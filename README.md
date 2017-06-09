@@ -402,7 +402,7 @@ public class Customer {
 
 Will result in the following stored edge-document:
 
-``` json
+```
 {
   ”_key” : ”123”,
   ”_id” : ”relations/123”,
@@ -413,7 +413,7 @@ Will result in the following stored edge-document:
 
 and the following stored documents:
 
-``` json
+```
 {
   ”_key” : ”456”,
   ”_id” : ”persons/456”,
@@ -445,7 +445,7 @@ public class Address {
 
 Will result in the following stored documents:
 
-``` json
+```
 {
   ”_key” : ”123”,
   ”_id” : ”persons/123”,
@@ -461,7 +461,7 @@ Will result in the following stored documents:
 
 Without the annotation `Ref` at the field `address`, the stored document would look:
 
-``` json
+```
 {
   ”_key” : ”123”,
   ”_id” : ”persons/123”,
