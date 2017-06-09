@@ -33,7 +33,7 @@
 
 # Getting Started
 
-Spring Data ArangoDB requires ArangoDB 3.1 or higher - which you can download here - and Java 6 or higher. To use Spring Data ArangoDB in your project, your build automation tool needs to be configured to include and use the Spring Data ArangoDB dependency. Example with Maven:
+Spring Data ArangoDB requires ArangoDB 3.1 or higher - which you can download [here](https://www.arangodb.com/download/) - and Java 6 or higher. To use Spring Data ArangoDB in your project, your build automation tool needs to be configured to include and use the Spring Data ArangoDB dependency. Example with Maven:
 
 ``` xml
 <dependency>
@@ -54,7 +54,7 @@ The `ArangoTemplate` class is the default implementation of the operations inter
 
 ### Java-Configuration
 
-You can use Java to instantiate and configure an instance of `ArangoTemplate` as show below. Setup the underlying driver (ArangoDB.Builder) with default configuration automatically loads a properties file arangodb.properties, if exists in the classpath.
+You can use Java to instantiate and configure an instance of `ArangoTemplate` as show below. Setup the underlying driver (`ArangoDB.Builder`) with default configuration automatically loads a properties file arangodb.properties, if exists in the classpath.
 
 ``` java
 @Configuration
@@ -114,7 +114,7 @@ You can use Spring’s XML bean schema to configure `ArangoTemplate` as show bel
 <arango:arango host=”127.0.0.1” />
 
 <bean id=”arangoTemplate” class=”org.springframework.data.arango.core.ArangoTemplate”>
-  <constructor-arg ref”arango” />
+  <constructor-arg ref=”arango” />
 </bean>
 ```
 
@@ -122,7 +122,7 @@ You can use Spring’s XML bean schema to configure `ArangoTemplate` as show bel
 
 ## Introduction
 
-Spring Data Commons provide a composable repository infrastructure which Spring Data ArangoDB is built on. These allow for interface-based composition of repositories consisting of provided default implementations for certain interfaces (like CrudRepository) and custom implementations for other methods.
+Spring Data Commons provide a composable repository infrastructure which Spring Data ArangoDB is built on. These allow for interface-based composition of repositories consisting of provided default implementations for certain interfaces (like `CrudRepository`) and custom implementations for other methods.
 
 ## Instantiating
 
