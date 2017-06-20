@@ -26,8 +26,8 @@
   * [Type conventions](#type-conventions)
   * [Annotations](#annotations)
     * [Annotation overview](#annotation-overview)
-    * [Document & Edge](#document-edge)
-    * [From & To](#from-to)
+    * [Document Edge](#document-edge)
+    * [From To](#from-to)
     * [Reference](#reference)
     * [Indexed annotations](#indexed-annotations)
 
@@ -366,7 +366,7 @@ annotation | level | description
 @FulltextIndexed | field | described how to index the field
 @Transient, @Expose | field | excludes the field from serialisation/deserialisation
 
-### Document & Edge
+### Document Edge
 
 The annotations `@Document` and `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are name to specify the collection name in the database. The annotation `@Document` specify the collection type to `DOCUMENT`. The annotation `@Edge` specify the collection type to `EDGE`.
 
@@ -381,7 +381,7 @@ public class Relation {
 }
 ```
 
-### From & To
+### From To
 
 With the annotations `@From` and `@To` applied on a field in a class annotated with @Document(type=`EDGE`) the nested object isn’t stored as a nested object in the document. The _id field of the nested object is stored in the edge document and the nested object is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
 
