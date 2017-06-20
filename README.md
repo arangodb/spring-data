@@ -26,7 +26,7 @@
   * [Type conventions](#type-conventions)
   * [Annotations](#annotations)
     * [Annotation overview](#annotation-overview)
-    * [Document / Edge](#eocument-edge)
+    * [Document / Edge](#document-edge)
     * [From / To](#from-to)
     * [Reference](#reference)
     * [Indexed annotations](#indexed-annotations)
@@ -38,7 +38,7 @@ Spring Data ArangoDB requires ArangoDB 3.1 or higher - which you can download [h
 ``` xml
 <dependency>
   <groupId>com.arangodb</groupId>
-  <artifactId>spring-data-arangodb</artifactId>
+  <artifactId>spring-data</artifactId>
   <version>{version}</version>
 </dependency>
 ```
