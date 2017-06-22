@@ -46,7 +46,7 @@ public class ArangoTemplateTest {
 	private ArangoOperations template;
 
 	@Test
-	public void getVersion() {
+	public void template() {
 		final ArangoDBVersion version = template.getVersion();
 		assertThat(version, is(notNullValue()));
 		assertThat(version.getLicense(), is(notNullValue()));

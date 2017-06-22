@@ -49,7 +49,7 @@ public class ArangoDatabaseTemplateTest {
 	private ArangoDatabaseOperations databaseTemplate;
 
 	@Test
-	public void getVersion() {
+	public void template() {
 		final ArangoDBVersion version = template.getVersion();
 		assertThat(version, is(notNullValue()));
 		assertThat(version.getLicense(), is(notNullValue()));
@@ -58,7 +58,7 @@ public class ArangoDatabaseTemplateTest {
 	}
 
 	@Test
-	public void getVersion2() {
+	public void databaseTemplate() {
 		final ArangoDBVersion version = databaseTemplate.getVersion();
 		assertThat(version, is(notNullValue()));
 		assertThat(version.getLicense(), is(notNullValue()));

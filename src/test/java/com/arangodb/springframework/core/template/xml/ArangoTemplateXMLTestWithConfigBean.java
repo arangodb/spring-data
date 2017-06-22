@@ -45,7 +45,7 @@ public class ArangoTemplateXMLTestWithConfigBean {
 	private ApplicationContext context;
 
 	@Test
-	public void getVersion() {
+	public void template() {
 		final ArangoOperations template = context.getBean("arangoTemplate", ArangoOperations.class);
 		assertThat(template.getVersion(), is(notNullValue()));
 

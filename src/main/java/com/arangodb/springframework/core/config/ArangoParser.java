@@ -27,6 +27,7 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
+import org.springframework.data.config.ParsingUtils;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -43,11 +44,17 @@ public class ArangoParser implements BeanDefinitionParser {
 		final Object source = parserContext.extractSource(element);
 		final BeanComponentDefinitionBuilder componentBuilder = new BeanComponentDefinitionBuilder(element,
 				parserContext);
-		final BeanDefinitionBuilder builder = BeanDefinitionBuilder
-				.genericBeanDefinition(ArangoFactoryBean.class);
+		final BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(ArangoFactoryBean.class);
+		ParsingUtils.setPropertyValue(builder, element, ArangoFactoryBean.PROPERTY_NAME_USERNAME,
+			ArangoFactoryBean.PROPERTY_NAME_USERNAME);
+		ParsingUtils.setPropertyValue(builder, element, ArangoFactoryBean.PROPERTY_NAME_PASSWORD,
+			ArangoFactoryBean.PROPERTY_NAME_PASSWORD);
+		ParsingUtils.setPropertyValue(builder, element, ArangoFactoryBean.PROPERTY_NAME_HOST,
+			ArangoFactoryBean.PROPERTY_NAME_HOST);
+		ParsingUtils.setPropertyValue(builder, element, ArangoFactoryBean.PROPERTY_NAME_PORT,
+			ArangoFactoryBean.PROPERTY_NAME_PORT);
 
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("arango", source));
-
 		final String id = element.getAttribute("id");
 		final BeanComponentDefinition component = componentBuilder.getComponent(builder,
 			StringUtils.hasText(id) ? id : ArangoBeanNames.ARANGO);

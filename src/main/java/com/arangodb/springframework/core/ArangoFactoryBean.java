@@ -23,12 +23,59 @@ package com.arangodb.springframework.core;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 
 import com.arangodb.ArangoDB;
+import com.arangodb.internal.ArangoDBConstants;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
 public class ArangoFactoryBean extends AbstractFactoryBean<ArangoDB.Builder> {
+
+	public static final String PROPERTY_NAME_HOST = "host";
+	public static final String PROPERTY_NAME_PORT = "port";
+	public static final String PROPERTY_NAME_USERNAME = "username";
+	public static final String PROPERTY_NAME_PASSWORD = "password";
+
+	private String host;
+	private Integer port;
+	private String username;
+	private String password;
+
+	public ArangoFactoryBean() {
+		super();
+	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(final String host) {
+		this.host = host;
+	}
+
+	public Integer getPort() {
+		return port;
+	}
+
+	public void setPort(final Integer port) {
+		this.port = port;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(final String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(final String password) {
+		this.password = password;
+	}
 
 	@Override
 	public Class<?> getObjectType() {
@@ -37,7 +84,14 @@ public class ArangoFactoryBean extends AbstractFactoryBean<ArangoDB.Builder> {
 
 	@Override
 	protected ArangoDB.Builder createInstance() throws Exception {
-		return new ArangoDB.Builder();
+		final ArangoDB.Builder builder = new ArangoDB.Builder();
+		if (username != null) {
+			builder.user(username).password(password);
+		}
+		if (host != null) {
+			builder.host(host, port != null ? port : ArangoDBConstants.DEFAULT_PORT);
+		}
+		return builder;
 	}
 
 }

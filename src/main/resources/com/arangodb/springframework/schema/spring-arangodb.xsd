@@ -22,5 +22,9 @@
 	</xsd:element>
 	<xsd:complexType name="arangoType">
 		<xsd:attribute name="id" type="xsd:string" use="optional"></xsd:attribute>
+		<xsd:attribute name="host" type="xsd:string" use="optional"></xsd:attribute>
+		<xsd:attribute name="port" type="xsd:int" use="optional"></xsd:attribute>
+		<xsd:attribute name="username" type="xsd:string" use="optional"></xsd:attribute>
+		<xsd:attribute name="password" type="xsd:string" use="optional"></xsd:attribute>
 	</xsd:complexType>
 </xsd:schema>
