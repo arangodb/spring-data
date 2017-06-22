@@ -1,0 +1,1 @@
+http\://www.arangodb.com/spring/schema/arangodb=com.arangodb.springframework.core.config.ArangoNamespaceHandler
