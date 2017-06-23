@@ -58,13 +58,13 @@ You can use Java to instantiate and configure an instance of `ArangoTemplate` as
 
 ``` java
 @Configuration
-public class MyConfiguration {
+public class MyConfiguration extends AbstractArangoConfiguration {
 
-  @Bean
-  public ArangoTemplate arangoTemplate() {
-    ArangoDB.Builder arangoBuilder = new ArangoDB.Builder();
-    return new ArangoTemplate(arangoBuilder);
+  @Override
+  public ArangoDB.Builder arango() {
+    return new ArangoDB.Builder();
   }
+
 }
 ```
 
