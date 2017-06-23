@@ -158,7 +158,7 @@ Queries using ArangoDB Query Language (AQL) can be supplied with the @Query anno
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
-  @Query(“FOR c IN customers FILTER c.name == @name RETURN c")
+  @Query("FOR c IN customers FILTER c.name == @name RETURN c")
   ArangoCursor<Customer> query(String name);
 
 }
@@ -169,7 +169,7 @@ The Bind Parameters will be substituted by the actual method parameter. In addit
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
-  @Query(“FOR c IN customers FILTER c.name == @name RETURN c")
+  @Query("FOR c IN customers FILTER c.name == @name RETURN c")
   ArangoCursor<Customer> query(Map<String, Object> bindVars);
 
 }
@@ -233,9 +233,9 @@ public class Address {
 
 public interface MyRepository extends Repository<Customer, String> {
 
-  // 1. step: search domain class for a property “addressZipCode"
-  // 2. step: search domain class for “addressZip.code"
-  // 3. step: search domain class for “address.zipCode"
+  // 1. step: search domain class for a property "addressZipCode"
+  // 2. step: search domain class for "addressZip.code"
+  // 3. step: search domain class for "address.zipCode"
   ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode);
 }
 ```
@@ -259,15 +259,15 @@ public class AddressZip {
 
 public interface MyRepository extends Repository<Customer, String> {
 
-  // 1. step: search domain class for a property “addressZipCode"
-  // 2. step: search domain class for “addressZip.code"
-  // creates query with “x.addressZip.code"
+  // 1. step: search domain class for a property "addressZipCode"
+  // 2. step: search domain class for "addressZip.code"
+  // creates query with "x.addressZip.code"
   ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode);
 
-  // 1. step: search domain class for a property “addressZipCode"
-  // 2. step: search domain class for “addressZip.code"
-  // 3. step: search domain class for “address.zipCode"
-  // creates query with “x.address.zipCode"
+  // 1. step: search domain class for a property "addressZipCode"
+  // 2. step: search domain class for "addressZip.code"
+  // 3. step: search domain class for "address.zipCode"
+  // creates query with "x.address.zipCode"
   ArangoCursor<Customer> findByAddress_ZipCode(ZipCode zipCode);
 
 }
@@ -282,16 +282,16 @@ AQL supports the usage of [bind parameters](https://docs.arangodb.com/3.1/AQL/Fu
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
 
-  @Query(“FOR c IN customers FILTER c[@field] == @value RETURN c")
+  @Query("FOR c IN customers FILTER c[@field] == @value RETURN c")
   ArangoCursor<Customer> query(Map<String, Object> bindVars);
 
 }
 
 Map<String, Object> bindVars = new HashMap<String, Object>();
-bindVars.put(“field", “name");
-bindVars.put(“value", “john";
+bindVars.put("field", "name");
+bindVars.put("value", "john";
 
-// will execute query “FOR c IN customers FILTER c.name == “john" RETURN c"
+// will execute query "FOR c IN customers FILTER c.name == "john" RETURN c"
 ArangoCursor<Customer> cursor = myRepo.query(bindVars);
 ```
 
@@ -303,14 +303,14 @@ This special parameter works with both query-methods and finder-methods. Keep in
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
 
-  @Query(“FOR c IN customers FILTER c.name == @name RETURN c")
+  @Query("FOR c IN customers FILTER c.name == @name RETURN c")
   Iterable<Customer> query(String name, AqlQueryOptions options);
 
   Iterable<Customer> findByName(String name, AqlQueryOptions options);
 
   ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode, AqlQueryOptions options);
 
-  @Query(“FOR c IN customers FILTER c[@field] == @value RETURN c")
+  @Query("FOR c IN customers FILTER c[@field] == @value RETURN c")
   ArangoCursor<Customer> query(Map<String, Object> bindVars, AqlQueryOptions options);
 
 }
@@ -364,7 +364,7 @@ annotation | level | description
 @Id | field | stored the field as the system field _id
 @Key | field | stored the field as the system field _key
 @Rev | field | stored the field as the system field _rev
-@Field(“alt-name") | field | stored the field with an alternative name
+@Field("alt-name") | field | stored the field with an alternative name
 @Ref | field | stored the _id of the referenced document and not the nested document
 @From | field | stored the _id of the referenced document  as the system field _from
 @To | field | stored the _id of the referenced document  as the system field _to
