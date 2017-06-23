@@ -83,9 +83,9 @@ To customize the configuration, the parameters can be changed in the Java code.
 
 ``` java
 ArangoDB.Builder arangoBuilder = new ArangoDB.Builder()
-  .host(”127.0.0.1”)
+  .host("127.0.0.1")
   .port(8429)
-  .user(”root)”;
+  .user("root)";
 return new ArangoTemplate(arangoBuilder);
 ```
 
@@ -111,11 +111,20 @@ return new ArangoTemplate(arangoBuilder);
 You can use Spring’s XML bean schema to configure `ArangoTemplate` as show below.
 
 ``` xml
-<arango:arango host=”127.0.0.1” />
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:arango="http://www.arangodb.com/spring/schema/arangodb"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.arangodb.com/spring/schema/arangodb http://www.arangodb.com/spring/schema/arangodb/spring-arangodb.xsd">
 
-<bean id=”arangoTemplate” class=”org.springframework.data.arango.core.ArangoTemplate”>
-  <constructor-arg ref=”arango” />
-</bean>
+  <arango:arango host="127.0.0.1" port="8529" username="root" password="" />
+
+  <bean id="arangoTemplate" class="com.arangodb.springframework.core.template.ArangoTemplate">
+    <constructor-arg ref="arango" />
+  </bean>
+
+</beans>
 ```
 
 # Repositories
@@ -149,7 +158,7 @@ Queries using ArangoDB Query Language (AQL) can be supplied with the @Query anno
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
-  @Query(“FOR c IN customers FILTER c.name == @name RETURN c”)
+  @Query(“FOR c IN customers FILTER c.name == @name RETURN c")
   ArangoCursor<Customer> query(String name);
 
 }
@@ -160,7 +169,7 @@ The Bind Parameters will be substituted by the actual method parameter. In addit
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
-  @Query(“FOR c IN customers FILTER c.name == @name RETURN c”)
+  @Query(“FOR c IN customers FILTER c.name == @name RETURN c")
   ArangoCursor<Customer> query(Map<String, Object> bindVars);
 
 }
@@ -213,7 +222,7 @@ public interface MyRepository extends Repository<Customer, String> {
 Property expressions can refer only to direct and nested properties of the managed domain class. The algorithm checks the domain class for the entire expression as the property. If the check fails, the algorithm splits up the expression at the camel case parts from the right and tries to find the corresponding property.
 
 ``` java
-@Document(name=”customers”)
+@Document(name="customers")
 public class Customer {
   private Address address;
 }
@@ -224,9 +233,9 @@ public class Address {
 
 public interface MyRepository extends Repository<Customer, String> {
 
-  // 1. step: search domain class for a property “addressZipCode”
-  // 2. step: search domain class for “addressZip.code”
-  // 3. step: search domain class for “address.zipCode”
+  // 1. step: search domain class for a property “addressZipCode"
+  // 2. step: search domain class for “addressZip.code"
+  // 3. step: search domain class for “address.zipCode"
   ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode);
 }
 ```
@@ -234,7 +243,7 @@ public interface MyRepository extends Repository<Customer, String> {
 It is possible for the algorithm to select the wrong property if the domain class has also an property which match the first split of the expression. To resolve this ambiguity you can use _ as a separator inside your method-name to define traversal points.
 
 ``` java
-@Document(name=”customers”)
+@Document(name="customers")
 public class Customer {
   private Address address;
   private AddressZip addressZip;
@@ -250,15 +259,15 @@ public class AddressZip {
 
 public interface MyRepository extends Repository<Customer, String> {
 
-  // 1. step: search domain class for a property “addressZipCode”
-  // 2. step: search domain class for “addressZip.code”
-  // creates query with “x.addressZip.code”
+  // 1. step: search domain class for a property “addressZipCode"
+  // 2. step: search domain class for “addressZip.code"
+  // creates query with “x.addressZip.code"
   ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode);
 
-  // 1. step: search domain class for a property “addressZipCode”
-  // 2. step: search domain class for “addressZip.code”
-  // 3. step: search domain class for “address.zipCode”
-  // creates query with “x.address.zipCode”
+  // 1. step: search domain class for a property “addressZipCode"
+  // 2. step: search domain class for “addressZip.code"
+  // 3. step: search domain class for “address.zipCode"
+  // creates query with “x.address.zipCode"
   ArangoCursor<Customer> findByAddress_ZipCode(ZipCode zipCode);
 
 }
@@ -273,16 +282,16 @@ AQL supports the usage of [bind parameters](https://docs.arangodb.com/3.1/AQL/Fu
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
 
-  @Query(“FOR c IN customers FILTER c[@field] == @value RETURN c”)
+  @Query(“FOR c IN customers FILTER c[@field] == @value RETURN c")
   ArangoCursor<Customer> query(Map<String, Object> bindVars);
 
 }
 
 Map<String, Object> bindVars = new HashMap<String, Object>();
-bindVars.put(“field”, “name”);
-bindVars.put(“value”, “john”;
+bindVars.put(“field", “name");
+bindVars.put(“value", “john";
 
-// will execute query “FOR c IN customers FILTER c.name == “john” RETURN c”
+// will execute query “FOR c IN customers FILTER c.name == “john" RETURN c"
 ArangoCursor<Customer> cursor = myRepo.query(bindVars);
 ```
 
@@ -294,14 +303,14 @@ This special parameter works with both query-methods and finder-methods. Keep in
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
 
-  @Query(“FOR c IN customers FILTER c.name == @name RETURN c”)
+  @Query(“FOR c IN customers FILTER c.name == @name RETURN c")
   Iterable<Customer> query(String name, AqlQueryOptions options);
 
   Iterable<Customer> findByName(String name, AqlQueryOptions options);
 
   ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode, AqlQueryOptions options);
 
-  @Query(“FOR c IN customers FILTER c[@field] == @value RETURN c”)
+  @Query(“FOR c IN customers FILTER c[@field] == @value RETURN c")
   ArangoCursor<Customer> query(Map<String, Object> bindVars, AqlQueryOptions options);
 
 }
@@ -355,7 +364,7 @@ annotation | level | description
 @Id | field | stored the field as the system field _id
 @Key | field | stored the field as the system field _key
 @Rev | field | stored the field as the system field _rev
-@Field(“alt-name”) | field | stored the field with an alternative name
+@Field(“alt-name") | field | stored the field with an alternative name
 @Ref | field | stored the _id of the referenced document and not the nested document
 @From | field | stored the _id of the referenced document  as the system field _from
 @To | field | stored the _id of the referenced document  as the system field _to
@@ -371,11 +380,11 @@ annotation | level | description
 The annotations `@Document` and `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are name to specify the collection name in the database. The annotation `@Document` specify the collection type to `DOCUMENT`. The annotation `@Edge` specify the collection type to `EDGE`.
 
 ``` java
-@Document(name=”persons”)
+@Document(name="persons")
 public class Person {
   ...
 }
-@Edge(name=”relations”)
+@Edge(name="relations")
 public class Relation {
   ...
 }
@@ -386,7 +395,7 @@ public class Relation {
 With the annotations `@From` and `@To` applied on a field in a class annotated with @Document(type=`EDGE`) the nested object isn’t stored as a nested object in the document. The _id field of the nested object is stored in the edge document and the nested object is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
 
 ``` java
-@Edge(name=”relations”)
+@Edge(name="relations")
 public class Relation {
   @From
   private Person c1;
@@ -394,7 +403,7 @@ public class Relation {
   private Person c2;
 }
 
-@Document(name=”customers”)
+@Document(name="customers")
 public class Customer {
   …
 }
@@ -404,10 +413,10 @@ Will result in the following stored edge-document:
 
 ```
 {
-  ”_key” : ”123”,
-  ”_id” : ”relations/123”,
-  ”_from” : ”persons/456”,
-  ”_to” : ”persons/789”
+  "_key" : "123",
+  "_id" : "relations/123",
+  "_from" : "persons/456",
+  "_to" : "persons/789"
 }
 ```
 
@@ -415,12 +424,12 @@ and the following stored documents:
 
 ```
 {
-  ”_key” : ”456”,
-  ”_id” : ”persons/456”,
+  "_key" : "456",
+  "_id" : "persons/456",
 }
 {
-  ”_key” : ”789”,
-  ”_id” : ”persons/789”,
+  "_key" : "789",
+  "_id" : "persons/789",
 }
 ```
 
@@ -429,13 +438,13 @@ and the following stored documents:
 With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
 
 ``` java
-@Document(name=”persons”)
+@Document(name="persons")
 public class Person {
   @Ref
   private Address address;
 }
 
-@Document(name=”addresses”)
+@Document(name="addresses")
 public class Address {
   private String country;
   private String street;
@@ -447,15 +456,15 @@ Will result in the following stored documents:
 
 ```
 {
-  ”_key” : ”123”,
-  ”_id” : ”persons/123”,
-  ”address” : ”addresses/456”
+  "_key" : "123",
+  "_id" : "persons/123",
+  "address" : "addresses/456"
 }
 {
-  ”_key” : ”456”,
-  ”_id” : ”addresses/456”,
-  ”country” : ”...”,
-  ”street” : ”...”
+  "_key" : "456",
+  "_id" : "addresses/456",
+  "country" : "...",
+  "street" : "..."
 }
 ```
 
@@ -463,11 +472,11 @@ Without the annotation `Ref` at the field `address`, the stored document would l
 
 ```
 {
-  ”_key” : ”123”,
-  ”_id” : ”persons/123”,
-  ”address” : {
-    ”country” : ”...”,
-     ”street” : ”...”
+  "_key" : "123",
+  "_id" : "persons/123",
+  "address" : {
+    "country" : "...",
+     "street" : "..."
   }
 }
 ```
