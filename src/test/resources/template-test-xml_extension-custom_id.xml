@@ -6,9 +6,12 @@
 	 http://www.arangodb.com/spring/schema/arangodb http://www.arangodb.com/spring/schema/arangodb/spring-arangodb.xsd">
 
 	<arango:arango id="test" />
+	
+	<arango:database id="test2" name="_system" />
 
 	<bean id="arangoTemplate" class="com.arangodb.springframework.core.template.ArangoTemplate">
-		<constructor-arg ref="test" />
+		<constructor-arg name="arango" ref="test" />
+		<constructor-arg name="database" ref="test2" />
 	</bean>
 
 </beans>

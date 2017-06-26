@@ -37,4 +37,9 @@ public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 		return new ArangoDB.Builder();
 	}
 
+	@Override
+	public String database() {
+		return "_system";
+	}
+
 }

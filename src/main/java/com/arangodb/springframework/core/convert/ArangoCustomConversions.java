@@ -18,17 +18,29 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.config;
+package com.arangodb.springframework.core.convert;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
-public class ArangoBeanNames {
+public class ArangoCustomConversions extends CustomConversions {
 
-	public static final String ARANGO = "arango";
-	public static final String DATABASE = "database";
-	public static final String MAPPING_CONVERTER = "mapping-converter";
-	public static final String TEMPLATE = "template";
+	private static final StoreConversions STORE_CONVERSIONS;
+
+	static {
+		final Collection<?> converters = new ArrayList<>();
+		STORE_CONVERSIONS = StoreConversions.of(SimpleTypeHolder.DEFAULT, converters);
+	}
+
+	public ArangoCustomConversions(final Collection<?> converters) {
+		super(STORE_CONVERSIONS, converters);
+	}
 
 }

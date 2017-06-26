@@ -18,17 +18,20 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.config;
+package com.arangodb.springframework.core.mapping;
+
+import java.util.Optional;
+
+import org.springframework.data.mapping.PersistentProperty;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
-public class ArangoBeanNames {
+public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersistentProperty> {
 
-	public static final String ARANGO = "arango";
-	public static final String DATABASE = "database";
-	public static final String MAPPING_CONVERTER = "mapping-converter";
-	public static final String TEMPLATE = "template";
+	String getFieldName();
+
+	Optional<Ref> getRef();
 
 }

@@ -18,17 +18,22 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.config;
+package com.arangodb.springframework.core.config.parser;
+
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.xml.BeanDefinitionParser;
+import org.springframework.beans.factory.xml.ParserContext;
+import org.w3c.dom.Element;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
-public class ArangoBeanNames {
+public class ArangoMappingConverterParser implements BeanDefinitionParser {
 
-	public static final String ARANGO = "arango";
-	public static final String DATABASE = "database";
-	public static final String MAPPING_CONVERTER = "mapping-converter";
-	public static final String TEMPLATE = "template";
+	@Override
+	public BeanDefinition parse(Element element, ParserContext parserContext) {
+		return null;
+	}
 
 }

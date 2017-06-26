@@ -18,17 +18,27 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.config;
+package com.arangodb.springframework.core.mapping;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
-public class ArangoBeanNames {
+@Document
+public class Customer {
 
-	public static final String ARANGO = "arango";
-	public static final String DATABASE = "database";
-	public static final String MAPPING_CONVERTER = "mapping-converter";
-	public static final String TEMPLATE = "template";
+	private String name;
+
+	public Customer() {
+		super();
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(final String name) {
+		this.name = name;
+	}
 
 }

@@ -22,6 +22,11 @@ package com.arangodb.springframework.core.config;
 
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
+import com.arangodb.springframework.core.config.parser.ArangoDatabaseParser;
+import com.arangodb.springframework.core.config.parser.ArangoMappingConverterParser;
+import com.arangodb.springframework.core.config.parser.ArangoParser;
+import com.arangodb.springframework.core.config.parser.ArangoTemplateParser;
+
 /**
  * @author Mark - mark at arangodb.com
  *
@@ -31,6 +36,9 @@ public class ArangoNamespaceHandler extends NamespaceHandlerSupport {
 	@Override
 	public void init() {
 		registerBeanDefinitionParser(ArangoBeanNames.ARANGO, new ArangoParser());
+		registerBeanDefinitionParser(ArangoBeanNames.DATABASE, new ArangoDatabaseParser());
+		registerBeanDefinitionParser(ArangoBeanNames.MAPPING_CONVERTER, new ArangoMappingConverterParser());
+		registerBeanDefinitionParser(ArangoBeanNames.TEMPLATE, new ArangoTemplateParser());
 	}
 
 }

@@ -49,7 +49,7 @@ public class ArangoFactoryBeanTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void testFields() throws Exception {
+	public void arango() throws Exception {
 		final ArangoDB.Builder arango = context.getBean("arango", ArangoDB.Builder.class);
 		checkField(arango, "user", "testuser");
 		checkField(arango, "password", "testpw");
@@ -57,6 +57,12 @@ public class ArangoFactoryBeanTest {
 		assertThat(hosts.size(), is(1));
 		assertThat(hosts.get(0).getHost(), is("testhost"));
 		assertThat(hosts.get(0).getPort(), is(1234));
+	}
+
+	@Test
+	public void db() {
+		final String db = context.getBean("database", String.class);
+		assertThat(db, is("testdb"));
 	}
 
 	private Object getField(final ArangoDB.Builder arango, final String field)

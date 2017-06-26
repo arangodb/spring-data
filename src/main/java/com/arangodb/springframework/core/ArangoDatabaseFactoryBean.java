@@ -18,17 +18,40 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.config;
+package com.arangodb.springframework.core;
+
+import org.springframework.beans.factory.config.AbstractFactoryBean;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
-public class ArangoBeanNames {
+public class ArangoDatabaseFactoryBean extends AbstractFactoryBean<String> {
 
-	public static final String ARANGO = "arango";
-	public static final String DATABASE = "database";
-	public static final String MAPPING_CONVERTER = "mapping-converter";
-	public static final String TEMPLATE = "template";
+	public static final String PROPERTY_NAME_NAME = "name";
+
+	private String name;
+
+	public ArangoDatabaseFactoryBean() {
+		super();
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(final String name) {
+		this.name = name;
+	}
+
+	@Override
+	public Class<?> getObjectType() {
+		return String.class;
+	}
+
+	@Override
+	protected String createInstance() throws Exception {
+		return name;
+	}
 
 }

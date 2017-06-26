@@ -7,4 +7,6 @@
 
 	<arango:arango host="testhost" port="1234" username="testuser" password="testpw" />
 
+	<arango:database name="testdb" />
+
 </beans>

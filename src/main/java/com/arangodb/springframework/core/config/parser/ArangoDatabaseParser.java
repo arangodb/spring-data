@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.config;
+package com.arangodb.springframework.core.config.parser;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
@@ -31,33 +31,29 @@ import org.springframework.data.config.ParsingUtils;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
-import com.arangodb.springframework.core.ArangoFactoryBean;
+import com.arangodb.springframework.core.ArangoDatabaseFactoryBean;
+import com.arangodb.springframework.core.config.ArangoBeanNames;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
-public class ArangoParser implements BeanDefinitionParser {
+public class ArangoDatabaseParser implements BeanDefinitionParser {
 
 	@Override
 	public BeanDefinition parse(final Element element, final ParserContext parserContext) {
 		final Object source = parserContext.extractSource(element);
 		final BeanComponentDefinitionBuilder componentBuilder = new BeanComponentDefinitionBuilder(element,
 				parserContext);
-		final BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(ArangoFactoryBean.class);
-		ParsingUtils.setPropertyValue(builder, element, ArangoFactoryBean.PROPERTY_NAME_USERNAME,
-			ArangoFactoryBean.PROPERTY_NAME_USERNAME);
-		ParsingUtils.setPropertyValue(builder, element, ArangoFactoryBean.PROPERTY_NAME_PASSWORD,
-			ArangoFactoryBean.PROPERTY_NAME_PASSWORD);
-		ParsingUtils.setPropertyValue(builder, element, ArangoFactoryBean.PROPERTY_NAME_HOST,
-			ArangoFactoryBean.PROPERTY_NAME_HOST);
-		ParsingUtils.setPropertyValue(builder, element, ArangoFactoryBean.PROPERTY_NAME_PORT,
-			ArangoFactoryBean.PROPERTY_NAME_PORT);
+		final BeanDefinitionBuilder builder = BeanDefinitionBuilder
+				.genericBeanDefinition(ArangoDatabaseFactoryBean.class);
+		ParsingUtils.setPropertyValue(builder, element, ArangoDatabaseFactoryBean.PROPERTY_NAME_NAME,
+			ArangoDatabaseFactoryBean.PROPERTY_NAME_NAME);
 
-		parserContext.pushContainingComponent(new CompositeComponentDefinition("arango", source));
+		parserContext.pushContainingComponent(new CompositeComponentDefinition(ArangoBeanNames.DATABASE, source));
 		final String id = element.getAttribute("id");
 		final BeanComponentDefinition component = componentBuilder.getComponent(builder,
-			StringUtils.hasText(id) ? id : ArangoBeanNames.ARANGO);
+			StringUtils.hasText(id) ? id : ArangoBeanNames.DATABASE);
 		parserContext.registerBeanComponent(component);
 		return component.getBeanDefinition();
 	}

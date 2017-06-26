@@ -27,4 +27,18 @@
 		<xsd:attribute name="username" type="xsd:string" use="optional"></xsd:attribute>
 		<xsd:attribute name="password" type="xsd:string" use="optional"></xsd:attribute>
 	</xsd:complexType>
+	<xsd:element name="database" type="databaseType">
+	</xsd:element>
+	<xsd:complexType name="databaseType">
+		<xsd:attribute name="id" type="xsd:string" use="optional"></xsd:attribute>
+		<xsd:attribute name="name" type="xsd:string" use="required"></xsd:attribute>
+	</xsd:complexType>
+	<xsd:element name="mapping-converter" type="mapping-conveterType">
+	</xsd:element>
+	<xsd:complexType name="mapping-conveterType">
+	</xsd:complexType>
+	<xsd:element name="template" type="templateType">
+	</xsd:element>
+	<xsd:complexType name="templateType">
+	</xsd:complexType>
 </xsd:schema>

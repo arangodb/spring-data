@@ -18,26 +18,23 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.template;
+package com.arangodb.springframework.core.mapping;
 
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.mapping.PersistentEntity;
+
+import com.arangodb.entity.CollectionType;
 
 /**
  * @author Mark - mark at arangodb.com
+ * @param <T>
  *
  */
-public class ArangoTemplateBase {
+public interface ArangoPersistentEntity<T>
+		extends PersistentEntity<T, ArangoPersistentProperty>, ApplicationContextAware {
 
-	protected final PersistenceExceptionTranslator exceptionTranslator;
+	String getCollection();
 
-	protected ArangoTemplateBase(final PersistenceExceptionTranslator exceptionTranslator) {
-		super();
-		this.exceptionTranslator = exceptionTranslator;
-	}
-
-	protected DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
-		return exceptionTranslator.translateExceptionIfPossible(exception);
-	}
+	CollectionType getCollectionType();
 
 }

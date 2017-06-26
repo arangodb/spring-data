@@ -31,8 +31,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.entity.ArangoDBVersion;
+import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.mapping.Customer;
 
 /**
  * @author Mark - mark at arangodb.com
@@ -52,6 +54,20 @@ public class ArangoTemplateTest {
 		assertThat(version.getLicense(), is(notNullValue()));
 		assertThat(version.getServer(), is(notNullValue()));
 		assertThat(version.getVersion(), is(notNullValue()));
+	}
+
+	@Test
+	public void insertDocument() {
+		try {
+			template.driver().db().createCollection("customer");
+			final Customer value = new Customer();
+			value.setName("John");
+			final DocumentCreateEntity<Customer> res = template.insertDocument(value);
+			assertThat(res, is(notNullValue()));
+			assertThat(res.getId(), is(notNullValue()));
+		} finally {
+			template.driver().db().collection("customer").drop();
+		}
 	}
 
 }

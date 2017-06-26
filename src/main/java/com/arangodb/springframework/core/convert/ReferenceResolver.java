@@ -18,17 +18,27 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.config;
+package com.arangodb.springframework.core.convert;
+
+import java.io.Serializable;
+import java.util.Collection;
+
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
-public class ArangoBeanNames {
+public interface ReferenceResolver<T extends Serializable> {
 
-	public static final String ARANGO = "arango";
-	public static final String DATABASE = "database";
-	public static final String MAPPING_CONVERTER = "mapping-converter";
-	public static final String TEMPLATE = "template";
+	Object resolve(ArangoPersistentProperty property, T ref);
+
+	T create(ArangoPersistentEntity<?> entity);
+
+	VPackSlice fetch(T ref);
+
+	Collection<VPackSlice> fetch(Collection<T> refs);
 
 }

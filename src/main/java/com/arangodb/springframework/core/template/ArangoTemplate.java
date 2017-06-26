@@ -21,204 +21,346 @@
 package com.arangodb.springframework.core.template;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
+import com.arangodb.ArangoDBException;
 import com.arangodb.entity.ArangoDBVersion;
-import com.arangodb.entity.LogEntity;
-import com.arangodb.entity.LogLevelEntity;
-import com.arangodb.entity.ServerRole;
-import com.arangodb.entity.UserEntity;
-import com.arangodb.model.LogOptions;
-import com.arangodb.model.UserCreateOptions;
-import com.arangodb.model.UserUpdateOptions;
-import com.arangodb.springframework.core.ArangoDatabaseOperations;
+import com.arangodb.entity.DocumentCreateEntity;
+import com.arangodb.entity.DocumentDeleteEntity;
+import com.arangodb.entity.DocumentImportEntity;
+import com.arangodb.entity.DocumentUpdateEntity;
+import com.arangodb.entity.EdgeEntity;
+import com.arangodb.entity.EdgeUpdateEntity;
+import com.arangodb.entity.MultiDocumentEntity;
+import com.arangodb.entity.VertexEntity;
+import com.arangodb.entity.VertexUpdateEntity;
+import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.model.DocumentCreateOptions;
+import com.arangodb.model.DocumentDeleteOptions;
+import com.arangodb.model.DocumentImportOptions;
+import com.arangodb.model.DocumentReadOptions;
+import com.arangodb.model.DocumentReplaceOptions;
+import com.arangodb.model.DocumentUpdateOptions;
+import com.arangodb.model.EdgeCreateOptions;
+import com.arangodb.model.EdgeDeleteOptions;
+import com.arangodb.model.EdgeReplaceOptions;
+import com.arangodb.model.EdgeUpdateOptions;
+import com.arangodb.model.VertexCreateOptions;
+import com.arangodb.model.VertexDeleteOptions;
+import com.arangodb.model.VertexReplaceOptions;
+import com.arangodb.model.VertexUpdateOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
-import com.arangodb.velocystream.Request;
-import com.arangodb.velocystream.Response;
+import com.arangodb.velocypack.VPackBuilder;
 
 /**
  * @author Mark - mark at arangodb.com
  *
  */
-public class ArangoTemplate extends ArangoTemplateBase implements ArangoOperations {
+public class ArangoTemplate implements ArangoOperations {
 
+	private final PersistenceExceptionTranslator exceptionTranslator;
+	private final ArangoConverter converter;
 	private final ArangoDB arango;
+	private final String database;
 
-	public ArangoTemplate(final ArangoDB.Builder arango) {
-		this(arango, new ArangoExceptionTranslator());
+	public ArangoTemplate(final ArangoDB.Builder arango, final String database) {
+		this(arango, database, null);
 	}
 
-	public ArangoTemplate(final ArangoDB.Builder arango, final PersistenceExceptionTranslator exceptionTranslator) {
-		super(exceptionTranslator);
+	public ArangoTemplate(final ArangoDB.Builder arango, final String database, final ArangoConverter converter) {
+		this(arango, database, converter, new ArangoExceptionTranslator());
+	}
+
+	public ArangoTemplate(final ArangoDB.Builder arango, final String database, final ArangoConverter converter,
+		final PersistenceExceptionTranslator exceptionTranslator) {
+		super();
 		this.arango = arango.build();
+		this.database = database;
+		this.converter = converter;
+		this.exceptionTranslator = exceptionTranslator;
+	}
+
+	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
+		return exceptionTranslator.translateExceptionIfPossible(exception);
+	}
+
+	private String determineCollectionName(final Class<?> entityClass) {
+		return converter.getMappingContext().getPersistentEntity(entityClass)
+				.orElseThrow(() -> new InvalidDataAccessApiUsageException(
+						"No persistent entity information found for the type " + entityClass.getName()))
+				.getCollection();
 	}
 
 	@Override
-	public ArangoDatabaseOperations db() {
-		return new ArangoDatabaseTemplate(arango.db(), exceptionTranslator);
-	}
-
-	@Override
-	public ArangoDatabaseOperations db(final String name) {
-		return new ArangoDatabaseTemplate(arango.db(name), exceptionTranslator);
-	}
-
-	@Override
-	public Boolean createDatabase(final String name) throws DataAccessException {
-		try {
-			return arango.createDatabase(name);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
-	}
-
-	@Override
-	public Collection<String> getDatabases() throws DataAccessException {
-		try {
-			return arango.getDatabases();
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
-	}
-
-	@Override
-	public Collection<String> getAccessibleDatabases() throws DataAccessException {
-		try {
-			return arango.getAccessibleDatabases();
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
-	}
-
-	@Override
-	public Collection<String> getAccessibleDatabasesFor(final String user) throws DataAccessException {
-		try {
-			return arango.getAccessibleDatabasesFor(user);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public ArangoDB driver() {
+		return arango;
 	}
 
 	@Override
 	public ArangoDBVersion getVersion() throws DataAccessException {
 		try {
 			return arango.getVersion();
-		} catch (final RuntimeException e) {
+		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public ServerRole getRole() throws DataAccessException {
-		try {
-			return arango.getRole();
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> ArangoCursor<T> query(
+		final String query,
+		final Map<String, Object> bindVars,
+		final AqlQueryOptions options,
+		final Class<T> type) throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public UserEntity createUser(final String user, final String passwd) throws DataAccessException {
-		try {
-			return arango.createUser(user, passwd);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(
+		final Collection<?> values,
+		final Class<T> type,
+		final DocumentDeleteOptions options) throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public UserEntity createUser(final String user, final String passwd, final UserCreateOptions options)
+	public MultiDocumentEntity<DocumentDeleteEntity<Void>> deleteDocuments(final Collection<?> values)
 			throws DataAccessException {
-		try {
-			return arango.createUser(user, passwd, options);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+		return null;
 	}
 
 	@Override
-	public void deleteUser(final String user) throws DataAccessException {
-		try {
-			arango.deleteUser(user);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> DocumentDeleteEntity<T> deleteDocument(
+		final String key,
+		final Class<T> type,
+		final DocumentDeleteOptions options) throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public UserEntity getUser(final String user) throws DataAccessException {
-		try {
-			return arango.getUser(user);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public DocumentDeleteEntity<Void> deleteDocument(final String key) throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public Collection<UserEntity> getUsers() throws DataAccessException {
-		try {
-			return arango.getUsers();
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(
+		final Collection<T> values,
+		final DocumentUpdateOptions options) throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public UserEntity updateUser(final String user, final UserUpdateOptions options) throws DataAccessException {
-		try {
-			return arango.updateUser(user, options);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(final Collection<T> values)
+			throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public UserEntity replaceUser(final String user, final UserUpdateOptions options) throws DataAccessException {
-		try {
-			return arango.replaceUser(user, options);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> DocumentUpdateEntity<T> updateDocument(
+		final String key,
+		final T value,
+		final DocumentUpdateOptions options) throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public Response execute(final Request request) throws DataAccessException {
-		try {
-			return arango.execute(request);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> DocumentUpdateEntity<T> updateDocument(final String key, final T value) throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public LogEntity getLogs(final LogOptions options) throws DataAccessException {
-		try {
-			return arango.getLogs(options);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceDocuments(
+		final Collection<T> values,
+		final DocumentReplaceOptions options) throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public LogLevelEntity getLogLevel() throws DataAccessException {
-		try {
-			return arango.getLogLevel();
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceDocuments(final Collection<T> values)
+			throws DataAccessException {
+		return null;
 	}
 
 	@Override
-	public LogLevelEntity setLogLevel(final LogLevelEntity entity) throws DataAccessException {
-		try {
-			return arango.setLogLevel(entity);
-		} catch (final RuntimeException e) {
-			throw translateExceptionIfPossible(e);
-		}
+	public <T> DocumentUpdateEntity<T> replaceDocument(
+		final String key,
+		final T value,
+		final DocumentReplaceOptions options) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> DocumentUpdateEntity<T> replaceDocument(final String key, final T value) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> T getDocument(final String key, final Class<T> type, final DocumentReadOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> T getDocument(final String key, final Class<T> type) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public DocumentImportEntity importDocuments(final String values, final DocumentImportOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public DocumentImportEntity importDocuments(final String values) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public DocumentImportEntity importDocuments(final Collection<?> values, final DocumentImportOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public DocumentImportEntity importDocuments(final Collection<?> values) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> MultiDocumentEntity<DocumentCreateEntity<T>> insertDocuments(
+		final Collection<T> values,
+		final DocumentCreateOptions options) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> MultiDocumentEntity<DocumentCreateEntity<T>> insertDocuments(final Collection<T> values)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public DocumentCreateEntity<Object> insertDocument(final Object value, final DocumentCreateOptions options)
+			throws DataAccessException {
+		final VPackBuilder builder = new VPackBuilder();
+		converter.write(value, builder);
+		return arango.db(database).collection(determineCollectionName(value.getClass()))
+				.insertDocument(builder.slice());
+	}
+
+	@Override
+	public DocumentCreateEntity<Object> insertDocument(final Object value) throws DataAccessException {
+		return insertDocument(value, new DocumentCreateOptions());
+	}
+
+	@Override
+	public void deleteVertex(final String key, final VertexDeleteOptions options) throws DataAccessException {
+	}
+
+	@Override
+	public void deleteVertex(final String key) throws DataAccessException {
+	}
+
+	@Override
+	public <T> VertexUpdateEntity updateVertex(final String key, final T value, final VertexUpdateOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> VertexUpdateEntity updateVertex(final String key, final T value) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> VertexUpdateEntity replaceVertex(final String key, final T value, final VertexReplaceOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> VertexUpdateEntity replaceVertex(final String key, final T value) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> T getVertex(final String key, final Class<T> type, final DocumentReadOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> T getVertex(final String key, final Class<T> type) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> VertexEntity insertVertex(final T value, final VertexCreateOptions options) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> VertexEntity insertVertex(final T value) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public void deleteEdge(final String key, final EdgeDeleteOptions options) throws DataAccessException {
+	}
+
+	@Override
+	public void deleteEdge(final String key) throws DataAccessException {
+	}
+
+	@Override
+	public <T> EdgeUpdateEntity updateEdge(final String key, final T value, final EdgeUpdateOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> EdgeUpdateEntity updateEdge(final String key, final T value) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> EdgeUpdateEntity replaceEdge(final String key, final T value, final EdgeReplaceOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> EdgeUpdateEntity replaceEdge(final String key, final T value) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> T getEdge(final String key, final Class<T> type, final DocumentReadOptions options)
+			throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> T getEdge(final String key, final Class<T> type) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> EdgeEntity insertEdge(final T value, final EdgeCreateOptions options) throws DataAccessException {
+		return null;
+	}
+
+	@Override
+	public <T> EdgeEntity insertEdge(final T value) throws DataAccessException {
+		return null;
 	}
 
 }
