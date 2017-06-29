@@ -59,6 +59,10 @@ public class ArangoTemplateTest {
 	@Test
 	public void insertDocument() {
 		try {
+			template.driver().db().collection("customer").drop();
+		} catch (final Exception e) {
+		}
+		try {
 			template.driver().db().createCollection("customer");
 			final Customer value = new Customer();
 			value.setName("John");
