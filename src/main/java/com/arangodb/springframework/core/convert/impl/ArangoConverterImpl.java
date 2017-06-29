@@ -139,7 +139,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 			return;
 		}
 		// TODO from, to
-		final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass(), null);
+		final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass(), Object.class);
 		if (customWriteTarget.isPresent()) {
 			// accessor.put(prop, conversionService.convert(obj, basicTargetType));
 			final Object a = conversionService.convert(source, customWriteTarget.get());
