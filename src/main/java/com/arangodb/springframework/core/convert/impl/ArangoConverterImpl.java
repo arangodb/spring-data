@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.convert.impl;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -95,7 +96,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 			() -> new MappingException("No mapping metadata found fot type " + type.getType().getName()));
 
 		final EntityInstantiator instantiatorFor = instantiators.getInstantiatorFor(entity);
-		final ParameterValueProvider<ArangoPersistentProperty> provider = null;
+		final ParameterValueProvider<ArangoPersistentProperty> provider = null; // TODO
 		final R instance = instantiatorFor.createInstance(entity, provider);
 		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(instance),
 				conversionService);
@@ -110,7 +111,20 @@ public class ArangoConverterImpl implements ArangoConverter {
 		final ConvertingPropertyAccessor accessor,
 		final Object source,
 		final ArangoPersistentProperty property) {
-		accessor.setProperty(property, Optional.ofNullable(source));
+		accessor.setProperty(property, Optional.ofNullable(read(source, property.getTypeInformation())));
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <T> T read(final Object source, final TypeInformation<?> type) {
+		if (source == null) {
+			return null;
+		}
+		if (conversions.hasCustomReadTarget(source.getClass(), type.getType())) {
+			return (T) conversionService.convert(source, type.getType());
+		} else if (Map.class.isAssignableFrom(source.getClass())) {
+			return (T) read(type, new DBEntity((Map<? extends String, ? extends Object>) source));
+		}
+		return (T) source;
 	}
 
 	@Override

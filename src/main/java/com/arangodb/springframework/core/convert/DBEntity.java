@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core.convert;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Mark Vollmary
@@ -32,6 +33,10 @@ public class DBEntity extends HashMap<String, Object> {
 
 	public DBEntity() {
 		super();
+	}
+
+	public DBEntity(final Map<? extends String, ? extends Object> m) {
+		super(m);
 	}
 
 }

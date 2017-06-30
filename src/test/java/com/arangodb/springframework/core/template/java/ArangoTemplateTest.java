@@ -38,6 +38,7 @@ import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.mapping.Address;
 import com.arangodb.springframework.core.mapping.Customer;
 
 /**
@@ -86,15 +87,15 @@ public class ArangoTemplateTest {
 
 	@Test
 	public void getDocument() {
-		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));// , new
-																											// Address("22162–1010")
+		final DocumentCreateEntity<Customer> res = template
+				.insertDocument(new Customer("John", "Doe", 30, new Address("22162–1010")));
 		final Customer customer = template.getDocument(res.getKey(), Customer.class);
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("John"));
 		assertThat(customer.getSurname(), is("Doe"));
 		assertThat(customer.getAge(), is(30));
-		// assertThat(customer.getAddress(), is(notNullValue()));
-		// assertThat(customer.getAddress().getZipCode(), is("22162–1010"));
+		assertThat(customer.getAddress(), is(notNullValue()));
+		assertThat(customer.getAddress().getZipCode(), is("22162–1010"));
 	}
 
 	@Test
