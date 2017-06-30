@@ -90,6 +90,11 @@ public class ArangoTemplate implements ArangoOperations {
 		return exceptionTranslator.translateExceptionIfPossible(exception);
 	}
 
+	private String determineCollectionName(final Class<?> entityClass, final String id) {
+		final String[] split = id.split("/");
+		return split.length == 2 ? split[0] : determineCollectionName(entityClass);
+	}
+
 	private String determineCollectionName(final Class<?> entityClass) {
 		return converter.getMappingContext().getPersistentEntity(entityClass)
 				.orElseThrow(() -> new InvalidDataAccessApiUsageException(
@@ -98,8 +103,8 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	private String determineDocumentKey(final String id) {
-		final String[] splitty = id.split("/");
-		return splitty[splitty.length - 1];
+		final String[] split = id.split("/");
+		return split[split.length - 1];
 	}
 
 	private DBEntity toDBEntity(final Object value) {
@@ -153,7 +158,7 @@ public class ArangoTemplate implements ArangoOperations {
 	public <T> DocumentDeleteEntity<Void> deleteDocument(final String id, final Class<T> type)
 			throws DataAccessException {
 		try {
-			return arango.db(database).collection(determineCollectionName(type))
+			return arango.db(database).collection(determineCollectionName(type, id))
 					.deleteDocument(determineDocumentKey(id));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -166,7 +171,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException {
 		try {
-			return arango.db(database).collection(determineCollectionName(type))
+			return arango.db(database).collection(determineCollectionName(type, id))
 					.deleteDocument(determineDocumentKey(id), type, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -192,7 +197,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Object value,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			return arango.db(database).collection(determineCollectionName(value.getClass()))
+			return arango.db(database).collection(determineCollectionName(value.getClass(), id))
 					.updateDocument(determineDocumentKey(id), toDBEntity(value));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -223,7 +228,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Object value,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			return arango.db(database).collection(determineCollectionName(value.getClass()))
+			return arango.db(database).collection(determineCollectionName(value.getClass(), id))
 					.replaceDocument(determineDocumentKey(id), toDBEntity(value), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
