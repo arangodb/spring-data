@@ -1,7 +1,7 @@
 /*
  * DISCLAIMER
  *
- * Copyright 2016 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2017 ArangoDB GmbH, Cologne, Germany
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import com.arangodb.springframework.core.ArangoFactoryBean;
 import com.arangodb.springframework.core.config.ArangoBeanNames;
 
 /**
- * @author Mark - mark at arangodb.com
+ * @author Mark Vollmary
  *
  */
 public class ArangoParser implements BeanDefinitionParser {

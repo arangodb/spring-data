@@ -1,7 +1,7 @@
 /*
  * DISCLAIMER
  *
- * Copyright 2016 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2017 ArangoDB GmbH, Cologne, Germany
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.Optional;
 import org.springframework.data.mapping.PersistentProperty;
 
 /**
- * @author Mark - mark at arangodb.com
+ * @author Mark Vollmary
  *
  */
 public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersistentProperty> {
