@@ -56,6 +56,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 		this.context = context;
 		this.conversions = conversions;
 		conversionService = new DefaultConversionService();
+		conversions.registerConvertersIn(conversionService);
 	}
 
 	@Override
@@ -139,7 +140,8 @@ public class ArangoConverterImpl implements ArangoConverter {
 			return;
 		}
 		// TODO from, to
-		final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass(), Object.class);
+
+		final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass());
 		if (customWriteTarget.isPresent()) {
 			// accessor.put(prop, conversionService.convert(obj, basicTargetType));
 			final Object a = conversionService.convert(source, customWriteTarget.get());
@@ -147,7 +149,10 @@ public class ArangoConverterImpl implements ArangoConverter {
 			return;
 		}
 		final TypeInformation<?> type = property.getTypeInformation();
-		write(source, sink, context.getPersistentEntity(type), fieldName);
+		// write(source, sink, context.getPersistentEntity(type), fieldName);
+		final Object a = conversionService.convert(source, type.getType());
+		sink.add(fieldName, a.toString());// TODO
+		return;
 	}
 
 }
