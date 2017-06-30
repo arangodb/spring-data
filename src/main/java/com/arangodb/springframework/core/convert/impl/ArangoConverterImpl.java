@@ -20,7 +20,6 @@
 
 package com.arangodb.springframework.core.convert.impl;
 
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -111,7 +110,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 		final ConvertingPropertyAccessor accessor,
 		final Object source,
 		final ArangoPersistentProperty property) {
-		accessor.setProperty(property, Optional.of(source));
+		accessor.setProperty(property, Optional.ofNullable(source));
 	}
 
 	@Override
@@ -129,7 +128,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 
 	protected void write(
 		final Object source,
-		final Map<String, Object> sink,
+		final DBEntity sink,
 		final Optional<? extends ArangoPersistentEntity<?>> entityC) {
 		final ArangoPersistentEntity<?> entity = entityC.orElseThrow(
 			() -> new MappingException("No mapping metadata found for type " + source.getClass().getName()));
@@ -152,13 +151,9 @@ public class ArangoConverterImpl implements ArangoConverter {
 				writeProperty(prop, sink, inverse);
 			});
 		});
-
 	}
 
-	protected void writeProperty(
-		final Object source,
-		final Map<String, Object> obj,
-		final ArangoPersistentProperty property) {
+	protected void writeProperty(final Object source, final DBEntity sink, final ArangoPersistentProperty property) {
 		if (source == null) {
 			return;
 		}
@@ -179,16 +174,8 @@ public class ArangoConverterImpl implements ArangoConverter {
 		// TODO from, to
 
 		final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass());
-		if (customWriteTarget.isPresent()) {
-			// accessor.put(prop, conversionService.convert(obj, basicTargetType));
-			final Object a = conversionService.convert(source, customWriteTarget.get());
-			obj.put(fieldName, a);
-			return;
-		}
-		final TypeInformation<?> type = property.getTypeInformation();
-		// write(source, sink, context.getPersistentEntity(type), fieldName);
-		final Object a = conversionService.convert(source, type.getType());
-		obj.put(fieldName, a);
+		final Class<?> targetType = customWriteTarget.orElseGet(() -> property.getTypeInformation().getType());
+		sink.put(fieldName, conversionService.convert(source, targetType));
 		return;
 	}
 

@@ -29,15 +29,26 @@ public class Customer {
 
 	private String name;
 	private String surname;
+	private int age;
+	private Address address;
 
 	public Customer() {
 		super();
 	}
 
-	public Customer(final String name, final String surname) {
+	public Customer(final String name, final String surname, final int age) {
 		super();
 		this.name = name;
 		this.surname = surname;
+		this.age = age;
+	}
+
+	public Customer(final String name, final String surname, final int age, final Address address) {
+		super();
+		this.name = name;
+		this.surname = surname;
+		this.age = age;
+		this.address = address;
 	}
 
 	public String getName() {
@@ -54,6 +65,22 @@ public class Customer {
 
 	public void setSurname(final String surname) {
 		this.surname = surname;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(final int age) {
+		this.age = age;
+	}
+
+	public Address getAddress() {
+		return address;
+	}
+
+	public void setAddress(final Address address) {
+		this.address = address;
 	}
 
 }

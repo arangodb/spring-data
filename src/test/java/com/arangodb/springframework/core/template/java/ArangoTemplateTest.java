@@ -79,45 +79,51 @@ public class ArangoTemplateTest {
 
 	@Test
 	public void insertDocument() {
-		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getId(), is(notNullValue()));
 	}
 
 	@Test
 	public void getDocument() {
-		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));// , new
+																											// Address("22162–1010")
 		final Customer customer = template.getDocument(res.getKey(), Customer.class);
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("John"));
 		assertThat(customer.getSurname(), is("Doe"));
+		assertThat(customer.getAge(), is(30));
+		// assertThat(customer.getAddress(), is(notNullValue()));
+		// assertThat(customer.getAddress().getZipCode(), is("22162–1010"));
 	}
 
 	@Test
 	public void replaceDocument() {
-		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));
 		final DocumentUpdateEntity<Customer> replaceDocument = template.replaceDocument(res.getKey(),
-			new Customer("Jane", "Doe"));
+			new Customer("Jane", "Doe", 26));
 		assertThat(replaceDocument, is(notNullValue()));
 		final Customer customer = template.getDocument(res.getKey(), Customer.class);
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("Jane"));
 		assertThat(customer.getSurname(), is("Doe"));
+		assertThat(customer.getAge(), is(26));
 	}
 
 	@Test
 	public void updateDocument() {
-		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
-		template.updateDocument(res.getKey(), new Customer("Jane", "Doe"));
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));
+		template.updateDocument(res.getKey(), new Customer("Jane", "Doe", 26));
 		final Customer customer = template.getDocument(res.getKey(), Customer.class);
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("Jane"));
 		assertThat(customer.getSurname(), is("Doe"));
+		assertThat(customer.getAge(), is(26));
 	}
 
 	@Test
 	public void deleteDocument() {
-		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));
 		template.deleteDocument(res.getKey(), Customer.class);
 		final Customer customer = template.getDocument(res.getKey(), Customer.class);
 		assertThat(customer, is(nullValue()));
