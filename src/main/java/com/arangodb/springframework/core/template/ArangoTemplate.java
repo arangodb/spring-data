@@ -140,7 +140,7 @@ public class ArangoTemplate implements ArangoOperations {
 	public <T> DocumentDeleteEntity<Void> deleteDocument(final String key, final Class<T> type)
 			throws DataAccessException {
 		try {
-			return arango.db().collection(determineCollectionName(type)).deleteDocument(key);
+			return arango.db(database).collection(determineCollectionName(type)).deleteDocument(key);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -152,7 +152,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException {
 		try {
-			return arango.db().collection(determineCollectionName(type)).deleteDocument(key, type, options);
+			return arango.db(database).collection(determineCollectionName(type)).deleteDocument(key, type, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -177,7 +177,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Object value,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			return arango.db().collection(determineCollectionName(value.getClass())).updateDocument(key,
+			return arango.db(database).collection(determineCollectionName(value.getClass())).updateDocument(key,
 				toVPack(value));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -209,7 +209,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Object value,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			return arango.db().collection(determineCollectionName(value.getClass())).replaceDocument(key,
+			return arango.db(database).collection(determineCollectionName(value.getClass())).replaceDocument(key,
 				toVPack(value), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -226,8 +226,8 @@ public class ArangoTemplate implements ArangoOperations {
 	public <T> T getDocument(final String key, final Class<T> type, final DocumentReadOptions options)
 			throws DataAccessException {
 		try {
-			final DBEntity doc = arango.db().collection(determineCollectionName(type)).getDocument(key, DBEntity.class,
-				options);
+			final DBEntity doc = arango.db(database).collection(determineCollectionName(type)).getDocument(key,
+				DBEntity.class, options);
 			return converter.read(type, doc);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
