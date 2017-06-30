@@ -361,13 +361,15 @@ annotation | level | description
 -----------|-------|------------
 @Document | class | marked this class as a candidate for mapping
 @Edge | class | marked this class as a candidate for mapping
+@Graph | class | marked this class as part of a named graph
 @Id | field | stored the field as the system field _id
 @Key | field | stored the field as the system field _key
 @Rev | field | stored the field as the system field _rev
 @Field("alt-name") | field | stored the field with an alternative name
-@Ref | field | stored the _id of the referenced document and not the nested document
-@From | field | stored the _id of the referenced document  as the system field _from
-@To | field | stored the _id of the referenced document  as the system field _to
+@Ref, @Reference | field | stored the _id of the referenced document and not the nested document
+@From | field | stored the _id of the referenced document as the system field _from
+@To | field | stored the _id of the referenced document as the system field _to
+@Relation | field | vertices which are connected over edges
 @HashIndexed | field | described how to index the field
 @SkiplistIndexed | field | described how to index the field
 @PersistentIndexed | field | described how to index the field
