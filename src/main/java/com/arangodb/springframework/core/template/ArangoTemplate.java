@@ -250,10 +250,14 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public DocumentCreateEntity<Object> insertDocument(final Object value, final DocumentCreateOptions options)
 			throws DataAccessException {
-		final VPackBuilder builder = new VPackBuilder();
-		converter.write(value, builder);
-		return arango.db(database).collection(determineCollectionName(value.getClass()))
-				.insertDocument(builder.slice());
+		try {
+			final VPackBuilder builder = new VPackBuilder();
+			converter.write(value, builder);
+			return arango.db(database).collection(determineCollectionName(value.getClass()))
+					.insertDocument(builder.slice());
+		} catch (final ArangoDBException e) {
+			throw exceptionTranslator.translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override
