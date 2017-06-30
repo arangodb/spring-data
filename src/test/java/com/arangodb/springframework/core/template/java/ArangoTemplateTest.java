@@ -22,6 +22,7 @@ package com.arangodb.springframework.core.template.java;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import org.junit.After;
@@ -34,6 +35,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentCreateEntity;
+import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.Customer;
@@ -89,6 +91,36 @@ public class ArangoTemplateTest {
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("John"));
 		assertThat(customer.getSurname(), is("Doe"));
+	}
+
+	@Test
+	public void replaceDocument() {
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		final DocumentUpdateEntity<Customer> replaceDocument = template.replaceDocument(res.getKey(),
+			new Customer("Jane", "Doe"));
+		assertThat(replaceDocument, is(notNullValue()));
+		final Customer customer = template.getDocument(res.getKey(), Customer.class);
+		assertThat(customer, is(notNullValue()));
+		assertThat(customer.getName(), is("Jane"));
+		assertThat(customer.getSurname(), is("Doe"));
+	}
+
+	@Test
+	public void updateDocument() {
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		template.updateDocument(res.getKey(), new Customer("Jane", "Doe"));
+		final Customer customer = template.getDocument(res.getKey(), Customer.class);
+		assertThat(customer, is(notNullValue()));
+		assertThat(customer.getName(), is("Jane"));
+		assertThat(customer.getSurname(), is("Doe"));
+	}
+
+	@Test
+	public void deleteDocument() {
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		template.deleteDocument(res.getKey(), Customer.class);
+		final Customer customer = template.getDocument(res.getKey(), Customer.class);
+		assertThat(customer, is(nullValue()));
 	}
 
 }

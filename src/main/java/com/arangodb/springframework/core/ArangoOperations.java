@@ -82,7 +82,7 @@ public interface ArangoOperations {
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException;
 
-	DocumentDeleteEntity<Void> deleteDocument(final String key) throws DataAccessException;
+	<T> DocumentDeleteEntity<Void> deleteDocument(final String key, Class<T> type) throws DataAccessException;
 
 	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(
 		final Collection<T> values,
