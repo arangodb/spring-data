@@ -30,7 +30,6 @@ import com.arangodb.ArangoDB;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.entity.DocumentDeleteEntity;
-import com.arangodb.entity.DocumentImportEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.entity.EdgeEntity;
 import com.arangodb.entity.EdgeUpdateEntity;
@@ -40,7 +39,6 @@ import com.arangodb.entity.VertexUpdateEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.DocumentDeleteOptions;
-import com.arangodb.model.DocumentImportOptions;
 import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
@@ -78,11 +76,11 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	<T> DocumentDeleteEntity<T> deleteDocument(
-		final String key,
+		final String id,
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException;
 
-	<T> DocumentDeleteEntity<Void> deleteDocument(final String key, Class<T> type) throws DataAccessException;
+	<T> DocumentDeleteEntity<Void> deleteDocument(final String id, Class<T> type) throws DataAccessException;
 
 	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(
 		final Collection<T> values,
@@ -91,10 +89,10 @@ public interface ArangoOperations {
 	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(final Collection<T> values)
 			throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> updateDocument(final String key, final T value, final DocumentUpdateOptions options)
+	<T> DocumentUpdateEntity<T> updateDocument(final String id, final T value, final DocumentUpdateOptions options)
 			throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> updateDocument(final String key, final T value) throws DataAccessException;
+	<T> DocumentUpdateEntity<T> updateDocument(final String id, final T value) throws DataAccessException;
 
 	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceDocuments(
 		final Collection<T> values,
@@ -103,25 +101,15 @@ public interface ArangoOperations {
 	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceDocuments(final Collection<T> values)
 			throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> replaceDocument(final String key, final T value, final DocumentReplaceOptions options)
+	<T> DocumentUpdateEntity<T> replaceDocument(final String id, final T value, final DocumentReplaceOptions options)
 			throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> replaceDocument(final String key, final T value) throws DataAccessException;
+	<T> DocumentUpdateEntity<T> replaceDocument(final String id, final T value) throws DataAccessException;
 
-	<T> T getDocument(final String key, final Class<T> type, final DocumentReadOptions options)
+	<T> T getDocument(final String id, final Class<T> type, final DocumentReadOptions options)
 			throws DataAccessException;
 
-	<T> T getDocument(final String key, final Class<T> type) throws DataAccessException;
-
-	DocumentImportEntity importDocuments(final String values, final DocumentImportOptions options)
-			throws DataAccessException;
-
-	DocumentImportEntity importDocuments(final String values) throws DataAccessException;
-
-	DocumentImportEntity importDocuments(final Collection<?> values, final DocumentImportOptions options)
-			throws DataAccessException;
-
-	DocumentImportEntity importDocuments(final Collection<?> values) throws DataAccessException;
+	<T> T getDocument(final String id, final Class<T> type) throws DataAccessException;
 
 	<T> MultiDocumentEntity<DocumentCreateEntity<T>> insertDocuments(
 		final Collection<T> values,
@@ -135,46 +123,45 @@ public interface ArangoOperations {
 
 	<T> DocumentCreateEntity<T> insertDocument(final T value) throws DataAccessException;
 
-	void deleteVertex(final String key, final VertexDeleteOptions options) throws DataAccessException;
+	void deleteVertex(final String id, final VertexDeleteOptions options) throws DataAccessException;
 
-	void deleteVertex(final String key) throws DataAccessException;
+	void deleteVertex(final String id) throws DataAccessException;
 
-	<T> VertexUpdateEntity updateVertex(final String key, final T value, final VertexUpdateOptions options)
+	<T> VertexUpdateEntity updateVertex(final String id, final T value, final VertexUpdateOptions options)
 			throws DataAccessException;
 
-	<T> VertexUpdateEntity updateVertex(final String key, final T value) throws DataAccessException;
+	<T> VertexUpdateEntity updateVertex(final String id, final T value) throws DataAccessException;
 
-	<T> VertexUpdateEntity replaceVertex(final String key, final T value, final VertexReplaceOptions options)
+	<T> VertexUpdateEntity replaceVertex(final String id, final T value, final VertexReplaceOptions options)
 			throws DataAccessException;
 
-	<T> VertexUpdateEntity replaceVertex(final String key, final T value) throws DataAccessException;
+	<T> VertexUpdateEntity replaceVertex(final String id, final T value) throws DataAccessException;
 
-	<T> T getVertex(final String key, final Class<T> type, final DocumentReadOptions options)
-			throws DataAccessException;
+	<T> T getVertex(final String id, final Class<T> type, final DocumentReadOptions options) throws DataAccessException;
 
-	<T> T getVertex(final String key, final Class<T> type) throws DataAccessException;
+	<T> T getVertex(final String id, final Class<T> type) throws DataAccessException;
 
 	<T> VertexEntity insertVertex(final T value, final VertexCreateOptions options) throws DataAccessException;
 
 	<T> VertexEntity insertVertex(final T value) throws DataAccessException;
 
-	void deleteEdge(final String key, final EdgeDeleteOptions options) throws DataAccessException;
+	void deleteEdge(final String id, final EdgeDeleteOptions options) throws DataAccessException;
 
-	void deleteEdge(final String key) throws DataAccessException;
+	void deleteEdge(final String id) throws DataAccessException;
 
-	<T> EdgeUpdateEntity updateEdge(final String key, final T value, final EdgeUpdateOptions options)
+	<T> EdgeUpdateEntity updateEdge(final String id, final T value, final EdgeUpdateOptions options)
 			throws DataAccessException;
 
-	<T> EdgeUpdateEntity updateEdge(final String key, final T value) throws DataAccessException;
+	<T> EdgeUpdateEntity updateEdge(final String id, final T value) throws DataAccessException;
 
-	<T> EdgeUpdateEntity replaceEdge(final String key, final T value, final EdgeReplaceOptions options)
+	<T> EdgeUpdateEntity replaceEdge(final String id, final T value, final EdgeReplaceOptions options)
 			throws DataAccessException;
 
-	<T> EdgeUpdateEntity replaceEdge(final String key, final T value) throws DataAccessException;
+	<T> EdgeUpdateEntity replaceEdge(final String id, final T value) throws DataAccessException;
 
-	<T> T getEdge(final String key, final Class<T> type, final DocumentReadOptions options) throws DataAccessException;
+	<T> T getEdge(final String id, final Class<T> type, final DocumentReadOptions options) throws DataAccessException;
 
-	<T> T getEdge(final String key, final Class<T> type) throws DataAccessException;
+	<T> T getEdge(final String id, final Class<T> type) throws DataAccessException;
 
 	<T> EdgeEntity insertEdge(final T value, final EdgeCreateOptions options) throws DataAccessException;
 

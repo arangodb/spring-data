@@ -33,7 +33,6 @@ import com.arangodb.ArangoDBException;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.entity.DocumentDeleteEntity;
-import com.arangodb.entity.DocumentImportEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.entity.EdgeEntity;
 import com.arangodb.entity.EdgeUpdateEntity;
@@ -43,7 +42,6 @@ import com.arangodb.entity.VertexUpdateEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.DocumentDeleteOptions;
-import com.arangodb.model.DocumentImportOptions;
 import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
@@ -99,6 +97,21 @@ public class ArangoTemplate implements ArangoOperations {
 				.getCollection();
 	}
 
+	private String determineDocumentKey(final String id) {
+		final String[] splitty = id.split("/");
+		return splitty[splitty.length - 1];
+	}
+
+	private DBEntity toDBEntity(final Object value) {
+		final DBEntity entity = new DBEntity();
+		converter.write(value, entity);
+		return entity;
+	}
+
+	private <T> T fromDBEntity(final Class<T> type, final DBEntity doc) {
+		return converter.read(type, doc);
+	}
+
 	@Override
 	public ArangoDB driver() {
 		return arango;
@@ -137,10 +150,11 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public <T> DocumentDeleteEntity<Void> deleteDocument(final String key, final Class<T> type)
+	public <T> DocumentDeleteEntity<Void> deleteDocument(final String id, final Class<T> type)
 			throws DataAccessException {
 		try {
-			return arango.db(database).collection(determineCollectionName(type)).deleteDocument(key);
+			return arango.db(database).collection(determineCollectionName(type))
+					.deleteDocument(determineDocumentKey(id));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -148,11 +162,12 @@ public class ArangoTemplate implements ArangoOperations {
 
 	@Override
 	public <T> DocumentDeleteEntity<T> deleteDocument(
-		final String key,
+		final String id,
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException {
 		try {
-			return arango.db(database).collection(determineCollectionName(type)).deleteDocument(key, type, options);
+			return arango.db(database).collection(determineCollectionName(type))
+					.deleteDocument(determineDocumentKey(id), type, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -173,21 +188,20 @@ public class ArangoTemplate implements ArangoOperations {
 
 	@Override
 	public DocumentUpdateEntity<Object> updateDocument(
-		final String key,
+		final String id,
 		final Object value,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			return arango.db(database).collection(determineCollectionName(value.getClass())).updateDocument(key,
-				toVPack(value));
+			return arango.db(database).collection(determineCollectionName(value.getClass()))
+					.updateDocument(determineDocumentKey(id), toDBEntity(value));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public DocumentUpdateEntity<Object> updateDocument(final String key, final Object value)
-			throws DataAccessException {
-		return updateDocument(key, value, new DocumentUpdateOptions());
+	public DocumentUpdateEntity<Object> updateDocument(final String id, final Object value) throws DataAccessException {
+		return updateDocument(id, value, new DocumentUpdateOptions());
 	}
 
 	@Override
@@ -205,60 +219,38 @@ public class ArangoTemplate implements ArangoOperations {
 
 	@Override
 	public DocumentUpdateEntity<Object> replaceDocument(
-		final String key,
+		final String id,
 		final Object value,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			return arango.db(database).collection(determineCollectionName(value.getClass())).replaceDocument(key,
-				toVPack(value), options);
+			return arango.db(database).collection(determineCollectionName(value.getClass()))
+					.replaceDocument(determineDocumentKey(id), toDBEntity(value), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public DocumentUpdateEntity<Object> replaceDocument(final String key, final Object value)
+	public DocumentUpdateEntity<Object> replaceDocument(final String id, final Object value)
 			throws DataAccessException {
-		return replaceDocument(key, value, new DocumentReplaceOptions());
+		return replaceDocument(id, value, new DocumentReplaceOptions());
 	}
 
 	@Override
-	public <T> T getDocument(final String key, final Class<T> type, final DocumentReadOptions options)
+	public <T> T getDocument(final String id, final Class<T> type, final DocumentReadOptions options)
 			throws DataAccessException {
 		try {
-			final DBEntity doc = arango.db(database).collection(determineCollectionName(type)).getDocument(key,
-				DBEntity.class, options);
-			return converter.read(type, doc);
+			final DBEntity doc = arango.db(database).collection(determineCollectionName(type))
+					.getDocument(determineDocumentKey(id), DBEntity.class, options);
+			return fromDBEntity(type, doc);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public <T> T getDocument(final String key, final Class<T> type) throws DataAccessException {
-		return getDocument(key, type, new DocumentReadOptions());
-	}
-
-	@Override
-	public DocumentImportEntity importDocuments(final String values, final DocumentImportOptions options)
-			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public DocumentImportEntity importDocuments(final String values) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public DocumentImportEntity importDocuments(final Collection<?> values, final DocumentImportOptions options)
-			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public DocumentImportEntity importDocuments(final Collection<?> values) throws DataAccessException {
-		return null;
+	public <T> T getDocument(final String id, final Class<T> type) throws DataAccessException {
+		return getDocument(determineDocumentKey(id), type, new DocumentReadOptions());
 	}
 
 	@Override
@@ -279,7 +271,7 @@ public class ArangoTemplate implements ArangoOperations {
 			throws DataAccessException {
 		try {
 			return arango.db(database).collection(determineCollectionName(value.getClass()))
-					.insertDocument(toVPack(value));
+					.insertDocument(toDBEntity(value));
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
@@ -291,43 +283,43 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public void deleteVertex(final String key, final VertexDeleteOptions options) throws DataAccessException {
+	public void deleteVertex(final String id, final VertexDeleteOptions options) throws DataAccessException {
 	}
 
 	@Override
-	public void deleteVertex(final String key) throws DataAccessException {
+	public void deleteVertex(final String id) throws DataAccessException {
 	}
 
 	@Override
-	public <T> VertexUpdateEntity updateVertex(final String key, final T value, final VertexUpdateOptions options)
+	public <T> VertexUpdateEntity updateVertex(final String id, final T value, final VertexUpdateOptions options)
 			throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> VertexUpdateEntity updateVertex(final String key, final T value) throws DataAccessException {
+	public <T> VertexUpdateEntity updateVertex(final String id, final T value) throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> VertexUpdateEntity replaceVertex(final String key, final T value, final VertexReplaceOptions options)
+	public <T> VertexUpdateEntity replaceVertex(final String id, final T value, final VertexReplaceOptions options)
 			throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> VertexUpdateEntity replaceVertex(final String key, final T value) throws DataAccessException {
+	public <T> VertexUpdateEntity replaceVertex(final String id, final T value) throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> T getVertex(final String key, final Class<T> type, final DocumentReadOptions options)
+	public <T> T getVertex(final String id, final Class<T> type, final DocumentReadOptions options)
 			throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> T getVertex(final String key, final Class<T> type) throws DataAccessException {
+	public <T> T getVertex(final String id, final Class<T> type) throws DataAccessException {
 		return null;
 	}
 
@@ -342,43 +334,43 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public void deleteEdge(final String key, final EdgeDeleteOptions options) throws DataAccessException {
+	public void deleteEdge(final String id, final EdgeDeleteOptions options) throws DataAccessException {
 	}
 
 	@Override
-	public void deleteEdge(final String key) throws DataAccessException {
+	public void deleteEdge(final String id) throws DataAccessException {
 	}
 
 	@Override
-	public <T> EdgeUpdateEntity updateEdge(final String key, final T value, final EdgeUpdateOptions options)
+	public <T> EdgeUpdateEntity updateEdge(final String id, final T value, final EdgeUpdateOptions options)
 			throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> EdgeUpdateEntity updateEdge(final String key, final T value) throws DataAccessException {
+	public <T> EdgeUpdateEntity updateEdge(final String id, final T value) throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> EdgeUpdateEntity replaceEdge(final String key, final T value, final EdgeReplaceOptions options)
+	public <T> EdgeUpdateEntity replaceEdge(final String id, final T value, final EdgeReplaceOptions options)
 			throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> EdgeUpdateEntity replaceEdge(final String key, final T value) throws DataAccessException {
+	public <T> EdgeUpdateEntity replaceEdge(final String id, final T value) throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> T getEdge(final String key, final Class<T> type, final DocumentReadOptions options)
+	public <T> T getEdge(final String id, final Class<T> type, final DocumentReadOptions options)
 			throws DataAccessException {
 		return null;
 	}
 
 	@Override
-	public <T> T getEdge(final String key, final Class<T> type) throws DataAccessException {
+	public <T> T getEdge(final String id, final Class<T> type) throws DataAccessException {
 		return null;
 	}
 
@@ -390,12 +382,6 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public <T> EdgeEntity insertEdge(final T value) throws DataAccessException {
 		return null;
-	}
-
-	private DBEntity toVPack(final Object value) {
-		final DBEntity entity = new DBEntity();
-		converter.write(value, entity);
-		return entity;
 	}
 
 }
