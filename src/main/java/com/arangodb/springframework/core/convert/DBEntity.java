@@ -20,21 +20,18 @@
 
 package com.arangodb.springframework.core.convert;
 
-import org.springframework.data.convert.EntityReader;
-import org.springframework.data.convert.EntityWriter;
-import org.springframework.data.mapping.context.MappingContext;
-
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import java.util.HashMap;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface ArangoConverter
-		// extends EntityConverter<ArangoPersistentEntity<?>, ArangoPersistentProperty, Object, VPackSlice>
-		extends EntityReader<Object, DBEntity>, EntityWriter<Object, DBEntity> {
+public class DBEntity extends HashMap<String, Object> {
 
-	MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> getMappingContext();
+	private static final long serialVersionUID = -3300373105117729074L;
+
+	public DBEntity() {
+		super();
+	}
 
 }

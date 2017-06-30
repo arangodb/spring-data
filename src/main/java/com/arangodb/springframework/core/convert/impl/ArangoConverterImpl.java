@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.convert.impl;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -37,11 +38,9 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.springframework.core.convert.ArangoConverter;
+import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.velocypack.VPackBuilder;
-import com.arangodb.velocypack.VPackSlice;
-import com.arangodb.velocypack.ValueType;
 
 /**
  * @author Mark Vollmary
@@ -71,13 +70,13 @@ public class ArangoConverterImpl implements ArangoConverter {
 	}
 
 	@Override
-	public <R> R read(final Class<R> type, final VPackSlice source) {
+	public <R> R read(final Class<R> type, final DBEntity source) {
 		return read(ClassTypeInformation.from(type), source);
 	}
 
 	@SuppressWarnings("unchecked")
-	protected <R> R read(final TypeInformation<R> type, final VPackSlice source) {
-		if (source == null || source.isNull()) {
+	protected <R> R read(final TypeInformation<R> type, final DBEntity source) {
+		if (source == null) {
 			return null;
 		}
 		if (conversions.hasCustomReadTarget(type.getType(), type.getType())) {
@@ -91,7 +90,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 
 	protected <R> R read(
 		final TypeInformation<R> type,
-		final VPackSlice source,
+		final DBEntity source,
 		final Optional<? extends ArangoPersistentEntity<R>> entityC) {
 		final ArangoPersistentEntity<R> entity = entityC.orElseThrow(
 			() -> new MappingException("No mapping metadata found fot type " + type.getType().getName()));
@@ -110,35 +109,32 @@ public class ArangoConverterImpl implements ArangoConverter {
 
 	protected void readProperty(
 		final ConvertingPropertyAccessor accessor,
-		final VPackSlice source,
+		final Object source,
 		final ArangoPersistentProperty property) {
-		accessor.setProperty(property, Optional.of(source.getAsString()));
+		accessor.setProperty(property, Optional.of(source));
 	}
 
 	@Override
-	public void write(final Object source, final VPackBuilder sink) {
+	public void write(final Object source, final DBEntity sink) {
 		if (source == null) {
 			return;
 		}
 		write(source, ClassTypeInformation.from(source.getClass()), sink);
 	}
 
-	protected void write(final Object source, final ClassTypeInformation<?> type, final VPackBuilder sink) {
+	protected void write(final Object source, final ClassTypeInformation<?> type, final DBEntity sink) {
 		final Optional<? extends ArangoPersistentEntity<?>> entity = context.getPersistentEntity(type);
-		write(source, sink, entity, null);
+		write(source, sink, entity);
 	}
 
 	protected void write(
 		final Object source,
-		final VPackBuilder sink,
-		final Optional<? extends ArangoPersistentEntity<?>> entityC,
-		final String fieldName) {
+		final Map<String, Object> sink,
+		final Optional<? extends ArangoPersistentEntity<?>> entityC) {
 		final ArangoPersistentEntity<?> entity = entityC.orElseThrow(
 			() -> new MappingException("No mapping metadata found for type " + source.getClass().getName()));
 
 		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
-
-		sink.add(fieldName, ValueType.OBJECT);
 
 		entity.doWithProperties((final ArangoPersistentProperty property) -> {
 			if (!property.isWritable()) {
@@ -157,12 +153,11 @@ public class ArangoConverterImpl implements ArangoConverter {
 			});
 		});
 
-		sink.close();
 	}
 
 	protected void writeProperty(
 		final Object source,
-		final VPackBuilder sink,
+		final Map<String, Object> obj,
 		final ArangoPersistentProperty property) {
 		if (source == null) {
 			return;
@@ -187,13 +182,13 @@ public class ArangoConverterImpl implements ArangoConverter {
 		if (customWriteTarget.isPresent()) {
 			// accessor.put(prop, conversionService.convert(obj, basicTargetType));
 			final Object a = conversionService.convert(source, customWriteTarget.get());
-			sink.add(fieldName, a.toString());// TODO
+			obj.put(fieldName, a);
 			return;
 		}
 		final TypeInformation<?> type = property.getTypeInformation();
 		// write(source, sink, context.getPersistentEntity(type), fieldName);
 		final Object a = conversionService.convert(source, type.getType());
-		sink.add(fieldName, a.toString());// TODO
+		obj.put(fieldName, a);
 		return;
 	}
 

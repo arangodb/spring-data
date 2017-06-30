@@ -57,9 +57,8 @@ import com.arangodb.model.VertexReplaceOptions;
 import com.arangodb.model.VertexUpdateOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
+import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
-import com.arangodb.velocypack.VPackBuilder;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
@@ -226,18 +225,18 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public <T> T getDocument(final String key, final Class<T> type, final DocumentReadOptions options)
 			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> T getDocument(final String key, final Class<T> type) throws DataAccessException {
 		try {
-			final VPackSlice doc = arango.db().collection(determineCollectionName(type)).getDocument(key,
-				VPackSlice.class);
+			final DBEntity doc = arango.db().collection(determineCollectionName(type)).getDocument(key, DBEntity.class,
+				options);
 			return converter.read(type, doc);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+	}
+
+	@Override
+	public <T> T getDocument(final String key, final Class<T> type) throws DataAccessException {
+		return getDocument(key, type, new DocumentReadOptions());
 	}
 
 	@Override
@@ -393,10 +392,10 @@ public class ArangoTemplate implements ArangoOperations {
 		return null;
 	}
 
-	private VPackSlice toVPack(final Object value) {
-		final VPackBuilder builder = new VPackBuilder();
-		converter.write(value, builder);
-		return builder.slice();
+	private DBEntity toVPack(final Object value) {
+		final DBEntity entity = new DBEntity();
+		converter.write(value, entity);
+		return entity;
 	}
 
 }
