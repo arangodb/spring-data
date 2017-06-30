@@ -25,10 +25,14 @@ import java.util.Optional;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.convert.EntityInstantiator;
+import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 
@@ -48,6 +52,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final CustomConversions conversions;
 	private final GenericConversionService conversionService;
+	private final EntityInstantiators instantiators;
 
 	public ArangoConverterImpl(
 		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
@@ -57,6 +62,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 		this.conversions = conversions;
 		conversionService = new DefaultConversionService();
 		conversions.registerConvertersIn(conversionService);
+		instantiators = new EntityInstantiators();
 	}
 
 	@Override
@@ -69,8 +75,44 @@ public class ArangoConverterImpl implements ArangoConverter {
 		return read(ClassTypeInformation.from(type), source);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected <R> R read(final TypeInformation<R> type, final VPackSlice source) {
-		return null;
+		if (source == null || source.isNull()) {
+			return null;
+		}
+		if (conversions.hasCustomReadTarget(type.getType(), type.getType())) {
+			return conversionService.convert(source, type.getType());
+		}
+		// TODO isCollection or Array or Map
+		final Optional<? extends ArangoPersistentEntity<R>> entity = (Optional<? extends ArangoPersistentEntity<R>>) context
+				.getPersistentEntity(type.getType());
+		return read(type, source, entity);
+	}
+
+	protected <R> R read(
+		final TypeInformation<R> type,
+		final VPackSlice source,
+		final Optional<? extends ArangoPersistentEntity<R>> entityC) {
+		final ArangoPersistentEntity<R> entity = entityC.orElseThrow(
+			() -> new MappingException("No mapping metadata found fot type " + type.getType().getName()));
+
+		final EntityInstantiator instantiatorFor = instantiators.getInstantiatorFor(entity);
+		final ParameterValueProvider<ArangoPersistentProperty> provider = null;
+		final R instance = instantiatorFor.createInstance(entity, provider);
+		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(instance),
+				conversionService);
+
+		entity.doWithProperties((final ArangoPersistentProperty property) -> {
+			readProperty(accessor, source.get(property.getFieldName()), property);
+		});
+		return instance;
+	}
+
+	protected void readProperty(
+		final ConvertingPropertyAccessor accessor,
+		final VPackSlice source,
+		final ArangoPersistentProperty property) {
+		accessor.setProperty(property, Optional.of(source.getAsString()));
 	}
 
 	@Override

@@ -59,6 +59,7 @@ import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.velocypack.VPackBuilder;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark - mark at arangodb.com
@@ -209,7 +210,13 @@ public class ArangoTemplate implements ArangoOperations {
 
 	@Override
 	public <T> T getDocument(final String key, final Class<T> type) throws DataAccessException {
-		return null;
+		try {
+			final VPackSlice doc = arango.db().collection(determineCollectionName(type)).getDocument(key,
+				VPackSlice.class);
+			return converter.read(type, doc);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override

@@ -28,9 +28,16 @@ package com.arangodb.springframework.core.mapping;
 public class Customer {
 
 	private String name;
+	private String surname;
 
 	public Customer() {
 		super();
+	}
+
+	public Customer(final String name, final String surname) {
+		super();
+		this.name = name;
+		this.surname = surname;
 	}
 
 	public String getName() {
@@ -39,6 +46,14 @@ public class Customer {
 
 	public void setName(final String name) {
 		this.name = name;
+	}
+
+	public String getSurname() {
+		return surname;
+	}
+
+	public void setSurname(final String surname) {
+		this.surname = surname;
 	}
 
 }

@@ -24,6 +24,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,22 +58,37 @@ public class ArangoTemplateTest {
 		assertThat(version.getVersion(), is(notNullValue()));
 	}
 
-	@Test
-	public void insertDocument() {
+	@Before
+	public void before() {
 		try {
 			template.driver().db().collection("customer").drop();
 		} catch (final Exception e) {
 		}
+		template.driver().db().createCollection("customer");
+	}
+
+	@After
+	public void after() {
 		try {
-			template.driver().db().createCollection("customer");
-			final Customer value = new Customer();
-			value.setName("John");
-			final DocumentCreateEntity<Customer> res = template.insertDocument(value);
-			assertThat(res, is(notNullValue()));
-			assertThat(res.getId(), is(notNullValue()));
-		} finally {
 			template.driver().db().collection("customer").drop();
+		} catch (final Exception e) {
 		}
+	}
+
+	@Test
+	public void insertDocument() {
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getId(), is(notNullValue()));
+	}
+
+	@Test
+	public void getDocument() {
+		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe"));
+		final Customer customer = template.getDocument(res.getKey(), Customer.class);
+		assertThat(customer, is(notNullValue()));
+		assertThat(customer.getName(), is("John"));
+		assertThat(customer.getSurname(), is("Doe"));
 	}
 
 }
