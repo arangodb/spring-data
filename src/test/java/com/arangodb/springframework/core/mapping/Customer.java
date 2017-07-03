@@ -31,6 +31,8 @@ public class Customer {
 	private String surname;
 	private int age;
 	private Address address;
+	@Ref
+	private ShoppingCart shoppingCart;
 
 	public Customer() {
 		super();
@@ -81,6 +83,14 @@ public class Customer {
 
 	public void setAddress(final Address address) {
 		this.address = address;
+	}
+
+	public ShoppingCart getShoppingCart() {
+		return shoppingCart;
+	}
+
+	public void setShoppingCart(final ShoppingCart shoppingCart) {
+		this.shoppingCart = shoppingCart;
 	}
 
 }

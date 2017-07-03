@@ -18,20 +18,43 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework.core.mapping;
 
-import java.io.Serializable;
+import org.springframework.data.annotation.Id;
 
 /**
  * @author Mark Vollmary
  *
  */
-public class Ref implements Serializable {
+public class Product {
 
-	private static final long serialVersionUID = 3554304064092676883L;
+	@Id
+	private String id;
+	private String name;
 
-	public Ref() {
+	public Product() {
 		super();
+	}
+
+	public Product(final String name) {
+		super();
+		this.name = name;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(final String name) {
+		this.name = name;
 	}
 
 }

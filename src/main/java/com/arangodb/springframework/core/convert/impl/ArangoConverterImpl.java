@@ -20,8 +20,12 @@
 
 package com.arangodb.springframework.core.convert.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -36,9 +40,11 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.CollectionUtils;
 
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.DBEntity;
+import com.arangodb.springframework.core.convert.ReferenceResolver;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 
@@ -52,13 +58,15 @@ public class ArangoConverterImpl implements ArangoConverter {
 	private final CustomConversions conversions;
 	private final GenericConversionService conversionService;
 	private final EntityInstantiators instantiators;
+	private final ReferenceResolver refResolver;
 
 	public ArangoConverterImpl(
 		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
-		final CustomConversions conversions) {
+		final CustomConversions conversions, final ReferenceResolver refResolver) {
 		super();
 		this.context = context;
 		this.conversions = conversions;
+		this.refResolver = refResolver;
 		conversionService = new DefaultConversionService();
 		conversions.registerConvertersIn(conversionService);
 		instantiators = new EntityInstantiators();
@@ -93,7 +101,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 		final DBEntity source,
 		final Optional<? extends ArangoPersistentEntity<R>> entityC) {
 		final ArangoPersistentEntity<R> entity = entityC.orElseThrow(
-			() -> new MappingException("No mapping metadata found fot type " + type.getType().getName()));
+			() -> new MappingException("No mapping metadata found for type " + type.getType().getName()));
 
 		final EntityInstantiator instantiatorFor = instantiators.getInstantiatorFor(entity);
 		final ParameterValueProvider<ArangoPersistentProperty> provider = null; // TODO
@@ -104,14 +112,33 @@ public class ArangoConverterImpl implements ArangoConverter {
 		entity.doWithProperties((final ArangoPersistentProperty property) -> {
 			readProperty(accessor, source.get(property.getFieldName()), property);
 		});
+		entity.doWithAssociations((final Association<ArangoPersistentProperty> association) -> {
+			final ArangoPersistentProperty property = association.getInverse();
+			readProperty(accessor, source.get(property.getFieldName()), property);
+		});
 		return instance;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void readProperty(
 		final ConvertingPropertyAccessor accessor,
 		final Object source,
 		final ArangoPersistentProperty property) {
-		accessor.setProperty(property, Optional.ofNullable(read(source, property.getTypeInformation())));
+		Object tmp = source;
+		if (tmp != null && property.getRef().isPresent()) {
+			if (property.isCollectionLike()) {
+				// TODO check for string collection
+				final Collection<String> ids = (Collection<String>) asCollection(tmp);
+				tmp = refResolver.read(ids, property.getTypeInformation().getComponentType()
+						.orElseThrow(() -> new MappingException("")).getType());
+			} else {
+				if (!String.class.isAssignableFrom(tmp.getClass())) {
+					throw new MappingException("Type String expected for reference but found type " + tmp.getClass());
+				}
+				tmp = refResolver.read(tmp.toString(), property.getTypeInformation().getType());
+			}
+		}
+		accessor.setProperty(property, Optional.ofNullable(read(tmp, property.getTypeInformation())));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -173,6 +200,21 @@ public class ArangoConverterImpl implements ArangoConverter {
 		}
 		final String fieldName = property.getFieldName();
 		final TypeInformation<?> valueType = ClassTypeInformation.from(source.getClass());
+		if (property.getRef().isPresent()) {
+			if (valueType.isCollectionLike()) {
+				final Collection<String> idRefs = new ArrayList<>();
+				for (final Object ref : createCollection(asCollection(source), property)) {
+					// TODO get id of ref
+					idRefs.add(refResolver.write(Optional.ofNullable(null), ref));
+				}
+				sink.put(fieldName, idRefs);
+			} else {
+				final Object idRef = conversionService.convert(source, property.getTypeInformation().getType());
+				sink.put(fieldName, refResolver.write(Optional.ofNullable(null), idRef));
+			}
+			return;
+		}
+		// TODO from, to
 		if (valueType.isCollectionLike()) {
 			// TODO
 			return;
@@ -181,16 +223,20 @@ public class ArangoConverterImpl implements ArangoConverter {
 			// TODO
 			return;
 		}
-		if (property.getRef().isPresent()) {
-			// TODO
-			return;
-		}
-		// TODO from, to
-
 		final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass());
 		final Class<?> targetType = customWriteTarget.orElseGet(() -> property.getTypeInformation().getType());
 		sink.put(fieldName, conversionService.convert(source, targetType));
 		return;
 	}
 
+	private Collection<?> createCollection(final Collection<?> source, final ArangoPersistentProperty property) {
+		return source.stream().map(s -> conversionService.convert(s,
+			property.getTypeInformation().getComponentType().orElseThrow(() -> new MappingException("")).getType()))
+				.collect(Collectors.toList());
+	}
+
+	private static Collection<?> asCollection(final Object source) {
+		return (Collection.class.isAssignableFrom(source.getClass())) ? Collection.class.cast(source)
+				: source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
+	}
 }

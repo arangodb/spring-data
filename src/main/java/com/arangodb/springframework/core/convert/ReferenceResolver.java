@@ -20,25 +20,19 @@
 
 package com.arangodb.springframework.core.convert;
 
-import java.io.Serializable;
 import java.util.Collection;
-
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.velocypack.VPackSlice;
+import java.util.Optional;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface ReferenceResolver<T extends Serializable> {
+public interface ReferenceResolver {
 
-	Object resolve(ArangoPersistentProperty property, T ref);
+	String write(Optional<String> id, Object obj);
 
-	T create(ArangoPersistentEntity<?> entity);
+	<T> T read(String id, Class<T> type);
 
-	VPackSlice fetch(T ref);
-
-	Collection<VPackSlice> fetch(Collection<T> refs);
+	<T> Iterable<T> read(Collection<String> ids, Class<T> type);
 
 }

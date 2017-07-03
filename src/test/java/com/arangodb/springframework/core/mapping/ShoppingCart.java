@@ -18,12 +18,44 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework.core.mapping;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.springframework.data.annotation.Id;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface RefResolver extends ReferenceResolver<Ref> {
+@Document(collection = "shopping-cart")
+public class ShoppingCart {
+
+	@Id
+	private String id;
+	@Ref
+	private Collection<Product> products;
+
+	public ShoppingCart() {
+		super();
+		products = new ArrayList<>();
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
+	}
+
+	public Collection<Product> getProducts() {
+		return products;
+	}
+
+	public void setProducts(final Collection<Product> products) {
+		this.products = products;
+	}
 
 }

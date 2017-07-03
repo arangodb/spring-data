@@ -34,6 +34,7 @@ import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
 import com.arangodb.springframework.core.convert.impl.ArangoConverterImpl;
+import com.arangodb.springframework.core.convert.impl.RefResolver;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.template.ArangoTemplate;
 import com.arangodb.velocypack.module.jdk8.VPackJdk8Module;
@@ -91,7 +92,17 @@ public abstract class AbstractArangoConfiguration {
 
 	@Bean
 	public ArangoConverter arangoConverter() throws Exception {
-		return new ArangoConverterImpl(arangoMappingContext(), customConversions());
+		return new ArangoConverterImpl(arangoMappingContext(), customConversions(), new RefResolver() {
+			@Override
+			public ArangoOperations template() {
+				try {
+					return arangoTemplate();
+				} catch (final Exception e) {
+					// TODO
+					throw new RuntimeException(e);
+				}
+			}
+		});
 	}
 
 }

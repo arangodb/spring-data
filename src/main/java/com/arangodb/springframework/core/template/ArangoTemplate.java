@@ -90,12 +90,14 @@ public class ArangoTemplate implements ArangoOperations {
 		return exceptionTranslator.translateExceptionIfPossible(exception);
 	}
 
-	private String determineCollectionName(final Class<?> entityClass, final String id) {
+	@Override
+	public String determineCollectionName(final Class<?> entityClass, final String id) {
 		final String[] split = id.split("/");
 		return split.length == 2 ? split[0] : determineCollectionName(entityClass);
 	}
 
-	private String determineCollectionName(final Class<?> entityClass) {
+	@Override
+	public String determineCollectionName(final Class<?> entityClass) {
 		return converter.getMappingContext().getPersistentEntity(entityClass)
 				.orElseThrow(() -> new InvalidDataAccessApiUsageException(
 						"No persistent entity information found for the type " + entityClass.getName()))
@@ -137,7 +139,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options,
 		final Class<T> type) throws DataAccessException {
-		return null;
+		return arango.db(database).query(query, toDBEntity(bindVars), options, type);
 	}
 
 	@Override

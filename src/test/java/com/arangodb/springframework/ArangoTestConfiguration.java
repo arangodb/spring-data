@@ -32,6 +32,8 @@ import com.arangodb.springframework.core.config.AbstractArangoConfiguration;
 @Configuration
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
+	public static final String DB = "_system";
+
 	@Override
 	public ArangoDB.Builder arango() {
 		return new ArangoDB.Builder();
@@ -39,7 +41,7 @@ public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
 	@Override
 	public String database() {
-		return "_system";
+		return DB;
 	}
 
 }

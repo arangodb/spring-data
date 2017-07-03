@@ -167,4 +167,8 @@ public interface ArangoOperations {
 
 	<T> EdgeEntity insertEdge(final T value) throws DataAccessException;
 
+	String determineCollectionName(final Class<?> entityClass);
+
+	String determineCollectionName(final Class<?> entityClass, final String id);
+
 }
