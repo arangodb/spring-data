@@ -38,12 +38,12 @@ public abstract class RefResolver implements ReferenceResolver {
 	public abstract ArangoOperations template();
 
 	@Override
-	public String write(final Optional<String> id, final Object obj) {
+	public String write(final Optional<Object> id, final Object obj) {
 		final ArangoOperations template = template();
 		if (id.isPresent()) {
-			return template.query("UPSERT { _id: '@id' } INSERT @doc UPDATE @doc IN @@coll",
+			return template.query("UPSERT { _id: @id } INSERT @doc REPLACE @doc IN @@coll RETURN @id",
 				new MapBuilder().put("id", id.get()).put("doc", obj)
-						.put("@coll", template.determineCollectionName(obj.getClass(), id.get())).get(),
+						.put("@coll", template.determineCollectionName(obj.getClass(), id.get().toString())).get(),
 				new AqlQueryOptions(), String.class).next();
 		}
 		return template.insertDocument(obj).getId();

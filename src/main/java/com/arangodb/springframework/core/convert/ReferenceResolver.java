@@ -29,7 +29,7 @@ import java.util.Optional;
  */
 public interface ReferenceResolver {
 
-	String write(Optional<String> id, Object obj);
+	String write(Optional<Object> id, Object obj);
 
 	<T> T read(String id, Class<T> type);
 

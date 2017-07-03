@@ -49,7 +49,12 @@ import com.arangodb.springframework.core.ArangoOperations;
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class ArangoMappingTest {
 
-	private static final String[] COLLECTIONS = new String[] { "customer", "shopping-cart", "product" };
+	private static final String COLLECTION_CUSTOMER = "customer";
+	private static final String COLLECTION_SHOPPING_CART = "shopping-cart";
+	private static final String COLLECTION_PRODUCT = "product";
+
+	private static final String[] COLLECTIONS = new String[] { COLLECTION_CUSTOMER, COLLECTION_SHOPPING_CART,
+			COLLECTION_PRODUCT };
 
 	@Autowired
 	private ArangoOperations template;
@@ -122,6 +127,60 @@ public class ArangoMappingTest {
 		final Collection<Product> products = customerDocument.getShoppingCart().getProducts();
 		assertThat(products.size(), is(3));
 		assertThat(products.stream().map(e -> e.getName()).collect(Collectors.toList()), hasItems("a", "b", "c"));
+	}
+
+	@Test
+	public void existingReference() {
+		final DocumentCreateEntity<Customer> ref1;
+		{
+			final Customer customer = new Customer();
+			final ShoppingCart shoppingCart = new ShoppingCart();
+			customer.setShoppingCart(shoppingCart);
+			ref1 = template.insertDocument(customer);
+		}
+		final Customer customer1 = template.getDocument(ref1.getId(), Customer.class);
+		final DocumentCreateEntity<Customer> ref2;
+		{
+			final Customer customer = new Customer();
+			customer.setShoppingCart(customer1.getShoppingCart());
+			ref2 = template.insertDocument(customer);
+		}
+		final Customer customer2 = template.getDocument(ref2.getId(), Customer.class);
+		assertThat(customer1.getShoppingCart().getId(), is(customer2.getShoppingCart().getId()));
+		assertThat(
+			template.driver().db(ArangoTestConfiguration.DB).collection(COLLECTION_SHOPPING_CART).count().getCount(),
+			is(1L));
+	}
+
+	@Test
+	public void existingReferences() {
+		final DocumentCreateEntity<Customer> ref1;
+		{
+			final Customer customer = new Customer();
+			final ShoppingCart shoppingCart = new ShoppingCart();
+			final Collection<Product> products = new ArrayList<>();
+			products.add(new Product("a"));
+			products.add(new Product("b"));
+			products.add(new Product("c"));
+			shoppingCart.setProducts(products);
+			customer.setShoppingCart(shoppingCart);
+			ref1 = template.insertDocument(customer);
+		}
+		final Customer customer1 = template.getDocument(ref1.getId(), Customer.class);
+		final DocumentCreateEntity<Customer> ref2;
+		{
+			final Customer customer = new Customer();
+			customer.setShoppingCart(customer1.getShoppingCart());
+			customer.getShoppingCart().getProducts().add(new Product("d"));
+			ref2 = template.insertDocument(customer);
+		}
+		final Customer customer2 = template.getDocument(ref2.getId(), Customer.class);
+		assertThat(customer1.getShoppingCart().getId(), is(customer2.getShoppingCart().getId()));
+		assertThat(
+			template.driver().db(ArangoTestConfiguration.DB).collection(COLLECTION_SHOPPING_CART).count().getCount(),
+			is(1L));
+		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection(COLLECTION_PRODUCT).count().getCount(),
+			is(4L));
 	}
 
 }
