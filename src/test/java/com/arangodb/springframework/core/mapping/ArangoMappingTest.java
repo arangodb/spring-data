@@ -27,6 +27,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.After;
@@ -37,9 +38,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.entity.DocumentCreateEntity;
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
@@ -181,6 +185,35 @@ public class ArangoMappingTest {
 			is(1L));
 		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection(COLLECTION_PRODUCT).count().getCount(),
 			is(4L));
+	}
+
+	@Test
+	public void query() {
+		final DocumentCreateEntity<Customer> ref;
+		{
+			final Customer customer = new Customer();
+			final ShoppingCart shoppingCart = new ShoppingCart();
+			final Collection<Product> products = new ArrayList<>();
+			products.add(new Product("a"));
+			products.add(new Product("b"));
+			products.add(new Product("c"));
+			shoppingCart.setProducts(products);
+			customer.setShoppingCart(shoppingCart);
+			ref = template.insertDocument(customer);
+		}
+		final ArangoCursor<Customer> cursor = template.query("FOR c IN @@coll FILTER c._id == @id RETURN c",
+			new MapBuilder().put("@coll", COLLECTION_CUSTOMER).put("id", ref.getId()).get(), new AqlQueryOptions(),
+			Customer.class);
+		assertThat(cursor, is(notNullValue()));
+		final List<Customer> customers = cursor.asListRemaining();
+		assertThat(customers.size(), is(1));
+		final Customer customer = customers.get(0);
+		final ShoppingCart shoppingCart = customer.getShoppingCart();
+		assertThat(shoppingCart, is(notNullValue()));
+		final Collection<Product> products = shoppingCart.getProducts();
+		assertThat(products, is(notNullValue()));
+		assertThat(products.size(), is(3));
+		assertThat(products.stream().map(e -> e.getName()).collect(Collectors.toList()), hasItems("a", "b", "c"));
 	}
 
 }

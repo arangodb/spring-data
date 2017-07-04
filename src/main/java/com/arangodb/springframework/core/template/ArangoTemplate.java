@@ -80,7 +80,8 @@ public class ArangoTemplate implements ArangoOperations {
 	public ArangoTemplate(final ArangoDB.Builder arango, final String database, final ArangoConverter converter,
 		final PersistenceExceptionTranslator exceptionTranslator) {
 		super();
-		this.arango = arango.build();
+		this.arango = arango.build()._setCursorInitializer(
+			new com.arangodb.springframework.core.template.ArangoCursorInitializer(converter));
 		this.database = database;
 		this.converter = converter;
 		this.exceptionTranslator = exceptionTranslator;

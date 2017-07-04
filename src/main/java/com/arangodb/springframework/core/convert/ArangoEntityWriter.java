@@ -20,17 +20,12 @@
 
 package com.arangodb.springframework.core.convert;
 
-import org.springframework.data.mapping.context.MappingContext;
-
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import org.springframework.data.convert.EntityWriter;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface ArangoConverter extends ArangoEntityReader, ArangoEntityWriter {
-
-	MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> getMappingContext();
+public interface ArangoEntityWriter extends EntityWriter<Object, DBEntity> {
 
 }

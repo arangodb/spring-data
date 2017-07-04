@@ -25,6 +25,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,13 +35,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.Address;
 import com.arangodb.springframework.core.mapping.Customer;
+import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
@@ -128,6 +133,19 @@ public class ArangoTemplateTest {
 		template.deleteDocument(res.getId(), Customer.class);
 		final Customer customer = template.getDocument(res.getId(), Customer.class);
 		assertThat(customer, is(nullValue()));
+	}
+
+	@Test
+	public void query() {
+		template.insertDocument(new Customer("John", "Doe", 30));
+		final ArangoCursor<Customer> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
+			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(), Customer.class);
+		assertThat(cursor, is(notNullValue()));
+		final List<Customer> customers = cursor.asListRemaining();
+		assertThat(customers.size(), is(1));
+		assertThat(customers.get(0).getName(), is("John"));
+		assertThat(customers.get(0).getSurname(), is("Doe"));
+		assertThat(customers.get(0).getAge(), is(30));
 	}
 
 }

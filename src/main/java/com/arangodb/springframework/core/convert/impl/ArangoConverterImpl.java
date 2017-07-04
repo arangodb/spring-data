@@ -270,4 +270,9 @@ public class ArangoConverterImpl implements ArangoConverter {
 		return (Collection.class.isAssignableFrom(source.getClass())) ? Collection.class.cast(source)
 				: source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
+
+	@Override
+	public boolean isSimpleType(final Class<?> type) {
+		return conversions.isSimpleType(type);
+	}
 }
