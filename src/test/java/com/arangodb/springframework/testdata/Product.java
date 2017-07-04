@@ -22,6 +22,7 @@ package com.arangodb.springframework.testdata;
 
 import org.springframework.data.annotation.Id;
 
+import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Rev;
 
@@ -38,6 +39,8 @@ public class Product {
 	@Rev
 	private String rev;
 	private String name;
+	@Field("description")
+	private String desc;
 
 	public Product() {
 		super();
@@ -78,6 +81,14 @@ public class Product {
 
 	public void setName(final String name) {
 		this.name = name;
+	}
+
+	public String getDesc() {
+		return desc;
+	}
+
+	public void setDesc(final String desc) {
+		this.desc = desc;
 	}
 
 }

@@ -44,6 +44,7 @@ import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.Product;
 import com.arangodb.springframework.testdata.ShoppingCart;
 import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
@@ -183,4 +184,15 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(products.stream().map(e -> e.getName()).collect(Collectors.toList()), hasItems("a", "b", "c"));
 	}
 
+	@Test
+	public void fieldNameAnnotation() {
+		final Product p = new Product();
+		p.setDesc("test");
+		final DocumentCreateEntity<Product> res = template.insertDocument(p);
+		final VPackSlice slice = template.driver().db(ArangoTestConfiguration.DB).getDocument(res.getId(),
+			VPackSlice.class);
+		assertThat(slice, is(notNullValue()));
+		assertThat(slice.get("description").isString(), is(true));
+		assertThat(slice.get("description").getAsString(), is("test"));
+	}
 }
