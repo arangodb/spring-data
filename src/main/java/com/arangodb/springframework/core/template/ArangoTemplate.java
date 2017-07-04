@@ -34,25 +34,13 @@ import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.entity.DocumentDeleteEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
-import com.arangodb.entity.EdgeEntity;
-import com.arangodb.entity.EdgeUpdateEntity;
 import com.arangodb.entity.MultiDocumentEntity;
-import com.arangodb.entity.VertexEntity;
-import com.arangodb.entity.VertexUpdateEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
-import com.arangodb.model.EdgeCreateOptions;
-import com.arangodb.model.EdgeDeleteOptions;
-import com.arangodb.model.EdgeReplaceOptions;
-import com.arangodb.model.EdgeUpdateOptions;
-import com.arangodb.model.VertexCreateOptions;
-import com.arangodb.model.VertexDeleteOptions;
-import com.arangodb.model.VertexReplaceOptions;
-import com.arangodb.model.VertexUpdateOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.DBEntity;
@@ -288,108 +276,6 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public DocumentCreateEntity<Object> insertDocument(final Object value) throws DataAccessException {
 		return insertDocument(value, new DocumentCreateOptions());
-	}
-
-	@Override
-	public void deleteVertex(final String id, final VertexDeleteOptions options) throws DataAccessException {
-	}
-
-	@Override
-	public void deleteVertex(final String id) throws DataAccessException {
-	}
-
-	@Override
-	public <T> VertexUpdateEntity updateVertex(final String id, final T value, final VertexUpdateOptions options)
-			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> VertexUpdateEntity updateVertex(final String id, final T value) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> VertexUpdateEntity replaceVertex(final String id, final T value, final VertexReplaceOptions options)
-			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> VertexUpdateEntity replaceVertex(final String id, final T value) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> T getVertex(final String id, final Class<T> type, final DocumentReadOptions options)
-			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> T getVertex(final String id, final Class<T> type) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> VertexEntity insertVertex(final T value, final VertexCreateOptions options) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> VertexEntity insertVertex(final T value) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public void deleteEdge(final String id, final EdgeDeleteOptions options) throws DataAccessException {
-	}
-
-	@Override
-	public void deleteEdge(final String id) throws DataAccessException {
-	}
-
-	@Override
-	public <T> EdgeUpdateEntity updateEdge(final String id, final T value, final EdgeUpdateOptions options)
-			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> EdgeUpdateEntity updateEdge(final String id, final T value) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> EdgeUpdateEntity replaceEdge(final String id, final T value, final EdgeReplaceOptions options)
-			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> EdgeUpdateEntity replaceEdge(final String id, final T value) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> T getEdge(final String id, final Class<T> type, final DocumentReadOptions options)
-			throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> T getEdge(final String id, final Class<T> type) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> EdgeEntity insertEdge(final T value, final EdgeCreateOptions options) throws DataAccessException {
-		return null;
-	}
-
-	@Override
-	public <T> EdgeEntity insertEdge(final T value) throws DataAccessException {
-		return null;
 	}
 
 }
