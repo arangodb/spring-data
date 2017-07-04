@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.mapping.impl;
+package com.arangodb.springframework.core.mapping;
 
 import java.util.Optional;
 
@@ -37,15 +37,13 @@ import org.springframework.util.StringUtils;
 import com.arangodb.entity.CollectionType;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 
 /**
  * @author Mark Vollmary
  * @param <T>
  *
  */
-public class ArangoPersistentEntityImpl<T> extends BasicPersistentEntity<T, ArangoPersistentProperty>
+public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, ArangoPersistentProperty>
 		implements ArangoPersistentEntity<T> {
 
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -54,7 +52,7 @@ public class ArangoPersistentEntityImpl<T> extends BasicPersistentEntity<T, Aran
 	private CollectionType collectionType;
 	private final StandardEvaluationContext context;
 
-	public ArangoPersistentEntityImpl(final TypeInformation<T> information) {
+	public DefaultArangoPersistentEntity(final TypeInformation<T> information) {
 		super(information);
 		collection = StringUtils.uncapitalize(information.getType().getSimpleName());
 		collectionType = CollectionType.DOCUMENT;

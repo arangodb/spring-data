@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.mapping.impl;
+package com.arangodb.springframework.core.mapping;
 
 import java.util.Optional;
 
@@ -35,18 +35,17 @@ import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Rev;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 
 /**
  * @author Mark Vollmary
  *
  */
-public class ArangoPersistentPropertyImpl extends AnnotationBasedPersistentProperty<ArangoPersistentProperty>
+public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentProperty<ArangoPersistentProperty>
 		implements ArangoPersistentProperty {
 
 	private final FieldNamingStrategy fieldNamingStrategy;
 
-	public ArangoPersistentPropertyImpl(final Property property,
+	public DefaultArangoPersistentProperty(final Property property,
 		final PersistentEntity<?, ArangoPersistentProperty> owner, final SimpleTypeHolder simpleTypeHolder,
 		final FieldNamingStrategy fieldNamingStrategy) {
 		super(property, owner, simpleTypeHolder);

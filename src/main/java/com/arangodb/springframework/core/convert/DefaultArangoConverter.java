@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert.impl;
+package com.arangodb.springframework.core.convert;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,9 +43,6 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
-import com.arangodb.springframework.core.convert.ArangoConverter;
-import com.arangodb.springframework.core.convert.DBEntity;
-import com.arangodb.springframework.core.convert.ReferenceResolver;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 
@@ -53,7 +50,7 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
  * @author Mark Vollmary
  *
  */
-public class ArangoConverterImpl implements ArangoConverter {
+public class DefaultArangoConverter implements ArangoConverter {
 
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final CustomConversions conversions;
@@ -61,7 +58,7 @@ public class ArangoConverterImpl implements ArangoConverter {
 	private final EntityInstantiators instantiators;
 	private final ReferenceResolver refResolver;
 
-	public ArangoConverterImpl(
+	public DefaultArangoConverter(
 		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
 		final CustomConversions conversions, final ReferenceResolver refResolver) {
 		super();

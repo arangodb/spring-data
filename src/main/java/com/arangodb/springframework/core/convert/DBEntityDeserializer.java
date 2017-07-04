@@ -18,37 +18,26 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert.impl;
+package com.arangodb.springframework.core.convert;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
-import com.arangodb.springframework.core.convert.DBEntity;
+import com.arangodb.velocypack.VPackDeserializationContext;
+import com.arangodb.velocypack.VPackDeserializer;
+import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.exception.VPackException;
 
 /**
  * @author Mark Vollmary
  *
  */
-public class DBCollectionEntity extends ArrayList<Object> implements DBEntity {
-
-	private static final long serialVersionUID = -2068955559598596722L;
-
-	public DBCollectionEntity() {
-		super();
-	}
-
-	public DBCollectionEntity(final Collection<? extends Object> c) {
-		super(c);
-	}
+public class DBEntityDeserializer implements VPackDeserializer<DBEntity> {
 
 	@Override
-	public Object put(final String key, final Object value) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Object get(final Object key) {
-		throw new UnsupportedOperationException();
+	public DBEntity deserialize(
+		final VPackSlice parent,
+		final VPackSlice vpack,
+		final VPackDeserializationContext context) throws VPackException {
+		final Class<?> type = vpack.isObject() ? DBDocumentEntity.class : DBCollectionEntity.class;
+		return (DBEntity) context.deserialize(vpack, type);
 	}
 
 }

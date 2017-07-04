@@ -18,12 +18,10 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert.impl;
+package com.arangodb.springframework.core.convert;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.arangodb.springframework.core.convert.DBEntity;
 
 /**
  * @author Mark Vollmary

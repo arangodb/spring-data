@@ -43,10 +43,10 @@ import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
+import com.arangodb.springframework.core.convert.DBCollectionEntity;
+import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.convert.DBEntity;
-import com.arangodb.springframework.core.convert.impl.DBCollectionEntity;
-import com.arangodb.springframework.core.convert.impl.DBDocumentEntity;
-import com.arangodb.springframework.core.convert.impl.DBEntityDeserializer;
+import com.arangodb.springframework.core.convert.DBEntityDeserializer;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 
 /**

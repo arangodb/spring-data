@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert.impl;
+package com.arangodb.springframework.core.convert;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.convert.ReferenceResolver;
 import com.arangodb.util.MapBuilder;
 
 /**

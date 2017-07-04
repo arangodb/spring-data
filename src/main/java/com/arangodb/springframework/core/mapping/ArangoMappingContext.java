@@ -31,15 +31,12 @@ import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 
-import com.arangodb.springframework.core.mapping.impl.ArangoPersistentEntityImpl;
-import com.arangodb.springframework.core.mapping.impl.ArangoPersistentPropertyImpl;
-
 /**
  * @author Mark Vollmary
  *
  */
 public class ArangoMappingContext
-		extends AbstractMappingContext<ArangoPersistentEntityImpl<?>, ArangoPersistentProperty>
+		extends AbstractMappingContext<DefaultArangoPersistentEntity<?>, ArangoPersistentProperty>
 		implements ApplicationContextAware {
 
 	private FieldNamingStrategy fieldNamingStrategy;
@@ -50,8 +47,8 @@ public class ArangoMappingContext
 	}
 
 	@Override
-	protected <T> ArangoPersistentEntityImpl<?> createPersistentEntity(final TypeInformation<T> typeInformation) {
-		final ArangoPersistentEntityImpl<T> entity = new ArangoPersistentEntityImpl<>(typeInformation);
+	protected <T> DefaultArangoPersistentEntity<?> createPersistentEntity(final TypeInformation<T> typeInformation) {
+		final DefaultArangoPersistentEntity<T> entity = new DefaultArangoPersistentEntity<>(typeInformation);
 		applicationContext.ifPresent(context -> entity.setApplicationContext(context));
 		return entity;
 	}
@@ -59,9 +56,9 @@ public class ArangoMappingContext
 	@Override
 	protected ArangoPersistentProperty createPersistentProperty(
 		final Property property,
-		final ArangoPersistentEntityImpl<?> owner,
+		final DefaultArangoPersistentEntity<?> owner,
 		final SimpleTypeHolder simpleTypeHolder) {
-		return new ArangoPersistentPropertyImpl(property, owner, simpleTypeHolder, fieldNamingStrategy);
+		return new DefaultArangoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
 	@Override
