@@ -74,7 +74,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void insertDocuments() {
 		final MultiDocumentEntity<DocumentCreateEntity<Object>> res = template
-				.insertDocuments(Arrays.asList(new Customer(), new Customer(), new Customer()));
+				.insertDocuments(Arrays.asList(new Customer(), new Customer(), new Customer()), Customer.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(3));
 	}
@@ -116,7 +116,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		documentB.setName("bb");
 
 		final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = template
-				.replaceDocuments(Arrays.asList(documentA, documentB));
+				.replaceDocuments(Arrays.asList(documentA, documentB), Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 
@@ -148,7 +148,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		documentB.setName("bb");
 
 		final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = template
-				.updateDocuments(Arrays.asList(documentA, documentB));
+				.updateDocuments(Arrays.asList(documentA, documentB), Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 
@@ -174,8 +174,8 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Product documentA = template.getDocument(a.getId(), Product.class);
 		final Product documentB = template.getDocument(b.getId(), Product.class);
 
-		final MultiDocumentEntity<DocumentDeleteEntity<Void>> res = template
-				.deleteDocuments(Arrays.asList(documentA, documentB));
+		final MultiDocumentEntity<DocumentDeleteEntity<Product>> res = template
+				.deleteDocuments(Arrays.asList(documentA, documentB), Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 

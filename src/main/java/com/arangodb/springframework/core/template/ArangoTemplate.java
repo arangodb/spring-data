@@ -142,12 +142,11 @@ public class ArangoTemplate implements ArangoOperations {
 
 	@Override
 	public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(
-		final Collection<?> values,
+		final Collection<Object> values,
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException {
 		try {
-			// TODO determineCollectionName
-			return arango.db(database).collection(determineCollectionName(values.iterator().next().getClass()))
+			return arango.db(database).collection(determineCollectionName(type))
 					.deleteDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), type, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -155,9 +154,10 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public MultiDocumentEntity<DocumentDeleteEntity<Void>> deleteDocuments(final Collection<?> values)
-			throws DataAccessException {
-		return deleteDocuments(values, Void.class, new DocumentDeleteOptions());
+	public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(
+		final Collection<Object> values,
+		final Class<T> type) throws DataAccessException {
+		return deleteDocuments(values, type, new DocumentDeleteOptions());
 	}
 
 	@Override
@@ -187,10 +187,10 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(
 		final Collection<Object> values,
+		final Class<?> type,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			// TODO determineCollectionName
-			return arango.db(database).collection(determineCollectionName(values.iterator().next().getClass()))
+			return arango.db(database).collection(determineCollectionName(type))
 					.updateDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -198,9 +198,10 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(final Collection<Object> values)
-			throws DataAccessException {
-		return updateDocuments(values, new DocumentUpdateOptions());
+	public MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(
+		final Collection<Object> values,
+		final Class<?> type) throws DataAccessException {
+		return updateDocuments(values, type, new DocumentUpdateOptions());
 	}
 
 	@Override
@@ -224,10 +225,10 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(
 		final Collection<Object> values,
+		final Class<?> type,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			// TODO determineCollectionName
-			return arango.db(database).collection(determineCollectionName(values.iterator().next().getClass()))
+			return arango.db(database).collection(determineCollectionName(type))
 					.replaceDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -235,9 +236,10 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(final Collection<Object> values)
-			throws DataAccessException {
-		return replaceDocuments(values, new DocumentReplaceOptions());
+	public MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(
+		final Collection<Object> values,
+		final Class<?> type) throws DataAccessException {
+		return replaceDocuments(values, type, new DocumentReplaceOptions());
 	}
 
 	@Override
@@ -279,11 +281,10 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(
 		final Collection<Object> values,
+		final Class<?> type,
 		final DocumentCreateOptions options) throws DataAccessException {
 		try {
-			// final Class<?> type = ClassTypeInformation.from(values.getClass()).getComponentType().get().getType();
-			// TODO find a better way t determine the component type
-			return arango.db(database).collection(determineCollectionName(values.iterator().next().getClass()))
+			return arango.db(database).collection(determineCollectionName(type))
 					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -291,9 +292,10 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(final Collection<Object> values)
-			throws DataAccessException {
-		return insertDocuments(values, new DocumentCreateOptions());
+	public MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(
+		final Collection<Object> values,
+		final Class<?> type) throws DataAccessException {
+		return insertDocuments(values, type, new DocumentCreateOptions());
 	}
 
 	@Override
