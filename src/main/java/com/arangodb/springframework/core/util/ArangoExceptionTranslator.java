@@ -41,34 +41,36 @@ public class ArangoExceptionTranslator implements PersistenceExceptionTranslator
 			dae = DataAccessException.class.cast(ex);
 		} else if (ArangoDBException.class.isAssignableFrom(ex.getClass())) {
 			final ArangoDBException exception = ArangoDBException.class.cast(ex);
-			final int responseCode = exception.getResponseCode();
-			switch (responseCode) {
-			case ArangoErrors.ERROR_HTTP_BAD_PARAMETER:
-				// TODO
-				break;
-			case ArangoErrors.ERROR_HTTP_UNAUTHORIZED:
-				dae = new PermissionDeniedDataAccessException(exception.getMessage(), exception);
-				break;
-			case ArangoErrors.ERROR_HTTP_FORBIDDEN:
-				// TODO
-				break;
-			case ArangoErrors.ERROR_HTTP_NOT_FOUND:
-				dae = new InvalidDataAccessApiUsageException(exception.getMessage(), exception);
-				break;
-			case ArangoErrors.ERROR_HTTP_METHOD_NOT_ALLOWED:
-				// TODO
-				break;
-			case ArangoErrors.ERROR_HTTP_PRECONDITION_FAILED:
-				// TODO
-				break;
-			case ArangoErrors.ERROR_HTTP_SERVER_ERROR:
-				// TODO
-				break;
-			case ArangoErrors.ERROR_HTTP_SERVICE_UNAVAILABLE:
-				dae = new DataAccessResourceFailureException(exception.getMessage(), exception);
-				break;
-			default:
-				break;
+			final Integer responseCode = exception.getResponseCode();
+			if (responseCode != null) {
+				switch (responseCode) {
+				case ArangoErrors.ERROR_HTTP_BAD_PARAMETER:
+					// TODO
+					break;
+				case ArangoErrors.ERROR_HTTP_UNAUTHORIZED:
+					dae = new PermissionDeniedDataAccessException(exception.getMessage(), exception);
+					break;
+				case ArangoErrors.ERROR_HTTP_FORBIDDEN:
+					// TODO
+					break;
+				case ArangoErrors.ERROR_HTTP_NOT_FOUND:
+					dae = new InvalidDataAccessApiUsageException(exception.getMessage(), exception);
+					break;
+				case ArangoErrors.ERROR_HTTP_METHOD_NOT_ALLOWED:
+					// TODO
+					break;
+				case ArangoErrors.ERROR_HTTP_PRECONDITION_FAILED:
+					// TODO
+					break;
+				case ArangoErrors.ERROR_HTTP_SERVER_ERROR:
+					// TODO
+					break;
+				case ArangoErrors.ERROR_HTTP_SERVICE_UNAVAILABLE:
+					dae = new DataAccessResourceFailureException(exception.getMessage(), exception);
+					break;
+				default:
+					break;
+				}
 			}
 		}
 		if (dae == null) {
