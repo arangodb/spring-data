@@ -18,14 +18,27 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework.core.convert.impl;
 
-import org.springframework.data.convert.EntityReader;
+import com.arangodb.springframework.core.convert.DBEntity;
+import com.arangodb.velocypack.VPackDeserializationContext;
+import com.arangodb.velocypack.VPackDeserializer;
+import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.exception.VPackException;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface ArangoEntityReader extends EntityReader<Object, DBEntity> {
+public class DBEntityDeserializer implements VPackDeserializer<DBEntity> {
+
+	@Override
+	public DBEntity deserialize(
+		final VPackSlice parent,
+		final VPackSlice vpack,
+		final VPackDeserializationContext context) throws VPackException {
+		final Class<?> type = vpack.isObject() ? DBDocumentEntity.class : DBCollectionEntity.class;
+		return (DBEntity) context.deserialize(vpack, type);
+	}
 
 }

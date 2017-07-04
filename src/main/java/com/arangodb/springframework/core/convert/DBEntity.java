@@ -20,23 +20,16 @@
 
 package com.arangodb.springframework.core.convert;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author Mark Vollmary
  *
  */
-public class DBEntity extends HashMap<String, Object> {
+public interface DBEntity {
 
-	private static final long serialVersionUID = -3300373105117729074L;
+	Object put(String key, Object value);
 
-	public DBEntity() {
-		super();
-	}
+	Object get(Object key);
 
-	public DBEntity(final Map<? extends String, ? extends Object> m) {
-		super(m);
-	}
+	boolean add(Object value);
 
 }

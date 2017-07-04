@@ -24,7 +24,7 @@ import com.arangodb.ArangoCursor;
 import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
 import com.arangodb.internal.InternalArangoDatabase;
-import com.arangodb.springframework.core.convert.ArangoEntityReader;
+import com.arangodb.springframework.core.convert.ArangoConverter;
 
 /**
  * @author Mark Vollmary
@@ -32,11 +32,11 @@ import com.arangodb.springframework.core.convert.ArangoEntityReader;
  */
 class ArangoCursorInitializer implements com.arangodb.util.ArangoCursorInitializer {
 
-	private final ArangoEntityReader entityReader;
+	private final ArangoConverter converter;
 
-	public ArangoCursorInitializer(final ArangoEntityReader entityReader) {
+	public ArangoCursorInitializer(final ArangoConverter converter) {
 		super();
-		this.entityReader = entityReader;
+		this.converter = converter;
 	}
 
 	@Override
@@ -45,7 +45,7 @@ class ArangoCursorInitializer implements com.arangodb.util.ArangoCursorInitializ
 		final ArangoCursorExecute execute,
 		final Class<T> type,
 		final CursorEntity result) {
-		return new ArangoExtCursor<>(db, execute, type, result, entityReader);
+		return new ArangoExtCursor<>(db, execute, type, result, converter);
 	}
 
 }

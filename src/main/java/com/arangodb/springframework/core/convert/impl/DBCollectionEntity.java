@@ -18,14 +18,37 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework.core.convert.impl;
 
-import org.springframework.data.convert.EntityReader;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import com.arangodb.springframework.core.convert.DBEntity;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface ArangoEntityReader extends EntityReader<Object, DBEntity> {
+public class DBCollectionEntity extends ArrayList<Object> implements DBEntity {
+
+	private static final long serialVersionUID = -2068955559598596722L;
+
+	public DBCollectionEntity() {
+		super();
+	}
+
+	public DBCollectionEntity(final Collection<? extends Object> c) {
+		super(c);
+	}
+
+	@Override
+	public Object put(final String key, final Object value) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Object get(final Object key) {
+		throw new UnsupportedOperationException();
+	}
 
 }
