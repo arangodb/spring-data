@@ -37,4 +37,6 @@ public interface ArangoPersistentEntity<T>
 
 	CollectionType getCollectionType();
 
+	PersistentPropertyAccessor getPropertyAccessor(Object source);
+
 }

@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 
@@ -33,6 +32,7 @@ import com.arangodb.ArangoDB;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
+import com.arangodb.springframework.core.convert.CustomConversions;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
 import com.arangodb.springframework.core.convert.RefResolver;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;

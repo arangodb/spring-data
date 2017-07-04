@@ -47,6 +47,7 @@ import com.arangodb.springframework.core.convert.DBCollectionEntity;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.convert.DBEntityDeserializer;
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 
 /**
@@ -91,10 +92,13 @@ public class ArangoTemplate implements ArangoOperations {
 
 	@Override
 	public String determineCollectionName(final Class<?> entityClass) {
-		return converter.getMappingContext().getPersistentEntity(entityClass)
-				.orElseThrow(() -> new InvalidDataAccessApiUsageException(
-						"No persistent entity information found for the type " + entityClass.getName()))
-				.getCollection();
+		final ArangoPersistentEntity<?> persistentEntity = converter.getMappingContext()
+				.getPersistentEntity(entityClass);
+		if (persistentEntity == null) {
+			new InvalidDataAccessApiUsageException(
+					"No persistent entity information found for the type " + entityClass.getName());
+		}
+		return persistentEntity.getCollection();
 	}
 
 	private String determineDocumentKey(final String id) {

@@ -20,13 +20,13 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import java.beans.PropertyDescriptor;
 import java.util.Optional;
 
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
@@ -45,10 +45,10 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 
 	private final FieldNamingStrategy fieldNamingStrategy;
 
-	public DefaultArangoPersistentProperty(final Property property,
-		final PersistentEntity<?, ArangoPersistentProperty> owner, final SimpleTypeHolder simpleTypeHolder,
-		final FieldNamingStrategy fieldNamingStrategy) {
-		super(property, owner, simpleTypeHolder);
+	public DefaultArangoPersistentProperty(final java.lang.reflect.Field field,
+		final PropertyDescriptor propertyDescriptor, final PersistentEntity<?, ArangoPersistentProperty> owner,
+		final SimpleTypeHolder simpleTypeHolder, final FieldNamingStrategy fieldNamingStrategy) {
+		super(field, propertyDescriptor, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy != null ? fieldNamingStrategy
 				: PropertyNameFieldNamingStrategy.INSTANCE;
 	}
@@ -60,17 +60,17 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 
 	@Override
 	public boolean isKeyProperty() {
-		return findAnnotation(Key.class).isPresent();
+		return findAnnotation(Key.class) != null;
 	}
 
 	@Override
 	public boolean isRevProperty() {
-		return findAnnotation(Rev.class).isPresent();
+		return findAnnotation(Rev.class) != null;
 	}
 
 	@Override
 	public Optional<Ref> getRef() {
-		return findAnnotation(Ref.class);
+		return Optional.ofNullable(findAnnotation(Ref.class));
 	}
 
 	@Override
@@ -89,7 +89,8 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	}
 
 	private Optional<String> getAnnotatedFieldName() {
-		return findAnnotation(Field.class).map(f -> StringUtils.hasText(f.value()) ? f.value() : null);
+		return Optional.ofNullable(findAnnotation(Field.class))
+				.map(f -> StringUtils.hasText(f.value()) ? f.value() : null);
 	}
 
 }

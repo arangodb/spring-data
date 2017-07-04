@@ -20,11 +20,7 @@
 
 package com.arangodb.springframework.core.convert;
 
-import java.util.ArrayList;
 import java.util.Collection;
-
-import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
  * @author Mark Vollmary
@@ -32,15 +28,15 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  */
 public class ArangoCustomConversions extends CustomConversions {
 
-	private static final StoreConversions STORE_CONVERSIONS;
+	// private static final StoreConversions STORE_CONVERSIONS;
 
-	static {
-		final Collection<?> converters = new ArrayList<>();
-		STORE_CONVERSIONS = StoreConversions.of(SimpleTypeHolder.DEFAULT, converters);
-	}
+	// static {
+	// final Collection<?> converters = new ArrayList<>();
+	// STORE_CONVERSIONS = StoreConversions.of(SimpleTypeHolder.DEFAULT, converters);
+	// }
 
 	public ArangoCustomConversions(final Collection<?> converters) {
-		super(STORE_CONVERSIONS, converters);
+		super(converters);
 	}
 
 }

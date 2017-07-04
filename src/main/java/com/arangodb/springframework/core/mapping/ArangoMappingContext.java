@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.util.Optional;
 
 import org.springframework.beans.BeansException;
@@ -27,7 +29,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 
@@ -55,10 +56,11 @@ public class ArangoMappingContext
 
 	@Override
 	protected ArangoPersistentProperty createPersistentProperty(
-		final Property property,
+		final Field field,
+		final PropertyDescriptor descriptor,
 		final DefaultArangoPersistentEntity<?> owner,
 		final SimpleTypeHolder simpleTypeHolder) {
-		return new DefaultArangoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+		return new DefaultArangoPersistentProperty(field, descriptor, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
 	@Override
