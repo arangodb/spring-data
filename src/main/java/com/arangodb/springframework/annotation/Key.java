@@ -18,26 +18,19 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.mapping;
+package com.arangodb.springframework.annotation;
 
-import java.util.Optional;
-
-import org.springframework.data.mapping.PersistentProperty;
-
-import com.arangodb.springframework.annotation.Ref;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersistentProperty> {
-
-	String getFieldName();
-
-	boolean isKeyProperty();
-
-	boolean isRevProperty();
-
-	Optional<Ref> getRef();
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.FIELD })
+public @interface Key {
 
 }

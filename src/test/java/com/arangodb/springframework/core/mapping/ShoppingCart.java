@@ -25,6 +25,9 @@ import java.util.Collection;
 
 import org.springframework.data.annotation.Id;
 
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Ref;
+
 /**
  * @author Mark Vollmary
  *

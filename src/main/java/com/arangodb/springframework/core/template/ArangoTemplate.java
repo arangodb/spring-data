@@ -44,6 +44,9 @@ import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.DBEntity;
+import com.arangodb.springframework.core.convert.impl.DBCollectionEntity;
+import com.arangodb.springframework.core.convert.impl.DBDocumentEntity;
+import com.arangodb.springframework.core.convert.impl.DBEntityDeserializer;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 
 /**
@@ -68,8 +71,9 @@ public class ArangoTemplate implements ArangoOperations {
 	public ArangoTemplate(final ArangoDB.Builder arango, final String database, final ArangoConverter converter,
 		final PersistenceExceptionTranslator exceptionTranslator) {
 		super();
-		this.arango = arango.build()._setCursorInitializer(
-			new com.arangodb.springframework.core.template.ArangoCursorInitializer(converter));
+		this.arango = arango.registerDeserializer(DBEntity.class, new DBEntityDeserializer()).build()
+				._setCursorInitializer(
+					new com.arangodb.springframework.core.template.ArangoCursorInitializer(converter));
 		this.database = database;
 		this.converter = converter;
 		this.exceptionTranslator = exceptionTranslator;
@@ -99,7 +103,8 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	private DBEntity toDBEntity(final Object value) {
-		final DBEntity entity = new DBEntity();
+		final DBEntity entity = converter.isCollectionType(value.getClass()) ? new DBCollectionEntity()
+				: new DBDocumentEntity();
 		converter.write(value, entity);
 		return entity;
 	}
@@ -128,7 +133,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options,
 		final Class<T> type) throws DataAccessException {
-		return arango.db(database).query(query, toDBEntity(bindVars), options, type);
+		return arango.db(database).query(query, DBDocumentEntity.class.cast(toDBEntity(bindVars)), options, type);
 	}
 
 	@Override
@@ -136,13 +141,19 @@ public class ArangoTemplate implements ArangoOperations {
 		final Collection<?> values,
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException {
-		return null;
+		try {
+			// TODO determineCollectionName
+			return arango.db(database).collection(determineCollectionName(values.iterator().next().getClass()))
+					.deleteDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), type, options);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override
 	public MultiDocumentEntity<DocumentDeleteEntity<Void>> deleteDocuments(final Collection<?> values)
 			throws DataAccessException {
-		return null;
+		return deleteDocuments(values, Void.class, new DocumentDeleteOptions());
 	}
 
 	@Override
@@ -170,16 +181,22 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(
-		final Collection<T> values,
+	public MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(
+		final Collection<Object> values,
 		final DocumentUpdateOptions options) throws DataAccessException {
-		return null;
+		try {
+			// TODO determineCollectionName
+			return arango.db(database).collection(determineCollectionName(values.iterator().next().getClass()))
+					.updateDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override
-	public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(final Collection<T> values)
+	public MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(final Collection<Object> values)
 			throws DataAccessException {
-		return null;
+		return updateDocuments(values, new DocumentUpdateOptions());
 	}
 
 	@Override
@@ -201,16 +218,22 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceDocuments(
-		final Collection<T> values,
+	public MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(
+		final Collection<Object> values,
 		final DocumentReplaceOptions options) throws DataAccessException {
-		return null;
+		try {
+			// TODO determineCollectionName
+			return arango.db(database).collection(determineCollectionName(values.iterator().next().getClass()))
+					.replaceDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override
-	public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceDocuments(final Collection<T> values)
+	public MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(final Collection<Object> values)
 			throws DataAccessException {
-		return null;
+		return replaceDocuments(values, new DocumentReplaceOptions());
 	}
 
 	@Override
@@ -250,16 +273,23 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public <T> MultiDocumentEntity<DocumentCreateEntity<T>> insertDocuments(
-		final Collection<T> values,
+	public MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(
+		final Collection<Object> values,
 		final DocumentCreateOptions options) throws DataAccessException {
-		return null;
+		try {
+			// final Class<?> type = ClassTypeInformation.from(values.getClass()).getComponentType().get().getType();
+			// TODO find a better way t determine the component type
+			return arango.db(database).collection(determineCollectionName(values.iterator().next().getClass()))
+					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override
-	public <T> MultiDocumentEntity<DocumentCreateEntity<T>> insertDocuments(final Collection<T> values)
+	public MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(final Collection<Object> values)
 			throws DataAccessException {
-		return null;
+		return insertDocuments(values, new DocumentCreateOptions());
 	}
 
 	@Override

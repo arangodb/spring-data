@@ -22,6 +22,9 @@ package com.arangodb.springframework.core.mapping;
 
 import org.springframework.data.annotation.Id;
 
+import com.arangodb.springframework.annotation.Key;
+import com.arangodb.springframework.annotation.Rev;
+
 /**
  * @author Mark Vollmary
  *
@@ -30,6 +33,10 @@ public class Product {
 
 	@Id
 	private String id;
+	@Key
+	private String key;
+	@Rev
+	private String rev;
 	private String name;
 
 	public Product() {
@@ -47,6 +54,22 @@ public class Product {
 
 	public void setId(final String id) {
 		this.id = id;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(final String key) {
+		this.key = key;
+	}
+
+	public String getRev() {
+		return rev;
+	}
+
+	public void setRev(final String rev) {
+		this.rev = rev;
 	}
 
 	public String getName() {

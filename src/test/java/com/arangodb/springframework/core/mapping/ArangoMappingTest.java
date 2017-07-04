@@ -30,19 +30,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
-import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.util.MapBuilder;
 
 /**
@@ -51,40 +48,7 @@ import com.arangodb.util.MapBuilder;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
-public class ArangoMappingTest {
-
-	private static final String COLLECTION_CUSTOMER = "customer";
-	private static final String COLLECTION_SHOPPING_CART = "shopping-cart";
-	private static final String COLLECTION_PRODUCT = "product";
-
-	private static final String[] COLLECTIONS = new String[] { COLLECTION_CUSTOMER, COLLECTION_SHOPPING_CART,
-			COLLECTION_PRODUCT };
-
-	@Autowired
-	private ArangoOperations template;
-
-	@Before
-	public void before() {
-		try {
-			for (final String collection : COLLECTIONS) {
-				template.driver().db(ArangoTestConfiguration.DB).collection(collection).drop();
-			}
-		} catch (final Exception e) {
-		}
-		for (final String collection : COLLECTIONS) {
-			template.driver().db(ArangoTestConfiguration.DB).createCollection(collection);
-		}
-	}
-
-	@After
-	public void after() {
-		try {
-			for (final String collection : COLLECTIONS) {
-				template.driver().db(ArangoTestConfiguration.DB).collection(collection).drop();
-			}
-		} catch (final Exception e) {
-		}
-	}
+public class ArangoMappingTest extends AbstractArangoTest {
 
 	@Test
 	public void id() {

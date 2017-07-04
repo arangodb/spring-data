@@ -18,26 +18,24 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.mapping;
+package com.arangodb.springframework.annotation;
 
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.data.annotation.Persistent;
+import org.springframework.data.annotation.Reference;
 
 /**
  * @author Mark Vollmary
  *
  */
-@Persistent
-@Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE })
-public @interface Edge {
+@Target({ ElementType.FIELD })
+@Reference
+public @interface Ref {
 
-	String collection() default "";
+	boolean lazy() default false;
 
 }

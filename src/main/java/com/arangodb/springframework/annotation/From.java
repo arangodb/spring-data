@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.mapping;
+package com.arangodb.springframework.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

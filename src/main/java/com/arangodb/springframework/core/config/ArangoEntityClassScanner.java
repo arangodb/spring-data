@@ -30,8 +30,8 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-import com.arangodb.springframework.core.mapping.Document;
-import com.arangodb.springframework.core.mapping.Edge;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
 
 /**
  * @author Mark Vollmary

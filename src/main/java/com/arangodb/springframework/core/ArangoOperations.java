@@ -70,11 +70,11 @@ public interface ArangoOperations {
 
 	<T> DocumentDeleteEntity<Void> deleteDocument(final String id, Class<T> type) throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(
-		final Collection<T> values,
+	MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(
+		final Collection<Object> values,
 		final DocumentUpdateOptions options) throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateDocuments(final Collection<T> values)
+	MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(final Collection<Object> values)
 			throws DataAccessException;
 
 	<T> DocumentUpdateEntity<T> updateDocument(final String id, final T value, final DocumentUpdateOptions options)
@@ -82,11 +82,11 @@ public interface ArangoOperations {
 
 	<T> DocumentUpdateEntity<T> updateDocument(final String id, final T value) throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceDocuments(
-		final Collection<T> values,
+	MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(
+		final Collection<Object> values,
 		final DocumentReplaceOptions options) throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceDocuments(final Collection<T> values)
+	MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(final Collection<Object> values)
 			throws DataAccessException;
 
 	<T> DocumentUpdateEntity<T> replaceDocument(final String id, final T value, final DocumentReplaceOptions options)
@@ -99,11 +99,11 @@ public interface ArangoOperations {
 
 	<T> T getDocument(final String id, final Class<T> type) throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentCreateEntity<T>> insertDocuments(
-		final Collection<T> values,
+	MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(
+		final Collection<Object> values,
 		final DocumentCreateOptions options) throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentCreateEntity<T>> insertDocuments(final Collection<T> values)
+	MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(final Collection<Object> values)
 			throws DataAccessException;
 
 	<T> DocumentCreateEntity<T> insertDocument(final T value, final DocumentCreateOptions options)

@@ -31,9 +31,11 @@ import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
 
+import com.arangodb.springframework.annotation.Field;
+import com.arangodb.springframework.annotation.Key;
+import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Rev;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.Field;
-import com.arangodb.springframework.core.mapping.Ref;
 
 /**
  * @author Mark Vollmary
@@ -58,13 +60,33 @@ public class ArangoPersistentPropertyImpl extends AnnotationBasedPersistentPrope
 	}
 
 	@Override
+	public boolean isKeyProperty() {
+		return findAnnotation(Key.class).isPresent();
+	}
+
+	@Override
+	public boolean isRevProperty() {
+		return findAnnotation(Rev.class).isPresent();
+	}
+
+	@Override
 	public Optional<Ref> getRef() {
 		return findAnnotation(Ref.class);
 	}
 
 	@Override
 	public String getFieldName() {
-		return isIdProperty() ? "_id" : getAnnotatedFieldName().orElse(fieldNamingStrategy.getFieldName(this));
+		final String fieldName;
+		if (isIdProperty()) {
+			fieldName = "_id";
+		} else if (isKeyProperty()) {
+			fieldName = "_key";
+		} else if (isRevProperty()) {
+			fieldName = "_rev";
+		} else {
+			fieldName = getAnnotatedFieldName().orElse(fieldNamingStrategy.getFieldName(this));
+		}
+		return fieldName;
 	}
 
 	private Optional<String> getAnnotatedFieldName() {

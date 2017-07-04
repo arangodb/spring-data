@@ -20,6 +20,9 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Ref;
+
 /**
  * @author Mark Vollmary
  *

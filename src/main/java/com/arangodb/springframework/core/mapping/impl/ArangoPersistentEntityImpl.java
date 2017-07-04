@@ -35,10 +35,10 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.StringUtils;
 
 import com.arangodb.entity.CollectionType;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.Document;
-import com.arangodb.springframework.core.mapping.Edge;
 
 /**
  * @author Mark Vollmary
