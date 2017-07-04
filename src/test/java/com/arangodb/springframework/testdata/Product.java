@@ -18,31 +18,34 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.mapping;
-
-import java.util.ArrayList;
-import java.util.Collection;
+package com.arangodb.springframework.testdata;
 
 import org.springframework.data.annotation.Id;
 
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Key;
+import com.arangodb.springframework.annotation.Rev;
 
 /**
  * @author Mark Vollmary
  *
  */
-@Document(collection = "shopping-cart")
-public class ShoppingCart {
+public class Product {
 
 	@Id
 	private String id;
-	@Ref
-	private Collection<Product> products;
+	@Key
+	private String key;
+	@Rev
+	private String rev;
+	private String name;
 
-	public ShoppingCart() {
+	public Product() {
 		super();
-		products = new ArrayList<>();
+	}
+
+	public Product(final String name) {
+		super();
+		this.name = name;
 	}
 
 	public String getId() {
@@ -53,12 +56,28 @@ public class ShoppingCart {
 		this.id = id;
 	}
 
-	public Collection<Product> getProducts() {
-		return products;
+	public String getKey() {
+		return key;
 	}
 
-	public void setProducts(final Collection<Product> products) {
-		this.products = products;
+	public void setKey(final String key) {
+		this.key = key;
+	}
+
+	public String getRev() {
+		return rev;
+	}
+
+	public void setRev(final String rev) {
+		this.rev = rev;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(final String name) {
+		this.name = name;
 	}
 
 }

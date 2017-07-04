@@ -42,9 +42,9 @@ import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
-import com.arangodb.springframework.core.mapping.Address;
-import com.arangodb.springframework.core.mapping.Customer;
-import com.arangodb.springframework.core.mapping.Product;
+import com.arangodb.springframework.testdata.Address;
+import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.Product;
 import com.arangodb.util.MapBuilder;
 
 /**

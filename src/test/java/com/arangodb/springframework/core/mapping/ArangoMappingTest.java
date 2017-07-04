@@ -40,6 +40,9 @@ import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.Product;
+import com.arangodb.springframework.testdata.ShoppingCart;
 import com.arangodb.util.MapBuilder;
 
 /**
