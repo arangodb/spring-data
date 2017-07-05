@@ -30,8 +30,8 @@
     * [Edge](#edge)
     * [Reference](#reference)
     * [Relations](#relations)
-    * [Edge with From and To](#edge-with-from-and-to)
     * [Document with From and To](#document-with-from-and-to)
+    * [Edge with From and To](#edge-with-from-and-to)
     * [Indexed annotations](#indexed-annotations)
 
 # Getting Started
@@ -393,7 +393,7 @@ public class Person {
 
 ### Edge
 
-The annotations `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are `name` to specify the collection name in the database and `graph` to specify a named graph which the collection belongs to. The annotation `@Edge` specify the collection type to `EDGE`.
+The annotations `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are `name` to specify the collection name in the database. The annotation `@Edge` specify the collection type to `EDGE`.
 
 ``` java
 @Edge(name="relations")
@@ -404,7 +404,7 @@ public class Relation {
 
 ### Reference
 
-With the annotation `@Reference` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
+With the annotation `@Reference` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate document in another collection described in the `@Document` annotation of the nested object class. To successfully persist an instance of your object the referencing field has to be null or it's instance has to provide a field with the annotation `@Id` including an valid id.
 
 ``` java
 @Document(name="persons")
@@ -415,13 +415,14 @@ public class Person {
 
 @Document(name="addresses")
 public class Address {
+  @Id
+  private String id;
   private String country;
   private String street;
-  ...
 }
 ```
 
-Will result in the following stored documents:
+The database representation of *Person* in collection *persons* looks as follow:
 
 ```
 {
@@ -429,6 +430,9 @@ Will result in the following stored documents:
   "_id" : "persons/123",
   "address" : "addresses/456"
 }
+```
+and the representation of *Address* in collection *addresses*:
+```
 {
   "_key" : "456",
   "_id" : "addresses/456",
@@ -437,7 +441,7 @@ Will result in the following stored documents:
 }
 ```
 
-Without the annotation `Ref` at the field `address`, the stored document would look:
+Without the annotation `@Reference` at the field `address`, the stored document would look:
 
 ```
 {
@@ -452,12 +456,12 @@ Without the annotation `Ref` at the field `address`, the stored document would l
 
 ### Relations
 
-With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameters are `collections` and `edges`. With `collections` you can define the edge collections with should be used in the traversal. With `edges` you get an alternative for defining the edge collections using class types. You can use both at the same time. The parameter `graph` can be used instead of `collections` and `edges` if you are using a named graph. If you use `graph` every edge collection defined within the graph is used for the traversal. With the parameter `depth` you can define the maximal depth for the traversal (default 1).
+With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameters are `collection` and `edge`. With `collection` you can define the edge collection which should be used in the traversal. With `edge` you get an alternative for defining the edge collection using the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
 
 ``` java
 @Document(name="persons")
 public class Person {
-  @Relations(collections={"relations"}, depth=1)
+  @Relations(collection="relations", depth=1, direction=Direction.ANY)
   private List<Person> friends;
 }
 ```
@@ -465,7 +469,7 @@ or
 ``` java
 @Document(name="persons")
 public class Person {
-  @Relations(edges={Relation.class}, depth=1)
+  @Relations(edge=Relation.class, depth=1, direction=Direction.ANY)
   private List<Person> friends;
 }
 
@@ -475,50 +479,9 @@ public class Relation {
 }
 ```
 
-### Edge with From and To
-
-With the annotations `@From` and `@To` applied on a field in a class annotated with `@Edge` the nested object isn’t stored as a nested object in that edge document. The _id field of the nested object is stored in the fields _from or _to within the edge document and the nested object itself is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
-
-``` java
-@Edge(name="relations")
-public class Relation {
-  @From
-  private Person c1;
-  @To
-  private Person c2;
-}
-
-@Document(name="persons")
-public class Person {
-  ...
-}
-```
-
-Will result in the following stored edge-document in collection *relations*:
-```
-{
-  "_key" : "123",
-  "_id" : "relations/123",
-  "_from" : "persons/456",
-  "_to" : "persons/789"
-}
-```
-
-and the following stored documents in collection *persons*:
-```
-{
-  "_key" : "456",
-  "_id" : "persons/456",
-}
-{
-  "_key" : "789",
-  "_id" : "persons/789",
-}
-```
-
 ### Document with From and To
 
-With the annotations `@From` and `@To` applied on a collection or array field in a class annotated with `@Document` the nested objects aren’t stored as nested objects in that document. Each of the nested objects is stored as separate edge document in another collection described in the `@Edge` annotation of the nested object class with the _id of the parent document as field _from or _to.
+With the annotations `@From` and `@To` applied on a collection or array field in a class annotated with `@Document` the nested edge objects are fetched from the database. Each of the nested edge objects has to be stored as separate edge document in the edge collection described in the `@Edge` annotation of the nested object class with the *_id* of the parent document as field *_from* or *_to*.
 
 ``` java
 @Document(name="persons")
@@ -558,6 +521,50 @@ and the following stored edge documents in collection *relations*:
 ...
 
 ```
+
+### Edge with From and To
+
+With the annotations `@From` and `@To` applied on a field in a class annotated with `@Edge` the nested object is fetched from the database. The nested object has to be stored as a separate document in the collection described in the `@Document` annotation of the nested object class. The *_id* field of this nested object is stored in the fields *_from* or *_to* within the edge document.
+
+``` java
+@Edge(name="relations")
+public class Relation {
+  @From
+  private Person c1;
+  @To
+  private Person c2;
+}
+
+@Document(name="persons")
+public class Person {
+  @Id
+  private String id;
+}
+```
+
+Will result in the following stored edge-document in collection *relations*:
+```
+{
+  "_key" : "123",
+  "_id" : "relations/123",
+  "_from" : "persons/456",
+  "_to" : "persons/789"
+}
+```
+
+and the following stored documents in collection *persons*:
+```
+{
+  "_key" : "456",
+  "_id" : "persons/456",
+}
+{
+  "_key" : "789",
+  "_id" : "persons/789",
+}
+```
+
+**Note:** If you want to save an instance of *Relation* both *Person* objects (from & to) already has to be persisted and the class *Person* needs a field with the annotation `@Id` so it can hold the persisted *_id* from the database. 
 
 ### Indexed annotations
 
