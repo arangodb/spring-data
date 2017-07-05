@@ -26,9 +26,12 @@
   * [Type conventions](#type-conventions)
   * [Annotations](#annotations)
     * [Annotation overview](#annotation-overview)
-    * [Document Edge](#document-edge)
-    * [From To](#from-to)
+    * [Document](#document)
+    * [Edge](#edge)
     * [Reference](#reference)
+    * [Relations](#relations)
+    * [Edge with From and To](#edge-with-from-and-to)
+    * [Document with From and To](#document-with-from-and-to)
     * [Indexed annotations](#indexed-annotations)
 
 # Getting Started
@@ -366,10 +369,10 @@ annotation | level | description
 @Key | field | stored the field as the system field _key
 @Rev | field | stored the field as the system field _rev
 @Field("alt-name") | field | stored the field with an alternative name
-@Ref, @Reference | field | stored the _id of the referenced document and not the nested document
+@Reference | field | stored the _id of the referenced document and not the nested document
 @From | field | stored the _id of the referenced document as the system field _from
 @To | field | stored the _id of the referenced document as the system field _to
-@Relation | field | vertices which are connected over edges
+@Relations | field | vertices which are connected over edges
 @HashIndexed | field | described how to index the field
 @SkiplistIndexed | field | described how to index the field
 @PersistentIndexed | field | described how to index the field
@@ -377,72 +380,36 @@ annotation | level | description
 @FulltextIndexed | field | described how to index the field
 @Transient, @Expose | field | excludes the field from serialisation/deserialisation
 
-### Document Edge
+### Document
 
-The annotations `@Document` and `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are name to specify the collection name in the database. The annotation `@Document` specify the collection type to `DOCUMENT`. The annotation `@Edge` specify the collection type to `EDGE`.
+The annotations `@Document` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameter is `name` to specify the collection name in the database. The annotation `@Document` specify the collection type to `DOCUMENT`.
 
 ``` java
 @Document(name="persons")
 public class Person {
   ...
 }
-@Edge(name="relations")
-public class Relation {
-  ...
-}
 ```
 
-### From To
+### Edge
 
-With the annotations `@From` and `@To` applied on a field in a class annotated with @Document(type=`EDGE`) the nested object isn’t stored as a nested object in the document. The _id field of the nested object is stored in the edge document and the nested object is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
+The annotations `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are `name` to specify the collection name in the database and `graph` to specify a named graph which the collection belongs to. The annotation `@Edge` specify the collection type to `EDGE`.
 
 ``` java
 @Edge(name="relations")
 public class Relation {
-  @From
-  private Person c1;
-  @To
-  private Person c2;
-}
-
-@Document(name="customers")
-public class Customer {
-  …
-}
-```
-
-Will result in the following stored edge-document:
-
-```
-{
-  "_key" : "123",
-  "_id" : "relations/123",
-  "_from" : "persons/456",
-  "_to" : "persons/789"
-}
-```
-
-and the following stored documents:
-
-```
-{
-  "_key" : "456",
-  "_id" : "persons/456",
-}
-{
-  "_key" : "789",
-  "_id" : "persons/789",
+  ...
 }
 ```
 
 ### Reference
 
-With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
+With the annotation `@Reference` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
 
 ``` java
 @Document(name="persons")
 public class Person {
-  @Ref
+  @Reference
   private Address address;
 }
 
@@ -481,6 +448,115 @@ Without the annotation `Ref` at the field `address`, the stored document would l
      "street" : "..."
   }
 }
+```
+
+### Relations
+
+With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameters are `collections` and `edges`. With `collections` you can define the edge collections with should be used in the traversal. With `edges` you get an alternative for defining the edge collections using class types. You can use both at the same time. The parameter `graph` can be used instead of `collections` and `edges` if you are using a named graph. If you use `graph` every edge collection defined within the graph is used for the traversal. With the parameter `depth` you can define the maximal depth for the traversal (default 1).
+
+``` java
+@Document(name="persons")
+public class Person {
+  @Relations(collections={"relations"}, depth=1)
+  private List<Person> friends;
+}
+```
+or
+``` java
+@Document(name="persons")
+public class Person {
+  @Relations(edges={Relation.class}, depth=1)
+  private List<Person> friends;
+}
+
+@Edge(name="relations")
+public class Relation {
+
+}
+```
+
+### Edge with From and To
+
+With the annotations `@From` and `@To` applied on a field in a class annotated with `@Edge` the nested object isn’t stored as a nested object in that edge document. The _id field of the nested object is stored in the fields _from or _to within the edge document and the nested object itself is stored as a separate document in another collection described in the `@Document` annotation of the nested object class.
+
+``` java
+@Edge(name="relations")
+public class Relation {
+  @From
+  private Person c1;
+  @To
+  private Person c2;
+}
+
+@Document(name="persons")
+public class Person {
+  ...
+}
+```
+
+Will result in the following stored edge-document in collection *relations*:
+```
+{
+  "_key" : "123",
+  "_id" : "relations/123",
+  "_from" : "persons/456",
+  "_to" : "persons/789"
+}
+```
+
+and the following stored documents in collection *persons*:
+```
+{
+  "_key" : "456",
+  "_id" : "persons/456",
+}
+{
+  "_key" : "789",
+  "_id" : "persons/789",
+}
+```
+
+### Document with From and To
+
+With the annotations `@From` and `@To` applied on a collection or array field in a class annotated with `@Document` the nested objects aren’t stored as nested objects in that document. Each of the nested objects is stored as separate edge document in another collection described in the `@Edge` annotation of the nested object class with the _id of the parent document as field _from or _to.
+
+``` java
+@Document(name="persons")
+public class Person {
+  @From
+  private List<Relation> relations;
+}
+
+@Edge(name="relations")
+public class Relation {
+  ...
+}
+```
+
+Will result in the following stored document in collection *persons*:
+```
+{
+  "_key" : "123",
+  "_id" : "persons/123"
+}
+```
+
+and the following stored edge documents in collection *relations*:
+```
+{
+  "_key" : "456",
+  "_id" : "relations/456",
+  "_from" : "persons/123"
+  "_to" : ".../..."
+}
+{
+  "_key" : "789",
+  "_id" : "relations/456",
+  "_from" : "persons/123"
+  "_to" : ".../..."
+}
+...
+
 ```
 
 ### Indexed annotations
