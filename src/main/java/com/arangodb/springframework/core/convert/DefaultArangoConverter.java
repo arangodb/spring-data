@@ -80,13 +80,13 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return context;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <R> R read(final Class<R> type, final DBEntity source) {
-		return read(ClassTypeInformation.from(type), source);
+		return (R) read(ClassTypeInformation.from(type), source);
 	}
 
-	@SuppressWarnings("unchecked")
-	private <R> R read(final TypeInformation<R> type, final DBEntity source) {
+	private Object read(final TypeInformation<?> type, final DBEntity source) {
 		if (source == null) {
 			return null;
 		}
@@ -94,9 +94,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return conversionService.convert(source, type.getType());
 		}
 		if (type.isCollectionLike() && DBCollectionEntity.class.isAssignableFrom(source.getClass())) {
-			return (R) readCollection(type, DBCollectionEntity.class.cast(source));
+			return readCollection(type, DBCollectionEntity.class.cast(source));
 		}
-		final Optional<? extends ArangoPersistentEntity<R>> entity = (Optional<? extends ArangoPersistentEntity<R>>) Optional
+		final Optional<? extends ArangoPersistentEntity<?>> entity = Optional
 				.ofNullable(context.getPersistentEntity(type.getType()));
 		return read(type, source, entity);
 	}
@@ -121,16 +121,16 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return entries;
 	}
 
-	private <R> R read(
-		final TypeInformation<R> type,
+	private Object read(
+		final TypeInformation<?> type,
 		final DBEntity source,
-		final Optional<? extends ArangoPersistentEntity<R>> entityC) {
-		final ArangoPersistentEntity<R> entity = entityC.orElseThrow(
+		final Optional<? extends ArangoPersistentEntity<?>> entity2) {
+		final ArangoPersistentEntity<?> entity = entity2.orElseThrow(
 			() -> new MappingException("No mapping metadata found for type " + type.getType().getName()));
 
 		final EntityInstantiator instantiatorFor = instantiators.getInstantiatorFor(entity);
 		final ParameterValueProvider<ArangoPersistentProperty> provider = null; // TODO
-		final R instance = instantiatorFor.createInstance(entity, provider);
+		final Object instance = instantiatorFor.createInstance(entity, provider);
 		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(instance),
 				conversionService);
 
