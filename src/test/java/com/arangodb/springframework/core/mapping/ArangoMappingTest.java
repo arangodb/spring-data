@@ -249,11 +249,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		p2.setId(template.insertDocument(p2).getId());
 
 		final Customer customer = new Customer();
-		final DocumentCreateEntity<Customer> res = template.insertDocument(customer);
-		template.insertDocument(new Owns(res.getId(), p1.getId()));
-		template.insertDocument(new Owns(res.getId(), p2.getId()));
+		customer.setId(template.insertDocument(customer).getId());
+		template.insertDocument(new Owns(customer, p1));
+		template.insertDocument(new Owns(customer, p2));
 
-		final Customer doc = template.getDocument(res.getId(), Customer.class);
+		final Customer doc = template.getDocument(customer.getId(), Customer.class);
 		assertThat(doc.getOwns(), is(notNullValue()));
 		assertThat(doc.getOwns().size(), is(2));
 		assertThat(doc.getOwns().stream().map(p -> p.getId()).collect(Collectors.toList()),
@@ -270,13 +270,29 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final Person p3 = new Person();
 		p3.setId(template.insertDocument(p3).getId());
 
-		template.insertDocument(new Knows(p1.getId(), p2.getId()));
-		template.insertDocument(new Knows(p1.getId(), p3.getId()));
+		template.insertDocument(new Knows(p1, p2));
+		template.insertDocument(new Knows(p1, p3));
 
 		final Person doc = template.getDocument(p1.getId(), Person.class);
 		assertThat(doc.getKnows(), is(notNullValue()));
 		assertThat(doc.getKnows().size(), is(2));
 		assertThat(doc.getKnows().stream().map(e -> e.getId()).collect(Collectors.toList()),
 			hasItems(p2.getId(), p3.getId()));
+	}
+
+	@Test
+	public void edgeFrom() {
+		final Product product = new Product();
+		product.setId(template.insertDocument(product).getId());
+		final Customer customer = new Customer();
+		customer.setId(template.insertDocument(customer).getId());
+		final DocumentCreateEntity<Owns> res = template.insertDocument(new Owns(customer, product));
+
+		final Owns owns = template.getDocument(res.getId(), Owns.class);
+		assertThat(owns, is(notNullValue()));
+		assertThat(owns.getFrom(), is(notNullValue()));
+		assertThat(owns.getFrom().getId(), is(customer.getId()));
+		assertThat(owns.getTo(), is(notNullValue()));
+		assertThat(owns.getTo().getId(), is(product.getId()));
 	}
 }

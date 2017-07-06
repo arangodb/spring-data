@@ -18,48 +18,37 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.testdata;
+package com.arangodb.springframework.core.convert.resolver;
 
-import com.arangodb.springframework.annotation.Edge;
-import com.arangodb.springframework.annotation.From;
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.To;
+import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
  *
  */
-@Edge
-public class Owns {
+public class ToResolver implements RelationResolver<To> {
 
-	@From
-	private Customer from;
-	@To
-	private Product to;
+	private final ArangoOperations template;
 
-	public Owns() {
+	public ToResolver(final ArangoOperations template) {
 		super();
+		this.template = template;
 	}
 
-	public Owns(final Customer from, final Product to) {
-		super();
-		this.from = from;
-		this.to = to;
+	@Override
+	public <T> T resolve(final String id, final Class<T> type, final To annotation) {
+		return template.getDocument(id, type);
 	}
 
-	public Customer getFrom() {
-		return from;
-	}
-
-	public void setFrom(final Customer from) {
-		this.from = from;
-	}
-
-	public Product getTo() {
-		return to;
-	}
-
-	public void setTo(final Product to) {
-		this.to = to;
+	@Override
+	public <T> Iterable<T> resolveMultiple(final String id, final Class<T> type, final To annotation) {
+		return template
+				.query("FOR e IN @@edge FILTER e._to == @id RETURN e",
+					new MapBuilder().put("@edge", type).put("id", id).get(), new AqlQueryOptions(), type)
+				.asListRemaining();
 	}
 
 }

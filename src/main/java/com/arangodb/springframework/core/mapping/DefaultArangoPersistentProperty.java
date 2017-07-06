@@ -100,6 +100,10 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 			fieldName = "_key";
 		} else if (isRevProperty()) {
 			fieldName = "_rev";
+		} else if (getFrom().isPresent()) {
+			fieldName = "_from";
+		} else if (getTo().isPresent()) {
+			fieldName = "_to";
 		} else {
 			fieldName = getAnnotatedFieldName().orElse(fieldNamingStrategy.getFieldName(this));
 		}

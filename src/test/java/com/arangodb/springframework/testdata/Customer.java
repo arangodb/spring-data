@@ -22,6 +22,8 @@ package com.arangodb.springframework.testdata;
 
 import java.util.Collection;
 
+import org.springframework.data.annotation.Id;
+
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
@@ -33,6 +35,8 @@ import com.arangodb.springframework.annotation.Relations;
 @Document
 public class Customer {
 
+	@Id
+	private String id;
 	private String name;
 	private String surname;
 	private int age;
@@ -59,6 +63,14 @@ public class Customer {
 		this.surname = surname;
 		this.age = age;
 		this.address = address;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
 	}
 
 	public String getName() {

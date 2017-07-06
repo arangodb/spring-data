@@ -22,6 +22,7 @@ package com.arangodb.springframework.core.convert;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +45,6 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
 import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
-import com.arangodb.springframework.core.convert.resolver.RelationResolver;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
@@ -103,8 +103,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 	private Object readCollection(final TypeInformation<?> type, final DBCollectionEntity source) {
 		final Class<?> collectionType = Collection.class.isAssignableFrom(type.getType()) ? type.getType() : List.class;
-		final Class<?> componentType = Optional.ofNullable(type.getComponentType())
-				.orElseThrow(() -> new MappingException("Can not determine collection component type")).getType();
+		final Class<?> componentType = getComponentType(type);
 		final Collection<Object> entries = type.getType().isArray() ? new ArrayList<>()
 				: CollectionFactory.createCollection(collectionType, componentType, source.size());
 		for (final Object entry : source) {
@@ -159,19 +158,14 @@ public class DefaultArangoConverter implements ArangoConverter {
 					tmp = ref;
 				}
 			}
-		} else {
-			if (!tmp.isPresent()) {
-				final Optional<Object> relations = property.getRelations().flatMap(
-					annotation -> readRelations(Optional.ofNullable(parentId), source, property, annotation));
-				if (relations.isPresent()) {
-					tmp = relations;
+		} else if (parentId != null) {
+			for (final Optional<? extends Annotation> annotation : Arrays.asList(property.getRelations(),
+				property.getFrom(), property.getTo())) {
+				final Optional<Object> relation = annotation.flatMap(a -> readRelation(parentId, property, a));
+				if (relation.isPresent()) {
+					tmp = relation;
+					break;
 				}
-			}
-			if (!tmp.isPresent()) {
-				// TODO from
-			}
-			if (!tmp.isPresent()) {
-				// TODO to
 			}
 		}
 		accessor.setProperty(property, Optional.ofNullable(read(tmp.orElse(source), property.getTypeInformation())));
@@ -188,10 +182,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 			if (property.isCollectionLike()) {
 				// TODO check for string collection
 				final Collection<String> ids = (Collection<String>) asCollection(source);
-				reference = Optional.ofNullable(resolver.get().resolve(ids,
-					Optional.ofNullable(property.getTypeInformation().getComponentType())
-							.orElseThrow(() -> new MappingException("Can not determine collection component type"))
-							.getType()));
+				reference = Optional
+						.ofNullable(resolver.get().resolve(ids, getComponentType(property.getTypeInformation())));
 			} else {
 				if (!String.class.isAssignableFrom(source.getClass())) {
 					throw new MappingException(
@@ -204,29 +196,19 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return reference;
 	}
 
-	private <A extends Annotation> Optional<Object> readRelations(
-		final Optional<Object> parentId,
-		final Object source,
+	private <A extends Annotation> Optional<Object> readRelation(
+		final Object parentId,
 		final ArangoPersistentProperty property,
 		final A annotation) {
-		Optional<Object> relations = Optional.empty();
-		if (parentId.isPresent()) {
-			final Optional<RelationResolver<A>> resolver = resolverFactory.getRelationResolver(annotation);
-			if (resolver.isPresent()) {
-				if (!property.isCollectionLike()) {
-					throw new MappingException(
-							"Collection like type expected for relations but found type " + source.getClass());
-				}
-				relations = Optional.of(resolver.get().resolveMultiple(parentId.get().toString(),
-					Optional.ofNullable(property.getTypeInformation().getComponentType())
-							.orElseThrow(() -> new MappingException("Can not determine collection component type"))
-							.getType(),
-					annotation));
+		return resolverFactory.getRelationResolver(annotation).flatMap(resolver -> {
+			if (property.isCollectionLike()) {
+				return Optional.of(resolver.resolveMultiple(parentId.toString(),
+					getComponentType(property.getTypeInformation()), annotation));
+			} else {
+				return Optional
+						.of(resolver.resolve(parentId.toString(), property.getTypeInformation().getType(), annotation));
 			}
-		} else {
-			// TODO log that id is missing
-		}
-		return relations;
+		});
 	}
 
 	@SuppressWarnings("unchecked")
@@ -309,7 +291,13 @@ public class DefaultArangoConverter implements ArangoConverter {
 			}
 			return;
 		}
-		if (property.getRelations().isPresent() || property.getFrom().isPresent() || property.getTo().isPresent()) {
+		if (property.getRelations().isPresent()) {
+			return;
+		}
+		if (property.getFrom().isPresent() || property.getTo().isPresent()) {
+			if (!valueType.isCollectionLike()) {
+				getId(source, property).ifPresent(id -> sink.put(fieldName, id));
+			}
 			return;
 		}
 		if (valueType.isCollectionLike()) {
@@ -379,10 +367,13 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private Collection<?> createCollection(final Collection<?> source, final ArangoPersistentProperty property) {
-		return source.stream().map(s -> conversionService.convert(s,
-			Optional.ofNullable(property.getTypeInformation().getComponentType())
-					.orElseThrow(() -> new MappingException("Can not determine collection component type")).getType()))
+		return source.stream().map(s -> conversionService.convert(s, getComponentType(property.getTypeInformation())))
 				.collect(Collectors.toList());
+	}
+
+	private Class<?> getComponentType(final TypeInformation<?> type) {
+		return Optional.ofNullable(type.getComponentType())
+				.orElseThrow(() -> new MappingException("Can not determine collection component type")).getType();
 	}
 
 	private static Collection<?> asCollection(final Object source) {

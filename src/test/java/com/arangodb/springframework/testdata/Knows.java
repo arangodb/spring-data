@@ -21,6 +21,8 @@
 package com.arangodb.springframework.testdata;
 
 import com.arangodb.springframework.annotation.Edge;
+import com.arangodb.springframework.annotation.From;
+import com.arangodb.springframework.annotation.To;
 
 /**
  * @author Mark Vollmary
@@ -29,33 +31,35 @@ import com.arangodb.springframework.annotation.Edge;
 @Edge
 public class Knows {
 
-	private String _from;
-	private String _to;
+	@From
+	private Person from;
+	@To
+	private Person to;
 
 	public Knows() {
 		super();
 	}
 
-	public Knows(final String _from, final String _to) {
+	public Knows(final Person from, final Person to) {
 		super();
-		this._from = _from;
-		this._to = _to;
+		this.from = from;
+		this.to = to;
 	}
 
-	public String get_from() {
-		return _from;
+	public Person getFrom() {
+		return from;
 	}
 
-	public void set_from(final String _from) {
-		this._from = _from;
+	public void setFrom(final Person from) {
+		this.from = from;
 	}
 
-	public String get_to() {
-		return _to;
+	public Person getTo() {
+		return to;
 	}
 
-	public void set_to(final String _to) {
-		this._to = _to;
+	public void setTo(final Person to) {
+		this.to = to;
 	}
 
 }

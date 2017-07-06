@@ -40,11 +40,13 @@ import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
 import com.arangodb.springframework.core.convert.CustomConversions;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
+import com.arangodb.springframework.core.convert.resolver.FromResolver;
 import com.arangodb.springframework.core.convert.resolver.RefResolver;
 import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
 import com.arangodb.springframework.core.convert.resolver.RelationResolver;
 import com.arangodb.springframework.core.convert.resolver.RelationsResolver;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
+import com.arangodb.springframework.core.convert.resolver.ToResolver;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.template.ArangoTemplate;
 import com.arangodb.velocypack.module.jdk8.VPackJdk8Module;
@@ -122,9 +124,9 @@ public abstract class AbstractArangoConfiguration {
 				RelationResolver<A> resolver = null;
 				try {
 					if (From.class.isAssignableFrom(annotation.getClass())) {
-						// resolver = Optional.of(new FromResolver(arangoTemplate()));
+						resolver = (RelationResolver<A>) new FromResolver(arangoTemplate());
 					} else if (To.class.isAssignableFrom(annotation.getClass())) {
-						// resolver = Optional.of(new ToResolver(arangoTemplate()));
+						resolver = (RelationResolver<A>) new ToResolver(arangoTemplate());
 					} else if (Relations.class.isAssignableFrom(annotation.getClass())) {
 						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
 					}
