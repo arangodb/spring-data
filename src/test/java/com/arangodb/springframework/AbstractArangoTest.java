@@ -24,9 +24,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.arangodb.entity.CollectionType;
-import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.Knows;
+import com.arangodb.springframework.testdata.Owns;
+import com.arangodb.springframework.testdata.Person;
+import com.arangodb.springframework.testdata.Product;
+import com.arangodb.springframework.testdata.ShoppingCart;
 
 /**
  * @author Mark Vollmary
@@ -34,16 +38,8 @@ import com.arangodb.springframework.core.ArangoOperations;
  */
 public class AbstractArangoTest {
 
-	protected static final String COLLECTION_CUSTOMER = "customer";
-	protected static final String COLLECTION_SHOPPING_CART = "shopping-cart";
-	protected static final String COLLECTION_PRODUCT = "product";
-	protected static final String COLLECTION_PERSON = "person";
-	protected static final String EDGE_COLLECTION_KNOWS = "knows";
-	protected static final String EDGE_COLLECTION_OWNS = "owns";
-
-	protected static final String[] COLLECTIONS = new String[] { COLLECTION_CUSTOMER, COLLECTION_SHOPPING_CART,
-			COLLECTION_PRODUCT, COLLECTION_PERSON };
-	protected static final String[] EDGE_COLLECTIONS = new String[] { EDGE_COLLECTION_KNOWS, EDGE_COLLECTION_OWNS };
+	protected static final Class<?>[] COLLECTIONS = new Class<?>[] { Customer.class, ShoppingCart.class, Product.class,
+			Person.class, Owns.class, Knows.class };
 
 	@Autowired
 	protected ArangoOperations template;
@@ -51,33 +47,16 @@ public class AbstractArangoTest {
 	@Before
 	public void before() {
 		try {
-			for (final String collection : COLLECTIONS) {
-				template.driver().db(ArangoTestConfiguration.DB).collection(collection).drop();
-			}
-			for (final String collection : EDGE_COLLECTIONS) {
-				template.driver().db(ArangoTestConfiguration.DB).collection(collection).drop();
+			for (final Class<?> collection : COLLECTIONS) {
+				template.dropCollection(collection);
 			}
 		} catch (final Exception e) {
-		}
-		for (final String collection : COLLECTIONS) {
-			template.driver().db(ArangoTestConfiguration.DB).createCollection(collection);
-		}
-		for (final String collection : EDGE_COLLECTIONS) {
-			template.driver().db(ArangoTestConfiguration.DB).createCollection(collection,
-				new CollectionCreateOptions().type(CollectionType.EDGES));
 		}
 	}
 
 	@After
 	public void after() {
-		try {
-			for (final String collection : COLLECTIONS) {
-				template.driver().db(ArangoTestConfiguration.DB).collection(collection).drop();
-			}
-			for (final String collection : EDGE_COLLECTIONS) {
-				template.driver().db(ArangoTestConfiguration.DB).collection(collection).drop();
-			}
-		} catch (final Exception e) {
-		}
+		template.dropDatabase();
 	}
+
 }

@@ -139,8 +139,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		}
 		final Customer customer2 = template.getDocument(ref2.getId(), Customer.class);
 		assertThat(customer1.getShoppingCart().getId(), is(customer2.getShoppingCart().getId()));
-		assertThat(
-			template.driver().db(ArangoTestConfiguration.DB).collection(COLLECTION_SHOPPING_CART).count().getCount(),
+		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("shopping-cart").count().getCount(),
 			is(1L));
 	}
 
@@ -183,11 +182,9 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		}
 		final Customer customer2 = template.getDocument(ref2.getId(), Customer.class);
 		assertThat(customer1.getShoppingCart().getId(), is(customer2.getShoppingCart().getId()));
-		assertThat(
-			template.driver().db(ArangoTestConfiguration.DB).collection(COLLECTION_SHOPPING_CART).count().getCount(),
+		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("shopping-cart").count().getCount(),
 			is(1L));
-		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection(COLLECTION_PRODUCT).count().getCount(),
-			is(4L));
+		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("product").count().getCount(), is(4L));
 	}
 
 	@Test
@@ -218,7 +215,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 			ref = template.insertDocument(customer);
 		}
 		final ArangoCursor<Customer> cursor = template.query("FOR c IN @@coll FILTER c._id == @id RETURN c",
-			new MapBuilder().put("@coll", COLLECTION_CUSTOMER).put("id", ref.getId()).get(), new AqlQueryOptions(),
+			new MapBuilder().put("@coll", "customer").put("id", ref.getId()).get(), new AqlQueryOptions(),
 			Customer.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<Customer> customers = cursor.asListRemaining();

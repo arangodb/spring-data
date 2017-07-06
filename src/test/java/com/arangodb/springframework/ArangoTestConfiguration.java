@@ -32,7 +32,7 @@ import com.arangodb.springframework.core.config.AbstractArangoConfiguration;
 @Configuration
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
-	public static final String DB = "_system";
+	public static final String DB = "spring-test-db";
 
 	@Override
 	public ArangoDB.Builder arango() {

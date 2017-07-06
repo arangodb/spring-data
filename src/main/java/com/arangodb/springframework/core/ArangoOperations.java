@@ -114,8 +114,7 @@ public interface ArangoOperations {
 
 	<T> DocumentCreateEntity<T> insertDocument(final T value) throws DataAccessException;
 
-	String determineCollectionName(final Class<?> entityClass);
+	void dropCollection(Class<?> type);
 
-	String determineCollectionName(final Class<?> entityClass, final String id);
-
+	void dropDatabase();
 }
