@@ -46,7 +46,7 @@ public class RelationsResolver implements RelationResolver<Relations> {
 	@Override
 	public <T> Iterable<T> resolveMultiple(final String id, final Class<T> type, final Relations annotation) {
 		return template.query(
-			"FOR v IN 1.." + Math.max(1, annotation.depth()) + " " + annotation.direction()
+			"WITH @@edge FOR v IN 1.." + Math.max(1, annotation.depth()) + " " + annotation.direction()
 					+ " @start @@edge OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v",
 			new MapBuilder().put("start", id).put("@edge", annotation.edge()).get(), new AqlQueryOptions(), type)
 				.asListRemaining();
