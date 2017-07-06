@@ -158,14 +158,13 @@ public class DefaultArangoConverter implements ArangoConverter {
 					tmp = ref;
 				}
 			}
-		} else if (parentId != null) {
-			for (final Optional<? extends Annotation> annotation : Arrays.asList(property.getRelations(),
-				property.getFrom(), property.getTo())) {
-				final Optional<Object> relation = annotation.flatMap(a -> readRelation(parentId, property, a));
-				if (relation.isPresent()) {
-					tmp = relation;
-					break;
-				}
+		}
+		for (final Optional<? extends Annotation> annotation : Arrays.asList(property.getRelations(),
+			property.getFrom(), property.getTo())) {
+			final Optional<Object> relation = annotation.flatMap(a -> readRelation(parentId, source, property, a));
+			if (relation.isPresent()) {
+				tmp = relation;
+				break;
 			}
 		}
 		accessor.setProperty(property, Optional.ofNullable(read(tmp.orElse(source), property.getTypeInformation())));
@@ -198,16 +197,18 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 	private <A extends Annotation> Optional<Object> readRelation(
 		final Object parentId,
+		final Object source,
 		final ArangoPersistentProperty property,
 		final A annotation) {
 		return resolverFactory.getRelationResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike()) {
 				return Optional.of(resolver.resolveMultiple(parentId.toString(),
 					getComponentType(property.getTypeInformation()), annotation));
-			} else {
+			} else if (source != null) {
 				return Optional
-						.of(resolver.resolve(parentId.toString(), property.getTypeInformation().getType(), annotation));
+						.of(resolver.resolve(source.toString(), property.getTypeInformation().getType(), annotation));
 			}
+			return Optional.empty();
 		});
 	}
 
