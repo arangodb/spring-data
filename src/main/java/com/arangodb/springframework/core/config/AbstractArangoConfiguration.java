@@ -31,16 +31,20 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 
 import com.arangodb.ArangoDB;
+import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
+import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
 import com.arangodb.springframework.core.convert.CustomConversions;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
-import com.arangodb.springframework.core.convert.RefResolver;
-import com.arangodb.springframework.core.convert.ReferenceResolver;
-import com.arangodb.springframework.core.convert.RelationResolver;
-import com.arangodb.springframework.core.convert.ResolverFactory;
+import com.arangodb.springframework.core.convert.resolver.RefResolver;
+import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
+import com.arangodb.springframework.core.convert.resolver.RelationResolver;
+import com.arangodb.springframework.core.convert.resolver.RelationsResolver;
+import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.template.ArangoTemplate;
 import com.arangodb.velocypack.module.jdk8.VPackJdk8Module;
@@ -112,10 +116,22 @@ public abstract class AbstractArangoConfiguration {
 				return resolver;
 			}
 
+			@SuppressWarnings("unchecked")
 			@Override
-			public Optional<RelationResolver> getRelationResolver(final Annotation annotation) {
-				// TODO
-				return null;
+			public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final A annotation) {
+				RelationResolver<A> resolver = null;
+				try {
+					if (From.class.isAssignableFrom(annotation.getClass())) {
+						// resolver = Optional.of(new FromResolver(arangoTemplate()));
+					} else if (To.class.isAssignableFrom(annotation.getClass())) {
+						// resolver = Optional.of(new ToResolver(arangoTemplate()));
+					} else if (Relations.class.isAssignableFrom(annotation.getClass())) {
+						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
+					}
+				} catch (final Exception e) {
+					// TODO
+				}
+				return Optional.ofNullable(resolver);
 			}
 		});
 	}

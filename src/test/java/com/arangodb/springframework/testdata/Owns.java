@@ -18,21 +18,44 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.annotation;
+package com.arangodb.springframework.testdata;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.arangodb.springframework.annotation.Edge;
 
 /**
  * @author Mark Vollmary
  *
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
-public @interface From {
+@Edge
+public class Owns {
 
-	boolean lazy() default false;
+	private String _from;
+	private String _to;
+
+	public Owns() {
+		super();
+	}
+
+	public Owns(final String _from, final String _to) {
+		super();
+		this._from = _from;
+		this._to = _to;
+	}
+
+	public String get_from() {
+		return _from;
+	}
+
+	public void set_from(final String _from) {
+		this._from = _from;
+	}
+
+	public String get_to() {
+		return _to;
+	}
+
+	public void set_to(final String _to) {
+		this._to = _to;
+	}
 
 }

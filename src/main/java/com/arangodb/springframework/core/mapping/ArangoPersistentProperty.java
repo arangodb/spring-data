@@ -26,6 +26,7 @@ import org.springframework.data.mapping.PersistentProperty;
 
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.To;
 
 /**
@@ -41,6 +42,8 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 	boolean isRevProperty();
 
 	Optional<Ref> getRef();
+
+	Optional<Relations> getRelations();
 
 	Optional<From> getFrom();
 

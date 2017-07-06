@@ -18,14 +18,18 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework.core.convert.resolver;
+
+import java.util.Collection;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface RelationResolver {
+public interface ReferenceResolver {
 
 	<T> T resolve(String id, Class<T> type);
+
+	<T> Iterable<T> resolve(Collection<String> ids, Class<T> type);
 
 }

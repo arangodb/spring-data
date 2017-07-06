@@ -18,21 +18,18 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.annotation;
+package com.arangodb.springframework.core.convert.resolver;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.Annotation;
 
 /**
  * @author Mark Vollmary
  *
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
-public @interface From {
+public interface RelationResolver<A extends Annotation> {
 
-	boolean lazy() default false;
+	<T> T resolve(String id, Class<T> type, A annotation);
+
+	<T> Iterable<T> resolveMultiple(String id, Class<T> type, A annotation);
 
 }

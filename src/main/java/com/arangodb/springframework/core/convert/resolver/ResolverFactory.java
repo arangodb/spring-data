@@ -18,38 +18,19 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework.core.convert.resolver;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
-import com.arangodb.springframework.core.ArangoOperations;
+import java.lang.annotation.Annotation;
+import java.util.Optional;
 
 /**
  * @author Mark Vollmary
  *
  */
-public class RefResolver implements ReferenceResolver {
+public interface ResolverFactory {
 
-	private final ArangoOperations template;
+	Optional<ReferenceResolver> getReferenceResolver(Annotation annotation);
 
-	public RefResolver(final ArangoOperations template) {
-		super();
-		this.template = template;
-	}
-
-	@Override
-	public <T> T resolve(final String id, final Class<T> type) {
-		return template.getDocument(id, type);
-	}
-
-	@Override
-	public <T> Iterable<T> resolve(final Collection<String> ids, final Class<T> type) {
-		final Collection<T> docs = new ArrayList<>();
-		for (final String id : ids) {
-			docs.add(template.getDocument(id, type));
-		}
-		return docs;
-	}
+	<A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(A annotation);
 
 }

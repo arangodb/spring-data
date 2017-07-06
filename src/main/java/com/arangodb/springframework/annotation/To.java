@@ -25,15 +25,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.data.annotation.Reference;
-
 /**
  * @author Mark Vollmary
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
-@Reference
 public @interface To {
 
 	boolean lazy() default false;

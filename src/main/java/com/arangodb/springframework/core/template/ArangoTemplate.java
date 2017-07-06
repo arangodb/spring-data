@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core.template;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.dao.DataAccessException;
@@ -137,7 +138,17 @@ public class ArangoTemplate implements ArangoOperations {
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options,
 		final Class<T> type) throws DataAccessException {
-		return arango.db(database).query(query, DBDocumentEntity.class.cast(toDBEntity(bindVars)), options, type);
+		return arango.db(database).query(query, DBDocumentEntity.class.cast(toDBEntity(prepareBindVars(bindVars))),
+			options, type);
+	}
+
+	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
+		for (final Map.Entry<String, Object> entry : new HashMap<>(bindVars).entrySet()) {
+			if (entry.getKey().startsWith("@") && Class.class.isAssignableFrom(entry.getValue().getClass())) {
+				bindVars.put(entry.getKey(), determineCollectionName((Class<?>) entry.getValue()));
+			}
+		}
+		return bindVars;
 	}
 
 	@Override

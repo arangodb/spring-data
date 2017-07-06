@@ -20,8 +20,11 @@
 
 package com.arangodb.springframework.testdata;
 
+import java.util.Collection;
+
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
 
 /**
  * @author Mark Vollmary
@@ -36,6 +39,8 @@ public class Customer {
 	private Address address;
 	@Ref
 	private ShoppingCart shoppingCart;
+	@Relations(edge = Owns.class)
+	private Collection<Product> owns;
 
 	public Customer() {
 		super();
@@ -94,6 +99,14 @@ public class Customer {
 
 	public void setShoppingCart(final ShoppingCart shoppingCart) {
 		this.shoppingCart = shoppingCart;
+	}
+
+	public Collection<Product> getOwns() {
+		return owns;
+	}
+
+	public void setOwns(final Collection<Product> owns) {
+		this.owns = owns;
 	}
 
 }

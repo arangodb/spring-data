@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -41,6 +42,9 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.Knows;
+import com.arangodb.springframework.testdata.Owns;
+import com.arangodb.springframework.testdata.Person;
 import com.arangodb.springframework.testdata.Product;
 import com.arangodb.springframework.testdata.ShoppingCart;
 import com.arangodb.util.MapBuilder;
@@ -238,5 +242,44 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(slice, is(notNullValue()));
 		assertThat(slice.get("description").isString(), is(true));
 		assertThat(slice.get("description").getAsString(), is("test"));
+	}
+
+	@Test
+	public void relations() {
+		final Product p1 = new Product();
+		p1.setId(template.insertDocument(p1).getId());
+		final Product p2 = new Product();
+		p2.setId(template.insertDocument(p2).getId());
+
+		final Customer customer = new Customer();
+		final DocumentCreateEntity<Customer> res = template.insertDocument(customer);
+		template.insertDocument(new Owns(res.getId(), p1.getId()));
+		template.insertDocument(new Owns(res.getId(), p2.getId()));
+
+		final Customer doc = template.getDocument(res.getId(), Customer.class);
+		assertThat(doc.getOwns(), is(notNullValue()));
+		assertThat(doc.getOwns().size(), is(2));
+		assertThat(doc.getOwns().stream().map(p -> p.getId()).collect(Collectors.toList()),
+			hasItems(p1.getId(), p2.getId()));
+	}
+
+	@Test
+	@Ignore
+	public void relationsLazy() {
+		final Person p1 = new Person();
+		p1.setId(template.insertDocument(p1).getId());
+		final Person p2 = new Person();
+		p2.setId(template.insertDocument(p2).getId());
+		final Person p3 = new Person();
+		p3.setId(template.insertDocument(p3).getId());
+
+		template.insertDocument(new Knows(p1.getId(), p2.getId()));
+		template.insertDocument(new Knows(p1.getId(), p3.getId()));
+
+		final Person doc = template.getDocument(p1.getId(), Person.class);
+		assertThat(doc.getKnows(), is(notNullValue()));
+		assertThat(doc.getKnows().size(), is(2));
+		assertThat(doc.getKnows().stream().map(e -> e.getId()).collect(Collectors.toList()),
+			hasItems(p2.getId(), p3.getId()));
 	}
 }

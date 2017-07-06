@@ -35,6 +35,7 @@ import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
 import com.arangodb.springframework.annotation.To;
 
@@ -73,6 +74,11 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	public Optional<Ref> getRef() {
 		return Optional.ofNullable(findAnnotation(Ref.class));
+	}
+
+	@Override
+	public Optional<Relations> getRelations() {
+		return Optional.ofNullable(findAnnotation(Relations.class));
 	}
 
 	@Override

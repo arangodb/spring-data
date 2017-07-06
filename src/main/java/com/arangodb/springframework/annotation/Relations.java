@@ -31,7 +31,17 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
-public @interface From {
+public @interface Relations {
+
+	public enum Direction {
+		ANY, OUTBOUND, INBOUND
+	}
+
+	Class<?> edge();
+
+	int depth() default 1;
+
+	Direction direction() default Direction.ANY;
 
 	boolean lazy() default false;
 

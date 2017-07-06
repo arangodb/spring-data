@@ -369,7 +369,7 @@ annotation | level | description
 @Key | field | stored the field as the system field _key
 @Rev | field | stored the field as the system field _rev
 @Field("alt-name") | field | stored the field with an alternative name
-@Reference | field | stored the _id of the referenced document and not the nested document
+@Ref | field | stored the _id of the referenced document and not the nested document
 @From | field | stored the _id of the referenced document as the system field _from
 @To | field | stored the _id of the referenced document as the system field _to
 @Relations | field | vertices which are connected over edges
@@ -404,12 +404,12 @@ public class Relation {
 
 ### Reference
 
-With the annotation `@Reference` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate document in another collection described in the `@Document` annotation of the nested object class. To successfully persist an instance of your object the referencing field has to be null or it's instance has to provide a field with the annotation `@Id` including an valid id.
+With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate document in another collection described in the `@Document` annotation of the nested object class. To successfully persist an instance of your object the referencing field has to be null or it's instance has to provide a field with the annotation `@Id` including an valid id.
 
 ``` java
 @Document(name="persons")
 public class Person {
-  @Reference
+  @Ref
   private Address address;
 }
 
@@ -456,7 +456,7 @@ Without the annotation `@Reference` at the field `address`, the stored document 
 
 ### Relations
 
-With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameters are `collection` and `edge`. With `collection` you can define the edge collection which should be used in the traversal. With `edge` you get an alternative for defining the edge collection using the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
+With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameter is `edge`. With `edge` you define the edge collection - which should be used in the traversal - using the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
 
 ``` java
 @Document(name="persons")
