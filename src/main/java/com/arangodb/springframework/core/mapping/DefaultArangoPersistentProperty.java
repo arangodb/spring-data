@@ -32,9 +32,11 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
 
 import com.arangodb.springframework.annotation.Field;
+import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Rev;
+import com.arangodb.springframework.annotation.To;
 
 /**
  * @author Mark Vollmary
@@ -71,6 +73,16 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	public Optional<Ref> getRef() {
 		return Optional.ofNullable(findAnnotation(Ref.class));
+	}
+
+	@Override
+	public Optional<From> getFrom() {
+		return Optional.ofNullable(findAnnotation(From.class));
+	}
+
+	@Override
+	public Optional<To> getTo() {
+		return Optional.ofNullable(findAnnotation(To.class));
 	}
 
 	@Override

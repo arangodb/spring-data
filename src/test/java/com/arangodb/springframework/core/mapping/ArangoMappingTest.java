@@ -66,8 +66,10 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void singleReference() {
 		final DocumentCreateEntity<Customer> ref;
 		{
+			final ShoppingCart shoppingCart = new ShoppingCart();
+			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
 			final Customer customer = new Customer();
-			customer.setShoppingCart(new ShoppingCart());
+			customer.setShoppingCart(shoppingCart);
 			ref = template.insertDocument(customer);
 		}
 		final Customer customerDocument = template.getDocument(ref.getId(), Customer.class);
@@ -85,13 +87,26 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void referenceList() {
 		final DocumentCreateEntity<Customer> ref;
 		{
-			final Customer customer = new Customer();
-			final ShoppingCart shoppingCart = new ShoppingCart();
 			final Collection<Product> products = new ArrayList<>();
-			products.add(new Product("a"));
-			products.add(new Product("b"));
-			products.add(new Product("c"));
+			{
+				final Product productA = new Product("a");
+				productA.setId(template.insertDocument(productA).getId());
+				products.add(productA);
+			}
+			{
+				final Product productB = new Product("b");
+				productB.setId(template.insertDocument(productB).getId());
+				products.add(productB);
+			}
+			{
+				final Product productC = new Product("c");
+				productC.setId(template.insertDocument(productC).getId());
+				products.add(productC);
+			}
+			final ShoppingCart shoppingCart = new ShoppingCart();
 			shoppingCart.setProducts(products);
+			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
+			final Customer customer = new Customer();
 			customer.setShoppingCart(shoppingCart);
 			ref = template.insertDocument(customer);
 		}
@@ -105,8 +120,9 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void existingReference() {
 		final DocumentCreateEntity<Customer> ref1;
 		{
-			final Customer customer = new Customer();
 			final ShoppingCart shoppingCart = new ShoppingCart();
+			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
+			final Customer customer = new Customer();
 			customer.setShoppingCart(shoppingCart);
 			ref1 = template.insertDocument(customer);
 		}
@@ -128,13 +144,24 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void existingReferences() {
 		final DocumentCreateEntity<Customer> ref1;
 		{
-			final Customer customer = new Customer();
-			final ShoppingCart shoppingCart = new ShoppingCart();
 			final Collection<Product> products = new ArrayList<>();
-			products.add(new Product("a"));
-			products.add(new Product("b"));
-			products.add(new Product("c"));
+			{
+				final Product productA = new Product("a");
+				productA.setId(template.insertDocument(productA).getId());
+				products.add(productA);
+			}
+			{
+				final Product productB = new Product("b");
+				productB.setId(template.insertDocument(productB).getId());
+				products.add(productB);
+			}
+			final Product productC = new Product("c");
+			productC.setId(template.insertDocument(productC).getId());
+			products.add(productC);
+			final ShoppingCart shoppingCart = new ShoppingCart();
 			shoppingCart.setProducts(products);
+			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
+			final Customer customer = new Customer();
 			customer.setShoppingCart(shoppingCart);
 			ref1 = template.insertDocument(customer);
 		}
@@ -143,7 +170,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		{
 			final Customer customer = new Customer();
 			customer.setShoppingCart(customer1.getShoppingCart());
-			customer.getShoppingCart().getProducts().add(new Product("d"));
+			{
+				final Product productD = new Product("d");
+				productD.setId(template.insertDocument(productD).getId());
+				customer.getShoppingCart().getProducts().add(productD);
+			}
 			ref2 = template.insertDocument(customer);
 		}
 		final Customer customer2 = template.getDocument(ref2.getId(), Customer.class);
@@ -160,12 +191,25 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final DocumentCreateEntity<Customer> ref;
 		{
 			final Customer customer = new Customer();
-			final ShoppingCart shoppingCart = new ShoppingCart();
 			final Collection<Product> products = new ArrayList<>();
-			products.add(new Product("a"));
-			products.add(new Product("b"));
-			products.add(new Product("c"));
+			{
+				final Product productA = new Product("a");
+				productA.setId(template.insertDocument(productA).getId());
+				products.add(productA);
+			}
+			{
+				final Product productB = new Product("b");
+				productB.setId(template.insertDocument(productB).getId());
+				products.add(productB);
+			}
+			{
+				final Product productC = new Product("c");
+				productC.setId(template.insertDocument(productC).getId());
+				products.add(productC);
+			}
+			final ShoppingCart shoppingCart = new ShoppingCart();
 			shoppingCart.setProducts(products);
+			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
 			customer.setShoppingCart(shoppingCart);
 			ref = template.insertDocument(customer);
 		}

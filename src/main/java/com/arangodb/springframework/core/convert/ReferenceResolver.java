@@ -21,7 +21,6 @@
 package com.arangodb.springframework.core.convert;
 
 import java.util.Collection;
-import java.util.Optional;
 
 /**
  * @author Mark Vollmary
@@ -29,10 +28,8 @@ import java.util.Optional;
  */
 public interface ReferenceResolver {
 
-	String write(Optional<Object> id, Object obj);
+	<T> T resolve(String id, Class<T> type);
 
-	<T> T read(String id, Class<T> type);
-
-	<T> Iterable<T> read(Collection<String> ids, Class<T> type);
+	<T> Iterable<T> resolve(Collection<String> ids, Class<T> type);
 
 }

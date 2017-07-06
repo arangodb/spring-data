@@ -20,7 +20,9 @@
 
 package com.arangodb.springframework.core.config;
 
+import java.lang.annotation.Annotation;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
@@ -29,12 +31,16 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 
 import com.arangodb.ArangoDB;
+import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
 import com.arangodb.springframework.core.convert.CustomConversions;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
 import com.arangodb.springframework.core.convert.RefResolver;
+import com.arangodb.springframework.core.convert.ReferenceResolver;
+import com.arangodb.springframework.core.convert.RelationResolver;
+import com.arangodb.springframework.core.convert.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.template.ArangoTemplate;
 import com.arangodb.velocypack.module.jdk8.VPackJdk8Module;
@@ -92,15 +98,24 @@ public abstract class AbstractArangoConfiguration {
 
 	@Bean
 	public ArangoConverter arangoConverter() throws Exception {
-		return new DefaultArangoConverter(arangoMappingContext(), customConversions(), new RefResolver() {
+		return new DefaultArangoConverter(arangoMappingContext(), customConversions(), new ResolverFactory() {
 			@Override
-			public ArangoOperations template() {
+			public Optional<ReferenceResolver> getReferenceResolver(final Annotation annotation) {
+				Optional<ReferenceResolver> resolver = Optional.empty();
 				try {
-					return arangoTemplate();
+					if (Ref.class.isAssignableFrom(annotation.getClass())) {
+						resolver = Optional.of(new RefResolver(arangoTemplate()));
+					}
 				} catch (final Exception e) {
 					// TODO
-					throw new RuntimeException(e);
 				}
+				return resolver;
+			}
+
+			@Override
+			public Optional<RelationResolver> getRelationResolver(final Annotation annotation) {
+				// TODO
+				return null;
 			}
 		});
 	}

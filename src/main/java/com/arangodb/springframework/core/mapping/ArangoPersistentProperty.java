@@ -24,7 +24,9 @@ import java.util.Optional;
 
 import org.springframework.data.mapping.PersistentProperty;
 
+import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.To;
 
 /**
  * @author Mark Vollmary
@@ -39,5 +41,9 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 	boolean isRevProperty();
 
 	Optional<Ref> getRef();
+
+	Optional<From> getFrom();
+
+	Optional<To> getTo();
 
 }

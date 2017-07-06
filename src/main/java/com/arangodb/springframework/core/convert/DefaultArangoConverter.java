@@ -20,7 +20,9 @@
 
 package com.arangodb.springframework.core.convert;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -55,15 +57,15 @@ public class DefaultArangoConverter implements ArangoConverter {
 	private final CustomConversions conversions;
 	private final GenericConversionService conversionService;
 	private final EntityInstantiators instantiators;
-	private final ReferenceResolver refResolver;
+	private final ResolverFactory resolverFactory;
 
 	public DefaultArangoConverter(
 		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
-		final CustomConversions conversions, final ReferenceResolver refResolver) {
+		final CustomConversions conversions, final ResolverFactory resolverFactory) {
 		super();
 		this.context = context;
 		this.conversions = conversions;
-		this.refResolver = refResolver;
+		this.resolverFactory = resolverFactory;
 		conversionService = new DefaultConversionService();
 		conversions.registerConvertersIn(conversionService);
 		instantiators = new EntityInstantiators();
@@ -117,26 +119,49 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return instance;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void readProperty(
 		final ConvertingPropertyAccessor accessor,
 		final Object source,
 		final ArangoPersistentProperty property) {
 		Object tmp = source;
-		if (tmp != null && property.getRef().isPresent()) {
-			if (property.isCollectionLike()) {
-				// TODO check for string collection
-				final Collection<String> ids = (Collection<String>) asCollection(tmp);
-				tmp = refResolver.read(ids, Optional.ofNullable(property.getTypeInformation().getComponentType())
-						.orElseThrow(() -> new MappingException("")).getType());
-			} else {
-				if (!String.class.isAssignableFrom(tmp.getClass())) {
-					throw new MappingException("Type String expected for reference but found type " + tmp.getClass());
+		if (tmp != null) {
+			for (final Optional<? extends Annotation> referenceAnnotation : Arrays.asList(property.getRef(),
+				property.getFrom(), property.getTo())) {
+				final Optional<Object> ref = readReference(source, property, referenceAnnotation);
+				if (ref.isPresent()) {
+					tmp = ref.get();
+					break;
 				}
-				tmp = refResolver.read(tmp.toString(), property.getTypeInformation().getType());
 			}
 		}
 		accessor.setProperty(property, Optional.ofNullable(read(tmp, property.getTypeInformation())));
+	}
+
+	@SuppressWarnings("unchecked")
+	private Optional<Object> readReference(
+		final Object source,
+		final ArangoPersistentProperty property,
+		final Optional<? extends Annotation> referenceAnnotation) {
+		final Optional<ReferenceResolver> resolver = referenceAnnotation
+				.flatMap(r -> resolverFactory.getReferenceResolver(r));
+		Optional<Object> tmp = Optional.empty();
+		if (resolver.isPresent()) {
+			if (property.isCollectionLike()) {
+				// TODO check for string collection
+				final Collection<String> ids = (Collection<String>) asCollection(source);
+				tmp = Optional.ofNullable(
+					resolver.get().resolve(ids, Optional.ofNullable(property.getTypeInformation().getComponentType())
+							.orElseThrow(() -> new MappingException("")).getType()));
+			} else {
+				if (!String.class.isAssignableFrom(source.getClass())) {
+					throw new MappingException(
+							"Type String expected for reference but found type " + source.getClass());
+				}
+				tmp = Optional
+						.ofNullable(resolver.get().resolve(source.toString(), property.getTypeInformation().getType()));
+			}
+		}
+		return tmp;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -200,26 +225,27 @@ public class DefaultArangoConverter implements ArangoConverter {
 		});
 	}
 
+	@SuppressWarnings("unchecked")
 	private void writeProperty(final Object source, final DBEntity sink, final ArangoPersistentProperty property) {
 		if (source == null) {
 			return;
 		}
 		final String fieldName = property.getFieldName();
 		final TypeInformation<?> valueType = ClassTypeInformation.from(source.getClass());
-		if (property.getRef().isPresent()) {
-			if (valueType.isCollectionLike()) {
-				final Collection<String> idRefs = new ArrayList<>();
-				for (final Object ref : createCollection(asCollection(source), property)) {
-					idRefs.add(refResolver.write(getId(ref, property), ref));
+		for (final Optional<? extends Annotation> referenceAnnotation : Arrays.asList(property.getRef())) {
+			if (referenceAnnotation.isPresent()) {
+				if (valueType.isCollectionLike()) {
+					final Collection<Object> ids = new ArrayList<>();
+					for (final Object ref : createCollection(asCollection(source), property)) {
+						getId(ref, property).ifPresent(id -> ids.add(id));
+					}
+					sink.put(fieldName, ids);
+				} else {
+					getId(source, property).ifPresent(id -> sink.put(fieldName, id));
 				}
-				sink.put(fieldName, idRefs);
-			} else {
-				final Object ref = conversionService.convert(source, property.getTypeInformation().getType());
-				sink.put(fieldName, refResolver.write(getId(source, property), ref));
+				return;
 			}
-			return;
 		}
-		// TODO from, to
 		if (valueType.isCollectionLike()) {
 			final DBEntity collection = new DBCollectionEntity();
 			writeCollection(source, collection);
@@ -227,7 +253,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return;
 		}
 		if (valueType.isMap()) {
-			// TODO
+			final DBEntity map = new DBDocumentEntity();
+			writeMap((Map<Object, Object>) source, map);
+			sink.put(fieldName, map);
 			return;
 		}
 		final Optional<Class<?>> customWriteTarget = Optional

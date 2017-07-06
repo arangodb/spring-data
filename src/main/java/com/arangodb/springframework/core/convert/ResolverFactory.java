@@ -18,43 +18,19 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.testdata;
+package com.arangodb.springframework.core.convert;
 
-import org.springframework.data.annotation.Id;
+import java.lang.annotation.Annotation;
+import java.util.Optional;
 
 /**
  * @author Mark Vollmary
  *
  */
-public class Address {
+public interface ResolverFactory {
 
-	@Id
-	private String id;
-	private String zipCode;
+	Optional<ReferenceResolver> getReferenceResolver(Annotation annotation);
 
-	public Address() {
-		super();
-	}
-
-	public Address(final String zipCode) {
-		super();
-		this.zipCode = zipCode;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(final String id) {
-		this.id = id;
-	}
-
-	public String getZipCode() {
-		return zipCode;
-	}
-
-	public void setZipCode(final String zipCode) {
-		this.zipCode = zipCode;
-	}
+	Optional<RelationResolver> getRelationResolver(Annotation annotation);
 
 }
