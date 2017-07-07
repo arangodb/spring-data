@@ -54,9 +54,9 @@ public class ArangoFactoryBeanTest {
 		checkField(arango, "user", "testuser");
 		checkField(arango, "password", "testpw");
 		final List<Host> hosts = (List<Host>) getField(arango, "hosts");
-		assertThat(hosts.size(), is(1));
-		assertThat(hosts.get(0).getHost(), is("testhost"));
-		assertThat(hosts.get(0).getPort(), is(1234));
+		assertThat(hosts.size(), is(2));
+		assertThat(hosts.get(1).getHost(), is("testhost"));
+		assertThat(hosts.get(1).getPort(), is(1234));
 	}
 
 	@Test
