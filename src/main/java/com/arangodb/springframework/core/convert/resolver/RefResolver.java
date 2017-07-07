@@ -20,16 +20,18 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
+import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.ArangoOperations;
 
 /**
  * @author Mark Vollmary
  *
  */
-public class RefResolver implements ReferenceResolver {
+public class RefResolver extends AbstractResolver<Ref>
+		implements ReferenceResolver<Ref>, AbstractResolver.ResolverCallback<Ref> {
 
 	private final ArangoOperations template;
 
@@ -39,17 +41,18 @@ public class RefResolver implements ReferenceResolver {
 	}
 
 	@Override
-	public <T> T resolve(final String id, final Class<T> type) {
-		return template.getDocument(id, type);
+	public Object resolveOne(final String id, final Class<?> type, final Ref annotation) {
+		return annotation.lazy() ? proxy(id, type, annotation, this) : resolve(id, type, annotation);
 	}
 
 	@Override
-	public <T> Iterable<T> resolve(final Collection<String> ids, final Class<T> type) {
-		final Collection<T> docs = new ArrayList<>();
-		for (final String id : ids) {
-			docs.add(template.getDocument(id, type));
-		}
-		return docs;
+	public Object resolveMultiple(final Collection<String> ids, final Class<?> type, final Ref annotation) {
+		return ids.stream().map(id -> resolveOne(id, type, annotation)).collect(Collectors.toList());
+	}
+
+	@Override
+	public Object resolve(final String id, final Class<?> type, final Ref annotation) {
+		return template.getDocument(id, type);
 	}
 
 }

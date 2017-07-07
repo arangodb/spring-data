@@ -20,34 +20,34 @@
 
 package com.arangodb.springframework.core.mapping;
 
-import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.data.annotation.Id;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.arangodb.ArangoCursor;
 import com.arangodb.entity.DocumentCreateEntity;
-import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
-import com.arangodb.springframework.testdata.Customer;
-import com.arangodb.springframework.testdata.Knows;
-import com.arangodb.springframework.testdata.Owns;
-import com.arangodb.springframework.testdata.Person;
-import com.arangodb.springframework.testdata.Product;
-import com.arangodb.springframework.testdata.ShoppingCart;
-import com.arangodb.util.MapBuilder;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
+import com.arangodb.springframework.annotation.Field;
+import com.arangodb.springframework.annotation.From;
+import com.arangodb.springframework.annotation.Key;
+import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
+import com.arangodb.springframework.annotation.Rev;
+import com.arangodb.springframework.annotation.To;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
@@ -58,241 +58,433 @@ import com.arangodb.velocypack.VPackSlice;
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class ArangoMappingTest extends AbstractArangoTest {
 
-	@Test
-	public void id() {
-		final DocumentCreateEntity<ShoppingCart> ref = template.insertDocument(new ShoppingCart());
-		final ShoppingCart cart = template.getDocument(ref.getId(), ShoppingCart.class);
-		assertThat(cart, is(notNullValue()));
-		assertThat(cart.getId(), is(ref.getId()));
+	@Document
+	public static class BasicTestEntity {
+
+		@Id
+		String id;
+		@Key
+		String key;
+		@Rev
+		String rev;
+
+		public BasicTestEntity() {
+			super();
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(final String id) {
+			this.id = id;
+		}
+
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(final String key) {
+			this.key = key;
+		}
+
+		public String getRev() {
+			return rev;
+		}
+
+		public void setRev(final String rev) {
+			this.rev = rev;
+		}
+
 	}
 
 	@Test
-	public void singleReference() {
-		final DocumentCreateEntity<Customer> ref;
-		{
-			final ShoppingCart shoppingCart = new ShoppingCart();
-			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
-			final Customer customer = new Customer();
-			customer.setShoppingCart(shoppingCart);
-			ref = template.insertDocument(customer);
-		}
-		final Customer customerDocument = template.getDocument(ref.getId(), Customer.class);
-		assertThat(customerDocument, is(notNullValue()));
-		final ShoppingCart shoppingCart = customerDocument.getShoppingCart();
-		assertThat(shoppingCart, is(notNullValue()));
-		assertThat(shoppingCart.getId(), is(notNullValue()));
-
-		final ShoppingCart shoppingCartDocument = template.getDocument(shoppingCart.getId(), ShoppingCart.class);
-		assertThat(shoppingCartDocument, is(notNullValue()));
-		assertThat(shoppingCartDocument.getId(), is(shoppingCart.getId()));
+	public void idKeyRev() {
+		final DocumentCreateEntity<BasicTestEntity> ref = template.insertDocument(new BasicTestEntity());
+		final BasicTestEntity entity = template.getDocument(ref.getId(), BasicTestEntity.class);
+		assertThat(entity, is(notNullValue()));
+		assertThat(entity.getId(), is(ref.getId()));
+		assertThat(entity.getKey(), is(ref.getKey()));
+		assertThat(entity.getRev(), is(ref.getRev()));
 	}
 
-	@Test
-	public void referenceList() {
-		final DocumentCreateEntity<Customer> ref;
-		{
-			final Collection<Product> products = new ArrayList<>();
-			{
-				final Product productA = new Product("a");
-				productA.setId(template.insertDocument(productA).getId());
-				products.add(productA);
-			}
-			{
-				final Product productB = new Product("b");
-				productB.setId(template.insertDocument(productB).getId());
-				products.add(productB);
-			}
-			{
-				final Product productC = new Product("c");
-				productC.setId(template.insertDocument(productC).getId());
-				products.add(productC);
-			}
-			final ShoppingCart shoppingCart = new ShoppingCart();
-			shoppingCart.setProducts(products);
-			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
-			final Customer customer = new Customer();
-			customer.setShoppingCart(shoppingCart);
-			ref = template.insertDocument(customer);
-		}
-		final Customer customerDocument = template.getDocument(ref.getId(), Customer.class);
-		final Collection<Product> products = customerDocument.getShoppingCart().getProducts();
-		assertThat(products.size(), is(3));
-		assertThat(products.stream().map(e -> e.getName()).collect(Collectors.toList()), hasItems("a", "b", "c"));
-	}
-
-	@Test
-	public void existingReference() {
-		final DocumentCreateEntity<Customer> ref1;
-		{
-			final ShoppingCart shoppingCart = new ShoppingCart();
-			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
-			final Customer customer = new Customer();
-			customer.setShoppingCart(shoppingCart);
-			ref1 = template.insertDocument(customer);
-		}
-		final Customer customer1 = template.getDocument(ref1.getId(), Customer.class);
-		final DocumentCreateEntity<Customer> ref2;
-		{
-			final Customer customer = new Customer();
-			customer.setShoppingCart(customer1.getShoppingCart());
-			ref2 = template.insertDocument(customer);
-		}
-		final Customer customer2 = template.getDocument(ref2.getId(), Customer.class);
-		assertThat(customer1.getShoppingCart().getId(), is(customer2.getShoppingCart().getId()));
-		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("shopping-cart").count().getCount(),
-			is(1L));
-	}
-
-	@Test
-	public void existingReferences() {
-		final DocumentCreateEntity<Customer> ref1;
-		{
-			final Collection<Product> products = new ArrayList<>();
-			{
-				final Product productA = new Product("a");
-				productA.setId(template.insertDocument(productA).getId());
-				products.add(productA);
-			}
-			{
-				final Product productB = new Product("b");
-				productB.setId(template.insertDocument(productB).getId());
-				products.add(productB);
-			}
-			final Product productC = new Product("c");
-			productC.setId(template.insertDocument(productC).getId());
-			products.add(productC);
-			final ShoppingCart shoppingCart = new ShoppingCart();
-			shoppingCart.setProducts(products);
-			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
-			final Customer customer = new Customer();
-			customer.setShoppingCart(shoppingCart);
-			ref1 = template.insertDocument(customer);
-		}
-		final Customer customer1 = template.getDocument(ref1.getId(), Customer.class);
-		final DocumentCreateEntity<Customer> ref2;
-		{
-			final Customer customer = new Customer();
-			customer.setShoppingCart(customer1.getShoppingCart());
-			{
-				final Product productD = new Product("d");
-				productD.setId(template.insertDocument(productD).getId());
-				customer.getShoppingCart().getProducts().add(productD);
-			}
-			ref2 = template.insertDocument(customer);
-		}
-		final Customer customer2 = template.getDocument(ref2.getId(), Customer.class);
-		assertThat(customer1.getShoppingCart().getId(), is(customer2.getShoppingCart().getId()));
-		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("shopping-cart").count().getCount(),
-			is(1L));
-		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("product").count().getCount(), is(4L));
-	}
-
-	@Test
-	public void query() {
-		final DocumentCreateEntity<Customer> ref;
-		{
-			final Customer customer = new Customer();
-			final Collection<Product> products = new ArrayList<>();
-			{
-				final Product productA = new Product("a");
-				productA.setId(template.insertDocument(productA).getId());
-				products.add(productA);
-			}
-			{
-				final Product productB = new Product("b");
-				productB.setId(template.insertDocument(productB).getId());
-				products.add(productB);
-			}
-			{
-				final Product productC = new Product("c");
-				productC.setId(template.insertDocument(productC).getId());
-				products.add(productC);
-			}
-			final ShoppingCart shoppingCart = new ShoppingCart();
-			shoppingCart.setProducts(products);
-			shoppingCart.setId(template.insertDocument(shoppingCart).getId());
-			customer.setShoppingCart(shoppingCart);
-			ref = template.insertDocument(customer);
-		}
-		final ArangoCursor<Customer> cursor = template.query("FOR c IN @@coll FILTER c._id == @id RETURN c",
-			new MapBuilder().put("@coll", "customer").put("id", ref.getId()).get(), new AqlQueryOptions(),
-			Customer.class);
-		assertThat(cursor, is(notNullValue()));
-		final List<Customer> customers = cursor.asListRemaining();
-		assertThat(customers.size(), is(1));
-		final Customer customer = customers.get(0);
-		final ShoppingCart shoppingCart = customer.getShoppingCart();
-		assertThat(shoppingCart, is(notNullValue()));
-		final Collection<Product> products = shoppingCart.getProducts();
-		assertThat(products, is(notNullValue()));
-		assertThat(products.size(), is(3));
-		assertThat(products.stream().map(e -> e.getName()).collect(Collectors.toList()), hasItems("a", "b", "c"));
+	public static class FieldNameTestEntity extends BasicTestEntity {
+		@Field("alt-test")
+		private String test;
 	}
 
 	@Test
 	public void fieldNameAnnotation() {
-		final Product p = new Product();
-		p.setDesc("test");
-		final DocumentCreateEntity<Product> res = template.insertDocument(p);
+		final FieldNameTestEntity entity = new FieldNameTestEntity();
+		entity.test = "1234";
+		final DocumentCreateEntity<FieldNameTestEntity> res = template.insertDocument(entity);
 		final VPackSlice slice = template.driver().db(ArangoTestConfiguration.DB).getDocument(res.getId(),
 			VPackSlice.class);
 		assertThat(slice, is(notNullValue()));
-		assertThat(slice.get("description").isString(), is(true));
-		assertThat(slice.get("description").getAsString(), is("test"));
+		assertThat(slice.get("alt-test").isString(), is(true));
+		assertThat(slice.get("alt-test").getAsString(), is(entity.test));
+	}
+
+	public static class SingleReferenceTestEntity extends BasicTestEntity {
+		@Ref
+		private BasicTestEntity entity;
+	}
+
+	@Test
+	public void singleRef() {
+		final BasicTestEntity e1 = new BasicTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final SingleReferenceTestEntity e0 = new SingleReferenceTestEntity();
+		e0.entity = e1;
+		e0.id = template.insertDocument(e0).getId();
+		final SingleReferenceTestEntity document = template.getDocument(e0.id, SingleReferenceTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entity, is(notNullValue()));
+		assertThat(document.entity.id, is(e1.id));
+	}
+
+	public static class SingleReferenceLazyTestEntity extends BasicTestEntity {
+		@Ref(lazy = true)
+		private BasicTestEntity entity;
+	}
+
+	@Test
+	public void singleRefLazy() {
+		final BasicTestEntity e1 = new BasicTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final SingleReferenceLazyTestEntity e0 = new SingleReferenceLazyTestEntity();
+		e0.entity = e1;
+		e0.id = template.insertDocument(e0).getId();
+		final SingleReferenceLazyTestEntity document = template.getDocument(e0.id, SingleReferenceLazyTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entity, is(notNullValue()));
+		assertThat(document.entity, instanceOf(BasicTestEntity.class));
+		assertThat(document.entity.getId(), is(e1.getId()));
+	}
+
+	public static class MultiReferenceTestEntity extends BasicTestEntity {
+		@Ref
+		private Collection<BasicTestEntity> entities;
+	}
+
+	@Test
+	public void multiRef() {
+		final BasicTestEntity e1 = new BasicTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicTestEntity e2 = new BasicTestEntity();
+		e2.id = template.insertDocument(e2).getId();
+		final MultiReferenceTestEntity e0 = new MultiReferenceTestEntity();
+		e0.entities = Arrays.asList(e1, e2);
+		e0.id = template.insertDocument(e0).getId();
+		final MultiReferenceTestEntity document = template.getDocument(e0.id, MultiReferenceTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+		}
+	}
+
+	public static class MultiReferenceLazyTestEntity extends BasicTestEntity {
+		@Ref(lazy = true)
+		private Collection<BasicTestEntity> entities;
+	}
+
+	@Test
+	public void multiRefLazy() {
+		final BasicTestEntity e1 = new BasicTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicTestEntity e2 = new BasicTestEntity();
+		e2.id = template.insertDocument(e2).getId();
+		final MultiReferenceLazyTestEntity e0 = new MultiReferenceLazyTestEntity();
+		e0.entities = Arrays.asList(e1, e2);
+		e0.id = template.insertDocument(e0).getId();
+		final MultiReferenceLazyTestEntity document = template.getDocument(e0.id, MultiReferenceLazyTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+		}
+	}
+
+	@Edge
+	public static class BasicEdgeTestEntity extends BasicTestEntity {
+		@From
+		BasicTestEntity from;
+		@To
+		BasicTestEntity to;
+
+		public BasicEdgeTestEntity() {
+			super();
+		}
+
+		public BasicEdgeTestEntity(final BasicTestEntity from, final BasicTestEntity to) {
+			super();
+			this.from = from;
+			this.to = to;
+		}
+
+		public BasicTestEntity getFrom() {
+			return from;
+		}
+
+		public void setFrom(final BasicTestEntity from) {
+			this.from = from;
+		}
+
+		public BasicTestEntity getTo() {
+			return to;
+		}
+
+		public void setTo(final BasicTestEntity to) {
+			this.to = to;
+		}
+
+	}
+
+	@Test
+	public void edgeFromTo() {
+		final BasicTestEntity e1 = new BasicTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicTestEntity e2 = new BasicTestEntity();
+		e2.id = template.insertDocument(e2).getId();
+		final BasicEdgeTestEntity e0 = new BasicEdgeTestEntity(e1, e2);
+		e0.id = template.insertDocument(e0).getId();
+		final BasicEdgeTestEntity document = template.getDocument(e0.id, BasicEdgeTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.getFrom(), is(notNullValue()));
+		assertThat(document.getFrom().getId(), is(e1.getId()));
+		assertThat(document.getTo(), is(notNullValue()));
+		assertThat(document.getTo().getId(), is(e2.getId()));
+	}
+
+	@Edge
+	public static class BasicEdgeLazyTestEntity extends BasicTestEntity {
+		@From(lazy = true)
+		BasicTestEntity from;
+		@To(lazy = true)
+		BasicTestEntity to;
+
+		public BasicEdgeLazyTestEntity() {
+			super();
+		}
+
+		public BasicEdgeLazyTestEntity(final BasicTestEntity from, final BasicTestEntity to) {
+			super();
+			this.from = from;
+			this.to = to;
+		}
+
+		public BasicTestEntity getFrom() {
+			return from;
+		}
+
+		public void setFrom(final BasicTestEntity from) {
+			this.from = from;
+		}
+
+		public BasicTestEntity getTo() {
+			return to;
+		}
+
+		public void setTo(final BasicTestEntity to) {
+			this.to = to;
+		}
+
+	}
+
+	@Test
+	public void edgeFromToLazy() {
+		final BasicTestEntity e1 = new BasicTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicTestEntity e2 = new BasicTestEntity();
+		e2.id = template.insertDocument(e2).getId();
+		final BasicEdgeLazyTestEntity e0 = new BasicEdgeLazyTestEntity(e1, e2);
+		e0.id = template.insertDocument(e0).getId();
+		final BasicEdgeLazyTestEntity document = template.getDocument(e0.id, BasicEdgeLazyTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.getFrom(), is(notNullValue()));
+		assertThat(document.getFrom().getId(), is(e1.getId()));
+		assertThat(document.getTo(), is(notNullValue()));
+		assertThat(document.getTo().getId(), is(e2.getId()));
+	}
+
+	public static class DocumentFromTestEntity extends BasicTestEntity {
+		@From
+		private Collection<BasicEdgeLazyTestEntity> entities;
+	}
+
+	@Test
+	public void documentFrom() {
+		final DocumentFromTestEntity e0 = new DocumentFromTestEntity();
+		e0.id = template.insertDocument(e0).getId();
+		final DocumentFromTestEntity e1 = new DocumentFromTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e0, e1);
+		edge0.id = template.insertDocument(edge0).getId();
+		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e0, e1);
+		edge1.id = template.insertDocument(edge1).getId();
+		final DocumentFromTestEntity document = template.getDocument(e0.id, DocumentFromTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicEdgeLazyTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getFrom(), is(notNullValue()));
+			assertThat(e.getFrom().getId(), is(notNullValue()));
+			assertThat(e.getFrom().getId(), is(e0.getId()));
+		}
+	}
+
+	public static class DocumentFromLazyTestEntity extends BasicTestEntity {
+		@From(lazy = true)
+		private Collection<BasicEdgeLazyTestEntity> entities;
+	}
+
+	@Test
+	@Ignore
+	public void documentFromLazy() {
+		final DocumentFromLazyTestEntity e0 = new DocumentFromLazyTestEntity();
+		e0.id = template.insertDocument(e0).getId();
+		final DocumentFromLazyTestEntity e1 = new DocumentFromLazyTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e0, e1);
+		edge0.id = template.insertDocument(edge0).getId();
+		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e0, e1);
+		edge1.id = template.insertDocument(edge1).getId();
+		final DocumentFromLazyTestEntity document = template.getDocument(e0.id, DocumentFromLazyTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicEdgeLazyTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getFrom(), is(notNullValue()));
+			assertThat(e.getFrom().getId(), is(notNullValue()));
+			assertThat(e.getFrom().getId(), is(e0.getId()));
+		}
+	}
+
+	public static class DocumentToTestEntity extends BasicTestEntity {
+		@To
+		private Collection<BasicEdgeLazyTestEntity> entities;
+	}
+
+	@Test
+	public void documentTo() {
+		final DocumentToTestEntity e0 = new DocumentToTestEntity();
+		e0.id = template.insertDocument(e0).getId();
+		final DocumentToTestEntity e1 = new DocumentToTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e1, e0);
+		edge0.id = template.insertDocument(edge0).getId();
+		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e1, e0);
+		edge1.id = template.insertDocument(edge1).getId();
+		final DocumentToTestEntity document = template.getDocument(e0.id, DocumentToTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicEdgeLazyTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getTo(), is(notNullValue()));
+			assertThat(e.getTo().getId(), is(notNullValue()));
+			assertThat(e.getTo().getId(), is(e0.getId()));
+		}
+	}
+
+	public static class DocumentToLazyTestEntity extends BasicTestEntity {
+		@To(lazy = true)
+		private Collection<BasicEdgeLazyTestEntity> entities;
+	}
+
+	@Test
+	@Ignore
+	public void documentToLazy() {
+		final DocumentToLazyTestEntity e0 = new DocumentToLazyTestEntity();
+		e0.id = template.insertDocument(e0).getId();
+		final DocumentToLazyTestEntity e1 = new DocumentToLazyTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e1, e0);
+		edge0.id = template.insertDocument(edge0).getId();
+		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e1, e0);
+		edge1.id = template.insertDocument(edge1).getId();
+		final DocumentToLazyTestEntity document = template.getDocument(e0.id, DocumentToLazyTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicEdgeLazyTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getTo(), is(notNullValue()));
+			assertThat(e.getTo().getId(), is(notNullValue()));
+			assertThat(e.getTo().getId(), is(e0.getId()));
+		}
+	}
+
+	public static class RelationsTestEntity extends BasicTestEntity {
+		@Relations(edge = BasicEdgeTestEntity.class)
+		private Collection<BasicTestEntity> entities;
 	}
 
 	@Test
 	public void relations() {
-		final Product p1 = new Product();
-		p1.setId(template.insertDocument(p1).getId());
-		final Product p2 = new Product();
-		p2.setId(template.insertDocument(p2).getId());
+		final BasicTestEntity e1 = new BasicTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicTestEntity e2 = new BasicTestEntity();
+		e2.id = template.insertDocument(e2).getId();
+		final RelationsTestEntity e0 = new RelationsTestEntity();
+		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(new BasicEdgeTestEntity(e0, e1));
+		template.insertDocument(new BasicEdgeTestEntity(e0, e2));
 
-		final Customer customer = new Customer();
-		customer.setId(template.insertDocument(customer).getId());
-		template.insertDocument(new Owns(customer, p1));
-		template.insertDocument(new Owns(customer, p2));
+		final RelationsTestEntity document = template.getDocument(e0.id, RelationsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+		}
+	}
 
-		final Customer doc = template.getDocument(customer.getId(), Customer.class);
-		assertThat(doc.getOwns(), is(notNullValue()));
-		assertThat(doc.getOwns().size(), is(2));
-		assertThat(doc.getOwns().stream().map(p -> p.getId()).collect(Collectors.toList()),
-			hasItems(p1.getId(), p2.getId()));
+	public static class RelationsLazyTestEntity extends BasicTestEntity {
+		@Relations(edge = BasicEdgeTestEntity.class, lazy = true)
+		private Collection<BasicTestEntity> entities;
 	}
 
 	@Test
 	@Ignore
 	public void relationsLazy() {
-		final Person p1 = new Person();
-		p1.setId(template.insertDocument(p1).getId());
-		final Person p2 = new Person();
-		p2.setId(template.insertDocument(p2).getId());
-		final Person p3 = new Person();
-		p3.setId(template.insertDocument(p3).getId());
+		final BasicTestEntity e1 = new BasicTestEntity();
+		e1.id = template.insertDocument(e1).getId();
+		final BasicTestEntity e2 = new BasicTestEntity();
+		e2.id = template.insertDocument(e2).getId();
+		final RelationsTestEntity e0 = new RelationsTestEntity();
+		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(new BasicEdgeTestEntity(e0, e1));
+		template.insertDocument(new BasicEdgeTestEntity(e0, e2));
 
-		template.insertDocument(new Knows(p1, p2));
-		template.insertDocument(new Knows(p1, p3));
-
-		final Person doc = template.getDocument(p1.getId(), Person.class);
-		assertThat(doc.getKnows(), is(notNullValue()));
-		assertThat(doc.getKnows().size(), is(2));
-		assertThat(doc.getKnows().stream().map(e -> e.getId()).collect(Collectors.toList()),
-			hasItems(p2.getId(), p3.getId()));
+		final RelationsLazyTestEntity document = template.getDocument(e0.id, RelationsLazyTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+		}
 	}
 
-	@Test
-	public void edgeFrom() {
-		final Product product = new Product();
-		product.setId(template.insertDocument(product).getId());
-		final Customer customer = new Customer();
-		customer.setId(template.insertDocument(customer).getId());
-		final DocumentCreateEntity<Owns> res = template.insertDocument(new Owns(customer, product));
-
-		final Owns owns = template.getDocument(res.getId(), Owns.class);
-		assertThat(owns, is(notNullValue()));
-		assertThat(owns.getFrom(), is(notNullValue()));
-		assertThat(owns.getFrom().getId(), is(customer.getId()));
-		assertThat(owns.getTo(), is(notNullValue()));
-		assertThat(owns.getTo().getId(), is(product.getId()));
-	}
 }

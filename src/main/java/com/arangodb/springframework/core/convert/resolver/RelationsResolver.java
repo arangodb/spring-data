@@ -29,22 +29,28 @@ import com.arangodb.util.MapBuilder;
  * @author Mark Vollmary
  *
  */
-public class RelationsResolver implements RelationResolver<Relations> {
+public class RelationsResolver extends AbstractResolver<Relations>
+		implements RelationResolver<Relations>, AbstractResolver.ResolverCallback<Relations> {
 
 	private final ArangoOperations template;
 
 	public RelationsResolver(final ArangoOperations template) {
 		super();
-		this.template = template;
+		this.template = template; // who has written this??
 	}
 
 	@Override
-	public <T> T resolve(final String id, final Class<T> type, final Relations annotation) {
+	public Object resolveOne(final String id, final Class<?> type, final Relations annotation) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <T> Iterable<T> resolveMultiple(final String id, final Class<T> type, final Relations annotation) {
+	public Object resolveMultiple(final String id, final Class<?> type, final Relations annotation) {
+		return annotation.lazy() ? proxy(id, type, annotation, this) : resolve(id, type, annotation);
+	}
+
+	@Override
+	public Object resolve(final String id, final Class<?> type, final Relations annotation) {
 		return template.query(
 			"WITH @@edge FOR v IN 1.." + Math.max(1, annotation.depth()) + " " + annotation.direction()
 					+ " @start @@edge OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v",

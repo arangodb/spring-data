@@ -29,7 +29,7 @@ import com.arangodb.util.MapBuilder;
  * @author Mark Vollmary
  *
  */
-public class ToResolver implements RelationResolver<To> {
+public class ToResolver extends AbstractResolver<To> implements RelationResolver<To> {
 
 	private final ArangoOperations template;
 
@@ -39,12 +39,22 @@ public class ToResolver implements RelationResolver<To> {
 	}
 
 	@Override
-	public <T> T resolve(final String id, final Class<T> type, final To annotation) {
+	public Object resolveOne(final String id, final Class<?> type, final To annotation) {
+		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> internalResolveOne(i, t))
+				: internalResolveOne(id, type);
+	}
+
+	private Object internalResolveOne(final String id, final Class<?> type) {
 		return template.getDocument(id, type);
 	}
 
 	@Override
-	public <T> Iterable<T> resolveMultiple(final String id, final Class<T> type, final To annotation) {
+	public Object resolveMultiple(final String id, final Class<?> type, final To annotation) {
+		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> internalResolveMultiple(i, t))
+				: internalResolveMultiple(id, type);
+	}
+
+	private Object internalResolveMultiple(final String id, final Class<?> type) {
 		return template
 				.query("FOR e IN @@edge FILTER e._to == @id RETURN e",
 					new MapBuilder().put("@edge", type).put("id", id).get(), new AqlQueryOptions(), type)

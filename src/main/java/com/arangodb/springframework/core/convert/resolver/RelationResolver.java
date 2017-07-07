@@ -28,8 +28,8 @@ import java.lang.annotation.Annotation;
  */
 public interface RelationResolver<A extends Annotation> {
 
-	<T> T resolve(String id, Class<T> type, A annotation);
+	Object resolveOne(String id, Class<?> type, A annotation);
 
-	<T> Iterable<T> resolveMultiple(String id, Class<T> type, A annotation);
+	Object resolveMultiple(String id, Class<?> type, A annotation);
 
 }

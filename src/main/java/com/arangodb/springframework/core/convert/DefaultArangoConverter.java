@@ -44,7 +44,6 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
-import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
@@ -175,24 +174,21 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Object source,
 		final ArangoPersistentProperty property,
 		final Annotation annotation) {
-		final Optional<ReferenceResolver> resolver = resolverFactory.getReferenceResolver(annotation);
-		Optional<Object> reference = Optional.empty();
-		if (resolver.isPresent()) {
+		return resolverFactory.getReferenceResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike()) {
 				// TODO check for string collection
 				final Collection<String> ids = (Collection<String>) asCollection(source);
-				reference = Optional
-						.ofNullable(resolver.get().resolve(ids, getComponentType(property.getTypeInformation())));
+				return Optional.ofNullable(
+					resolver.resolveMultiple(ids, getComponentType(property.getTypeInformation()), annotation));
 			} else {
 				if (!String.class.isAssignableFrom(source.getClass())) {
 					throw new MappingException(
 							"Type String expected for reference but found type " + source.getClass());
 				}
-				reference = Optional
-						.ofNullable(resolver.get().resolve(source.toString(), property.getTypeInformation().getType()));
+				return Optional.ofNullable(
+					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
 			}
-		}
-		return reference;
+		});
 	}
 
 	private <A extends Annotation> Optional<Object> readRelation(
@@ -205,8 +201,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 				return Optional.of(resolver.resolveMultiple(parentId.toString(),
 					getComponentType(property.getTypeInformation()), annotation));
 			} else if (source != null) {
-				return Optional
-						.of(resolver.resolve(source.toString(), property.getTypeInformation().getType(), annotation));
+				return Optional.of(
+					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
 			}
 			return Optional.empty();
 		});
