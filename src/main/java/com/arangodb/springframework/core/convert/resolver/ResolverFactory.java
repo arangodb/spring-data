@@ -29,7 +29,7 @@ import java.util.Optional;
  */
 public interface ResolverFactory {
 
-	Optional<ReferenceResolver> getReferenceResolver(Annotation annotation);
+	<A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(A annotation);
 
 	<A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(A annotation);
 

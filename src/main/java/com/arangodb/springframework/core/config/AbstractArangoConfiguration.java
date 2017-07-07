@@ -105,17 +105,18 @@ public abstract class AbstractArangoConfiguration {
 	@Bean
 	public ArangoConverter arangoConverter() throws Exception {
 		return new DefaultArangoConverter(arangoMappingContext(), customConversions(), new ResolverFactory() {
+			@SuppressWarnings("unchecked")
 			@Override
-			public Optional<ReferenceResolver> getReferenceResolver(final Annotation annotation) {
-				Optional<ReferenceResolver> resolver = Optional.empty();
+			public <A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(final A annotation) {
+				ReferenceResolver<A> resolver = null;
 				try {
 					if (Ref.class.isAssignableFrom(annotation.getClass())) {
-						resolver = Optional.of(new RefResolver(arangoTemplate()));
+						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
 					}
 				} catch (final Exception e) {
 					// TODO
 				}
-				return resolver;
+				return Optional.ofNullable(resolver);
 			}
 
 			@SuppressWarnings("unchecked")
