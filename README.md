@@ -441,7 +441,7 @@ and the representation of *Address* in collection *addresses*:
 }
 ```
 
-Without the annotation `@Reference` at the field `address`, the stored document would look:
+Without the annotation `@Ref` at the field `address`, the stored document would look:
 
 ```
 {
@@ -458,14 +458,6 @@ Without the annotation `@Reference` at the field `address`, the stored document 
 
 With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameter is `edge`. With `edge` you define the edge collection - which should be used in the traversal - using the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
 
-``` java
-@Document(name="persons")
-public class Person {
-  @Relations(collection="relations", depth=1, direction=Direction.ANY)
-  private List<Person> friends;
-}
-```
-or
 ``` java
 @Document(name="persons")
 public class Person {
@@ -496,7 +488,7 @@ public class Relation {
 }
 ```
 
-Will result in the following stored document in collection *persons*:
+The database representation of *Person* in collection *persons* looks as follow:
 ```
 {
   "_key" : "123",
@@ -504,7 +496,7 @@ Will result in the following stored document in collection *persons*:
 }
 ```
 
-and the following stored edge documents in collection *relations*:
+and the representation of *Relation* in collection *relations*:
 ```
 {
   "_key" : "456",
@@ -542,7 +534,7 @@ public class Person {
 }
 ```
 
-Will result in the following stored edge-document in collection *relations*:
+The database representation of *Relation* in collection *relations* looks as follow:
 ```
 {
   "_key" : "123",
@@ -552,7 +544,7 @@ Will result in the following stored edge-document in collection *relations*:
 }
 ```
 
-and the following stored documents in collection *persons*:
+and the representation of *Person* in collection *persons*:
 ```
 {
   "_key" : "456",
@@ -564,7 +556,7 @@ and the following stored documents in collection *persons*:
 }
 ```
 
-**Note:** If you want to save an instance of *Relation* both *Person* objects (from & to) already has to be persisted and the class *Person* needs a field with the annotation `@Id` so it can hold the persisted *_id* from the database. 
+**Note:** If you want to save an instance of *Relation*, both *Person* objects (from & to) already has to be persisted and the class *Person* needs a field with the annotation `@Id` so it can hold the persisted *_id* from the database. 
 
 ### Indexed annotations
 
