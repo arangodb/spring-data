@@ -30,7 +30,9 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.junit.Ignore;
@@ -199,6 +201,58 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		for (int i = 0; i < collect.size(); i++) {
 			for (int j = 0; j < collect.get(i).size(); j++) {
 				assertThat(collect.get(i).get(j), is(i + "" + j));
+			}
+		}
+	}
+
+	public static class SingleNestedMapTestEntity extends BasicTestEntity {
+		private Map<String, NestedDocumentTestEntity> entities;
+	}
+
+	@Test
+	public void singleNestedMap() {
+		final SingleNestedMapTestEntity entity = new SingleNestedMapTestEntity();
+		entity.entities = new HashMap<>();
+		entity.entities.put("0", new NestedDocumentTestEntity("0"));
+		entity.entities.put("1", new NestedDocumentTestEntity("1"));
+		entity.entities.put("2", new NestedDocumentTestEntity("2"));
+		template.insertDocument(entity);
+		final SingleNestedMapTestEntity document = template.getDocument(entity.id, SingleNestedMapTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		final Map<String, String> collect = document.entities.entrySet().stream()
+				.map(e -> new String[] { e.getKey(), e.getValue().test })
+				.collect(Collectors.toMap(k -> k[0], v -> v[1]));
+		for (int i = 0; i <= 2; i++) {
+			assertThat(collect.get(String.valueOf(i)), is(String.valueOf(i)));
+		}
+	}
+
+	public static class MultipleNestedMapTestEntity extends BasicTestEntity {
+		private Map<String, Map<String, NestedDocumentTestEntity>> entities;
+	}
+
+	@Test
+	public void multipleNestedMaps() {
+		final MultipleNestedMapTestEntity entity = new MultipleNestedMapTestEntity();
+		entity.entities = new HashMap<>();
+		final Map<String, NestedDocumentTestEntity> m0 = new HashMap<>();
+		m0.put("0", new NestedDocumentTestEntity("00"));
+		m0.put("1", new NestedDocumentTestEntity("01"));
+		m0.put("2", new NestedDocumentTestEntity("02"));
+		entity.entities.put("0", m0);
+		final Map<String, NestedDocumentTestEntity> m1 = new HashMap<>();
+		m1.put("0", new NestedDocumentTestEntity("10"));
+		m1.put("1", new NestedDocumentTestEntity("11"));
+		m1.put("2", new NestedDocumentTestEntity("12"));
+		entity.entities.put("1", m1);
+		template.insertDocument(entity);
+		final MultipleNestedMapTestEntity document = template.getDocument(entity.id, MultipleNestedMapTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		for (int i = 0; i <= 1; i++) {
+			for (int j = 0; j <= 2; j++) {
+				assertThat(document.entities.get(String.valueOf(i)).get(String.valueOf(j)).test, is(i + "" + j));
 			}
 		}
 	}

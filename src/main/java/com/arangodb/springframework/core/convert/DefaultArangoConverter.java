@@ -92,12 +92,41 @@ public class DefaultArangoConverter implements ArangoConverter {
 		if (conversions.hasCustomReadTarget(type.getType(), type.getType())) {
 			return conversionService.convert(source, type.getType());
 		}
+		if (isMapType(type.getType()) && DBDocumentEntity.class.isAssignableFrom(source.getClass())) {
+			return readMap(type, DBDocumentEntity.class.cast(source));
+		}
 		if (type.isCollectionLike() && DBCollectionEntity.class.isAssignableFrom(source.getClass())) {
 			return readCollection(type, DBCollectionEntity.class.cast(source));
 		}
 		final Optional<? extends ArangoPersistentEntity<?>> entity = Optional
 				.ofNullable(context.getPersistentEntity(type.getType()));
 		return read(type, source, entity);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Object readMap(final TypeInformation<?> type, final DBDocumentEntity source) {
+		final Class<?> keyType = type.getComponentType().getType();
+		final TypeInformation<?> valueType = type.getMapValueType();
+		final Map<Object, Object> map = CollectionFactory.createMap(type.getType(), keyType, source.size());
+		for (final Map.Entry<String, Object> entry : source.entrySet()) {
+			final Object key = conversionService.convert(entry.getKey(), keyType);
+			final Object value = entry.getValue();
+			if (DBEntity.class.isAssignableFrom(value.getClass())) {
+				map.put(key, read(valueType, (DBEntity) value));
+			} else if (Map.class.isAssignableFrom(value.getClass())) {
+				map.put(key, read(valueType, new DBDocumentEntity((Map<? extends String, ? extends Object>) value)));
+			} else if (Collection.class.isAssignableFrom(value.getClass())) {
+				map.put(key, read(valueType, new DBCollectionEntity((Collection<? extends Object>) value)));
+			} else if (isSimpleType(valueType.getType())) {
+				final Optional<Class<?>> customWriteTarget = Optional
+						.ofNullable(conversions.getCustomWriteTarget(valueType.getType()));
+				final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType.getType());
+				map.put(key, conversionService.convert(value, targetType));
+			} else {
+				map.put(key, value);
+			}
+		}
+		return map;
 	}
 
 	@SuppressWarnings("unchecked")
