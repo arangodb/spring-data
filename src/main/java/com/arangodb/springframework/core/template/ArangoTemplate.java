@@ -54,6 +54,7 @@ import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.convert.DBEntityDeserializer;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 
@@ -369,9 +370,12 @@ public class ArangoTemplate implements ArangoOperations {
 
 	private void updateId(final Object value, final DocumentEntity documentEntity) {
 		final ArangoPersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(value.getClass());
-		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(value),
-				converter.getConversionService());
-		accessor.setProperty(entity.getIdProperty(), Optional.ofNullable(documentEntity.getId()));
+		final ArangoPersistentProperty idProperty = entity.getIdProperty();
+		if (idProperty != null) {
+			final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(
+					entity.getPropertyAccessor(value), converter.getConversionService());
+			accessor.setProperty(idProperty, Optional.ofNullable(documentEntity.getId()));
+		}
 	}
 
 	@Override
