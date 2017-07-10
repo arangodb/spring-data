@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.convert;
 
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mapping.context.MappingContext;
 
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
@@ -36,5 +37,7 @@ public interface ArangoConverter extends ArangoEntityReader, ArangoEntityWriter 
 	boolean isSimpleType(Class<?> type);
 
 	boolean isCollectionType(Class<?> type);
+
+	GenericConversionService getConversionService();
 
 }

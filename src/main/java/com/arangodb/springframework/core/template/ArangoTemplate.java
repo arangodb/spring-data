@@ -37,6 +37,7 @@ import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.entity.DocumentDeleteEntity;
+import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
@@ -53,6 +54,7 @@ import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.convert.DBEntityDeserializer;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 
 /**
@@ -352,7 +354,9 @@ public class ArangoTemplate implements ArangoOperations {
 	public DocumentCreateEntity<Object> insertDocument(final Object value, final DocumentCreateOptions options)
 			throws DataAccessException {
 		try {
-			return collection(value.getClass()).insertDocument(toDBEntity(value));
+			final DocumentCreateEntity<Object> res = collection(value.getClass()).insertDocument(toDBEntity(value));
+			updateId(value, res);
+			return res;
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
@@ -361,6 +365,13 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public DocumentCreateEntity<Object> insertDocument(final Object value) throws DataAccessException {
 		return insertDocument(value, new DocumentCreateOptions());
+	}
+
+	private void updateId(final Object value, final DocumentEntity documentEntity) {
+		final ArangoPersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(value.getClass());
+		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(value),
+				converter.getConversionService());
+		accessor.setProperty(entity.getIdProperty(), Optional.ofNullable(documentEntity.getId()));
 	}
 
 	@Override

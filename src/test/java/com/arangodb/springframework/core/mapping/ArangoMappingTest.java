@@ -133,10 +133,10 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void singleRef() {
 		final BasicTestEntity e1 = new BasicTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final SingleReferenceTestEntity e0 = new SingleReferenceTestEntity();
 		e0.entity = e1;
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final SingleReferenceTestEntity document = template.getDocument(e0.id, SingleReferenceTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entity, is(notNullValue()));
@@ -151,10 +151,10 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void singleRefLazy() {
 		final BasicTestEntity e1 = new BasicTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final SingleReferenceLazyTestEntity e0 = new SingleReferenceLazyTestEntity();
 		e0.entity = e1;
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final SingleReferenceLazyTestEntity document = template.getDocument(e0.id, SingleReferenceLazyTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entity, is(notNullValue()));
@@ -170,12 +170,12 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void multiRef() {
 		final BasicTestEntity e1 = new BasicTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicTestEntity e2 = new BasicTestEntity();
-		e2.id = template.insertDocument(e2).getId();
+		template.insertDocument(e2);
 		final MultiReferenceTestEntity e0 = new MultiReferenceTestEntity();
 		e0.entities = Arrays.asList(e1, e2);
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final MultiReferenceTestEntity document = template.getDocument(e0.id, MultiReferenceTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
@@ -195,12 +195,12 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void multiRefLazy() {
 		final BasicTestEntity e1 = new BasicTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicTestEntity e2 = new BasicTestEntity();
-		e2.id = template.insertDocument(e2).getId();
+		template.insertDocument(e2);
 		final MultiReferenceLazyTestEntity e0 = new MultiReferenceLazyTestEntity();
 		e0.entities = Arrays.asList(e1, e2);
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final MultiReferenceLazyTestEntity document = template.getDocument(e0.id, MultiReferenceLazyTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
@@ -250,11 +250,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void edgeFromTo() {
 		final BasicTestEntity e1 = new BasicTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicTestEntity e2 = new BasicTestEntity();
-		e2.id = template.insertDocument(e2).getId();
+		template.insertDocument(e2);
 		final BasicEdgeTestEntity e0 = new BasicEdgeTestEntity(e1, e2);
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final BasicEdgeTestEntity document = template.getDocument(e0.id, BasicEdgeTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.getFrom(), is(notNullValue()));
@@ -301,11 +301,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void edgeFromToLazy() {
 		final BasicTestEntity e1 = new BasicTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicTestEntity e2 = new BasicTestEntity();
-		e2.id = template.insertDocument(e2).getId();
+		template.insertDocument(e2);
 		final BasicEdgeLazyTestEntity e0 = new BasicEdgeLazyTestEntity(e1, e2);
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final BasicEdgeLazyTestEntity document = template.getDocument(e0.id, BasicEdgeLazyTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.getFrom(), is(notNullValue()));
@@ -322,13 +322,13 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void documentFrom() {
 		final DocumentFromTestEntity e0 = new DocumentFromTestEntity();
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final DocumentFromTestEntity e1 = new DocumentFromTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e0, e1);
-		edge0.id = template.insertDocument(edge0).getId();
+		template.insertDocument(edge0);
 		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e0, e1);
-		edge1.id = template.insertDocument(edge1).getId();
+		template.insertDocument(edge1);
 		final DocumentFromTestEntity document = template.getDocument(e0.id, DocumentFromTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
@@ -352,13 +352,13 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Ignore
 	public void documentFromLazy() {
 		final DocumentFromLazyTestEntity e0 = new DocumentFromLazyTestEntity();
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final DocumentFromLazyTestEntity e1 = new DocumentFromLazyTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e0, e1);
-		edge0.id = template.insertDocument(edge0).getId();
+		template.insertDocument(edge0);
 		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e0, e1);
-		edge1.id = template.insertDocument(edge1).getId();
+		template.insertDocument(edge1);
 		final DocumentFromLazyTestEntity document = template.getDocument(e0.id, DocumentFromLazyTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
@@ -381,13 +381,13 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void documentTo() {
 		final DocumentToTestEntity e0 = new DocumentToTestEntity();
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final DocumentToTestEntity e1 = new DocumentToTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e1, e0);
-		edge0.id = template.insertDocument(edge0).getId();
+		template.insertDocument(edge0);
 		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e1, e0);
-		edge1.id = template.insertDocument(edge1).getId();
+		template.insertDocument(edge1);
 		final DocumentToTestEntity document = template.getDocument(e0.id, DocumentToTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
@@ -411,13 +411,13 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Ignore
 	public void documentToLazy() {
 		final DocumentToLazyTestEntity e0 = new DocumentToLazyTestEntity();
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		final DocumentToLazyTestEntity e1 = new DocumentToLazyTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e1, e0);
-		edge0.id = template.insertDocument(edge0).getId();
+		template.insertDocument(edge0);
 		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e1, e0);
-		edge1.id = template.insertDocument(edge1).getId();
+		template.insertDocument(edge1);
 		final DocumentToLazyTestEntity document = template.getDocument(e0.id, DocumentToLazyTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
@@ -440,11 +440,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void relations() {
 		final BasicTestEntity e1 = new BasicTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicTestEntity e2 = new BasicTestEntity();
-		e2.id = template.insertDocument(e2).getId();
+		template.insertDocument(e2);
 		final RelationsTestEntity e0 = new RelationsTestEntity();
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		template.insertDocument(new BasicEdgeTestEntity(e0, e1));
 		template.insertDocument(new BasicEdgeTestEntity(e0, e2));
 
@@ -468,11 +468,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Ignore
 	public void relationsLazy() {
 		final BasicTestEntity e1 = new BasicTestEntity();
-		e1.id = template.insertDocument(e1).getId();
+		template.insertDocument(e1);
 		final BasicTestEntity e2 = new BasicTestEntity();
-		e2.id = template.insertDocument(e2).getId();
+		template.insertDocument(e2);
 		final RelationsTestEntity e0 = new RelationsTestEntity();
-		e0.id = template.insertDocument(e0).getId();
+		template.insertDocument(e0);
 		template.insertDocument(new BasicEdgeTestEntity(e0, e1));
 		template.insertDocument(new BasicEdgeTestEntity(e0, e2));
 

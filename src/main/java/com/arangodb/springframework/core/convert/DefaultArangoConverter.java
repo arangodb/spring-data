@@ -395,4 +395,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 	public boolean isMapType(final Class<?> type) {
 		return Map.class.isAssignableFrom(type);
 	}
+
+	@Override
+	public GenericConversionService getConversionService() {
+		return conversionService;
+	}
 }
