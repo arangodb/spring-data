@@ -100,21 +100,26 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return read(type, source, entity);
 	}
 
+	@SuppressWarnings("unchecked")
 	private Object readCollection(final TypeInformation<?> type, final DBCollectionEntity source) {
 		final Class<?> collectionType = Collection.class.isAssignableFrom(type.getType()) ? type.getType() : List.class;
-		final Class<?> componentType = getComponentType(type);
+		final TypeInformation<?> componentType = getComponentType(type);
 		final Collection<Object> entries = type.getType().isArray() ? new ArrayList<>()
-				: CollectionFactory.createCollection(collectionType, componentType, source.size());
+				: CollectionFactory.createCollection(collectionType, componentType.getType(), source.size());
 		for (final Object entry : source) {
-			if (DBEntity.class.isAssignableFrom(entries.getClass())) {
+			if (DBEntity.class.isAssignableFrom(entry.getClass())) {
 				entries.add(read(componentType, (DBEntity) entry));
-			} else if (isSimpleType(componentType)) {
+			} else if (Map.class.isAssignableFrom(entry.getClass())) {
+				entries.add(read(componentType, new DBDocumentEntity((Map<? extends String, ? extends Object>) entry)));
+			} else if (Collection.class.isAssignableFrom(entry.getClass())) {
+				entries.add(read(componentType, new DBCollectionEntity((Collection<? extends Object>) entry)));
+			} else if (isSimpleType(componentType.getType())) {
 				final Optional<Class<?>> customWriteTarget = Optional
-						.ofNullable(conversions.getCustomWriteTarget(componentType));
-				final Class<?> targetType = customWriteTarget.orElseGet(() -> componentType);
+						.ofNullable(conversions.getCustomWriteTarget(componentType.getType()));
+				final Class<?> targetType = customWriteTarget.orElseGet(() -> componentType.getType());
 				entries.add(conversionService.convert(entry, targetType));
 			} else {
-				throw new MappingException("this should not happen");// TODO
+				entries.add(entry);
 			}
 		}
 		return entries;
@@ -178,8 +183,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 			if (property.isCollectionLike()) {
 				// TODO check for string collection
 				final Collection<String> ids = (Collection<String>) asCollection(source);
-				return Optional.ofNullable(
-					resolver.resolveMultiple(ids, getComponentType(property.getTypeInformation()), annotation));
+				return Optional.ofNullable(resolver.resolveMultiple(ids,
+					getComponentType(property.getTypeInformation()).getType(), annotation));
 			} else {
 				if (!String.class.isAssignableFrom(source.getClass())) {
 					throw new MappingException(
@@ -199,7 +204,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return resolverFactory.getRelationResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike()) {
 				return Optional.of(resolver.resolveMultiple(parentId.toString(),
-					getComponentType(property.getTypeInformation()), annotation));
+					getComponentType(property.getTypeInformation()).getType(), annotation));
 			} else if (source != null) {
 				return Optional.of(
 					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
@@ -215,8 +220,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 		if (conversions.hasCustomReadTarget(source.getClass(), type.getType())) {
 			return (T) conversionService.convert(source, type.getType());
-		} else if (isMapType(source.getClass())) {
+		}
+		if (isMapType(source.getClass())) {
 			return (T) read(type, new DBDocumentEntity((Map<? extends String, ? extends Object>) source));
+		}
+		if (isCollectionType(source.getClass())) {
+			return (T) readCollection(type, new DBCollectionEntity((Collection<? extends Object>) source));
 		}
 		return (T) source;
 	}
@@ -364,13 +373,14 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private Collection<?> createCollection(final Collection<?> source, final ArangoPersistentProperty property) {
-		return source.stream().map(s -> conversionService.convert(s, getComponentType(property.getTypeInformation())))
+		return source.stream()
+				.map(s -> conversionService.convert(s, getComponentType(property.getTypeInformation()).getType()))
 				.collect(Collectors.toList());
 	}
 
-	private Class<?> getComponentType(final TypeInformation<?> type) {
+	private TypeInformation<?> getComponentType(final TypeInformation<?> type) {
 		return Optional.ofNullable(type.getComponentType())
-				.orElseThrow(() -> new MappingException("Can not determine collection component type")).getType();
+				.orElseThrow(() -> new MappingException("Can not determine collection component type"));
 	}
 
 	private static Collection<?> asCollection(final Object source) {

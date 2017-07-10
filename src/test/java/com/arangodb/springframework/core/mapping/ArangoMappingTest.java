@@ -20,14 +20,18 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -123,6 +127,80 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(slice, is(notNullValue()));
 		assertThat(slice.get("alt-test").isString(), is(true));
 		assertThat(slice.get("alt-test").getAsString(), is(entity.test));
+	}
+
+	public static class SingleNestedDocumentTestEntity extends BasicTestEntity {
+		private NestedDocumentTestEntity entity;
+	}
+
+	public static class NestedDocumentTestEntity {
+		private String test;
+
+		public NestedDocumentTestEntity() {
+			super();
+		}
+
+		public NestedDocumentTestEntity(final String test) {
+			super();
+			this.test = test;
+		}
+	}
+
+	@Test
+	public void singleNestedDocument() {
+		final SingleNestedDocumentTestEntity entity = new SingleNestedDocumentTestEntity();
+		entity.entity = new NestedDocumentTestEntity("test");
+		template.insertDocument(entity);
+		final SingleNestedDocumentTestEntity document = template.getDocument(entity.id,
+			SingleNestedDocumentTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entity, is(notNullValue()));
+		assertThat(document.entity.test, is("test"));
+	}
+
+	public static class MultipleNestedDocumentTestEntity extends BasicTestEntity {
+		private Collection<NestedDocumentTestEntity> entities;
+	}
+
+	@Test
+	public void multipleNestedDocuments() {
+		final MultipleNestedDocumentTestEntity entity = new MultipleNestedDocumentTestEntity();
+		entity.entities = new ArrayList<>(Arrays.asList(new NestedDocumentTestEntity("0"),
+			new NestedDocumentTestEntity("1"), new NestedDocumentTestEntity("2")));
+		template.insertDocument(entity);
+		final MultipleNestedDocumentTestEntity document = template.getDocument(entity.id,
+			MultipleNestedDocumentTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(3));
+		assertThat(document.entities.stream().map(e -> e.test).collect(Collectors.toList()), hasItems("0", "1", "2"));
+	}
+
+	public static class MultipleNestedCollectionsTestEntity extends BasicTestEntity {
+		private Collection<Collection<NestedDocumentTestEntity>> entities;
+	}
+
+	@Test
+	public void multipleNestedCollections() {
+		final MultipleNestedCollectionsTestEntity entity = new MultipleNestedCollectionsTestEntity();
+		entity.entities = new ArrayList<>(Arrays.asList(
+			new ArrayList<>(Arrays.asList(new NestedDocumentTestEntity("00"), new NestedDocumentTestEntity("01"),
+				new NestedDocumentTestEntity("02"))),
+			new ArrayList<>(Arrays.asList(new NestedDocumentTestEntity("10"), new NestedDocumentTestEntity("11"),
+				new NestedDocumentTestEntity("12")))));
+		template.insertDocument(entity);
+		final MultipleNestedCollectionsTestEntity document = template.getDocument(entity.id,
+			MultipleNestedCollectionsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		final List<List<String>> collect = document.entities.stream()
+				.map(c -> c.stream().map(cc -> cc.test).collect(Collectors.toList())).collect(Collectors.toList());
+		for (int i = 0; i < collect.size(); i++) {
+			for (int j = 0; j < collect.get(i).size(); j++) {
+				assertThat(collect.get(i).get(j), is(i + "" + j));
+			}
+		}
 	}
 
 	public static class SingleReferenceTestEntity extends BasicTestEntity {

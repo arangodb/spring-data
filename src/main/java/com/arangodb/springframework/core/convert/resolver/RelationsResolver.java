@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
+import java.util.ArrayList;
+
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.ArangoOperations;
@@ -46,7 +48,7 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	@Override
 	public Object resolveMultiple(final String id, final Class<?> type, final Relations annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, this) : resolve(id, type, annotation);
+		return annotation.lazy() ? proxy(id, ArrayList.class, annotation, this) : resolve(id, type, annotation);
 	}
 
 	@Override
