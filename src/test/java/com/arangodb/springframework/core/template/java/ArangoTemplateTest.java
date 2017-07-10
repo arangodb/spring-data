@@ -73,10 +73,16 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	@Test
 	public void insertDocuments() {
+		final Customer c1 = new Customer();
+		final Customer c2 = new Customer();
+		final Customer c3 = new Customer();
 		final MultiDocumentEntity<DocumentCreateEntity<Object>> res = template
-				.insertDocuments(Arrays.asList(new Customer(), new Customer(), new Customer()), Customer.class);
+				.insertDocuments(Arrays.asList(c1, c2, c3), Customer.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(3));
+		assertThat(c1.getId(), is(notNullValue()));
+		assertThat(c2.getId(), is(notNullValue()));
+		assertThat(c3.getId(), is(notNullValue()));
 	}
 
 	@Test

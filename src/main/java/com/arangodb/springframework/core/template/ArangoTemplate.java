@@ -22,6 +22,7 @@ package com.arangodb.springframework.core.template;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -338,7 +339,16 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<?> type,
 		final DocumentCreateOptions options) throws DataAccessException {
 		try {
-			return collection(type).insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+			final MultiDocumentEntity<DocumentCreateEntity<Object>> res = collection(type)
+					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+			if (res.getErrors().isEmpty()) {
+				final Iterator<Object> valueIterator = values.iterator();
+				final Iterator<DocumentCreateEntity<Object>> documentIterator = res.getDocuments().iterator();
+				for (; valueIterator.hasNext() && documentIterator.hasNext();) {
+					updateId(valueIterator.next(), documentIterator.next());
+				}
+			}
+			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
