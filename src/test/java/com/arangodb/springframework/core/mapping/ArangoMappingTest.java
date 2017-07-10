@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.data.annotation.Id;
@@ -481,7 +480,6 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	@Ignore
 	public void documentFromLazy() {
 		final DocumentFromLazyTestEntity e0 = new DocumentFromLazyTestEntity();
 		template.insertDocument(e0);
@@ -540,7 +538,6 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	@Ignore
 	public void documentToLazy() {
 		final DocumentToLazyTestEntity e0 = new DocumentToLazyTestEntity();
 		template.insertDocument(e0);
@@ -597,7 +594,6 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	@Ignore
 	public void relationsLazy() {
 		final BasicTestEntity e1 = new BasicTestEntity();
 		template.insertDocument(e1);

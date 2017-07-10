@@ -200,7 +200,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 				break;
 			}
 		}
-		accessor.setProperty(property, Optional.ofNullable(read(tmp.orElse(source), property.getTypeInformation())));
+		accessor.setProperty(property, Optional.ofNullable(tmp.orElse(read(source, property.getTypeInformation()))));
 	}
 
 	@SuppressWarnings("unchecked")

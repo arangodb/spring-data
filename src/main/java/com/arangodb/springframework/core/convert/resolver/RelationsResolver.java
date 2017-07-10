@@ -20,7 +20,7 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
-import java.util.ArrayList;
+import java.util.Collection;
 
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.Relations;
@@ -38,7 +38,7 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	public RelationsResolver(final ArangoOperations template) {
 		super();
-		this.template = template; // who has written this??
+		this.template = template;
 	}
 
 	@Override
@@ -48,7 +48,8 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	@Override
 	public Object resolveMultiple(final String id, final Class<?> type, final Relations annotation) {
-		return annotation.lazy() ? proxy(id, ArrayList.class, annotation, this) : resolve(id, type, annotation);
+		return annotation.lazy() ? proxy(id, Collection.class, annotation, (i, t, a) -> resolve(i, type, a))
+				: resolve(id, type, annotation);
 	}
 
 	@Override

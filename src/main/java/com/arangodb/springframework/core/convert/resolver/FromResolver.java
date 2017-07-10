@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
+import java.util.Collection;
+
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.core.ArangoOperations;
@@ -50,7 +52,8 @@ public class FromResolver extends AbstractResolver<From> implements RelationReso
 
 	@Override
 	public Object resolveMultiple(final String id, final Class<?> type, final From annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> internalResolveMultiple(i, t))
+		return annotation.lazy()
+				? proxy(id, Collection.class, annotation, (i, t, a) -> internalResolveMultiple(i, type))
 				: internalResolveMultiple(id, type);
 	}
 
