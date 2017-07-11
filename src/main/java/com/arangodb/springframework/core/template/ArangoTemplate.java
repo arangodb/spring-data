@@ -341,13 +341,7 @@ public class ArangoTemplate implements ArangoOperations {
 		try {
 			final MultiDocumentEntity<DocumentCreateEntity<Object>> res = collection(type)
 					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			if (res.getErrors().isEmpty()) {
-				final Iterator<Object> valueIterator = values.iterator();
-				final Iterator<DocumentCreateEntity<Object>> documentIterator = res.getDocuments().iterator();
-				for (; valueIterator.hasNext() && documentIterator.hasNext();) {
-					updateId(valueIterator.next(), documentIterator.next());
-				}
-			}
+			updateIds(values, type, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -376,6 +370,28 @@ public class ArangoTemplate implements ArangoOperations {
 	@Override
 	public DocumentCreateEntity<Object> insertDocument(final Object value) throws DataAccessException {
 		return insertDocument(value, new DocumentCreateOptions());
+	}
+
+	private void updateIds(
+		final Collection<Object> values,
+		final Class<?> type,
+		final MultiDocumentEntity<? extends DocumentEntity> res) {
+		final Iterator<Object> valueIterator = values.iterator();
+		if (res.getErrors().isEmpty()) {
+			final Iterator<? extends DocumentEntity> documentIterator = res.getDocuments().iterator();
+			for (; valueIterator.hasNext() && documentIterator.hasNext();) {
+				updateId(valueIterator.next(), documentIterator.next());
+			}
+		} else {
+			final Iterator<Object> documentIterator = res.getDocumentsAndErrors().iterator();
+			for (; valueIterator.hasNext() && documentIterator.hasNext();) {
+				final Object nextDoc = documentIterator.next();
+				final Object nextValue = valueIterator.next();
+				if (DocumentEntity.class.isInstance(nextDoc)) {
+					updateId(nextValue, (DocumentEntity) nextDoc);
+				}
+			}
+		}
 	}
 
 	private void updateId(final Object value, final DocumentEntity documentEntity) {

@@ -25,6 +25,7 @@ import java.util.Collection;
 import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
 
@@ -37,6 +38,8 @@ public class Customer {
 
 	@Id
 	private String id;
+	@Key
+	private String key;
 	private String name;
 	private String surname;
 	private int age;
@@ -71,6 +74,14 @@ public class Customer {
 
 	public void setId(final String id) {
 		this.id = id;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(final String key) {
+		this.key = key;
 	}
 
 	public String getName() {
