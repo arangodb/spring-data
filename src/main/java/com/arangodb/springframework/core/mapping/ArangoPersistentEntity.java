@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import java.util.Optional;
+
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.PersistentEntity;
 
@@ -38,5 +40,9 @@ public interface ArangoPersistentEntity<T>
 	CollectionType getCollectionType();
 
 	PersistentPropertyAccessor getPropertyAccessor(Object source);
+
+	Optional<ArangoPersistentProperty> getKeyProperty();
+
+	Optional<ArangoPersistentProperty> getRevProperty();
 
 }

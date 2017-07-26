@@ -248,7 +248,10 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<?> type,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			return collection(type).updateDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = collection(type)
+					.updateDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+			updateDBFields(values, type, res);
+			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -267,7 +270,10 @@ public class ArangoTemplate implements ArangoOperations {
 		final Object value,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			return collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id), toDBEntity(value));
+			final DocumentUpdateEntity<Object> res = collection(value.getClass(), id)
+					.updateDocument(determineDocumentKeyFromId(id), toDBEntity(value));
+			updateDBFields(value, res);
+			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -284,7 +290,10 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<?> type,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			return collection(type).replaceDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = collection(type)
+					.replaceDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+			updateDBFields(values, type, res);
+			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -303,8 +312,10 @@ public class ArangoTemplate implements ArangoOperations {
 		final Object value,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			return collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id), toDBEntity(value),
-				options);
+			final DocumentUpdateEntity<Object> res = collection(value.getClass(), id)
+					.replaceDocument(determineDocumentKeyFromId(id), toDBEntity(value), options);
+			updateDBFields(value, res);
+			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -341,7 +352,7 @@ public class ArangoTemplate implements ArangoOperations {
 		try {
 			final MultiDocumentEntity<DocumentCreateEntity<Object>> res = collection(type)
 					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			updateIds(values, type, res);
+			updateDBFields(values, type, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -360,7 +371,7 @@ public class ArangoTemplate implements ArangoOperations {
 			throws DataAccessException {
 		try {
 			final DocumentCreateEntity<Object> res = collection(value.getClass()).insertDocument(toDBEntity(value));
-			updateId(value, res);
+			updateDBFields(value, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
@@ -372,7 +383,7 @@ public class ArangoTemplate implements ArangoOperations {
 		return insertDocument(value, new DocumentCreateOptions());
 	}
 
-	private void updateIds(
+	private void updateDBFields(
 		final Collection<Object> values,
 		final Class<?> type,
 		final MultiDocumentEntity<? extends DocumentEntity> res) {
@@ -380,7 +391,7 @@ public class ArangoTemplate implements ArangoOperations {
 		if (res.getErrors().isEmpty()) {
 			final Iterator<? extends DocumentEntity> documentIterator = res.getDocuments().iterator();
 			for (; valueIterator.hasNext() && documentIterator.hasNext();) {
-				updateId(valueIterator.next(), documentIterator.next());
+				updateDBFields(valueIterator.next(), documentIterator.next());
 			}
 		} else {
 			final Iterator<Object> documentIterator = res.getDocumentsAndErrors().iterator();
@@ -388,20 +399,24 @@ public class ArangoTemplate implements ArangoOperations {
 				final Object nextDoc = documentIterator.next();
 				final Object nextValue = valueIterator.next();
 				if (DocumentEntity.class.isInstance(nextDoc)) {
-					updateId(nextValue, (DocumentEntity) nextDoc);
+					updateDBFields(nextValue, (DocumentEntity) nextDoc);
 				}
 			}
 		}
 	}
 
-	private void updateId(final Object value, final DocumentEntity documentEntity) {
+	private void updateDBFields(final Object value, final DocumentEntity documentEntity) {
 		final ArangoPersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(value.getClass());
+		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(value),
+				converter.getConversionService());
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null) {
-			final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(
-					entity.getPropertyAccessor(value), converter.getConversionService());
 			accessor.setProperty(idProperty, Optional.ofNullable(documentEntity.getId()));
 		}
+		entity.getKeyProperty()
+				.ifPresent(key -> accessor.setProperty(key, Optional.ofNullable(documentEntity.getKey())));
+		entity.getRevProperty()
+				.ifPresent(rev -> accessor.setProperty(rev, Optional.ofNullable(documentEntity.getRev())));
 	}
 
 	@Override

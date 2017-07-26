@@ -28,6 +28,7 @@ import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
+import com.arangodb.springframework.annotation.Rev;
 
 /**
  * @author Mark Vollmary
@@ -40,6 +41,8 @@ public class Customer {
 	private String id;
 	@Key
 	private String key;
+	@Rev
+	private String rev;
 	private String name;
 	private String surname;
 	private int age;
@@ -82,6 +85,14 @@ public class Customer {
 
 	public void setKey(final String key) {
 		this.key = key;
+	}
+
+	public String getRev() {
+		return rev;
+	}
+
+	public void setRev(final String rev) {
+		this.rev = rev;
 	}
 
 	public String getName() {

@@ -66,9 +66,13 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	@Test
 	public void insertDocument() {
-		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));
+		final Customer c = new Customer("John", "Doe", 30);
+		final DocumentCreateEntity<Customer> res = template.insertDocument(c);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getId(), is(notNullValue()));
+		assertThat(c.getId(), is(res.getId()));
+		assertThat(c.getKey(), is(res.getKey()));
+		assertThat(c.getRev(), is(res.getRev()));
 	}
 
 	@Test
@@ -105,9 +109,12 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void replaceDocument() {
 		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));
-		final DocumentUpdateEntity<Customer> replaceDocument = template.replaceDocument(res.getId(),
-			new Customer("Jane", "Doe", 26));
+		final Customer c = new Customer("Jane", "Doe", 26);
+		final DocumentUpdateEntity<Customer> replaceDocument = template.replaceDocument(res.getId(), c);
 		assertThat(replaceDocument, is(notNullValue()));
+		assertThat(c.getId(), is(replaceDocument.getId()));
+		assertThat(c.getKey(), is(replaceDocument.getKey()));
+		assertThat(c.getRev(), is(replaceDocument.getRev()));
 		final Customer customer = template.getDocument(res.getId(), Customer.class);
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("Jane"));
@@ -139,7 +146,11 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void updateDocument() {
 		final DocumentCreateEntity<Customer> res = template.insertDocument(new Customer("John", "Doe", 30));
-		template.updateDocument(res.getId(), new Customer("Jane", "Doe", 26));
+		final Customer c = new Customer("Jane", "Doe", 26);
+		final DocumentUpdateEntity<Customer> updateDocument = template.updateDocument(res.getId(), c);
+		assertThat(c.getId(), is(updateDocument.getId()));
+		assertThat(c.getKey(), is(updateDocument.getKey()));
+		assertThat(c.getRev(), is(updateDocument.getRev()));
 		final Customer customer = template.getDocument(res.getId(), Customer.class);
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("Jane"));
