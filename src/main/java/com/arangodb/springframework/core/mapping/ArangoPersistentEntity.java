@@ -25,7 +25,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.PersistentEntity;
 
-import com.arangodb.entity.CollectionType;
+import com.arangodb.model.CollectionCreateOptions;
 
 /**
  * @author Mark Vollmary
@@ -37,7 +37,7 @@ public interface ArangoPersistentEntity<T>
 
 	String getCollection();
 
-	CollectionType getCollectionType();
+	CollectionCreateOptions getCollectionOptions();
 
 	PersistentPropertyAccessor getPropertyAccessor(Object source);
 

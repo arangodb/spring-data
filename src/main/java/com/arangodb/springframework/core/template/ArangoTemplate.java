@@ -42,7 +42,6 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReadOptions;
@@ -133,7 +132,7 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	private void createCollection(final String name, final ArangoPersistentEntity<?> persistentEntity) {
-		db().createCollection(name, new CollectionCreateOptions().type(persistentEntity.getCollectionType()));
+		db().createCollection(name, persistentEntity.getCollectionOptions());
 	}
 
 	private ArangoPersistentEntity<?> getPersistentEntity(final Class<?> entityClass) {
