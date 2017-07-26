@@ -20,12 +20,19 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -38,6 +45,16 @@ import com.arangodb.entity.CollectionType;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
+import com.arangodb.springframework.annotation.FulltextIndex;
+import com.arangodb.springframework.annotation.FulltextIndexes;
+import com.arangodb.springframework.annotation.GeoIndex;
+import com.arangodb.springframework.annotation.GeoIndexes;
+import com.arangodb.springframework.annotation.HashIndex;
+import com.arangodb.springframework.annotation.HashIndexes;
+import com.arangodb.springframework.annotation.PersistentIndex;
+import com.arangodb.springframework.annotation.PersistentIndexes;
+import com.arangodb.springframework.annotation.SkiplistIndex;
+import com.arangodb.springframework.annotation.SkiplistIndexes;
 
 /**
  * @author Mark Vollmary
@@ -55,23 +72,35 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private ArangoPersistentProperty keyProperty;
 	private ArangoPersistentProperty revProperty;
+	private final Collection<ArangoPersistentProperty> hashIndexedProperties;
+	private final Collection<ArangoPersistentProperty> skiplistIndexedProperties;
+	private final Collection<ArangoPersistentProperty> persistentIndexedProperties;
+	private final Collection<ArangoPersistentProperty> geoIndexedProperties;
+	private final Collection<ArangoPersistentProperty> fulltextIndexedProperties;
 
-	private CollectionCreateOptions collectionOptions;
+	private final CollectionCreateOptions collectionOptions;
 
 	public DefaultArangoPersistentEntity(final TypeInformation<T> information) {
 		super(information);
 		collection = StringUtils.uncapitalize(information.getType().getSimpleName());
 		context = new StandardEvaluationContext();
+		hashIndexedProperties = new ArrayList<>();
+		skiplistIndexedProperties = new ArrayList<>();
+		persistentIndexedProperties = new ArrayList<>();
+		geoIndexedProperties = new ArrayList<>();
+		fulltextIndexedProperties = new ArrayList<>();
 		final Optional<Document> document = Optional.ofNullable(findAnnotation(Document.class));
 		final Optional<Edge> edge = Optional.ofNullable(findAnnotation(Edge.class));
-		if (document.isPresent()) {
-			final Document d = document.get();
-			collection = StringUtils.hasText(d.value()) ? d.value() : collection;
-			collectionOptions = createCollectionOptions(d);
-		} else if (edge.isPresent()) {
+		if (edge.isPresent()) {
 			final Edge e = edge.get();
 			collection = StringUtils.hasText(e.value()) ? e.value() : collection;
 			collectionOptions = createCollectionOptions(e);
+		} else if (document.isPresent()) {
+			final Document d = document.get();
+			collection = StringUtils.hasText(d.value()) ? d.value() : collection;
+			collectionOptions = createCollectionOptions(d);
+		} else {
+			collectionOptions = new CollectionCreateOptions().type(CollectionType.DOCUMENT);
 		}
 		final Expression expression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
 		if (expression != null) {
@@ -109,7 +138,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	}
 
 	private static CollectionCreateOptions createCollectionOptions(final Edge annotation) {
-		final CollectionCreateOptions options = new CollectionCreateOptions().type(CollectionType.DOCUMENT)
+		final CollectionCreateOptions options = new CollectionCreateOptions().type(CollectionType.EDGES)
 				.waitForSync(annotation.waitForSync()).doCompact(annotation.doCompact())
 				.isVolatile(annotation.isVolatile()).isSystem(annotation.isSystem());
 		if (annotation.journalSize() > -1) {
@@ -162,6 +191,11 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		if (property.isRevProperty()) {
 			revProperty = property;
 		}
+		property.getHashIndexed().ifPresent(i -> hashIndexedProperties.add(property));
+		property.getSkiplistIndexed().ifPresent(i -> skiplistIndexedProperties.add(property));
+		property.getPersistentIndexed().ifPresent(i -> persistentIndexedProperties.add(property));
+		property.getGeoIndexed().ifPresent(i -> geoIndexedProperties.add(property));
+		property.getFulltextIndexed().ifPresent(i -> fulltextIndexedProperties.add(property));
 	}
 
 	@Override
@@ -178,4 +212,74 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	public CollectionCreateOptions getCollectionOptions() {
 		return collectionOptions;
 	}
+
+	@Override
+	public Collection<HashIndex> getHashIndexes() {
+		final Collection<HashIndex> indexes = getIndexes(HashIndex.class);
+		Optional.ofNullable(findAnnotation(HashIndexes.class)).ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
+		return indexes;
+	}
+
+	@Override
+	public Collection<SkiplistIndex> getSkiplistIndexes() {
+		final Collection<SkiplistIndex> indexes = getIndexes(SkiplistIndex.class);
+		Optional.ofNullable(findAnnotation(SkiplistIndexes.class))
+				.ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
+		return indexes;
+	}
+
+	@Override
+	public Collection<PersistentIndex> getPersistentIndexes() {
+		final Collection<PersistentIndex> indexes = getIndexes(PersistentIndex.class);
+		Optional.ofNullable(findAnnotation(PersistentIndexes.class))
+				.ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
+		return indexes;
+	}
+
+	@Override
+	public Collection<GeoIndex> getGeoIndexes() {
+		final Collection<GeoIndex> indexes = getIndexes(GeoIndex.class);
+		Optional.ofNullable(findAnnotation(GeoIndexes.class)).ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
+		return indexes;
+	}
+
+	@Override
+	public Collection<FulltextIndex> getFulltextIndexes() {
+		final Collection<FulltextIndex> indexes = getIndexes(FulltextIndex.class);
+		Optional.ofNullable(findAnnotation(FulltextIndexes.class))
+				.ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
+		return indexes;
+	}
+
+	public <A extends Annotation> Collection<A> getIndexes(final Class<A> annotation) {
+		final List<A> indexes = Arrays.asList(AnnotationUtils.getAnnotations(getType())).stream()
+				.filter(a -> annotation.isInstance(a)).map(a -> annotation.cast(a)).collect(Collectors.toList());
+		return indexes;
+	}
+
+	@Override
+	public Collection<ArangoPersistentProperty> getHashIndexedProperties() {
+		return hashIndexedProperties;
+	}
+
+	@Override
+	public Collection<ArangoPersistentProperty> getSkiplistIndexedProperties() {
+		return skiplistIndexedProperties;
+	}
+
+	@Override
+	public Collection<ArangoPersistentProperty> getPersistentIndexedProperties() {
+		return persistentIndexedProperties;
+	}
+
+	@Override
+	public Collection<ArangoPersistentProperty> getGeoIndexedProperties() {
+		return geoIndexedProperties;
+	}
+
+	@Override
+	public Collection<ArangoPersistentProperty> getFulltextIndexedProperties() {
+		return fulltextIndexedProperties;
+	}
+
 }

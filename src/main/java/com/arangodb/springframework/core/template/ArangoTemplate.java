@@ -20,7 +20,9 @@
 
 package com.arangodb.springframework.core.template;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -47,7 +49,18 @@ import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
+import com.arangodb.model.FulltextIndexOptions;
+import com.arangodb.model.GeoIndexOptions;
+import com.arangodb.model.HashIndexOptions;
+import com.arangodb.model.PersistentIndexOptions;
+import com.arangodb.model.SkiplistIndexOptions;
+import com.arangodb.springframework.annotation.FulltextIndex;
+import com.arangodb.springframework.annotation.GeoIndex;
+import com.arangodb.springframework.annotation.HashIndex;
+import com.arangodb.springframework.annotation.PersistentIndex;
+import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.CollectionOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.DBCollectionEntity;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
@@ -109,23 +122,25 @@ public class ArangoTemplate implements ArangoOperations {
 		return exceptionTranslator.translateExceptionIfPossible(exception);
 	}
 
-	private ArangoCollection collection(final Class<?> entityClass) {
-		return collection(entityClass, null);
+	private ArangoCollection _collection(final Class<?> entityClass) {
+		return _collection(entityClass, null);
 	}
 
-	private ArangoCollection collection(final Class<?> entityClass, final String id) {
+	private ArangoCollection _collection(final Class<?> entityClass, final String id) {
 		final String name = determineCollectionFromId(Optional.ofNullable(id))
 				.orElse(getPersistentEntity(entityClass).getCollection());
 		ArangoCollection collection = collectionCache.get(name);
 		if (collection == null) {
 			collection = db().collection(name);
+			final ArangoPersistentEntity<?> persistentEntity = getPersistentEntity(entityClass);
 			try {
 				collection.getInfo();
 			} catch (final ArangoDBException e) {
 				if (new Integer(404).equals(e.getResponseCode())) {
-					createCollection(name, getPersistentEntity(entityClass));
+					createCollection(name, persistentEntity);
 				}
 			}
+			ensureCollectionIndexes(collection, persistentEntity);
 			collectionCache.put(name, collection);
 		}
 		return collection;
@@ -133,6 +148,78 @@ public class ArangoTemplate implements ArangoOperations {
 
 	private void createCollection(final String name, final ArangoPersistentEntity<?> persistentEntity) {
 		db().createCollection(name, persistentEntity.getCollectionOptions());
+	}
+
+	private static void ensureCollectionIndexes(
+		final ArangoCollection collection,
+		final ArangoPersistentEntity<?> persistentEntity) {
+		persistentEntity.getHashIndexes().stream().forEach(index -> ensureHashIndex(collection, index));
+		persistentEntity.getHashIndexedProperties().stream().forEach(p -> ensureHashIndex(collection, p));
+		persistentEntity.getSkiplistIndexes().stream().forEach(index -> ensureSkiplistIndex(collection, index));
+		persistentEntity.getSkiplistIndexedProperties().stream().forEach(p -> ensureSkiplistIndex(collection, p));
+		persistentEntity.getPersistentIndexes().stream().forEach(index -> ensurePersistentIndex(collection, index));
+		persistentEntity.getPersistentIndexedProperties().stream().forEach(p -> ensurePersistentIndex(collection, p));
+		persistentEntity.getGeoIndexes().stream().forEach(index -> ensureGeoIndex(collection, index));
+		persistentEntity.getGeoIndexedProperties().stream().forEach(p -> ensureGeoIndex(collection, p));
+		persistentEntity.getFulltextIndexes().stream().forEach(index -> ensureFulltextIndex(collection, index));
+		persistentEntity.getFulltextIndexedProperties().stream().forEach(p -> ensureFulltextIndex(collection, p));
+	}
+
+	private static void ensureHashIndex(final ArangoCollection collection, final HashIndex annotation) {
+		collection.createHashIndex(Arrays.asList(annotation.fields()), new HashIndexOptions()
+				.unique(annotation.unique()).sparse(annotation.sparse()).deduplicate(annotation.deduplicate()));
+	}
+
+	private static void ensureHashIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+		final HashIndexOptions options = new HashIndexOptions();
+		value.getHashIndexed()
+				.ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()).deduplicate(i.deduplicate()));
+		collection.createHashIndex(Collections.singleton(value.getFieldName()), options);
+	}
+
+	private static void ensureSkiplistIndex(final ArangoCollection collection, final SkiplistIndex annotation) {
+		collection.createSkiplistIndex(Arrays.asList(annotation.fields()), new SkiplistIndexOptions()
+				.unique(annotation.unique()).sparse(annotation.sparse()).deduplicate(annotation.deduplicate()));
+	}
+
+	private static void ensureSkiplistIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+		final SkiplistIndexOptions options = new SkiplistIndexOptions();
+		value.getSkiplistIndexed()
+				.ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()).deduplicate(i.deduplicate()));
+		collection.createSkiplistIndex(Collections.singleton(value.getFieldName()), options);
+	}
+
+	private static void ensurePersistentIndex(final ArangoCollection collection, final PersistentIndex annotation) {
+		collection.createPersistentIndex(Arrays.asList(annotation.fields()),
+			new PersistentIndexOptions().unique(annotation.unique()).sparse(annotation.sparse()));
+	}
+
+	private static void ensurePersistentIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+		final PersistentIndexOptions options = new PersistentIndexOptions();
+		value.getPersistentIndexed().ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()));
+		collection.createPersistentIndex(Collections.singleton(value.getFieldName()), options);
+	}
+
+	private static void ensureGeoIndex(final ArangoCollection collection, final GeoIndex annotation) {
+		collection.createGeoIndex(Arrays.asList(annotation.fields()),
+			new GeoIndexOptions().geoJson(annotation.geoJson()));
+	}
+
+	private static void ensureGeoIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+		final GeoIndexOptions options = new GeoIndexOptions();
+		value.getGeoIndexed().ifPresent(i -> options.geoJson(i.geoJson()));
+		collection.createGeoIndex(Collections.singleton(value.getFieldName()), options);
+	}
+
+	private static void ensureFulltextIndex(final ArangoCollection collection, final FulltextIndex annotation) {
+		collection.createFulltextIndex(Arrays.asList(annotation.fields()),
+			new FulltextIndexOptions().minLength(annotation.minLength() > -1 ? annotation.minLength() : null));
+	}
+
+	private static void ensureFulltextIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+		final FulltextIndexOptions options = new FulltextIndexOptions();
+		value.getFulltextIndexed().ifPresent(i -> options.minLength(i.minLength() > -1 ? i.minLength() : null));
+		collection.createFulltextIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
 	private ArangoPersistentEntity<?> getPersistentEntity(final Class<?> entityClass) {
@@ -194,7 +281,7 @@ public class ArangoTemplate implements ArangoOperations {
 	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
 		for (final Map.Entry<String, Object> entry : new HashMap<>(bindVars).entrySet()) {
 			if (entry.getKey().startsWith("@") && Class.class.isAssignableFrom(entry.getValue().getClass())) {
-				bindVars.put(entry.getKey(), collection((Class<?>) entry.getValue()).name());
+				bindVars.put(entry.getKey(), _collection((Class<?>) entry.getValue()).name());
 			}
 		}
 		return bindVars;
@@ -206,7 +293,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException {
 		try {
-			return collection(type).deleteDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), type, options);
+			return _collection(type).deleteDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), type, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -223,7 +310,7 @@ public class ArangoTemplate implements ArangoOperations {
 	public <T> DocumentDeleteEntity<Void> deleteDocument(final String id, final Class<T> type)
 			throws DataAccessException {
 		try {
-			return collection(type, id).deleteDocument(determineDocumentKeyFromId(id));
+			return _collection(type, id).deleteDocument(determineDocumentKeyFromId(id));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -235,7 +322,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<T> type,
 		final DocumentDeleteOptions options) throws DataAccessException {
 		try {
-			return collection(type, id).deleteDocument(determineDocumentKeyFromId(id), type, options);
+			return _collection(type, id).deleteDocument(determineDocumentKeyFromId(id), type, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -247,7 +334,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<?> type,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = collection(type)
+			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = _collection(type)
 					.updateDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
 			updateDBFields(values, type, res);
 			return res;
@@ -269,7 +356,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Object value,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			final DocumentUpdateEntity<Object> res = collection(value.getClass(), id)
+			final DocumentUpdateEntity<Object> res = _collection(value.getClass(), id)
 					.updateDocument(determineDocumentKeyFromId(id), toDBEntity(value));
 			updateDBFields(value, res);
 			return res;
@@ -289,7 +376,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<?> type,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = collection(type)
+			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = _collection(type)
 					.replaceDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
 			updateDBFields(values, type, res);
 			return res;
@@ -311,7 +398,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Object value,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			final DocumentUpdateEntity<Object> res = collection(value.getClass(), id)
+			final DocumentUpdateEntity<Object> res = _collection(value.getClass(), id)
 					.replaceDocument(determineDocumentKeyFromId(id), toDBEntity(value), options);
 			updateDBFields(value, res);
 			return res;
@@ -330,7 +417,7 @@ public class ArangoTemplate implements ArangoOperations {
 	public <T> T getDocument(final String id, final Class<T> type, final DocumentReadOptions options)
 			throws DataAccessException {
 		try {
-			final DBEntity doc = collection(type, id).getDocument(determineDocumentKeyFromId(id), DBEntity.class,
+			final DBEntity doc = _collection(type, id).getDocument(determineDocumentKeyFromId(id), DBEntity.class,
 				options);
 			return fromDBEntity(type, doc);
 		} catch (final ArangoDBException e) {
@@ -349,7 +436,7 @@ public class ArangoTemplate implements ArangoOperations {
 		final Class<?> type,
 		final DocumentCreateOptions options) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<DocumentCreateEntity<Object>> res = collection(type)
+			final MultiDocumentEntity<DocumentCreateEntity<Object>> res = _collection(type)
 					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
 			updateDBFields(values, type, res);
 			return res;
@@ -369,7 +456,7 @@ public class ArangoTemplate implements ArangoOperations {
 	public DocumentCreateEntity<Object> insertDocument(final Object value, final DocumentCreateOptions options)
 			throws DataAccessException {
 		try {
-			final DocumentCreateEntity<Object> res = collection(value.getClass()).insertDocument(toDBEntity(value));
+			final DocumentCreateEntity<Object> res = _collection(value.getClass()).insertDocument(toDBEntity(value));
 			updateDBFields(value, res);
 			return res;
 		} catch (final ArangoDBException e) {
@@ -420,17 +507,23 @@ public class ArangoTemplate implements ArangoOperations {
 
 	@Override
 	public void dropCollection(final Class<?> type) {
-		final ArangoCollection collection = collectionCache.remove(type);
-		if (collection != null) {
-			collection.drop();
-		}
+		collection(type).drop();
 	}
 
 	@Override
 	public void dropDatabase() {
-		db().drop();
+		try {
+			db().drop();
+		} catch (final ArangoDBException e) {
+			throw exceptionTranslator.translateExceptionIfPossible(e);
+		}
 		database = null;
 		collectionCache.clear();
+	}
+
+	@Override
+	public CollectionOperations collection(final Class<?> type) {
+		return new DefaultCollectionOperations(_collection(type), collectionCache, exceptionTranslator);
 	}
 
 }

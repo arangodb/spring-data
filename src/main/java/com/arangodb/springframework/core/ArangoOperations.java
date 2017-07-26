@@ -114,7 +114,15 @@ public interface ArangoOperations {
 
 	<T> DocumentCreateEntity<T> insertDocument(final T value) throws DataAccessException;
 
-	void dropCollection(Class<?> type);
+	/**
+	 * @deprecated use {@link CollectionOperations#drop()} instead
+	 * @param type
+	 */
+	@Deprecated
+	void dropCollection(Class<?> type) throws DataAccessException;
 
-	void dropDatabase();
+	void dropDatabase() throws DataAccessException;
+
+	CollectionOperations collection(Class<?> type);
+
 }

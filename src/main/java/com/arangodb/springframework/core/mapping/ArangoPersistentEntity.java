@@ -20,12 +20,18 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.PersistentEntity;
 
 import com.arangodb.model.CollectionCreateOptions;
+import com.arangodb.springframework.annotation.FulltextIndex;
+import com.arangodb.springframework.annotation.GeoIndex;
+import com.arangodb.springframework.annotation.HashIndex;
+import com.arangodb.springframework.annotation.PersistentIndex;
+import com.arangodb.springframework.annotation.SkiplistIndex;
 
 /**
  * @author Mark Vollmary
@@ -44,5 +50,25 @@ public interface ArangoPersistentEntity<T>
 	Optional<ArangoPersistentProperty> getKeyProperty();
 
 	Optional<ArangoPersistentProperty> getRevProperty();
+
+	Collection<HashIndex> getHashIndexes();
+
+	Collection<SkiplistIndex> getSkiplistIndexes();
+
+	Collection<PersistentIndex> getPersistentIndexes();
+
+	Collection<GeoIndex> getGeoIndexes();
+
+	Collection<FulltextIndex> getFulltextIndexes();
+
+	Collection<ArangoPersistentProperty> getHashIndexedProperties();
+
+	Collection<ArangoPersistentProperty> getSkiplistIndexedProperties();
+
+	Collection<ArangoPersistentProperty> getPersistentIndexedProperties();
+
+	Collection<ArangoPersistentProperty> getGeoIndexedProperties();
+
+	Collection<ArangoPersistentProperty> getFulltextIndexedProperties();
 
 }
