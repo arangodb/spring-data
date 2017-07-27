@@ -24,15 +24,18 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
-import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -80,6 +83,9 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private final CollectionCreateOptions collectionOptions;
 
+	private final Map<Class<? extends Annotation>, Optional<Annotation>> annotationCache;
+	private final Map<Class<? extends Annotation>, Set<? extends Annotation>> repeatableAnnotationCache;
+
 	public DefaultArangoPersistentEntity(final TypeInformation<T> information) {
 		super(information);
 		collection = StringUtils.uncapitalize(information.getType().getSimpleName());
@@ -89,6 +95,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		persistentIndexedProperties = new ArrayList<>();
 		geoIndexedProperties = new ArrayList<>();
 		fulltextIndexedProperties = new ArrayList<>();
+		annotationCache = new HashMap<>();
+		repeatableAnnotationCache = new HashMap<>();
 		final Optional<Document> document = Optional.ofNullable(findAnnotation(Document.class));
 		final Optional<Edge> edge = Optional.ofNullable(findAnnotation(Edge.class));
 		if (edge.isPresent()) {
@@ -252,8 +260,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	}
 
 	public <A extends Annotation> Collection<A> getIndexes(final Class<A> annotation) {
-		final List<A> indexes = Arrays.asList(AnnotationUtils.getAnnotations(getType())).stream()
-				.filter(a -> annotation.isInstance(a)).map(a -> annotation.cast(a)).collect(Collectors.toList());
+		final List<A> indexes = findAnnotations(annotation).stream().filter(a -> annotation.isInstance(a))
+				.map(a -> annotation.cast(a)).collect(Collectors.toList());
 		return indexes;
 	}
 
@@ -282,4 +290,16 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		return fulltextIndexedProperties;
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public <A extends Annotation> A findAnnotation(final Class<A> annotationType) {
+		return (A) annotationCache.computeIfAbsent(annotationType,
+			it -> Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(getType(), it))).orElse(null);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <A extends Annotation> Set<A> findAnnotations(final Class<A> annotationType) {
+		return (Set<A>) repeatableAnnotationCache.computeIfAbsent(annotationType,
+			it -> AnnotatedElementUtils.findMergedRepeatableAnnotations(getType(), it));
+	}
 }
