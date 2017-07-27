@@ -235,7 +235,7 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	private static void ensureFulltextIndex(final CollectionOperations collection, final FulltextIndex annotation) {
-		collection.ensureFulltextIndex(Arrays.asList(annotation.fields()),
+		collection.ensureFulltextIndex(Collections.singleton(annotation.field()),
 			new FulltextIndexOptions().minLength(annotation.minLength() > -1 ? annotation.minLength() : null));
 	}
 

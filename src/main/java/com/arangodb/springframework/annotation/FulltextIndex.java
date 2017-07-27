@@ -36,9 +36,9 @@ import java.lang.annotation.Target;
 public @interface FulltextIndex {
 
 	/**
-	 * @return A list of attribute paths
+	 * @return The attribute paths
 	 */
-	String[] fields();
+	String field();
 
 	/**
 	 * @return Minimum character length of words to index. Will default to a server-defined value if unspecified. It is
