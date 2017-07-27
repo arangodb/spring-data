@@ -490,4 +490,67 @@ public class ArangoIndexTest extends AbstractArangoTest {
 					.map(i -> i.getType()).collect(Collectors.toList()),
 			hasItems(IndexType.primary, IndexType.fulltext));
 	}
+
+	public static class DifferentIndexedAnnotations {
+		@HashIndexed
+		@SkiplistIndexed
+		@PersistentIndexed
+		@GeoIndexed
+		@FulltextIndexed
+		private String a;
+	}
+
+	@Test
+	public void differentIndexedAnnotationsSameField() {
+		assertThat(template.collection(DifferentIndexedAnnotations.class).getIndexes().size(), is(6));
+		assertThat(
+			template.collection(DifferentIndexedAnnotations.class).getIndexes().stream().map(i -> i.getType())
+					.collect(Collectors.toList()),
+			hasItems(IndexType.primary, IndexType.hash, IndexType.skiplist, IndexType.persistent, IndexType.geo1,
+				IndexType.fulltext));
+	}
+
+	@HashIndex(fields = { "a" })
+	@SkiplistIndex(fields = { "a" })
+	@PersistentIndex(fields = { "a" })
+	@GeoIndex(fields = { "a" })
+	@FulltextIndex(field = "a")
+	public static class DifferentIndexAnnotations {
+
+	}
+
+	@Test
+	public void differentIndexAnnotations() {
+		assertThat(template.collection(DifferentIndexAnnotations.class).getIndexes().size(), is(6));
+		assertThat(
+			template.collection(DifferentIndexAnnotations.class).getIndexes().stream().map(i -> i.getType())
+					.collect(Collectors.toList()),
+			hasItems(IndexType.primary, IndexType.hash, IndexType.skiplist, IndexType.persistent, IndexType.geo1,
+				IndexType.fulltext));
+	}
+
+	@HashIndex(fields = { "a" })
+	@HashIndex(fields = { "b" })
+	@SkiplistIndex(fields = { "a" })
+	@SkiplistIndex(fields = { "b" })
+	@PersistentIndex(fields = { "a" })
+	@PersistentIndex(fields = { "b" })
+	@GeoIndex(fields = { "a" })
+	@GeoIndex(fields = { "b" })
+	@FulltextIndex(field = "a")
+	@FulltextIndex(field = "b")
+	public static class MultipleDifferentIndexAnnotations {
+
+	}
+
+	@Test
+	public void multipleDifferentIndexAnnotations() {
+		assertThat(template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().size(), is(11));
+		assertThat(
+			template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().stream().map(i -> i.getType())
+					.collect(Collectors.toList()),
+			hasItems(IndexType.primary, IndexType.hash, IndexType.skiplist, IndexType.persistent, IndexType.geo1,
+				IndexType.fulltext));
+	}
+
 }
