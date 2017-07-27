@@ -585,7 +585,18 @@ public class Person {
 }
 ```
 
-If the index should include multiple fields the `@<IndexType>Index` annotations can be used instead. 
+With the `@<IndexType>Indexed` annotations different indexes can be created on the same field.
+
+The following example creates a hash index and also a skiplist index on the field `name`:
+``` java
+public class Person {
+  @HashIndexed
+  @SkiplistIndexed
+  private String name;
+}
+```
+
+If the index should include multiple fields the `@<IndexType>Index` annotations can be used on the type instead.
 
 Possible `@<IndexType>Index` annotations are:
 * `@HashIndex`
@@ -631,7 +642,7 @@ public class Person {
 
 The `@<IndexType>Index` annotations can be used multiple times to create more than one index on this way.
 
-The following example creates a hash index on the fields `name` and `age` and a separate hash index on the fields `name` and `age`:
+The following example creates a hash index on the fields `name` and `age` and a separate hash index on the fields `name` and `gender`:
 ``` java
 @HashIndex(fields = {"name", "age"})
 @HashIndex(fields = {"name", "gender"})
