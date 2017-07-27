@@ -123,6 +123,8 @@ public interface ArangoOperations {
 
 	void dropDatabase() throws DataAccessException;
 
-	CollectionOperations collection(Class<?> type);
+	CollectionOperations collection(Class<?> type) throws DataAccessException;
+
+	CollectionOperations collection(String name) throws DataAccessException;
 
 }

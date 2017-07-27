@@ -44,6 +44,7 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReadOptions;
@@ -111,7 +112,13 @@ public class ArangoTemplate implements ArangoOperations {
 				database.getInfo();
 			} catch (final ArangoDBException e) {
 				if (new Integer(404).equals(e.getResponseCode())) {
-					arango.createDatabase(databaseName);
+					try {
+						arango.createDatabase(databaseName);
+					} catch (final ArangoDBException e1) {
+						throw translateExceptionIfPossible(e1);
+					}
+				} else {
+					throw translateExceptionIfPossible(e);
 				}
 			}
 		}
@@ -122,6 +129,10 @@ public class ArangoTemplate implements ArangoOperations {
 		return exceptionTranslator.translateExceptionIfPossible(exception);
 	}
 
+	private ArangoCollection _collection(final String name) {
+		return _collection(name, null);
+	}
+
 	private ArangoCollection _collection(final Class<?> entityClass) {
 		return _collection(entityClass, null);
 	}
@@ -129,29 +140,37 @@ public class ArangoTemplate implements ArangoOperations {
 	private ArangoCollection _collection(final Class<?> entityClass, final String id) {
 		final String name = determineCollectionFromId(Optional.ofNullable(id))
 				.orElse(getPersistentEntity(entityClass).getCollection());
+		return _collection(name, getPersistentEntity(entityClass));
+	}
+
+	private ArangoCollection _collection(final String name, final ArangoPersistentEntity<?> persistentEntity) {
 		ArangoCollection collection = collectionCache.get(name);
 		if (collection == null) {
 			collection = db().collection(name);
-			final ArangoPersistentEntity<?> persistentEntity = getPersistentEntity(entityClass);
 			try {
 				collection.getInfo();
 			} catch (final ArangoDBException e) {
 				if (new Integer(404).equals(e.getResponseCode())) {
-					createCollection(name, persistentEntity);
+					try {
+						db().createCollection(name, persistentEntity != null ? persistentEntity.getCollectionOptions()
+								: new CollectionCreateOptions());
+					} catch (final ArangoDBException e1) {
+						throw translateExceptionIfPossible(e1);
+					}
+				} else {
+					throw translateExceptionIfPossible(e);
 				}
 			}
-			ensureCollectionIndexes(collection, persistentEntity);
 			collectionCache.put(name, collection);
+			if (persistentEntity != null) {
+				ensureCollectionIndexes(collection(collection), persistentEntity);
+			}
 		}
 		return collection;
 	}
 
-	private void createCollection(final String name, final ArangoPersistentEntity<?> persistentEntity) {
-		db().createCollection(name, persistentEntity.getCollectionOptions());
-	}
-
 	private static void ensureCollectionIndexes(
-		final ArangoCollection collection,
+		final CollectionOperations collection,
 		final ArangoPersistentEntity<?> persistentEntity) {
 		persistentEntity.getHashIndexes().stream().forEach(index -> ensureHashIndex(collection, index));
 		persistentEntity.getHashIndexedProperties().stream().forEach(p -> ensureHashIndex(collection, p));
@@ -165,61 +184,67 @@ public class ArangoTemplate implements ArangoOperations {
 		persistentEntity.getFulltextIndexedProperties().stream().forEach(p -> ensureFulltextIndex(collection, p));
 	}
 
-	private static void ensureHashIndex(final ArangoCollection collection, final HashIndex annotation) {
-		collection.createHashIndex(Arrays.asList(annotation.fields()), new HashIndexOptions()
+	private static void ensureHashIndex(final CollectionOperations collection, final HashIndex annotation) {
+		collection.ensureHashIndex(Arrays.asList(annotation.fields()), new HashIndexOptions()
 				.unique(annotation.unique()).sparse(annotation.sparse()).deduplicate(annotation.deduplicate()));
 	}
 
-	private static void ensureHashIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+	private static void ensureHashIndex(final CollectionOperations collection, final ArangoPersistentProperty value) {
 		final HashIndexOptions options = new HashIndexOptions();
 		value.getHashIndexed()
 				.ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()).deduplicate(i.deduplicate()));
-		collection.createHashIndex(Collections.singleton(value.getFieldName()), options);
+		collection.ensureHashIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
-	private static void ensureSkiplistIndex(final ArangoCollection collection, final SkiplistIndex annotation) {
-		collection.createSkiplistIndex(Arrays.asList(annotation.fields()), new SkiplistIndexOptions()
+	private static void ensureSkiplistIndex(final CollectionOperations collection, final SkiplistIndex annotation) {
+		collection.ensureSkiplistIndex(Arrays.asList(annotation.fields()), new SkiplistIndexOptions()
 				.unique(annotation.unique()).sparse(annotation.sparse()).deduplicate(annotation.deduplicate()));
 	}
 
-	private static void ensureSkiplistIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+	private static void ensureSkiplistIndex(
+		final CollectionOperations collection,
+		final ArangoPersistentProperty value) {
 		final SkiplistIndexOptions options = new SkiplistIndexOptions();
 		value.getSkiplistIndexed()
 				.ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()).deduplicate(i.deduplicate()));
-		collection.createSkiplistIndex(Collections.singleton(value.getFieldName()), options);
+		collection.ensureSkiplistIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
-	private static void ensurePersistentIndex(final ArangoCollection collection, final PersistentIndex annotation) {
-		collection.createPersistentIndex(Arrays.asList(annotation.fields()),
+	private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation) {
+		collection.ensurePersistentIndex(Arrays.asList(annotation.fields()),
 			new PersistentIndexOptions().unique(annotation.unique()).sparse(annotation.sparse()));
 	}
 
-	private static void ensurePersistentIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+	private static void ensurePersistentIndex(
+		final CollectionOperations collection,
+		final ArangoPersistentProperty value) {
 		final PersistentIndexOptions options = new PersistentIndexOptions();
 		value.getPersistentIndexed().ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()));
-		collection.createPersistentIndex(Collections.singleton(value.getFieldName()), options);
+		collection.ensurePersistentIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
-	private static void ensureGeoIndex(final ArangoCollection collection, final GeoIndex annotation) {
-		collection.createGeoIndex(Arrays.asList(annotation.fields()),
+	private static void ensureGeoIndex(final CollectionOperations collection, final GeoIndex annotation) {
+		collection.ensureGeoIndex(Arrays.asList(annotation.fields()),
 			new GeoIndexOptions().geoJson(annotation.geoJson()));
 	}
 
-	private static void ensureGeoIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+	private static void ensureGeoIndex(final CollectionOperations collection, final ArangoPersistentProperty value) {
 		final GeoIndexOptions options = new GeoIndexOptions();
 		value.getGeoIndexed().ifPresent(i -> options.geoJson(i.geoJson()));
-		collection.createGeoIndex(Collections.singleton(value.getFieldName()), options);
+		collection.ensureGeoIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
-	private static void ensureFulltextIndex(final ArangoCollection collection, final FulltextIndex annotation) {
-		collection.createFulltextIndex(Arrays.asList(annotation.fields()),
+	private static void ensureFulltextIndex(final CollectionOperations collection, final FulltextIndex annotation) {
+		collection.ensureFulltextIndex(Arrays.asList(annotation.fields()),
 			new FulltextIndexOptions().minLength(annotation.minLength() > -1 ? annotation.minLength() : null));
 	}
 
-	private static void ensureFulltextIndex(final ArangoCollection collection, final ArangoPersistentProperty value) {
+	private static void ensureFulltextIndex(
+		final CollectionOperations collection,
+		final ArangoPersistentProperty value) {
 		final FulltextIndexOptions options = new FulltextIndexOptions();
 		value.getFulltextIndexed().ifPresent(i -> options.minLength(i.minLength() > -1 ? i.minLength() : null));
-		collection.createFulltextIndex(Collections.singleton(value.getFieldName()), options);
+		collection.ensureFulltextIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
 	private ArangoPersistentEntity<?> getPersistentEntity(final Class<?> entityClass) {
@@ -511,19 +536,28 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	@Override
-	public void dropDatabase() {
+	public void dropDatabase() throws DataAccessException {
 		try {
 			db().drop();
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 		database = null;
 		collectionCache.clear();
 	}
 
 	@Override
-	public CollectionOperations collection(final Class<?> type) {
-		return new DefaultCollectionOperations(_collection(type), collectionCache, exceptionTranslator);
+	public CollectionOperations collection(final Class<?> type) throws DataAccessException {
+		return collection(_collection(type));
+	}
+
+	@Override
+	public CollectionOperations collection(final String name) throws DataAccessException {
+		return collection(_collection(name));
+	}
+
+	private CollectionOperations collection(final ArangoCollection collection) {
+		return new DefaultCollectionOperations(collection, collectionCache, exceptionTranslator);
 	}
 
 }

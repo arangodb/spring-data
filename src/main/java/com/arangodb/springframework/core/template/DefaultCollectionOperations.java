@@ -53,13 +53,17 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		this.exceptionTranslator = exceptionTranslator;
 	}
 
+	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
+		return exceptionTranslator.translateExceptionIfPossible(exception);
+	}
+
 	@Override
 	public void drop() throws DataAccessException {
 		collectionCache.remove(collection.name());
 		try {
 			collection.drop();
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -68,7 +72,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			collection.truncate();
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -77,7 +81,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.getIndexes();
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -87,7 +91,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.createHashIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -97,7 +101,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.createSkiplistIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -107,7 +111,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.createPersistentIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -117,7 +121,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.createGeoIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -127,7 +131,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.createFulltextIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -136,7 +140,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			collection.deleteIndex(id);
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
