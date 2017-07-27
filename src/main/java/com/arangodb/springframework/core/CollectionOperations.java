@@ -25,6 +25,7 @@ import java.util.Collection;
 import org.springframework.dao.DataAccessException;
 
 import com.arangodb.entity.IndexEntity;
+import com.arangodb.entity.Permissions;
 import com.arangodb.model.FulltextIndexOptions;
 import com.arangodb.model.GeoIndexOptions;
 import com.arangodb.model.HashIndexOptions;
@@ -43,21 +44,21 @@ public interface CollectionOperations {
 
 	Collection<IndexEntity> getIndexes() throws DataAccessException;
 
-	IndexEntity ensureHashIndex(final Collection<String> fields, final HashIndexOptions options)
+	IndexEntity ensureHashIndex(Collection<String> fields, HashIndexOptions options) throws DataAccessException;
+
+	IndexEntity ensureSkiplistIndex(Collection<String> fields, SkiplistIndexOptions options) throws DataAccessException;
+
+	IndexEntity ensurePersistentIndex(Collection<String> fields, PersistentIndexOptions options)
 			throws DataAccessException;
 
-	IndexEntity ensureSkiplistIndex(final Collection<String> fields, final SkiplistIndexOptions options)
-			throws DataAccessException;
+	IndexEntity ensureGeoIndex(Collection<String> fields, GeoIndexOptions options) throws DataAccessException;
 
-	IndexEntity ensurePersistentIndex(final Collection<String> fields, final PersistentIndexOptions options)
-			throws DataAccessException;
+	IndexEntity ensureFulltextIndex(Collection<String> fields, FulltextIndexOptions options) throws DataAccessException;
 
-	IndexEntity ensureGeoIndex(final Collection<String> fields, final GeoIndexOptions options)
-			throws DataAccessException;
+	void dropIndex(String id) throws DataAccessException;
 
-	IndexEntity ensureFulltextIndex(final Collection<String> fields, final FulltextIndexOptions options)
-			throws DataAccessException;
+	void grantAccess(final String username, final Permissions permissions);
 
-	void dropIndex(final String id) throws DataAccessException;
+	void resetAccess(final String username);
 
 }

@@ -29,6 +29,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoDBException;
 import com.arangodb.entity.IndexEntity;
+import com.arangodb.entity.Permissions;
 import com.arangodb.model.FulltextIndexOptions;
 import com.arangodb.model.GeoIndexOptions;
 import com.arangodb.model.HashIndexOptions;
@@ -46,7 +47,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	private final Map<String, ArangoCollection> collectionCache;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 
-	public DefaultCollectionOperations(final ArangoCollection collection,
+	protected DefaultCollectionOperations(final ArangoCollection collection,
 		final Map<String, ArangoCollection> collectionCache, final PersistenceExceptionTranslator exceptionTranslator) {
 		this.collection = collection;
 		this.collectionCache = collectionCache;
@@ -139,6 +140,24 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	public void dropIndex(final String id) throws DataAccessException {
 		try {
 			collection.deleteIndex(id);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
+	public void grantAccess(final String username, final Permissions permissions) {
+		try {
+			collection.grantAccess(username, permissions);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
+	public void resetAccess(final String username) {
+		try {
+			collection.resetAccess(username);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}

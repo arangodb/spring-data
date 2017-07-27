@@ -43,6 +43,7 @@ import com.arangodb.entity.DocumentDeleteEntity;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.entity.MultiDocumentEntity;
+import com.arangodb.entity.UserEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.DocumentCreateOptions;
@@ -62,6 +63,7 @@ import com.arangodb.springframework.annotation.PersistentIndex;
 import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.CollectionOperations;
+import com.arangodb.springframework.core.UserOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.DBCollectionEntity;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
@@ -70,13 +72,14 @@ import com.arangodb.springframework.core.convert.DBEntityDeserializer;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
+import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 
 /**
  * @author Mark Vollmary
  *
  */
-public class ArangoTemplate implements ArangoOperations {
+public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final ArangoConverter converter;
@@ -130,7 +133,7 @@ public class ArangoTemplate implements ArangoOperations {
 	}
 
 	private ArangoCollection _collection(final String name) {
-		return _collection(name, null);
+		return _collection(name, null, null);
 	}
 
 	private ArangoCollection _collection(final Class<?> entityClass) {
@@ -140,10 +143,14 @@ public class ArangoTemplate implements ArangoOperations {
 	private ArangoCollection _collection(final Class<?> entityClass, final String id) {
 		final String name = determineCollectionFromId(Optional.ofNullable(id))
 				.orElse(getPersistentEntity(entityClass).getCollection());
-		return _collection(name, getPersistentEntity(entityClass));
+		final ArangoPersistentEntity<?> persistentEntity = getPersistentEntity(entityClass);
+		return _collection(name, persistentEntity, persistentEntity.getCollectionOptions());
 	}
 
-	private ArangoCollection _collection(final String name, final ArangoPersistentEntity<?> persistentEntity) {
+	private ArangoCollection _collection(
+		final String name,
+		final ArangoPersistentEntity<?> persistentEntity,
+		final CollectionCreateOptions options) {
 		ArangoCollection collection = collectionCache.get(name);
 		if (collection == null) {
 			collection = db().collection(name);
@@ -152,8 +159,7 @@ public class ArangoTemplate implements ArangoOperations {
 			} catch (final ArangoDBException e) {
 				if (new Integer(404).equals(e.getResponseCode())) {
 					try {
-						db().createCollection(name, persistentEntity != null ? persistentEntity.getCollectionOptions()
-								: new CollectionCreateOptions());
+						db().createCollection(name, options);
 					} catch (final ArangoDBException e1) {
 						throw translateExceptionIfPossible(e1);
 					}
@@ -556,8 +562,28 @@ public class ArangoTemplate implements ArangoOperations {
 		return collection(_collection(name));
 	}
 
+	@Override
+	public CollectionOperations collection(final String name, final CollectionCreateOptions options)
+			throws DataAccessException {
+		return collection(_collection(name, null, options));
+	}
+
 	private CollectionOperations collection(final ArangoCollection collection) {
 		return new DefaultCollectionOperations(collection, collectionCache, exceptionTranslator);
+	}
+
+	@Override
+	public UserOperations user(final String username) {
+		return new DefaultUserOperation(db(), username, exceptionTranslator, this);
+	}
+
+	@Override
+	public Collection<UserEntity> getUsers() throws DataAccessException {
+		try {
+			return arango.getUsers();
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 }

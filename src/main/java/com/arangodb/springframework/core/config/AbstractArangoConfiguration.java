@@ -63,9 +63,7 @@ public abstract class AbstractArangoConfiguration {
 	public abstract ArangoDB.Builder arango();
 
 	@Bean
-	public String database() {
-		return "_system";
-	}
+	public abstract String database();
 
 	private ArangoDB.Builder configure(final ArangoDB.Builder arango) {
 		return arango.registerModules(new VPackJdk8Module(), new VPackJodaModule());
