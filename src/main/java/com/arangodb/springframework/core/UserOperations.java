@@ -59,4 +59,10 @@ public interface UserOperations {
 
 	void resetCollectionAccess(String name) throws DataAccessException;
 
+	Permissions getDatabasePermissions() throws DataAccessException;
+
+	Permissions getCollectionPermissions(Class<?> type) throws DataAccessException;
+
+	Permissions getCollectionPermissions(String name) throws DataAccessException;
+
 }

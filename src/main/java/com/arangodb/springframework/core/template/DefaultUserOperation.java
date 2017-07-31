@@ -109,7 +109,7 @@ public class DefaultUserOperation implements UserOperations {
 	@Override
 	public void grantDefaultDatabaseAccess(final Permissions permissions) throws DataAccessException {
 		try {
-			db.arango().updateUserDefaultDatabaseAccess(username, permissions);
+			db.arango().grantDefaultDatabaseAccess(username, permissions);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -136,7 +136,7 @@ public class DefaultUserOperation implements UserOperations {
 	@Override
 	public void grantDefaultCollectionAccess(final Permissions permissions) throws DataAccessException {
 		try {
-			db.updateUserDefaultCollectionAccess(username, permissions);
+			db.grantDefaultCollectionAccess(username, permissions);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -160,6 +160,25 @@ public class DefaultUserOperation implements UserOperations {
 	@Override
 	public void resetCollectionAccess(final String name) throws DataAccessException {
 		collectionCallback.collection(name).resetAccess(username);
+	}
+
+	@Override
+	public Permissions getDatabasePermissions() throws DataAccessException {
+		try {
+			return db.getPermissions(username);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
+	public Permissions getCollectionPermissions(final Class<?> type) throws DataAccessException {
+		return collectionCallback.collection(type).getPermissions(username);
+	}
+
+	@Override
+	public Permissions getCollectionPermissions(final String name) throws DataAccessException {
+		return collectionCallback.collection(name).getPermissions(name);
 	}
 
 }

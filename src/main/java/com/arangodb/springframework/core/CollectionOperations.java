@@ -57,8 +57,10 @@ public interface CollectionOperations {
 
 	void dropIndex(String id) throws DataAccessException;
 
-	void grantAccess(final String username, final Permissions permissions);
+	void grantAccess(String username, Permissions permissions) throws DataAccessException;
 
-	void resetAccess(final String username);
+	void resetAccess(String username) throws DataAccessException;
+
+	Permissions getPermissions(String username) throws DataAccessException;
 
 }

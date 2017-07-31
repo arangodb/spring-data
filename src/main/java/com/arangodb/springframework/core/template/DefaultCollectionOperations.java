@@ -163,4 +163,13 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		}
 	}
 
+	@Override
+	public Permissions getPermissions(final String username) throws DataAccessException {
+		try {
+			return collection.getPermissions(username);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
 }
