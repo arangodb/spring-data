@@ -48,7 +48,7 @@ public class AbstractArangoTest {
 	public void before() {
 		try {
 			for (final Class<?> collection : COLLECTIONS) {
-				template.collection(collection).drop();
+				template.dropCollection(collection);
 			}
 		} catch (final Exception e) {
 		}

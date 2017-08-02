@@ -25,13 +25,8 @@ import java.util.Optional;
 import org.springframework.data.mapping.PersistentProperty;
 
 import com.arangodb.springframework.annotation.From;
-import com.arangodb.springframework.annotation.FulltextIndexed;
-import com.arangodb.springframework.annotation.GeoIndexed;
-import com.arangodb.springframework.annotation.HashIndexed;
-import com.arangodb.springframework.annotation.PersistentIndexed;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.To;
 
 /**
@@ -53,15 +48,5 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 	Optional<From> getFrom();
 
 	Optional<To> getTo();
-
-	Optional<HashIndexed> getHashIndexed();
-
-	Optional<SkiplistIndexed> getSkiplistIndexed();
-
-	Optional<PersistentIndexed> getPersistentIndexed();
-
-	Optional<GeoIndexed> getGeoIndexed();
-
-	Optional<FulltextIndexed> getFulltextIndexed();
 
 }

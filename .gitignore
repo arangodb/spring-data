@@ -27,3 +27,7 @@ hs_err_pid*
 /.settings
 /target
 /bin/
+
+# Intellij project files
+/.idea
+*.iml

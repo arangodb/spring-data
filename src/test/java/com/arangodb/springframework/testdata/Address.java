@@ -22,6 +22,8 @@ package com.arangodb.springframework.testdata;
 
 import org.springframework.data.annotation.Id;
 
+import java.util.Collection;
+
 /**
  * @author Mark Vollmary
  *
@@ -31,6 +33,7 @@ public class Address {
 	@Id
 	private String id;
 	private String zipCode;
+	private Iterable<String> iter;
 
 	public Address() {
 		super();
@@ -55,6 +58,14 @@ public class Address {
 
 	public void setZipCode(final String zipCode) {
 		this.zipCode = zipCode;
+	}
+
+	public boolean equals(Object o) {
+		if (!(o instanceof Address)) return false;
+		Address address = (Address) o;
+		if (!address.getId().equals(this.getId())) return false;
+		if (!address.getZipCode().equals(this.getZipCode())) return false;
+		return true;
 	}
 
 }
