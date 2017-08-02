@@ -20,24 +20,32 @@
 
 package com.arangodb.springframework;
 
+import com.arangodb.ArangoDB;
+import com.arangodb.Protocol;
+import com.arangodb.springframework.annotation.EnableArangoRepositories;
+import com.arangodb.springframework.core.config.AbstractArangoConfiguration;
 import org.springframework.context.annotation.Configuration;
 
-import com.arangodb.ArangoDB;
-import com.arangodb.springframework.core.config.AbstractArangoConfiguration;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.KeyStore;
 
 /**
  * @author Mark Vollmary
  *
  */
 @Configuration
+@EnableArangoRepositories(basePackages = {"com.arangodb.springframework.core.repository"})
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
 	public static final String DB = "spring-test-db";
 
 	@Override
-	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder();
-	}
+	public ArangoDB.Builder arango() { return new ArangoDB.Builder(); }
 
 	@Override
 	public String database() {
