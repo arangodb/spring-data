@@ -22,10 +22,13 @@ package com.arangodb.springframework.testdata;
 
 import java.util.Collection;
 
-import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
 
+import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Key;
+import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
+import com.arangodb.springframework.annotation.Rev;
 
 /**
  * @author Mark Vollmary
@@ -38,6 +41,8 @@ public class Customer {
 	private String id;
 	@Key
 	private String key;
+	@Rev
+	private String rev;
 	private String name;
 	private String surname;
 	private int age;
@@ -98,6 +103,14 @@ public class Customer {
 		this.key = key;
 	}
 
+	public String getRev() {
+		return rev;
+	}
+
+	public void setRev(final String rev) {
+		this.rev = rev;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -138,38 +151,68 @@ public class Customer {
 		this.shoppingCart = shoppingCart;
 	}
 
-	public Collection<Product> getOwns() { return owns; }
+	public Collection<Product> getOwns() {
+		return owns;
+	}
 
 	public void setOwns(final Collection<Product> owns) {
 		this.owns = owns;
 	}
 
-	public boolean isAlive() { return alive; }
+	public boolean isAlive() {
+		return alive;
+	}
 
-	public void setAlive(boolean alive) { this.alive = alive; }
+	public void setAlive(final boolean alive) {
+		this.alive = alive;
+	}
 
-	public int[] getLocation() { return location; }
+	public int[] getLocation() {
+		return location;
+	}
 
-	public void setLocation(int[] location) { this.location = location; }
+	public void setLocation(final int[] location) {
+		this.location = location;
+	}
 
-	public Iterable<Integer> getIntegerList() {	return integerList; }
+	public Iterable<Integer> getIntegerList() {
+		return integerList;
+	}
 
-	public void setIntegerList(Iterable<Integer> integerList) {	this.integerList = integerList;	}
+	public void setIntegerList(final Iterable<Integer> integerList) {
+		this.integerList = integerList;
+	}
 
-	public String[] getStringArray() { return stringArray; }
+	public String[] getStringArray() {
+		return stringArray;
+	}
 
-	public void setStringArray(String[] stringArray) { this.stringArray = stringArray; }
+	public void setStringArray(final String[] stringArray) {
+		this.stringArray = stringArray;
+	}
 
-	public void setStringList(Iterable<String> stringList) { this.stringList = stringList; }
+	public void setStringList(final Iterable<String> stringList) {
+		this.stringList = stringList;
+	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof Customer)) return false;
-		Customer customer = (Customer) o;
-		if (!customer.getId().equals(this.getId())) return false;
-		if (!customer.getName().equals(this.getName())) return false;
-		if (!customer.getSurname().equals(this.getSurname())) return false;
-		if (customer.getAge() != this.getAge()) return false;
+	public boolean equals(final Object o) {
+		if (!(o instanceof Customer)) {
+			return false;
+		}
+		final Customer customer = (Customer) o;
+		if (!customer.getId().equals(this.getId())) {
+			return false;
+		}
+		if (!customer.getName().equals(this.getName())) {
+			return false;
+		}
+		if (!customer.getSurname().equals(this.getSurname())) {
+			return false;
+		}
+		if (customer.getAge() != this.getAge()) {
+			return false;
+		}
 		return true;
 	}
 

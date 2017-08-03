@@ -23,7 +23,6 @@ package com.arangodb.springframework.testdata;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.arangodb.springframework.annotation.Field;
 import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.annotation.Document;
@@ -33,7 +32,7 @@ import com.arangodb.springframework.annotation.Ref;
  * @author Mark Vollmary
  *
  */
-@Document(collection = "shopping-cart")
+@Document("shopping-cart")
 public class ShoppingCart {
 
 	@Id

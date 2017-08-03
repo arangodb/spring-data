@@ -284,7 +284,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Object source,
 		final DBEntity sink,
 		final Optional<? extends ArangoPersistentEntity<?>> entityC) {
-
 		final ArangoPersistentEntity<?> entity = entityC.orElseThrow(
 			() -> new MappingException("No mapping metadata found for type " + source.getClass().getName()));
 
@@ -306,7 +305,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 				writeProperty(prop, sink, inverse);
 			});
 		});
-
 	}
 
 	@SuppressWarnings("unchecked")
