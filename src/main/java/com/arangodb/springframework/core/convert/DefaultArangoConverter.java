@@ -40,6 +40,8 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.ParameterValueProvider;
+import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
+import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
@@ -157,12 +159,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 	private Object read(
 		final TypeInformation<?> type,
 		final DBEntity source,
-		final Optional<? extends ArangoPersistentEntity<?>> entity2) {
-		final ArangoPersistentEntity<?> entity = entity2.orElseThrow(
+		final Optional<? extends ArangoPersistentEntity<?>> persistentEntity) {
+		final ArangoPersistentEntity<?> entity = persistentEntity.orElseThrow(
 			() -> new MappingException("No mapping metadata found for type " + type.getType().getName()));
 
 		final EntityInstantiator instantiatorFor = instantiators.getInstantiatorFor(entity);
-		final ParameterValueProvider<ArangoPersistentProperty> provider = null; // TODO
+		final ParameterValueProvider<ArangoPersistentProperty> provider = getParameterProvider(entity, source);
 		final Object instance = instantiatorFor.createInstance(entity, provider);
 		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(instance),
 				conversionService);
@@ -175,6 +177,28 @@ public class DefaultArangoConverter implements ArangoConverter {
 			readProperty(source.get("_id"), accessor, source.get(property.getFieldName()), property);
 		});
 		return instance;
+	}
+
+	private ParameterValueProvider<ArangoPersistentProperty> getParameterProvider(
+		final ArangoPersistentEntity<?> entity,
+		final DBEntity source) {
+		final PropertyValueProvider<ArangoPersistentProperty> provider = new ArangoPropertyValueProvider(source);
+		return new PersistentEntityParameterValueProvider<>(entity, provider, null);
+	}
+
+	private class ArangoPropertyValueProvider implements PropertyValueProvider<ArangoPersistentProperty> {
+		private final DBEntity source;
+
+		public ArangoPropertyValueProvider(final DBEntity source) {
+			super();
+			this.source = source;
+		}
+
+		@Override
+		public <T> T getPropertyValue(final ArangoPersistentProperty property) {
+			return read(source.get(property.getFieldName()), property.getTypeInformation());
+		}
+
 	}
 
 	private void readProperty(
