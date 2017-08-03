@@ -108,7 +108,7 @@ public abstract class AbstractArangoConfiguration {
 			public <A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(final A annotation) {
 				ReferenceResolver<A> resolver = null;
 				try {
-					if (Ref.class.isAssignableFrom(annotation.getClass())) {
+					if (annotation instanceof Ref) {
 						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
 					}
 				} catch (final Exception e) {
@@ -122,11 +122,11 @@ public abstract class AbstractArangoConfiguration {
 			public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final A annotation) {
 				RelationResolver<A> resolver = null;
 				try {
-					if (From.class.isAssignableFrom(annotation.getClass())) {
+					if (annotation instanceof From) {
 						resolver = (RelationResolver<A>) new FromResolver(arangoTemplate());
-					} else if (To.class.isAssignableFrom(annotation.getClass())) {
+					} else if (annotation instanceof To) {
 						resolver = (RelationResolver<A>) new ToResolver(arangoTemplate());
-					} else if (Relations.class.isAssignableFrom(annotation.getClass())) {
+					} else if (annotation instanceof Relations) {
 						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
 					}
 				} catch (final Exception e) {

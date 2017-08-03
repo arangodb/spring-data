@@ -111,6 +111,6 @@ public class ConvertingPropertyAccessor implements PersistentPropertyAccessor {
 	 */
 	@SuppressWarnings("unchecked")
 	private <T> Optional<T> convertIfNecessary(final Optional<? extends Object> source, final Class<T> type) {
-		return source.map(it -> type.isAssignableFrom(it.getClass()) ? (T) it : conversionService.convert(it, type));
+		return source.map(it -> type.isInstance(it) ? (T) it : conversionService.convert(it, type));
 	}
 }

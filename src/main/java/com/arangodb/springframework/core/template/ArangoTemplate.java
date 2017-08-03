@@ -315,7 +315,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
 		for (final Map.Entry<String, Object> entry : new HashMap<>(bindVars).entrySet()) {
-			if (entry.getKey().startsWith("@") && Class.class.isAssignableFrom(entry.getValue().getClass())) {
+			if (entry.getKey().startsWith("@") && entry.getValue() instanceof Class) {
 				bindVars.put(entry.getKey(), _collection((Class<?>) entry.getValue()).name());
 			}
 		}
@@ -540,7 +540,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 			for (; valueIterator.hasNext() && documentIterator.hasNext();) {
 				final Object nextDoc = documentIterator.next();
 				final Object nextValue = valueIterator.next();
-				if (DocumentEntity.class.isInstance(nextDoc)) {
+				if (nextDoc instanceof DocumentEntity) {
 					updateDBFields(nextValue, (DocumentEntity) nextDoc);
 				}
 			}

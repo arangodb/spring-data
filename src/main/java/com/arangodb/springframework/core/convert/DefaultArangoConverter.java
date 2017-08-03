@@ -92,10 +92,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		if (conversions.hasCustomReadTarget(type.getType(), type.getType())) {
 			return conversionService.convert(source, type.getType());
 		}
-		if (isMapType(type.getType()) && DBDocumentEntity.class.isAssignableFrom(source.getClass())) {
+		if (isMapType(type.getType()) && source instanceof DBDocumentEntity) {
 			return readMap(type, DBDocumentEntity.class.cast(source));
 		}
-		if (type.isCollectionLike() && DBCollectionEntity.class.isAssignableFrom(source.getClass())) {
+		if (type.isCollectionLike() && source instanceof DBCollectionEntity) {
 			return readCollection(type, DBCollectionEntity.class.cast(source));
 		}
 		final Optional<? extends ArangoPersistentEntity<?>> entity = Optional
@@ -111,11 +111,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 		for (final Map.Entry<String, Object> entry : source.entrySet()) {
 			final Object key = conversionService.convert(entry.getKey(), keyType);
 			final Object value = entry.getValue();
-			if (DBEntity.class.isAssignableFrom(value.getClass())) {
+			if (value instanceof DBEntity) {
 				map.put(key, read(valueType, (DBEntity) value));
-			} else if (Map.class.isAssignableFrom(value.getClass())) {
+			} else if (value instanceof Map) {
 				map.put(key, read(valueType, new DBDocumentEntity((Map<? extends String, ? extends Object>) value)));
-			} else if (Collection.class.isAssignableFrom(value.getClass())) {
+			} else if (value instanceof Collection) {
 				map.put(key, read(valueType, new DBCollectionEntity((Collection<? extends Object>) value)));
 			} else if (isSimpleType(valueType.getType())) {
 				final Optional<Class<?>> customWriteTarget = Optional
@@ -136,11 +136,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Collection<Object> entries = type.getType().isArray() ? new ArrayList<>()
 				: CollectionFactory.createCollection(collectionType, componentType.getType(), source.size());
 		for (final Object entry : source) {
-			if (DBEntity.class.isAssignableFrom(entry.getClass())) {
+			if (entry instanceof DBEntity) {
 				entries.add(read(componentType, (DBEntity) entry));
-			} else if (Map.class.isAssignableFrom(entry.getClass())) {
+			} else if (entry instanceof Map) {
 				entries.add(read(componentType, new DBDocumentEntity((Map<? extends String, ? extends Object>) entry)));
-			} else if (Collection.class.isAssignableFrom(entry.getClass())) {
+			} else if (entry instanceof Collection) {
 				entries.add(read(componentType, new DBCollectionEntity((Collection<? extends Object>) entry)));
 			} else if (isSimpleType(componentType.getType())) {
 				final Optional<Class<?>> customWriteTarget = Optional
@@ -210,12 +210,17 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Annotation annotation) {
 		return resolverFactory.getReferenceResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike()) {
-				// TODO check for string collection
-				final Collection<String> ids = (Collection<String>) asCollection(source);
+				final Collection<String> ids;
+				try {
+					ids = (Collection<String>) asCollection(source);
+				} catch (final Exception e) {
+					throw new MappingException(
+							"Collection of Type String expected for references but found type " + source.getClass());
+				}
 				return Optional.ofNullable(resolver.resolveMultiple(ids,
 					getComponentType(property.getTypeInformation()).getType(), annotation));
 			} else {
-				if (!String.class.isAssignableFrom(source.getClass())) {
+				if (!(source instanceof String)) {
 					throw new MappingException(
 							"Type String expected for reference but found type " + source.getClass());
 				}
@@ -413,7 +418,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private static Collection<?> asCollection(final Object source) {
-		return (Collection.class.isAssignableFrom(source.getClass())) ? Collection.class.cast(source)
+		return (source instanceof Collection) ? Collection.class.cast(source)
 				: source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
 
