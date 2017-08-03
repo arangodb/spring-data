@@ -32,7 +32,7 @@
     * [Relations](#relations)
     * [Document with From and To](#document-with-from-and-to)
     * [Edge with From and To](#edge-with-from-and-to)
-    * [Indexed annotations](#indexed-annotations)
+    * [Index and Indexed annotations](#index-and-indexed-annotations)
 
 # Getting Started
 
@@ -373,10 +373,15 @@ annotation | level | description
 @From | field | stored the _id of the referenced document as the system field _from
 @To | field | stored the _id of the referenced document as the system field _to
 @Relations | field | vertices which are connected over edges
+@HashIndex | class | described an hash index
 @HashIndexed | field | described how to index the field
+@SkiplistIndex | class | described an skiplist index
 @SkiplistIndexed | field | described how to index the field
+@PersistentIndex | class | described an persistent index
 @PersistentIndexed | field | described how to index the field
+@GeoIndex | class | described an geo index
 @GeoIndexed | field | described how to index the field
+@FulltextIndex | class | described an fulltext index
 @FulltextIndexed | field | described how to index the field
 @Transient, @Expose | field | excludes the field from serialisation/deserialisation
 
@@ -558,33 +563,94 @@ and the representation of *Person* in collection *persons*:
 
 **Note:** If you want to save an instance of *Relation*, both *Person* objects (from & to) already has to be persisted and the class *Person* needs a field with the annotation `@Id` so it can hold the persisted *_id* from the database. 
 
-### Indexed annotations
+### Index and Indexed annotations
 
-With the `@<IndexType>Indexed` annotations user defined indexes can be created on collection level. If the index should include multiple fields the annotation can be applied to the required fields with the parameter group set to the same id. The type of the indexes with the same group has to be the same.
+With the `@<IndexType>Indexed` annotations user defined indexes can be created on collection level by annotating single fields of a class.
 
+Possible `@<IndexType>Indexed` annotations are:
+* `@HashIndexed`
+* `@SkiplistIndexed`
+* `@PersistentIndexed`
+* `@GeoIndexed`
+* `@FulltextIndexed`
+
+The following example creates a hash index on the field `name` and a separate hash index on the field `age`:
 ``` java
 public class Person {
-  @HashIndexed(group=0)
+  @HashIndexed
   private String name;
 
-  @HashIndexed(group=0)
-  private int age;
-
-  @HashIndexed(group=1)
-  private Gender gender;
-}
-```
-
-Creates a Hash-Index on the fields `name` and `age` and a separate Hash-Index on the field `gender`.
-
-``` java
-public class Person {
-  @FulltextIndexed(group=0)
-  private String name;
-
-  @HashIndexed(group=0)
+  @HashIndexed
   private int age;
 }
 ```
 
-Throws an exception because both indexes are from different types but have the same group-id.
+With the `@<IndexType>Indexed` annotations different indexes can be created on the same field.
+
+The following example creates a hash index and also a skiplist index on the field `name`:
+``` java
+public class Person {
+  @HashIndexed
+  @SkiplistIndexed
+  private String name;
+}
+```
+
+If the index should include multiple fields the `@<IndexType>Index` annotations can be used on the type instead.
+
+Possible `@<IndexType>Index` annotations are:
+* `@HashIndex`
+* `@SkiplistIndex`
+* `@PersistentIndex`
+* `@GeoIndex`
+* `@FulltextIndex`
+
+The following example creates a single hash index on the fields `name` and `age`:
+``` java
+@HashIndex(fields = {"name", "age"})
+public class Person {
+  private String name;
+
+  private int age;
+}
+```
+
+The `@<IndexType>Index` annotations can also be used to create an index on a nested field.
+
+The following example creates a single hash index on the fields `name` and `address.country`:
+``` java
+@HashIndex(fields = {"name", "address.country"})
+public class Person {
+  private String name;
+
+  private Address address;
+}
+```
+
+The `@<IndexType>Index` annotations and the `@<IndexType>Indexed` annotations can be used at the same time in one class. 
+
+The following example creates a hash index on the fields `name` and `age` and a separate hash index on the field `age`:
+``` java
+@HashIndex(fields = {"name", "age"})
+public class Person {
+  private String name;
+
+  @HashIndexed
+  private int age;
+}
+```
+
+The `@<IndexType>Index` annotations can be used multiple times to create more than one index on this way.
+
+The following example creates a hash index on the fields `name` and `age` and a separate hash index on the fields `name` and `gender`:
+``` java
+@HashIndex(fields = {"name", "age"})
+@HashIndex(fields = {"name", "gender"})
+public class Person {
+  private String name;
+
+  private int age;
+  
+  private Gender gender
+}
+```
