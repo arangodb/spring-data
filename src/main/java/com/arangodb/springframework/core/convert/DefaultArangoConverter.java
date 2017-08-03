@@ -46,11 +46,14 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
+import com.arangodb.entity.BaseDocument;
+import com.arangodb.entity.BaseEdgeDocument;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
 import com.arangodb.springframework.core.mapping.PersistentPropertyAccessor;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
@@ -450,8 +453,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return isCollectionType(type) ? new DBCollectionEntity() : new DBDocumentEntity();
 	}
 
-	@Override
-	public boolean isSimpleType(final Class<?> type) {
+	private boolean isSimpleType(final Class<?> type) {
 		return conversions.isSimpleType(type);
 	}
 
@@ -460,7 +462,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return type.isArray() || Iterable.class.equals(type) || Collection.class.isAssignableFrom(type);
 	}
 
-	public boolean isMapType(final Class<?> type) {
+	private boolean isMapType(final Class<?> type) {
 		return Map.class.isAssignableFrom(type);
 	}
 
@@ -468,4 +470,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 	public GenericConversionService getConversionService() {
 		return conversionService;
 	}
+
+	@Override
+	public boolean isEntityType(final Class<?> type) {
+		return !isSimpleType(type) && !isMapType(type) && !isCollectionType(type)
+				&& !BaseDocument.class.isAssignableFrom(type) && !BaseEdgeDocument.class.isAssignableFrom(type)
+				&& !VPackSlice.class.isAssignableFrom(type);
+	}
+
 }

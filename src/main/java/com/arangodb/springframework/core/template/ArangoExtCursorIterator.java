@@ -49,7 +49,7 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 
 	@Override
 	protected <R> R deserialize(final VPackSlice result, final Class<R> type) {
-		return converter.isSimpleType(type) ? super.deserialize(result, type)
+		return !converter.isEntityType(type) ? super.deserialize(result, type)
 				: converter.read(type, super.deserialize(result, DBEntity.class));
 	}
 

@@ -34,9 +34,9 @@ public interface ArangoConverter extends ArangoEntityReader, ArangoEntityWriter 
 
 	MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> getMappingContext();
 
-	boolean isSimpleType(Class<?> type);
-
 	boolean isCollectionType(Class<?> type);
+
+	boolean isEntityType(Class<?> type);
 
 	GenericConversionService getConversionService();
 
