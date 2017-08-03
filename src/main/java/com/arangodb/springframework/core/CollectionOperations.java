@@ -42,6 +42,8 @@ public interface CollectionOperations {
 
 	void truncate() throws DataAccessException;
 
+	long count() throws DataAccessException;
+
 	Collection<IndexEntity> getIndexes() throws DataAccessException;
 
 	IndexEntity ensureHashIndex(Collection<String> fields, HashIndexOptions options) throws DataAccessException;

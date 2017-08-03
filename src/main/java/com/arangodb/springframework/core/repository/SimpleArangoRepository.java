@@ -56,11 +56,11 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public Iterable<T> findAll(Iterable<String> strings) {
-		return arangoOperations.getDocuments(domainClass, strings);
+		return arangoOperations.getDocuments(strings, domainClass);
 	}
 
 	@Override public long count() {
-		return arangoOperations.count(domainClass);
+		return arangoOperations.collection(domainClass).count();
 	}
 
 	@Override public void delete(String s) {
@@ -80,7 +80,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public void deleteAll() {
-		arangoOperations.deleteDocuments(domainClass);
+		arangoOperations.collection(domainClass).truncate();
 	}
 
 	@Override

@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.template;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -74,6 +76,7 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
+import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
@@ -282,8 +285,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		return entity;
 	}
 
-	private <T> T fromDBEntity(final Class<T> type, final DBEntity doc) {
-		return converter.read(type, doc);
+	private <T> T fromDBEntity(final Class<T> entityClass, final DBEntity doc) {
+		return converter.read(entityClass, doc);
 	}
 
 	@Override
@@ -305,8 +308,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final String query,
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options,
-		final Class<T> type) throws DataAccessException {
-		return db().query(query, DBDocumentEntity.class.cast(toDBEntity(prepareBindVars(bindVars))), options, type);
+		final Class<T> entityClass) throws DataAccessException {
+		return db().query(query, DBDocumentEntity.class.cast(toDBEntity(prepareBindVars(bindVars))), options,
+			entityClass);
 	}
 
 	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
@@ -321,10 +325,11 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(
 		final Collection<Object> values,
-		final Class<T> type,
+		final Class<T> entityClass,
 		final DocumentDeleteOptions options) throws DataAccessException {
 		try {
-			return _collection(type).deleteDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), type, options);
+			return _collection(entityClass).deleteDocuments(DBCollectionEntity.class.cast(toDBEntity(values)),
+				entityClass, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -333,15 +338,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(
 		final Collection<Object> values,
-		final Class<T> type) throws DataAccessException {
-		return deleteDocuments(values, type, new DocumentDeleteOptions());
+		final Class<T> entityClass) throws DataAccessException {
+		return deleteDocuments(values, entityClass, new DocumentDeleteOptions());
 	}
 
 	@Override
-	public <T> DocumentDeleteEntity<Void> deleteDocument(final String id, final Class<T> type)
+	public <T> DocumentDeleteEntity<Void> deleteDocument(final String id, final Class<T> entityClass)
 			throws DataAccessException {
 		try {
-			return _collection(type, id).deleteDocument(determineDocumentKeyFromId(id));
+			return _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -350,10 +355,10 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public <T> DocumentDeleteEntity<T> deleteDocument(
 		final String id,
-		final Class<T> type,
+		final Class<T> entityClass,
 		final DocumentDeleteOptions options) throws DataAccessException {
 		try {
-			return _collection(type, id).deleteDocument(determineDocumentKeyFromId(id), type, options);
+			return _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), entityClass, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -362,12 +367,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(
 		final Collection<Object> values,
-		final Class<?> type,
+		final Class<?> entityClass,
 		final DocumentUpdateOptions options) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = _collection(type)
+			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = _collection(entityClass)
 					.updateDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			updateDBFields(values, type, res);
+			updateDBFields(values, entityClass, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -377,8 +382,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(
 		final Collection<Object> values,
-		final Class<?> type) throws DataAccessException {
-		return updateDocuments(values, type, new DocumentUpdateOptions());
+		final Class<?> entityClass) throws DataAccessException {
+		return updateDocuments(values, entityClass, new DocumentUpdateOptions());
 	}
 
 	@Override
@@ -404,12 +409,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(
 		final Collection<Object> values,
-		final Class<?> type,
+		final Class<?> entityClass,
 		final DocumentReplaceOptions options) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = _collection(type)
+			final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = _collection(entityClass)
 					.replaceDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			updateDBFields(values, type, res);
+			updateDBFields(values, entityClass, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -419,8 +424,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(
 		final Collection<Object> values,
-		final Class<?> type) throws DataAccessException {
-		return replaceDocuments(values, type, new DocumentReplaceOptions());
+		final Class<?> entityClass) throws DataAccessException {
+		return replaceDocuments(values, entityClass, new DocumentReplaceOptions());
 	}
 
 	@Override
@@ -445,31 +450,51 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public <T> T getDocument(final String id, final Class<T> type, final DocumentReadOptions options)
+	public <T> T getDocument(final String id, final Class<T> entityClass, final DocumentReadOptions options)
 			throws DataAccessException {
 		try {
-			final DBEntity doc = _collection(type, id).getDocument(determineDocumentKeyFromId(id), DBEntity.class,
-				options);
-			return fromDBEntity(type, doc);
+			final DBEntity doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
+				DBEntity.class, options);
+			return fromDBEntity(entityClass, doc);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public <T> T getDocument(final String id, final Class<T> type) throws DataAccessException {
-		return getDocument(id, type, new DocumentReadOptions());
+	public <T> T getDocument(final String id, final Class<T> entityClass) throws DataAccessException {
+		return getDocument(id, entityClass, new DocumentReadOptions());
+	}
+
+	@Override
+	public <T> Iterable<T> getDocuments(final Class<T> entityClass) throws DataAccessException {
+		final String query = "FOR entity IN @@col RETURN entity";
+		final ArangoCursor<T> cursor = query(query, new MapBuilder().put("@col", entityClass).get(), null, entityClass);
+		return cursor.asListRemaining();
+	}
+
+	@Override
+	public <T> Iterable<T> getDocuments(final Iterable<String> ids, final Class<T> entityClass)
+			throws DataAccessException {
+		try {
+			final Collection<String> keys = new ArrayList<>();
+			ids.forEach(id -> keys.add(determineDocumentKeyFromId(id)));
+			final MultiDocumentEntity<DBEntity> docs = _collection(entityClass).getDocuments(keys, DBEntity.class);
+			return docs.getDocuments().stream().map(doc -> fromDBEntity(entityClass, doc)).collect(Collectors.toList());
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override
 	public MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(
 		final Collection<Object> values,
-		final Class<?> type,
+		final Class<?> entityClass,
 		final DocumentCreateOptions options) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<DocumentCreateEntity<Object>> res = _collection(type)
+			final MultiDocumentEntity<DocumentCreateEntity<Object>> res = _collection(entityClass)
 					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			updateDBFields(values, type, res);
+			updateDBFields(values, entityClass, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -479,8 +504,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(
 		final Collection<Object> values,
-		final Class<?> type) throws DataAccessException {
-		return insertDocuments(values, type, new DocumentCreateOptions());
+		final Class<?> entityClass) throws DataAccessException {
+		return insertDocuments(values, entityClass, new DocumentCreateOptions());
 	}
 
 	@Override
@@ -502,7 +527,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	private void updateDBFields(
 		final Collection<Object> values,
-		final Class<?> type,
+		final Class<?> entityClass,
 		final MultiDocumentEntity<? extends DocumentEntity> res) {
 		final Iterator<Object> valueIterator = values.iterator();
 		if (res.getErrors().isEmpty()) {
@@ -536,9 +561,16 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 				.ifPresent(rev -> accessor.setProperty(rev, Optional.ofNullable(documentEntity.getRev())));
 	}
 
+	/*
+	 * Added by Mark McC
+	 */
 	@Override
-	public void dropCollection(final Class<?> type) {
-		collection(type).drop();
+	public boolean exists(final String id, final Class<?> entityClass) throws DataAccessException {
+		try {
+			return _collection(entityClass).documentExists(determineDocumentKeyFromId(id));
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override
@@ -553,8 +585,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public CollectionOperations collection(final Class<?> type) throws DataAccessException {
-		return collection(_collection(type));
+	public CollectionOperations collection(final Class<?> entityClass) throws DataAccessException {
+		return collection(_collection(entityClass));
 	}
 
 	@Override
@@ -586,65 +618,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		}
 	}
 
-	/*
-	 * Added by Mark McC
-	 */
-	@Override
-	public <T> Iterable<T> getDocuments(final Class<T> type) {
-		final String query = String.format("FOR entity in `%s` return entity",
-			getPersistentEntity(type).getCollection());
-		final ArangoCursor<T> cursor = database.query(query, null, null, type);
-		return cursor.asListRemaining();
-	}
-
-	/*
-	 * Added by Mark McC
-	 */
-	@Override
-	public <T> Iterable<T> getDocuments(final Class<T> type, final Iterable<String> strings) {
-		final String query = String.format("FOR entity in `%s` FILTER entity._id IN @ids return entity",
-			getPersistentEntity(type).getCollection());
-		final Map<String, Object> parameters = new HashMap<>();
-		parameters.put("ids", strings);
-		final ArangoCursor<T> cursor = database.query(query, parameters, null, type);
-		return cursor.asListRemaining();
-	}
-
 	@Override
 	public ArangoConverter getConverter() {
 		return this.converter;
-	}
-
-	/*
-	 * Added by Mark McC
-	 */
-	@Override
-	public boolean exists(final String s, final Class<?> type) {
-		return _collection(type).documentExists(determineDocumentKeyFromId(s));
-	}
-
-	/*
-	 * Added by Mark McC
-	 */
-	@Override
-	public long count(final Class<?> type) {
-		return _collection(type).count().getCount();
-	}
-
-	/*
-	 * Added by Mark McC
-	 */
-	@Override
-	public void deleteDocuments(final Class<?> type) {
-		collection(type).truncate();
-	}
-
-	/*
-	 * Added by Mark McCO
-	 */
-	@Override
-	public Map<String, ArangoCollection> getCollectionCache() {
-		return collectionCache;
 	}
 
 }

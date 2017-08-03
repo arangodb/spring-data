@@ -78,6 +78,16 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	}
 
 	@Override
+	public long count() throws DataAccessException {
+		try {
+			final Long count = collection.count().getCount();
+			return count != null ? count.longValue() : -1;
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
 	public Collection<IndexEntity> getIndexes() throws DataAccessException {
 		try {
 			return collection.getIndexes();

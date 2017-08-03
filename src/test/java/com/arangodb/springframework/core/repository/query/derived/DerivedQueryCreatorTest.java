@@ -313,7 +313,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         Collection<String> fields = new LinkedList<>();
         fields.add(fieldName);
         String collectionName = template.getConverter().getMappingContext().getPersistentEntity(Customer.class).getCollection();
-        template.getCollectionCache().get(collectionName).createGeoIndex(fields, null);
+        template.collection(collectionName).ensureGeoIndex(fields, null);
     }
 
     private double convertAngleToDistance(int angle) {

@@ -43,17 +43,17 @@ public interface UserOperations {
 
 	void delete() throws DataAccessException;
 
-	void grantDefaultDatabaseAccess(final Permissions permissions) throws DataAccessException;
+	void grantDefaultDatabaseAccess(Permissions permissions) throws DataAccessException;
 
-	void grantDatabaseAccess(final Permissions permissions) throws DataAccessException;
+	void grantDatabaseAccess(Permissions permissions) throws DataAccessException;
 
 	void resetDatabaseAccess() throws DataAccessException;
 
-	void grantDefaultCollectionAccess(final Permissions permissions) throws DataAccessException;
+	void grantDefaultCollectionAccess(Permissions permissions) throws DataAccessException;
 
-	void grantCollectionAccess(Class<?> type, final Permissions permissions) throws DataAccessException;
+	void grantCollectionAccess(Class<?> type, Permissions permissions) throws DataAccessException;
 
-	void grantCollectionAccess(String name, final Permissions permissions) throws DataAccessException;
+	void grantCollectionAccess(String name, Permissions permissions) throws DataAccessException;
 
 	void resetCollectionAccess(Class<?> type) throws DataAccessException;
 
