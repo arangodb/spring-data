@@ -1,10 +1,13 @@
 package com.arangodb.springframework.core.repository.query.derived;
 
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
+import com.arangodb.springframework.core.repository.query.ArangoParameterAccessor;
 import com.arangodb.springframework.core.repository.query.derived.geo.Range;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
@@ -37,18 +40,31 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     private final String collectionName;
     private final PartTree tree;
     private final Map<String, Object> bindVars;
+    private final ArangoParameterAccessor accessor;
+    private final List<String> geoFields;
+    private Point uniquePoint = null;
     private int bindingCounter = 0;
 
-    public DerivedQueryCreator(ArangoMappingContext context, Class<?> domainClass, PartTree tree, ParameterAccessor accessor, Map<String, Object> bindVars) {
+    public DerivedQueryCreator(ArangoMappingContext context, Class<?> domainClass, PartTree tree,
+            ArangoParameterAccessor accessor, Map<String, Object> bindVars, List<String> geoFields) {
         super(tree, accessor);
         this.context = context;
         this.collectionName = context.getPersistentEntity(domainClass).getCollection();
         this.tree = tree;
         this.bindVars = bindVars;
+        this.accessor = accessor;
+        this.geoFields = geoFields;
     }
 
     public String getCollectionName() {
         return collectionName;
+    }
+
+    public List<String> getGeoFields() { return geoFields; }
+
+    public double[] getUniquePoint() {
+        if (uniquePoint == null) return new double[2];
+        return new double[] {uniquePoint.getX(), uniquePoint.getY()};
     }
 
     @Override
@@ -75,11 +91,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         Disjunction disjunction = disjunctionBuilder.build();
         String array = disjunction.getArray().length() == 0 ? collectionName : disjunction.getArray();
         String predicate = disjunction.getPredicate() == "" ? "" : " FILTER " + disjunction.getPredicate();
-        String queryTemplate = "FOR e IN %s%s%s%s%s%s";// collection predicate count sort limit queryType
+        String queryTemplate = "FOR e IN %s%s%s%s%s%s%s"; // collection predicate count sort limit pageable queryType
         String count = tree.isCountProjection() ? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length") : "";
         String limit = tree.isLimiting() ? String.format(" LIMIT %d", tree.getMaxResults()) : "";
+        String pageable = accessor.getPageable() == null ? "" : String.format(" LIMIT %d, %d", accessor.getPageable().getOffset(), accessor.getPageable().getPageSize());
         String type = tree.isDelete() ? (" REMOVE e IN " + collectionName) : (tree.isCountProjection() ? " RETURN length" : " RETURN e");
-        return String.format(queryTemplate, array, predicate, count, buildSortString(sort), limit, type);
+        return String.format(queryTemplate, array, predicate, count, buildSortString(sort), limit, pageable, type);
     }
 
     public static String buildSortString(Sort sort) {
@@ -141,8 +158,15 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             Object caseAdjusted = ignoreArgumentCase(iterator.next(), shouldIgnoreCase);
             if (caseAdjusted.getClass() == Point.class) {
                 Point point = (Point) caseAdjusted;
+                if (!geoFields.isEmpty()) {
+                    Assert.isTrue(uniquePoint == null || uniquePoint.equals(point), "Different Points are used - Distance is ambiguous");
+                    uniquePoint = point;
+                }
                 bindVars.put(Integer.toString(bindingCounter + bindings++), point.getX());
                 bindVars.put(Integer.toString(bindingCounter + bindings++), point.getY());
+            } else if (caseAdjusted.getClass() == Distance.class) {
+                Distance distance = (Distance) caseAdjusted;
+                bindVars.put(Integer.toString(bindingCounter + bindings++), distance.getNormalizedValue() * Metrics.KILOMETERS.getMultiplier() * 1000);
             } else if (caseAdjusted.getClass() == Range.class) {
                 Range range = (Range) caseAdjusted;
                 bindVars.put(Integer.toString(bindingCounter + bindings++), range.getLowerBound());
@@ -275,13 +299,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             case NEAR:
                 isArray = true;
                 clause = String.format("NEAR(%s, @%d, @%d)", collectionName, bindingCounter, bindingCounter + 1);
-                clause = unsetDistance(clause);
+                if (geoFields.isEmpty()) clause = unsetDistance(clause);
                 arguments = 1;
                 break;
             case WITHIN:
                 isArray = true;
                 clause = String.format("WITHIN(%s, @%d, @%d, @%d)", collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 2);
-                clause = unsetDistance(clause);
+                if (geoFields.isEmpty()) clause = unsetDistance(clause);
                 arguments = 2;
                 break;
             default:
@@ -293,8 +317,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             clause = String.format("MINUS(WITHIN(%s, @%d, @%d, @%d), WITHIN(%s, @%d, @%d, @%d))",
                     collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3,
                     collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 2);
-            clause = unsetDistance(clause);
             bindingCounter += 4 - bindings;
+            if (geoFields.isEmpty()) clause = unsetDistance(clause);
         }
         bindingCounter += bindings;
         return new PartInformation(isArray, clause);

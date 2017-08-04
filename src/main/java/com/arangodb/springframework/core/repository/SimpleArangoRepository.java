@@ -1,6 +1,11 @@
 package com.arangodb.springframework.core.repository;
 
+import com.arangodb.ArangoCursor;
+import com.arangodb.ArangoDB;
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.convert.DBDocumentEntity;
+import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,8 +99,9 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 		if (pageable == null) LOGGER.debug("Pageable in findAll(Pageable) is null");
 		String query = String.format("FOR e IN %s%s LIMIT %d, %d RETURN e",
 				getCollectionName(), DerivedQueryCreator.buildSortString(pageable.getSort()), pageable.getOffset(), pageable.getPageSize());
-		List<T> content = (List<T>) arangoOperations.query(query, new HashMap<>(), null, domainClass).asListRemaining();
-		return new PageImpl<T>(content, pageable, count());
+		ArangoCursor<T> result = arangoOperations.query(query, new HashMap<>(), new AqlQueryOptions().fullCount(true), domainClass);
+		List<T> content = result.asListRemaining();
+		return new PageImpl<T>(content, pageable, result.getStats().getFullCount());
 	}
 
 	private String getCollectionName() {

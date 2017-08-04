@@ -1,15 +1,22 @@
 package com.arangodb.springframework.core.repository.query.derived;
 
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
 
 import com.arangodb.springframework.core.repository.query.derived.geo.Range;
 import com.arangodb.springframework.testdata.Customer;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.data.geo.Point;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.geo.*;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.*;
+import java.util.function.BiPredicate;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -215,7 +222,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         customer3.setLocation(new int[] {180, 0});
         repository.save(customer3);
         createGeoIndex("location");
-        double distance = convertAngleToDistance(30);
+        double distanceInMeters = convertAngleToDistance(30);
+        Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
         Iterable<Customer> retrieved = repository.findByRandomExistingFieldWithinOrNameAndRandomExistingFieldNear(new Point(0, 20), distance, "+++", new Point(0, 0));
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
@@ -309,11 +317,140 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 
+    @Test
+    public void staticAndDynamicSortTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        toBeRetrieved.add(new Customer("Tony", "1", 5));
+        toBeRetrieved.add(new Customer("Tony", "2", 3));
+        toBeRetrieved.add(new Customer("Tony", "2", 4));
+        repository.save(toBeRetrieved);
+        repository.save(new Customer("Stark", "0", 0));
+        Customer[] retrieved = repository.findByNameOrderBySurnameAsc(new Sort("age"), "Tony");
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+    }
+
+    @Test
+    public void pageableTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        repository.save(new Customer("", "", 0));
+        repository.save(new Customer("", "", 1));
+        toBeRetrieved.add(new Customer("", "", 2));
+        repository.save(new Customer("-", "", 3));
+        toBeRetrieved.add(new Customer("", "", 4));
+        repository.save(new Customer("", "", 5));
+        repository.save(toBeRetrieved);
+        Pageable pageable = new PageRequest(1, 2, new Sort("age"));
+        Page<Customer> retrieved = repository.readByNameAndSurname(pageable, "", new AqlQueryOptions().fullCount(false), "");
+        assertEquals(5, retrieved.getTotalElements());
+        assertEquals(3, retrieved.getTotalPages());
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+    }
+
+    @Test
+    public void geoResultTest() {
+        Customer customer1 = new Customer("", "", 0);
+        customer1.setLocation(new int[] {5, 7});
+        repository.save(customer1);
+        Customer customer2 = new Customer("", "", 0);
+        customer2.setLocation(new int[] {50, 70});
+        repository.save(customer2);
+        double distance = convertAngleToDistance(10);
+        createGeoIndex("location");
+        GeoResult<Customer> retrieved = repository.queryByRandomExistingFieldWithin(new Point(1, 2), distance);
+        double expectedNormalizedDistance = getDistanceBetweenPoints(new Point(5, 7), new Point(1, 2))
+                / 1000.0 / Metrics.KILOMETERS.getMultiplier();
+        assertEquals(expectedNormalizedDistance, retrieved.getDistance().getNormalizedValue(), 0.000000001);
+        assertEquals(customer1, retrieved.getContent());
+    }
+
+    @Test
+    public void geoResultsTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        Customer customer1 = new Customer("", "", 0);
+        customer1.setLocation(new int[] {21, 43});
+        toBeRetrieved.add(customer1);
+        Customer customer2 = new Customer("", "", 0);
+        customer2.setLocation(new int[] {43, 21});
+        toBeRetrieved.add(customer2);
+        repository.save(toBeRetrieved);
+        Customer customer3 = new Customer("", "", 0);
+        customer3.setLocation(new int[] {50, 70});
+        repository.save(customer3);
+        Customer customer4 = new Customer("", "", 0);
+        customer4.setLocation(new int[] {2, 3});
+        repository.save(customer4);
+        createGeoIndex("location");
+        double lowerBound = convertAngleToDistance(30);
+        double upperBound = convertAngleToDistance(50);
+        GeoResults<Customer> retrieved = repository.findByRandomExistingFieldWithin(new Point(1, 0), new Range<>(lowerBound, upperBound));
+        List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+        expectedGeoResults.add(new GeoResult<>(customer1, new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(21, 43)) / 1000, Metrics.KILOMETERS)));
+        expectedGeoResults.add(new GeoResult<>(customer2, new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(43, 21)) / 1000, Metrics.KILOMETERS)));
+        assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+    }
+
+    @Test
+    public void geoPageTest() {
+        Customer customer1 = new Customer("", "", 0);
+        customer1.setLocation(new int[] {0, 2});
+        repository.save(customer1);
+        Customer customer2 = new Customer("", "", 0);
+        customer2.setLocation(new int[] {0, 3});
+        repository.save(customer2);
+        Customer customer3 = new Customer("", "", 0);
+        customer3.setLocation(new int[] {0, 4});
+        repository.save(customer3);
+        Customer customer4 = new Customer("", "", 0);
+        customer4.setLocation(new int[] {0, 6});
+        repository.save(customer4);
+        createGeoIndex("location");
+        GeoPage<Customer> retrieved = repository.findByRandomExistingFieldNear(new Point(0, 0), new PageRequest(1, 2));
+        List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+        expectedGeoResults.add(new GeoResult<>(customer3, new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 4)) / 1000, Metrics.KILOMETERS)));
+        expectedGeoResults.add(new GeoResult<>(customer4, new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 6)) / 1000, Metrics.KILOMETERS)));
+        assertEquals(4, retrieved.getTotalElements());
+        assertEquals(2, retrieved.getTotalPages());
+        assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, true));
+    }
+
+    @Test
+    public void someTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        Customer customer1 = new Customer("+", "", 0);
+        customer1.setLocation(new int[] {89, 89});
+        toBeRetrieved.add(customer1);
+        Customer customer2 = new Customer("", "+", 0);
+        customer2.setLocation(new int[] {0, 5});
+        toBeRetrieved.add(customer2);
+        Customer customer3 = new Customer("", "", 0);
+        customer3.setLocation(new int[] {25, 0});
+        toBeRetrieved.add(customer3);
+        repository.save(toBeRetrieved);
+        Customer customer4 = new Customer("", "", 0);
+        customer4.setLocation(new int[] {0, 15});
+        repository.save(customer4);
+        Customer customer5 = new Customer("", "", 0);
+        customer5.setLocation(new int[] {35, 0});
+        repository.save(customer5);
+        createGeoIndex("location");
+        double distance = convertAngleToDistance(10);
+        Range<Double> distanceRange = new Range<>(convertAngleToDistance(20), convertAngleToDistance(30));
+        Point location = new Point(0, 0);
+        GeoResults<Customer> retrievd = repository.findByNameOrSurnameAndRandomExistingFieldWithinOrRandomExistingFieldWithin("+", "+", location, distance, location, distanceRange);
+        List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+        expectedGeoResults.add(new GeoResult<>(customer1, new Distance(getDistanceBetweenPoints(location, new Point(89, 89)) / 1000, Metrics.KILOMETERS)));
+        expectedGeoResults.add(new GeoResult<>(customer2, new Distance(getDistanceBetweenPoints(location, new Point(0,5)) / 1000, Metrics.KILOMETERS)));
+        expectedGeoResults.add(new GeoResult<>(customer3, new Distance(getDistanceBetweenPoints(location, new Point(25, 0)) / 1000, Metrics.KILOMETERS)));
+        assertTrue(equals(expectedGeoResults, retrievd, geoCmp, geoEq, false));
+    }
+
     private void createGeoIndex(String fieldName) {
         Collection<String> fields = new LinkedList<>();
         fields.add(fieldName);
         String collectionName = template.getConverter().getMappingContext().getPersistentEntity(Customer.class).getCollection();
         template.collection(collectionName).ensureGeoIndex(fields, null);
+
+        template.collection(collectionName).getIndexes().forEach(i -> i.getFields());
     }
 
     private double convertAngleToDistance(int angle) {
@@ -321,8 +458,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         return 2 * Math.PI * EARTH_RADIUS * (angle / 360.0);
     }
 
-    private double convertAngleToDistance2(int angle) {
-        String query = String.format("RETURN DISTANCE(0, 0, 0, %d)", angle);
+    private double getDistanceBetweenPoints(Point point1, Point point2) {
+        String query = String.format("RETURN DISTANCE(%f, %f, %f, %f)", point1.getX(), point1.getY(), point2.getX(), point2.getY());
         return template.query(query, new HashMap<>(), null, Double.class).next();
     }
 

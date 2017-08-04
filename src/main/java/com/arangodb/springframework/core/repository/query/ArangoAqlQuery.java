@@ -1,20 +1,23 @@
 package com.arangodb.springframework.core.repository.query;
 
 import com.arangodb.ArangoCursor;
+import com.arangodb.entity.BaseDocument;
+import com.arangodb.entity.BaseEdgeDocument;
+import com.arangodb.entity.IndexType;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Param;
 import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Slice;
+import org.springframework.data.geo.*;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.PartTree;
@@ -31,12 +34,30 @@ import java.util.regex.Pattern;
  */
 public class ArangoAqlQuery implements RepositoryQuery {
 
+	private static final Set<Class<?>> RETURN_TYPES_USING_MAP = new HashSet<>();
+	private static final Set<Class<?>> GEO_RETURN_TYPES = new HashSet<>();
+
+	static {
+		RETURN_TYPES_USING_MAP.add(Map.class);
+		RETURN_TYPES_USING_MAP.add(BaseDocument.class);
+		RETURN_TYPES_USING_MAP.add(BaseEdgeDocument.class);
+		RETURN_TYPES_USING_MAP.add(GeoResult.class);
+		RETURN_TYPES_USING_MAP.add(GeoResults.class);
+		RETURN_TYPES_USING_MAP.add(GeoPage.class);
+
+		GEO_RETURN_TYPES.add(GeoResult.class);
+		GEO_RETURN_TYPES.add(GeoResults.class);
+		GEO_RETURN_TYPES.add(GeoPage.class);
+	}
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(ArangoAqlQuery.class);
 
 	private final ArangoOperations operations;
 	private final Class<?> domainClass;
 	private final Method method;
 	private final RepositoryMetadata metadata;
+	private ArangoParameterAccessor accessor;
+	private boolean isCountProjection = false;
 
 	public ArangoAqlQuery(Class<?> domainClass, Method method, RepositoryMetadata metadata, ArangoOperations operations) {
 		this.domainClass = domainClass;
@@ -53,12 +74,21 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		Map<String, Object> bindVars = new HashMap<>();
 		String query = getQueryAnnotationValue();
 		AqlQueryOptions options = null;
-		boolean isCountProjection = false;
 		if (query == null) {
 			PartTree tree = new PartTree(method.getName(), domainClass);
 			isCountProjection = tree.isCountProjection();
-			query = new DerivedQueryCreator((ArangoMappingContext) operations.getConverter().getMappingContext(), domainClass,
-					tree, new ParametersParameterAccessor(new ArangoParameters(method), arguments), bindVars).createQuery();
+			accessor = new ArangoParameterAccessor(new ArangoParameters(method), arguments);
+			options = accessor.getAqlQueryOptions();
+			if (Page.class.isAssignableFrom(method.getReturnType())) {
+				if (options == null) options = new AqlQueryOptions().fullCount(true);
+				else options = options.fullCount(true);
+			}
+			List<String> geoFields = new LinkedList<>();
+			if (GEO_RETURN_TYPES.contains(method.getReturnType()))
+				operations.collection(operations.getConverter().getMappingContext().getPersistentEntity(domainClass).getCollection())
+					.getIndexes().forEach(i -> { if (i.getType() == IndexType.geo1 || i.getType() == IndexType.geo2) i.getFields().forEach(f -> geoFields.add(f)); });
+			query = new DerivedQueryCreator((ArangoMappingContext) operations.getConverter().getMappingContext(),
+					domainClass, tree, accessor, bindVars, geoFields).createQuery();
 		} else if (arguments != null) {
 			String fixedQuery = removeAqlStringLiterals(query);
 			Set<String> bindings = getBindings(fixedQuery);
@@ -102,8 +132,13 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			}
 			mergeBindVars(bindVars, bindVarsLocal);
 		}
-		Class<?> resultClass = isCountProjection ? Integer.class : domainClass;
-		return convertResult(operations.query(query, bindVars, options, resultClass));
+		return convertResult(operations.query(query, bindVars, options, getResultClass()));
+	}
+
+	private Class<?> getResultClass() {
+		if (isCountProjection) return Integer.class;
+		if (RETURN_TYPES_USING_MAP.contains(method.getReturnType())) return Object.class;
+		return domainClass;
 	}
 
 	private Annotation getSpecialAnnotation(Annotation[] annotations) {
@@ -129,15 +164,42 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		}
 	}
 
+	private GeoResult buildGeoResult(Object object) {
+		Map<String, Object> map = (Map<String, Object>) object;
+		Object entity = operations.getConverter().read(domainClass, new DBDocumentEntity(map));
+		Distance distance = new Distance(((double) map.get("_distance")) / 1000, Metrics.KILOMETERS);
+		return new GeoResult(entity, distance);
+	}
+
+	private GeoResults buildGeoResults(ArangoCursor cursor) {
+		List<GeoResult> list = new LinkedList<>();
+		cursor.forEachRemaining(o -> list.add(buildGeoResult(o)));
+		return new GeoResults(list);
+	}
+
+	private Set buildSet(ArangoCursor cursor) {
+		Set set = new HashSet();
+		cursor.forEachRemaining(set::add);
+		return set;
+	}
+
 	private Object convertResult(ArangoCursor result) {
-		if (List.class.isAssignableFrom(method.getReturnType())) { return result.asListRemaining(); }
-		else if (Set.class.isAssignableFrom(method.getReturnType())) {
-			Set set = new HashSet();
-			result.forEachRemaining(set::add);
-			return set;
-		} else if (Iterable.class.isAssignableFrom(method.getReturnType())) { return result.asListRemaining(); }
-		else if (method.getReturnType().isArray()) { return result.asListRemaining().toArray(); }
-		return result.hasNext() ? result.next() : null;
+		if (!result.hasNext()) return null;
+		if (method.getReturnType().isAssignableFrom(List.class)) return result.asListRemaining();
+		if (method.getReturnType().isAssignableFrom(PageImpl.class))
+			return new PageImpl(result.asListRemaining(), accessor.getPageable(), result.getStats().getFullCount());
+		if (method.getReturnType().isAssignableFrom(Set.class)) return buildSet(result);
+		if (method.getReturnType().isAssignableFrom(BaseDocument.class))
+			return new BaseDocument((Map<String, Object>) result.next());
+		if (method.getReturnType().isAssignableFrom(BaseEdgeDocument.class))
+			return new BaseEdgeDocument((Map<String, Object>) result.next());
+		if (method.getReturnType().isAssignableFrom(ArangoCursor.class)) return result;
+		if (method.getReturnType().isArray()) return result.asListRemaining().toArray();
+		if (method.getReturnType().isAssignableFrom(GeoResult.class)) return buildGeoResult(result.next());
+		if (method.getReturnType().isAssignableFrom(GeoResults.class)) return buildGeoResults(result);
+		if (method.getReturnType().isAssignableFrom(GeoPage.class))
+			return new GeoPage(buildGeoResults(result), accessor.getPageable(), result.getStats().getFullCount());
+		return result.next();
 	}
 
 	private String removeAqlStringLiterals(String query){
