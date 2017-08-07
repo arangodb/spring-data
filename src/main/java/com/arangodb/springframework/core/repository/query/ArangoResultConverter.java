@@ -7,6 +7,7 @@ import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.geo.*;
 
 import java.lang.reflect.Method;
@@ -30,6 +31,7 @@ public class ArangoResultConverter {
             typeMap.put(Iterable.class, ArangoResultConverter.class.getMethod("convertList"));
             typeMap.put(Collection.class, ArangoResultConverter.class.getMethod("convertList"));
             typeMap.put(Page.class, ArangoResultConverter.class.getMethod("convertPage"));
+            typeMap.put(Slice.class, ArangoResultConverter.class.getMethod("convertPage"));
             typeMap.put(Set.class, ArangoResultConverter.class.getMethod("convertSet"));
             typeMap.put(BaseDocument.class, ArangoResultConverter.class.getMethod("convertBaseDocument"));
             typeMap.put(BaseEdgeDocument.class, ArangoResultConverter.class.getMethod("convertBaseEdgeDocument"));
