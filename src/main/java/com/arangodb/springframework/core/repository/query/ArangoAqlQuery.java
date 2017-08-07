@@ -169,50 +169,10 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		}
 	}
 
-	private GeoResult buildGeoResult(Object object) {
-		Map<String, Object> map = (Map<String, Object>) object;
-		Object entity = operations.getConverter().read(domainClass, new DBDocumentEntity(map));
-		Distance distance = new Distance(((double) map.get("_distance")) / 1000, Metrics.KILOMETERS);
-		return new GeoResult(entity, distance);
-	}
-
-	private GeoResults buildGeoResults(ArangoCursor cursor) {
-		List<GeoResult> list = new LinkedList<>();
-		cursor.forEachRemaining(o -> list.add(buildGeoResult(o)));
-		return new GeoResults(list);
-	}
-
-	private Set buildSet(ArangoCursor cursor) {
-		Set set = new HashSet();
-		cursor.forEachRemaining(set::add);
-		return set;
-	}
-
 	private Object convertResult(ArangoCursor result) {
-		if (!result.hasNext()) {
-			return null;
-		} else if (method.getReturnType().isAssignableFrom(List.class)) {
-			return result.asListRemaining();
-		} else if (method.getReturnType().isAssignableFrom(PageImpl.class)) {
-			return new PageImpl(result.asListRemaining(), accessor.getPageable(), result.getStats().getFullCount());
-		} else if (method.getReturnType().isAssignableFrom(Set.class)) {
-			return buildSet(result);
-		} else if (method.getReturnType().isAssignableFrom(BaseDocument.class)) {
-			return new BaseDocument((Map<String, Object>) result.next());
-		} else if (method.getReturnType().isAssignableFrom(BaseEdgeDocument.class)) {
-			return new BaseEdgeDocument((Map<String, Object>) result.next());
-		} else if (method.getReturnType().isAssignableFrom(ArangoCursor.class)) {
-			return result;
-		} else if (method.getReturnType().isArray()) {
-			return result.asListRemaining().toArray();
-		} else if (method.getReturnType().isAssignableFrom(GeoResult.class)) {
-			return buildGeoResult(result.next());
-		} else if (method.getReturnType().isAssignableFrom(GeoResults.class)) {
-			return buildGeoResults(result);
-		} else if (method.getReturnType().isAssignableFrom(GeoPage.class)) {
-			return new GeoPage(buildGeoResults(result), accessor.getPageable(), result.getStats().getFullCount());
-		}
-		return result.next();
+		if (!result.hasNext()) return null;
+		ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations, domainClass);
+		return resultConverter.convertResult(method.getReturnType());
 	}
 
 	private String removeAqlStringLiterals(String query){
