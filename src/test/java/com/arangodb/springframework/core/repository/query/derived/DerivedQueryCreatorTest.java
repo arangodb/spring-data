@@ -449,8 +449,6 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         fields.add(fieldName);
         String collectionName = template.getConverter().getMappingContext().getPersistentEntity(Customer.class).getCollection();
         template.collection(collectionName).ensureGeoIndex(fields, null);
-
-        template.collection(collectionName).getIndexes().forEach(i -> i.getFields());
     }
 
     private double convertAngleToDistance(int angle) {
