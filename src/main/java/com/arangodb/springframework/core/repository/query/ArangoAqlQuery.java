@@ -87,13 +87,13 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			if (GEO_RETURN_TYPES.contains(method.getReturnType())) {
 				operations.collection(operations.getConverter().getMappingContext().getPersistentEntity(domainClass).getCollection())
 						.getIndexes().forEach(i -> {
-							if (i.getType() == IndexType.geo1 || i.getType() == IndexType.geo2) {
+							if ((i.getType() == IndexType.geo1 || i.getType() == IndexType.geo2) && geoFields.isEmpty()) {
 								i.getFields().forEach(f -> geoFields.add(f));
 							}
 						});
 			}
 			query = new DerivedQueryCreator((ArangoMappingContext) operations.getConverter().getMappingContext(),
-					domainClass, tree, accessor, bindVars, geoFields).createQuery();
+					domainClass, tree, accessor, bindVars, geoFields, operations.getVersion().getVersion().compareTo("3.2.0") < 0).createQuery();
 		} else if (arguments != null) {
 			String fixedQuery = removeAqlStringLiterals(query);
 			Set<String> bindings = getBindings(fixedQuery);

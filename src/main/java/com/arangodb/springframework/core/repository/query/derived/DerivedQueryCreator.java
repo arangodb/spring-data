@@ -42,11 +42,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     private final Map<String, Object> bindVars;
     private final ArangoParameterAccessor accessor;
     private final List<String> geoFields;
+    private final boolean useFunctions;
     private Point uniquePoint = null;
+    private String uniqueLocation = null;
     private int bindingCounter = 0;
 
     public DerivedQueryCreator(ArangoMappingContext context, Class<?> domainClass, PartTree tree,
-            ArangoParameterAccessor accessor, Map<String, Object> bindVars, List<String> geoFields) {
+            ArangoParameterAccessor accessor, Map<String, Object> bindVars, List<String> geoFields, boolean useFunctions) {
         super(tree, accessor);
         this.context = context;
         this.collectionName = context.getPersistentEntity(domainClass).getCollection();
@@ -54,6 +56,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         this.bindVars = bindVars;
         this.accessor = accessor;
         this.geoFields = geoFields;
+        this.useFunctions = useFunctions;
     }
 
     public String getCollectionName() {
@@ -74,7 +77,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 
     @Override
     protected ConjunctionBuilder and(Part part, ConjunctionBuilder base, Iterator<Object> iterator) {
-        base.add(createPartInformation(part, iterator));
+        PartInformation partInformation = createPartInformation(part, iterator);
+        if (partInformation != null) base.add(partInformation);
         return base;
     }
 
@@ -95,8 +99,19 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         String count = tree.isCountProjection() ? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length") : "";
         String limit = tree.isLimiting() ? String.format(" LIMIT %d", tree.getMaxResults()) : "";
         String pageable = accessor.getPageable() == null ? "" : String.format(" LIMIT %d, %d", accessor.getPageable().getOffset(), accessor.getPageable().getPageSize());
-        String type = tree.isDelete() ? (" REMOVE e IN " + collectionName) : (tree.isCountProjection() ? " RETURN length" : " RETURN e");
-        return String.format(queryTemplate, array, predicate, count, buildSortString(sort), limit, pageable, type);
+        String geoFields = String.format("%s[0], %s[1]", uniqueLocation, uniqueLocation);
+        String distanceAdjusted = getGeoFields().isEmpty() ? "e" : String.format("MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields, getUniquePoint()[0], getUniquePoint()[1]);
+        String type = tree.isDelete() ? (" REMOVE e IN " + collectionName) : (tree.isCountProjection() ? " RETURN length" : String.format(" RETURN %s", distanceAdjusted));
+        String sortString = buildSortString(sort);
+        if (!this.geoFields.isEmpty() && !tree.isDelete() && !tree.isCountProjection()) {
+            String distanceSortKey = String.format(" SORT distance(%s, %f, %f)", geoFields, getUniquePoint()[0], getUniquePoint()[1]);
+            if (sortString.length() == 0) {
+                sortString = distanceSortKey;
+            } else {
+                sortString = distanceSortKey + ", " + sortString.substring(5, sortString.length());
+            }
+        }
+        return String.format(queryTemplate, array, predicate, count, sortString, limit, pageable, type);
     }
 
     public static String buildSortString(Sort sort) {
@@ -205,22 +220,18 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             case TRUE:
                 isArray = false;
                 clause = String.format("%s == true", ignorePropertyCase(part));
-                arguments = 0;
                 break;
             case FALSE:
                 isArray = false;
                 clause = String.format("%s == false", ignorePropertyCase(part));
-                arguments = 0;
                 break;
             case IS_NULL:
                 isArray = false;
                 clause = String.format("%s == null", ignorePropertyCase(part));
-                arguments = 0;
                 break;
             case IS_NOT_NULL:
                 isArray = false;
                 clause = String.format("%s != null", ignorePropertyCase(part));
-                arguments = 0;
                 break;
             case EXISTS:
                 isArray = false;
@@ -297,15 +308,36 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 arguments = 1;
                 break;
             case NEAR:
-                isArray = true;
-                clause = String.format("NEAR(%s, @%d, @%d, COUNT(%s), '_distance')", collectionName, bindingCounter, bindingCounter + 1, collectionName);
-                if (geoFields.isEmpty()) clause = unsetDistance(clause);
-                arguments = 1;
+                if (!geoFields.isEmpty()) {
+                    Assert.isTrue(uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part)),
+                            "Distance is ambiguous for multiple locations");
+                    uniqueLocation = ignorePropertyCase(part);
+                }
+                if (useFunctions) {
+                    isArray = true;
+                    clause = String.format("NEAR(%s, @%d, @%d, COUNT(%s), '_distance')", collectionName, bindingCounter, bindingCounter + 1, collectionName);
+                    if (geoFields.isEmpty()) clause = unsetDistance(clause);
+                    arguments = 1;
+                } else {
+                    iterator.next();
+                }
                 break;
             case WITHIN:
-                isArray = true;
-                clause = String.format("WITHIN(%s, @%d, @%d, @%d, '_distance')", collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 2);
-                if (geoFields.isEmpty()) clause = unsetDistance(clause);
+                if (!geoFields.isEmpty()) {
+                    Assert.isTrue(uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part)),
+                            "Distance is ambiguous for multiple locations");
+                    uniqueLocation = ignorePropertyCase(part);
+                }
+                if (useFunctions) {
+                    isArray = true;
+                    clause = String.format("WITHIN(%s, @%d, @%d, @%d, '_distance')", collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 2);
+                    if (geoFields.isEmpty()) clause = unsetDistance(clause);
+                } else {
+                    isArray = false;
+                    clause = String.format("distance(%s[0], %s[1], @%d, @%d) <= @%d",
+                            ignorePropertyCase(part), ignorePropertyCase(part),
+                            bindingCounter, bindingCounter + 1, bindingCounter + 2);
+                }
                 arguments = 2;
                 break;
             default:
@@ -314,14 +346,25 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         }
         int bindings = bindArguments(iterator, shouldIgnoreCase(part), arguments, borderStatus);
         if (bindings == -1) {
-            clause = String.format("MINUS(WITHIN(%s, @%d, @%d, @%d, '_distance'), WITHIN(%s, @%d, @%d, @%d, '_distance'))",
-                    collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3,
-                    collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 2);
+            if (!geoFields.isEmpty()) {
+                Assert.isTrue(uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part)),
+                        "Distance is ambiguous for multiple locations");
+                uniqueLocation = ignorePropertyCase(part);
+            }
+            if (useFunctions) {
+                clause = String.format("MINUS(WITHIN(%s, @%d, @%d, @%d, '_distance'), WITHIN(%s, @%d, @%d, @%d, '_distance'))",
+                        collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3,
+                        collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 2);
+                if (geoFields.isEmpty()) clause = unsetDistance(clause);
+            } else {
+                clause = String.format("@%d <= distance(%s[0], %s[1], @%d, @%d) AND distance(%s[0], %s[1], @%d, @%d) <= @%d",
+                        bindingCounter + 2, ignorePropertyCase(part), ignorePropertyCase(part), bindingCounter, bindingCounter + 1,
+                        ignorePropertyCase(part), ignorePropertyCase(part), bindingCounter, bindingCounter + 1, bindingCounter + 3);
+            }
             bindingCounter += 4 - bindings;
-            if (geoFields.isEmpty()) clause = unsetDistance(clause);
         }
         bindingCounter += bindings;
-        return new PartInformation(isArray, clause);
+        return clause == null ? null : new PartInformation(isArray, clause);
     }
 
     private String unsetDistance(String clause) {

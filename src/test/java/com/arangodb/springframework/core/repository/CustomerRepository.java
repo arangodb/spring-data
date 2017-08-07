@@ -83,21 +83,21 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	// GEOSPATIAL
 
-	Customer[] findByRandomExistingFieldNear(Point location);
+	Customer[] findByLocationNear(Point location);
 
-	List<Customer> findByRandomExistingFieldWithinAndName(Point location, Range<Double> distanceRange, String name);
+	List<Customer> findByLocationWithinAndName(Point location, Range<Double> distanceRange, String name);
 
-	Iterable<Customer> findByRandomExistingFieldWithinOrNameAndRandomExistingFieldNear(Point location, Distance distance, String name, Point location2);
+	Iterable<Customer> findByLocationWithinOrNameAndLocationNear(Point location, Distance distance, String name, Point location2);
 
-	Collection<Customer> findByRandomExistingFieldWithinAndRandomExistingFieldWithinOrName(Point location, int distance, Point location2, Range distanceRange, String name);
+	Collection<Customer> findByLocationWithinAndLocationWithinOrName(Point location, int distance, Point location2, Range distanceRange, String name);
 
 	// ArrayList not supported, use List instead
-	List<Customer> findByNameOrRandomExistingFieldWithinOrNameAndSurnameOrNameAndRandomExistingFieldNearAndSurnameAndRandomExistingFieldWithin(
+	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
 			String name1, Point location1, double distance, String name2, String surname1, String name3, Point location2, String surname2, Point location3, Range<Double> distanceRange);
 
 	// EXISTS
 
-	Customer[] findByRandomExistingFieldExistsAndStringListAllIgnoreCase(String field, List<String> stringList);
+	Customer[] findByLocationExistsAndStringListAllIgnoreCase(String field, List<String> stringList);
 
 	// SORT
 
@@ -109,11 +109,11 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	// GEO_RESULT, GEO_RESULTS, GEO_PAGE
 
-	GeoResult<Customer> queryByRandomExistingFieldWithin(Point location, double distance);
+	GeoResult<Customer> queryByLocationWithin(Point location, double distance);
 
-	GeoResults<Customer> findByRandomExistingFieldWithin(Point location, Range<Double> distanceRange);
+	GeoResults<Customer> findByLocationWithin(Point location, Range<Double> distanceRange);
 
-	GeoPage<Customer> findByRandomExistingFieldNear(Point location, Pageable pageable);
+	GeoPage<Customer> findByLocationNear(Point location, Pageable pageable);
 
-	GeoResults<Customer> findByNameOrSurnameAndRandomExistingFieldWithinOrRandomExistingFieldWithin(String name, String surname, Point location1, double distance, Point location2, Range distanceRange);
+	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(String name, String surname, Point location1, double distance, Point location2, Range distanceRange);
 }
