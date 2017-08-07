@@ -49,13 +49,13 @@ public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 			if (it != null) {
 				if (it.getClass().isArray()) {
 					Object[] array = (Object[]) it;
-					for (Object e : array) l.add(e);
+					for (Object e : array) { l.add(e); }
 				} else {
 					Iterable iterable = (Iterable) it;
-					for (Object e : iterable) l.add(e);
+					for (Object e : iterable) { l.add(e); }
 				}
 			}
-			if (!shouldOrderMatter) l.sort(cmp);
+			if (!shouldOrderMatter) { l.sort(cmp); }
 			return l;
 		};
 		List l1 = iterableToSortedList.apply(it1);

@@ -80,13 +80,18 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			accessor = new ArangoParameterAccessor(new ArangoParameters(method), arguments);
 			options = accessor.getAqlQueryOptions();
 			if (Page.class.isAssignableFrom(method.getReturnType())) {
-				if (options == null) options = new AqlQueryOptions().fullCount(true);
+				if (options == null) { options = new AqlQueryOptions().fullCount(true); }
 				else options = options.fullCount(true);
 			}
 			List<String> geoFields = new LinkedList<>();
-			if (GEO_RETURN_TYPES.contains(method.getReturnType()))
+			if (GEO_RETURN_TYPES.contains(method.getReturnType())) {
 				operations.collection(operations.getConverter().getMappingContext().getPersistentEntity(domainClass).getCollection())
-					.getIndexes().forEach(i -> { if (i.getType() == IndexType.geo1 || i.getType() == IndexType.geo2) i.getFields().forEach(f -> geoFields.add(f)); });
+						.getIndexes().forEach(i -> {
+							if (i.getType() == IndexType.geo1 || i.getType() == IndexType.geo2) {
+								i.getFields().forEach(f -> geoFields.add(f));
+							}
+						});
+			}
 			query = new DerivedQueryCreator((ArangoMappingContext) operations.getConverter().getMappingContext(),
 					domainClass, tree, accessor, bindVars, geoFields).createQuery();
 		} else if (arguments != null) {
@@ -184,21 +189,29 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	}
 
 	private Object convertResult(ArangoCursor result) {
-		if (!result.hasNext()) return null;
-		if (method.getReturnType().isAssignableFrom(List.class)) return result.asListRemaining();
-		if (method.getReturnType().isAssignableFrom(PageImpl.class))
+		if (!result.hasNext()) {
+			return null;
+		} else if (method.getReturnType().isAssignableFrom(List.class)) {
+			return result.asListRemaining();
+		} else if (method.getReturnType().isAssignableFrom(PageImpl.class)) {
 			return new PageImpl(result.asListRemaining(), accessor.getPageable(), result.getStats().getFullCount());
-		if (method.getReturnType().isAssignableFrom(Set.class)) return buildSet(result);
-		if (method.getReturnType().isAssignableFrom(BaseDocument.class))
+		} else if (method.getReturnType().isAssignableFrom(Set.class)) {
+			return buildSet(result);
+		} else if (method.getReturnType().isAssignableFrom(BaseDocument.class)) {
 			return new BaseDocument((Map<String, Object>) result.next());
-		if (method.getReturnType().isAssignableFrom(BaseEdgeDocument.class))
+		} else if (method.getReturnType().isAssignableFrom(BaseEdgeDocument.class)) {
 			return new BaseEdgeDocument((Map<String, Object>) result.next());
-		if (method.getReturnType().isAssignableFrom(ArangoCursor.class)) return result;
-		if (method.getReturnType().isArray()) return result.asListRemaining().toArray();
-		if (method.getReturnType().isAssignableFrom(GeoResult.class)) return buildGeoResult(result.next());
-		if (method.getReturnType().isAssignableFrom(GeoResults.class)) return buildGeoResults(result);
-		if (method.getReturnType().isAssignableFrom(GeoPage.class))
+		} else if (method.getReturnType().isAssignableFrom(ArangoCursor.class)) {
+			return result;
+		} else if (method.getReturnType().isArray()) {
+			return result.asListRemaining().toArray();
+		} else if (method.getReturnType().isAssignableFrom(GeoResult.class)) {
+			return buildGeoResult(result.next());
+		} else if (method.getReturnType().isAssignableFrom(GeoResults.class)) {
+			return buildGeoResults(result);
+		} else if (method.getReturnType().isAssignableFrom(GeoPage.class)) {
 			return new GeoPage(buildGeoResults(result), accessor.getPageable(), result.getStats().getFullCount());
+		}
 		return result.next();
 	}
 

@@ -96,7 +96,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 
 	@Override
 	public Page<T> findAll(Pageable pageable) {
-		if (pageable == null) LOGGER.debug("Pageable in findAll(Pageable) is null");
+		if (pageable == null) { LOGGER.debug("Pageable in findAll(Pageable) is null"); }
 		String query = String.format("FOR e IN %s%s LIMIT %d, %d RETURN e",
 				getCollectionName(), DerivedQueryCreator.buildSortString(pageable.getSort()), pageable.getOffset(), pageable.getPageSize());
 		ArangoCursor<T> result = arangoOperations.query(query, new HashMap<>(), new AqlQueryOptions().fullCount(true), domainClass);
