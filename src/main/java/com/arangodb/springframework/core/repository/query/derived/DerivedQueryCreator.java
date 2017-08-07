@@ -45,6 +45,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     private final boolean useFunctions;
     private Point uniquePoint = null;
     private String uniqueLocation = null;
+    private Boolean isUnique = null;
     private int bindingCounter = 0;
 
     public DerivedQueryCreator(ArangoMappingContext context, Class<?> domainClass, PartTree tree,
@@ -103,7 +104,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         String distanceAdjusted = getGeoFields().isEmpty() ? "e" : String.format("MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields, getUniquePoint()[0], getUniquePoint()[1]);
         String type = tree.isDelete() ? (" REMOVE e IN " + collectionName) : (tree.isCountProjection() ? " RETURN length" : String.format(" RETURN %s", distanceAdjusted));
         String sortString = buildSortString(sort);
-        if (!this.geoFields.isEmpty() && !tree.isDelete() && !tree.isCountProjection()) {
+        if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()) {
             String distanceSortKey = String.format(" SORT distance(%s, %f, %f)", geoFields, getUniquePoint()[0], getUniquePoint()[1]);
             if (sortString.length() == 0) {
                 sortString = distanceSortKey;
@@ -173,6 +174,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             Object caseAdjusted = ignoreArgumentCase(iterator.next(), shouldIgnoreCase);
             if (caseAdjusted.getClass() == Point.class) {
                 Point point = (Point) caseAdjusted;
+                isUnique = (uniquePoint == null || uniquePoint.equals(point)) ? isUnique : false;
                 if (!geoFields.isEmpty()) {
                     Assert.isTrue(uniquePoint == null || uniquePoint.equals(point), "Different Points are used - Distance is ambiguous");
                     uniquePoint = point;
@@ -308,11 +310,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 arguments = 1;
                 break;
             case NEAR:
-                if (!geoFields.isEmpty()) {
-                    Assert.isTrue(uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part)),
-                            "Distance is ambiguous for multiple locations");
-                    uniqueLocation = ignorePropertyCase(part);
-                }
+                isUnique = isUnique == null ? true : isUnique;
+                isUnique = (uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part))) ? isUnique : false;
+                uniqueLocation = ignorePropertyCase(part);
                 if (useFunctions) {
                     isArray = true;
                     clause = String.format("NEAR(%s, @%d, @%d, COUNT(%s), '_distance')", collectionName, bindingCounter, bindingCounter + 1, collectionName);
@@ -323,11 +323,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 }
                 break;
             case WITHIN:
-                if (!geoFields.isEmpty()) {
-                    Assert.isTrue(uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part)),
-                            "Distance is ambiguous for multiple locations");
-                    uniqueLocation = ignorePropertyCase(part);
-                }
+                isUnique = isUnique == null ? true : isUnique;
+                isUnique = (uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part))) ? isUnique : false;
+                uniqueLocation = ignorePropertyCase(part);
                 if (useFunctions) {
                     isArray = true;
                     clause = String.format("WITHIN(%s, @%d, @%d, @%d, '_distance')", collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 2);
@@ -344,13 +342,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 Assert.isTrue(false, String.format("Part.Type \"%s\" not supported", part.getType().toString()));
                 break;
         }
+        if (!geoFields.isEmpty()) { Assert.isTrue(isUnique == null || isUnique,"Distance is ambiguous for multiple locations"); }
         int bindings = bindArguments(iterator, shouldIgnoreCase(part), arguments, borderStatus);
         if (bindings == -1) {
-            if (!geoFields.isEmpty()) {
-                Assert.isTrue(uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part)),
-                        "Distance is ambiguous for multiple locations");
-                uniqueLocation = ignorePropertyCase(part);
-            }
+            isUnique = isUnique == null ? true : isUnique;
+            isUnique = (uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part))) ? isUnique : false;
+            uniqueLocation = ignorePropertyCase(part);
             if (useFunctions) {
                 clause = String.format("MINUS(WITHIN(%s, @%d, @%d, @%d, '_distance'), WITHIN(%s, @%d, @%d, @%d, '_distance'))",
                         collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3,
