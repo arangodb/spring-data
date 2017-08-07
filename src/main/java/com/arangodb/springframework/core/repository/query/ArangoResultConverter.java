@@ -39,7 +39,7 @@ public class ArangoResultConverter {
             typeMap.put(GeoPage.class, ArangoResultConverter.class.getMethod("convertGeoPage"));
             typeMap.put("array", ArangoResultConverter.class.getMethod("convertArray"));
         } catch (NoSuchMethodException e) {
-
+            e.printStackTrace();
         }
     }
 

@@ -339,6 +339,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         assertEquals(5, retrieved.getTotalElements());
         assertEquals(3, retrieved.getTotalPages());
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
     }
 
     @Test
