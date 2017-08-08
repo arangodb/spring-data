@@ -27,6 +27,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.ArangoDBVersion;
+import com.arangodb.entity.BaseDocument;
 import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.entity.DocumentDeleteEntity;
 import com.arangodb.entity.DocumentUpdateEntity;
@@ -46,6 +48,7 @@ import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.Product;
 import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
@@ -206,6 +209,48 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customers.get(0).getName(), is("John"));
 		assertThat(customers.get(0).getSurname(), is("Doe"));
 		assertThat(customers.get(0).getAge(), is(30));
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Test
+	public void queryMap() {
+		template.insertDocument(new Customer("John", "Doe", 30));
+		final ArangoCursor<Map> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
+			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(), Map.class);
+		assertThat(cursor, is(notNullValue()));
+		final List<Map> customers = cursor.asListRemaining();
+		assertThat(customers.size(), is(1));
+		assertThat(customers.get(0).get("name"), is("John"));
+		assertThat(customers.get(0).get("surname"), is("Doe"));
+		assertThat(customers.get(0).get("age"), is(30L));
+	}
+
+	@Test
+	public void queryBaseDocument() {
+		template.insertDocument(new Customer("John", "Doe", 30));
+		final ArangoCursor<BaseDocument> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
+			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(),
+			BaseDocument.class);
+		assertThat(cursor, is(notNullValue()));
+		final List<BaseDocument> customers = cursor.asListRemaining();
+		assertThat(customers.size(), is(1));
+		assertThat(customers.get(0).getAttribute("name"), is("John"));
+		assertThat(customers.get(0).getAttribute("surname"), is("Doe"));
+		assertThat(customers.get(0).getAttribute("age"), is(30L));
+	}
+
+	@Test
+	public void queryVPackSlice() {
+		template.insertDocument(new Customer("John", "Doe", 30));
+		final ArangoCursor<VPackSlice> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
+			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(),
+			VPackSlice.class);
+		assertThat(cursor, is(notNullValue()));
+		final List<VPackSlice> customers = cursor.asListRemaining();
+		assertThat(customers.size(), is(1));
+		assertThat(customers.get(0).get("name").getAsString(), is("John"));
+		assertThat(customers.get(0).get("surname").getAsString(), is("Doe"));
+		assertThat(customers.get(0).get("age").getAsInt(), is(30));
 	}
 
 }

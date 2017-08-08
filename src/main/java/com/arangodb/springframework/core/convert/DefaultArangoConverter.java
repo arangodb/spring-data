@@ -37,18 +37,23 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.ParameterValueProvider;
+import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
+import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
+import com.arangodb.entity.BaseDocument;
+import com.arangodb.entity.BaseEdgeDocument;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
-import com.arangodb.springframework.core.mapping.PersistentPropertyAccessor;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
@@ -92,10 +97,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		if (conversions.hasCustomReadTarget(type.getType(), type.getType())) {
 			return conversionService.convert(source, type.getType());
 		}
-		if (isMapType(type.getType()) && DBDocumentEntity.class.isAssignableFrom(source.getClass())) {
+		if (isMapType(type.getType()) && source instanceof DBDocumentEntity) {
 			return readMap(type, DBDocumentEntity.class.cast(source));
 		}
-		if (type.isCollectionLike() && DBCollectionEntity.class.isAssignableFrom(source.getClass())) {
+		if (type.isCollectionLike() && source instanceof DBCollectionEntity) {
 			return readCollection(type, DBCollectionEntity.class.cast(source));
 		}
 		final Optional<? extends ArangoPersistentEntity<?>> entity = Optional
@@ -111,11 +116,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 		for (final Map.Entry<String, Object> entry : source.entrySet()) {
 			final Object key = conversionService.convert(entry.getKey(), keyType);
 			final Object value = entry.getValue();
-			if (DBEntity.class.isAssignableFrom(value.getClass())) {
+			if (value instanceof DBEntity) {
 				map.put(key, read(valueType, (DBEntity) value));
-			} else if (Map.class.isAssignableFrom(value.getClass())) {
+			} else if (value instanceof Map) {
 				map.put(key, read(valueType, new DBDocumentEntity((Map<? extends String, ? extends Object>) value)));
-			} else if (Collection.class.isAssignableFrom(value.getClass())) {
+			} else if (value instanceof Collection) {
 				map.put(key, read(valueType, new DBCollectionEntity((Collection<? extends Object>) value)));
 			} else if (isSimpleType(valueType.getType())) {
 				final Optional<Class<?>> customWriteTarget = Optional
@@ -136,11 +141,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Collection<Object> entries = type.getType().isArray() ? new ArrayList<>()
 				: CollectionFactory.createCollection(collectionType, componentType.getType(), source.size());
 		for (final Object entry : source) {
-			if (DBEntity.class.isAssignableFrom(entry.getClass())) {
+			if (entry instanceof DBEntity) {
 				entries.add(read(componentType, (DBEntity) entry));
-			} else if (Map.class.isAssignableFrom(entry.getClass())) {
+			} else if (entry instanceof Map) {
 				entries.add(read(componentType, new DBDocumentEntity((Map<? extends String, ? extends Object>) entry)));
-			} else if (Collection.class.isAssignableFrom(entry.getClass())) {
+			} else if (entry instanceof Collection) {
 				entries.add(read(componentType, new DBCollectionEntity((Collection<? extends Object>) entry)));
 			} else if (isSimpleType(componentType.getType())) {
 				final Optional<Class<?>> customWriteTarget = Optional
@@ -157,12 +162,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 	private Object read(
 		final TypeInformation<?> type,
 		final DBEntity source,
-		final Optional<? extends ArangoPersistentEntity<?>> entity2) {
-		final ArangoPersistentEntity<?> entity = entity2.orElseThrow(
+		final Optional<? extends ArangoPersistentEntity<?>> persistentEntity) {
+		final ArangoPersistentEntity<?> entity = persistentEntity.orElseThrow(
 			() -> new MappingException("No mapping metadata found for type " + type.getType().getName()));
 
 		final EntityInstantiator instantiatorFor = instantiators.getInstantiatorFor(entity);
-		final ParameterValueProvider<ArangoPersistentProperty> provider = null; // TODO
+		final ParameterValueProvider<ArangoPersistentProperty> provider = getParameterProvider(entity, source);
 		final Object instance = instantiatorFor.createInstance(entity, provider);
 		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(instance),
 				conversionService);
@@ -175,6 +180,28 @@ public class DefaultArangoConverter implements ArangoConverter {
 			readProperty(source.get("_id"), accessor, source.get(property.getFieldName()), property);
 		});
 		return instance;
+	}
+
+	private ParameterValueProvider<ArangoPersistentProperty> getParameterProvider(
+		final ArangoPersistentEntity<?> entity,
+		final DBEntity source) {
+		final PropertyValueProvider<ArangoPersistentProperty> provider = new ArangoPropertyValueProvider(source);
+		return new PersistentEntityParameterValueProvider<>(entity, provider, null);
+	}
+
+	private class ArangoPropertyValueProvider implements PropertyValueProvider<ArangoPersistentProperty> {
+		private final DBEntity source;
+
+		public ArangoPropertyValueProvider(final DBEntity source) {
+			super();
+			this.source = source;
+		}
+
+		@Override
+		public <T> T getPropertyValue(final ArangoPersistentProperty property) {
+			return read(source.get(property.getFieldName()), property.getTypeInformation());
+		}
+
 	}
 
 	private void readProperty(
@@ -200,7 +227,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 				break;
 			}
 		}
-		accessor.setProperty(property, Optional.ofNullable(tmp.orElse(read(source, property.getTypeInformation()))));
+		accessor.setProperty(property, tmp.orElse(read(source, property.getTypeInformation())));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -210,12 +237,17 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Annotation annotation) {
 		return resolverFactory.getReferenceResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike()) {
-				// TODO check for string collection
-				final Collection<String> ids = (Collection<String>) asCollection(source);
+				final Collection<String> ids;
+				try {
+					ids = (Collection<String>) asCollection(source);
+				} catch (final Exception e) {
+					throw new MappingException(
+							"Collection of Type String expected for references but found type " + source.getClass());
+				}
 				return Optional.ofNullable(resolver.resolveMultiple(ids,
 					getComponentType(property.getTypeInformation()).getType(), annotation));
 			} else {
-				if (!String.class.isAssignableFrom(source.getClass())) {
+				if (!(source instanceof String)) {
 					throw new MappingException(
 							"Type String expected for reference but found type " + source.getClass());
 				}
@@ -293,17 +325,17 @@ public class DefaultArangoConverter implements ArangoConverter {
 			if (!property.isWritable()) {
 				return;
 			}
-			final Optional<Object> propertyObj = accessor.getProperty(property);
-			propertyObj.ifPresent(proObj -> {
-				writeProperty(proObj, sink, property);
-			});
+			final Object propertyObj = accessor.getProperty(property);
+			if (propertyObj != null) {
+				writeProperty(propertyObj, sink, property);
+			}
 		});
 		entity.doWithAssociations((final Association<ArangoPersistentProperty> association) -> {
 			final ArangoPersistentProperty inverse = association.getInverse();
-			final Optional<Object> property = accessor.getProperty(inverse);
-			property.ifPresent(prop -> {
-				writeProperty(prop, sink, inverse);
-			});
+			final Object property = accessor.getProperty(inverse);
+			if (property != null) {
+				writeProperty(property, sink, inverse);
+			}
 		});
 	}
 
@@ -397,8 +429,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private Optional<Object> getId(final Object source, final ArangoPersistentEntity<?> entity) {
-		return Optional.ofNullable(entity.getIdProperty())
-				.flatMap(p -> entity.getPropertyAccessor(source).getProperty(p));
+		return Optional.ofNullable(entity.getIdProperty()).map(p -> entity.getPropertyAccessor(source).getProperty(p));
 	}
 
 	private Collection<?> createCollection(final Collection<?> source, final ArangoPersistentProperty property) {
@@ -413,7 +444,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private static Collection<?> asCollection(final Object source) {
-		return (Collection.class.isAssignableFrom(source.getClass())) ? Collection.class.cast(source)
+		return (source instanceof Collection) ? Collection.class.cast(source)
 				: source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
 
@@ -421,8 +452,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return isCollectionType(type) ? new DBCollectionEntity() : new DBDocumentEntity();
 	}
 
-	@Override
-	public boolean isSimpleType(final Class<?> type) {
+	private boolean isSimpleType(final Class<?> type) {
 		return conversions.isSimpleType(type);
 	}
 
@@ -431,7 +461,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return type.isArray() || Iterable.class.equals(type) || Collection.class.isAssignableFrom(type);
 	}
 
-	public boolean isMapType(final Class<?> type) {
+	private boolean isMapType(final Class<?> type) {
 		return Map.class.isAssignableFrom(type);
 	}
 
@@ -439,4 +469,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 	public GenericConversionService getConversionService() {
 		return conversionService;
 	}
+
+	@Override
+	public boolean isEntityType(final Class<?> type) {
+		return !isSimpleType(type) && !isMapType(type) && !isCollectionType(type)
+				&& !BaseDocument.class.isAssignableFrom(type) && !BaseEdgeDocument.class.isAssignableFrom(type)
+				&& !VPackSlice.class.isAssignableFrom(type);
+	}
+
 }

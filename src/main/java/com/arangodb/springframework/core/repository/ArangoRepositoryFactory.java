@@ -31,8 +31,9 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 		return null;
 	}
 
-	@Override protected Object getTargetRepository(RepositoryMetadata repositoryMetadata) {
-		return new SimpleArangoRepository(arangoOperations, repositoryMetadata.getDomainType());
+	@Override
+	protected Object getTargetRepository(RepositoryInformation metadata) {
+		return new SimpleArangoRepository(arangoOperations, metadata.getDomainType());
 	}
 
 	@Override protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
@@ -43,4 +44,5 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	protected QueryLookupStrategy getQueryLookupStrategy(QueryLookupStrategy.Key key, EvaluationContextProvider evaluationContextProvider) {
 		return new ArangoQueryLookupStrategy(arangoOperations);
 	}
+
 }

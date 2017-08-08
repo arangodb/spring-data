@@ -615,4 +615,50 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		}
 	}
 
+	public static class ConstructorWithParamTestEntity extends BasicTestEntity {
+		private final String value;
+
+		public ConstructorWithParamTestEntity(final String value) {
+			super();
+			this.value = value;
+		}
+	}
+
+	@Test
+	public void constructorWithParam() {
+		final ConstructorWithParamTestEntity entity = new ConstructorWithParamTestEntity("test");
+		template.insertDocument(entity);
+		final ConstructorWithParamTestEntity document = template.getDocument(entity.getId(),
+			ConstructorWithParamTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(entity.value));
+	}
+
+	public static class ConstructorWithMultipleParamsTestEntity extends BasicTestEntity {
+		private final String value1;
+		private final boolean value2;
+		private final double value3;
+
+		public ConstructorWithMultipleParamsTestEntity(final String value1, final boolean value2, final double value3) {
+			super();
+			this.value1 = value1;
+			this.value2 = value2;
+			this.value3 = value3;
+		}
+
+	}
+
+	@Test
+	public void constructorWithMultipleParams() {
+		final ConstructorWithMultipleParamsTestEntity entity = new ConstructorWithMultipleParamsTestEntity("test", true,
+				3.5);
+		template.insertDocument(entity);
+		final ConstructorWithMultipleParamsTestEntity document = template.getDocument(entity.getId(),
+			ConstructorWithMultipleParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value1, is(entity.value1));
+		assertThat(document.value2, is(entity.value2));
+		assertThat(document.value3, is(entity.value3));
+	}
+
 }

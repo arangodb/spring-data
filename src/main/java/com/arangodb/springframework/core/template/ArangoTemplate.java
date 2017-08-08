@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoCursor;
@@ -73,7 +74,6 @@ import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.convert.DBEntityDeserializer;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.util.MapBuilder;
@@ -315,7 +315,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
 		for (final Map.Entry<String, Object> entry : new HashMap<>(bindVars).entrySet()) {
-			if (entry.getKey().startsWith("@") && Class.class.isAssignableFrom(entry.getValue().getClass())) {
+			if (entry.getKey().startsWith("@") && entry.getValue() instanceof Class) {
 				bindVars.put(entry.getKey(), _collection((Class<?>) entry.getValue()).name());
 			}
 		}
@@ -540,7 +540,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 			for (; valueIterator.hasNext() && documentIterator.hasNext();) {
 				final Object nextDoc = documentIterator.next();
 				final Object nextValue = valueIterator.next();
-				if (DocumentEntity.class.isInstance(nextDoc)) {
+				if (nextDoc instanceof DocumentEntity) {
 					updateDBFields(nextValue, (DocumentEntity) nextDoc);
 				}
 			}
@@ -553,12 +553,10 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 				converter.getConversionService());
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null) {
-			accessor.setProperty(idProperty, Optional.ofNullable(documentEntity.getId()));
+			accessor.setProperty(idProperty, documentEntity.getId());
 		}
-		entity.getKeyProperty()
-				.ifPresent(key -> accessor.setProperty(key, Optional.ofNullable(documentEntity.getKey())));
-		entity.getRevProperty()
-				.ifPresent(rev -> accessor.setProperty(rev, Optional.ofNullable(documentEntity.getRev())));
+		entity.getKeyProperty().ifPresent(key -> accessor.setProperty(key, documentEntity.getKey()));
+		entity.getRevProperty().ifPresent(rev -> accessor.setProperty(rev, documentEntity.getRev()));
 	}
 
 	/*
