@@ -12,7 +12,9 @@ import org.springframework.util.Assert;
 public class ArangoRepositoryFactoryBean<T extends Repository<S, String>, S> extends RepositoryFactoryBeanSupport<T, S, String> {
 	private ArangoOperations arangoOperations;
 
-	public ArangoRepositoryFactoryBean(ArangoOperations arangoOperations) {
+	
+	public ArangoRepositoryFactoryBean(Class<? extends T> repositoryInterface, ArangoOperations arangoOperations) {
+		super(repositoryInterface);
 		this.arangoOperations = arangoOperations;
 	}
 
