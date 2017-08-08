@@ -237,8 +237,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 break;
             case EXISTS:
                 isArray = false;
-                clause = String.format("HAS(e, @%d)", bindingCounter);
-                arguments = 1;
+                clause = String.format("HAS(e, '%s')", ignorePropertyCase(part).substring(2));
                 break;
             case BEFORE:
             case LESS_THAN:

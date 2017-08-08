@@ -53,7 +53,6 @@ public class Customer {
 	private Iterable<Integer> integerList;
 	private String[] stringArray;
 	private Iterable<String> stringList;
-	private String randomExistingField;
 
 	@Ref
 	private ShoppingCart shoppingCart;

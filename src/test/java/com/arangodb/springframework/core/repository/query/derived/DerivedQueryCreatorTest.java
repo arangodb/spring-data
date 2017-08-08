@@ -308,7 +308,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         Customer customer2 = new Customer("", "", 0);
         customer2.setStringList(stringList3);
         repository.save(customer2);
-        Customer[] retrieved = repository.findByLocationExistsAndStringListAllIgnoreCase("alive", stringList2);
+        Customer[] retrieved = repository.findByAliveExistsAndStringListAllIgnoreCase(stringList2);
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 
