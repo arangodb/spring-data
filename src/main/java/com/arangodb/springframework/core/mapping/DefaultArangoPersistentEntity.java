@@ -71,7 +71,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private String collection;
 	private final StandardEvaluationContext context;
-	private final PersistentPropertyAccessorFactory propertyAccessorFactory;
 
 	private ArangoPersistentProperty keyProperty;
 	private ArangoPersistentProperty revProperty;
@@ -114,7 +113,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		if (expression != null) {
 			collection = expression.getValue(context, String.class);
 		}
-		this.propertyAccessorFactory = BeanWrapperPropertyAccessorFactory.INSTANCE;
 	}
 
 	private static CollectionCreateOptions createCollectionOptions(final Document annotation) {
@@ -183,11 +181,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		context.setRootObject(applicationContext);
 		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		context.addPropertyAccessor(new BeanFactoryAccessor());
-	}
-
-	@Override
-	public PersistentPropertyAccessor getPropertyAccessor(final Object source) {
-		return propertyAccessorFactory.getPropertyAccessor(this, source);
 	}
 
 	@Override

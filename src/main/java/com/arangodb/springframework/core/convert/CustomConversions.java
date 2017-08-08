@@ -69,7 +69,7 @@ public class CustomConversions {
 	 * 
 	 * @param converters
 	 */
-	public CustomConversions(final Collection<?> converters) {
+	protected CustomConversions(final Collection<?> converters) {
 
 		this.readingPairs = new LinkedHashSet<>();
 		this.writingPairs = new LinkedHashSet<>();

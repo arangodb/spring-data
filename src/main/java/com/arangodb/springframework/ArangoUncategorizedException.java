@@ -18,26 +18,20 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework;
 
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.mapping.context.MappingContext;
-
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import org.springframework.dao.UncategorizedDataAccessException;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface ArangoConverter extends ArangoEntityReader, ArangoEntityWriter {
+public class ArangoUncategorizedException extends UncategorizedDataAccessException {
 
-	MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> getMappingContext();
+	private static final long serialVersionUID = 61324038255864240L;
 
-	boolean isCollectionType(Class<?> type);
-
-	boolean isEntityType(Class<?> type);
-
-	GenericConversionService getConversionService();
+	public ArangoUncategorizedException(final String msg, final Throwable cause) {
+		super(msg, cause);
+	}
 
 }
