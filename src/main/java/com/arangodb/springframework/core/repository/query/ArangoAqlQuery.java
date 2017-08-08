@@ -9,14 +9,13 @@ import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Param;
 import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.geo.*;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -58,19 +57,24 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	private final RepositoryMetadata metadata;
 	private ArangoParameterAccessor accessor;
 	private boolean isCountProjection = false;
+	private final ProjectionFactory factory;
 
-	public ArangoAqlQuery(Class<?> domainClass, Method method, RepositoryMetadata metadata, ArangoOperations operations) {
+	public ArangoAqlQuery(Class<?> domainClass, Method method, RepositoryMetadata metadata,
+		ArangoOperations operations, ProjectionFactory factory) {
 		this.domainClass = domainClass;
 		this.method = method;
 		this.metadata = metadata;
 		this.operations = operations;
+		this.factory = factory;
 	}
 
-	@Override public QueryMethod getQueryMethod() {
-		return new ArangoQueryMethod(method, metadata);
+	@Override
+	public QueryMethod getQueryMethod() {
+		return new ArangoQueryMethod(method, metadata, factory);
 	}
 
-	@Override public Object execute(Object[] arguments) {
+	@Override
+	public Object execute(Object[] arguments) {
 		Map<String, Object> bindVars = new HashMap<>();
 		String query = getQueryAnnotationValue();
 		AqlQueryOptions options = null;
@@ -98,8 +102,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			String fixedQuery = removeAqlStringLiterals(query);
 			Set<String> bindings = getBindings(fixedQuery);
 			Annotation[][] annotations = method.getParameterAnnotations();
-			Assert.isTrue(arguments.length == annotations.length,
-					"arguments.length != annotations.length");
+			Assert.isTrue(arguments.length == annotations.length, "arguments.length != annotations.length");
 			Map<String, Object> bindVarsLocal = new HashMap<>();
 			boolean bindVarsFound = false;
 			for (int i = 0; i < arguments.length; ++i) {
@@ -129,7 +132,8 @@ public class ArangoAqlQuery implements RepositoryQuery {
 					} else if (bindings.contains("@" + key)) {
 						Assert.isTrue(!bindVarsLocal.containsKey("@" + key), "duplicate parameter name");
 						bindVarsLocal.put("@" + key, arguments[i]);
-					} else LOGGER.debug("Local parameter '@{}' is not used in the query", key);
+					} else
+						LOGGER.debug("Local parameter '@{}' is not used in the query", key);
 				} else {
 					Assert.isTrue(!bindVarsLocal.containsKey(parameter), "duplicate parameter name");
 					bindVarsLocal.put(parameter, arguments[i]);
@@ -164,7 +168,8 @@ public class ArangoAqlQuery implements RepositoryQuery {
 
 	private void mergeBindVars(Map<String, Object> bindVars, Map<String, Object> bindVarsLocal) {
 		for (String key : bindVarsLocal.keySet()) {
-			if (bindVars.containsKey(key)) LOGGER.debug("Local parameter '{}' overrides @BindVars Map", key);
+			if (bindVars.containsKey(key))
+				LOGGER.debug("Local parameter '{}' overrides @BindVars Map", key);
 			bindVars.put(key, bindVarsLocal.get(key));
 		}
 	}
@@ -175,18 +180,26 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return resultConverter.convertResult(method.getReturnType());
 	}
 
-	private String removeAqlStringLiterals(String query){
+	private String removeAqlStringLiterals(String query) {
 		StringBuilder fixedQuery = new StringBuilder();
 		for (int i = 0; i < query.length(); ++i) {
 			if (query.charAt(i) == '"') {
 				for (++i; i < query.length(); ++i) {
-					if (query.charAt(i) == '"') { ++i; break; }
-					if (query.charAt(i) == '\\') ++i;
+					if (query.charAt(i) == '"') {
+						++i;
+						break;
+					}
+					if (query.charAt(i) == '\\')
+						++i;
 				}
 			} else if (query.charAt(i) == '\'') {
 				for (++i; i < query.length(); ++i) {
-					if (query.charAt(i) == '\'') { ++i; break; }
-					if (query.charAt(i) == '\\') ++i;
+					if (query.charAt(i) == '\'') {
+						++i;
+						break;
+					}
+					if (query.charAt(i) == '\\')
+						++i;
 				}
 			}
 			fixedQuery.append(query.charAt(i));
@@ -197,7 +210,8 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	private Set<String> getBindings(String query) {
 		Set<String> bindings = new HashSet<>();
 		Matcher matcher = Pattern.compile("@\\S+").matcher(query);
-		while (matcher.find()) bindings.add(matcher.group().substring(1));
+		while (matcher.find())
+			bindings.add(matcher.group().substring(1));
 		return bindings;
 	}
 }

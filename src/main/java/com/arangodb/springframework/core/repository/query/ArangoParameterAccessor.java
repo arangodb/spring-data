@@ -34,6 +34,9 @@ public class ArangoParameterAccessor implements ParameterAccessor {
     public Sort getSort() { return accessor.getSort(); }
 
     @Override
+    public Class<?> getDynamicProjection() { return accessor.getDynamicProjection(); }
+
+    @Override
     public Object getBindableValue(int index) { return accessor.getBindableValue(index); }
 
     @Override
