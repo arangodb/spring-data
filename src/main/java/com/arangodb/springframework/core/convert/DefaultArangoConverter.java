@@ -37,7 +37,9 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
@@ -51,8 +53,6 @@ import com.arangodb.entity.BaseEdgeDocument;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
-import com.arangodb.springframework.core.mapping.PersistentPropertyAccessor;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
@@ -325,17 +325,17 @@ public class DefaultArangoConverter implements ArangoConverter {
 			if (!property.isWritable()) {
 				return;
 			}
-			final Optional<Object> propertyObj = accessor.getProperty(property);
-			propertyObj.ifPresent(proObj -> {
-				writeProperty(proObj, sink, property);
-			});
+			final Object propertyObj = accessor.getProperty(property);
+			if (propertyObj != null) {
+				writeProperty(propertyObj, sink, property);
+			}
 		});
 		entity.doWithAssociations((final Association<ArangoPersistentProperty> association) -> {
 			final ArangoPersistentProperty inverse = association.getInverse();
-			final Optional<Object> property = accessor.getProperty(inverse);
-			property.ifPresent(prop -> {
-				writeProperty(prop, sink, inverse);
-			});
+			final Object property = accessor.getProperty(inverse);
+			if (property != null) {
+				writeProperty(property, sink, inverse);
+			}
 		});
 	}
 
@@ -429,8 +429,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private Optional<Object> getId(final Object source, final ArangoPersistentEntity<?> entity) {
-		return Optional.ofNullable(entity.getIdProperty())
-				.flatMap(p -> entity.getPropertyAccessor(source).getProperty(p));
+		return Optional.ofNullable(entity.getIdProperty()).map(p -> entity.getPropertyAccessor(source).getProperty(p));
 	}
 
 	private Collection<?> createCollection(final Collection<?> source, final ArangoPersistentProperty property) {

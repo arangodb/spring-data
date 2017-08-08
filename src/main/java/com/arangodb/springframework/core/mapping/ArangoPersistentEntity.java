@@ -45,8 +45,6 @@ public interface ArangoPersistentEntity<T>
 
 	CollectionCreateOptions getCollectionOptions();
 
-	PersistentPropertyAccessor getPropertyAccessor(Object source);
-
 	Optional<ArangoPersistentProperty> getKeyProperty();
 
 	Optional<ArangoPersistentProperty> getRevProperty();

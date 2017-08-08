@@ -32,7 +32,7 @@
 		<spring-core.version>${spring.version}</spring-core.version>
 		<spring-expression.version>${spring.version}</spring-expression.version>
 		<spring-test.version>${spring.version}</spring-test.version>
-		<spring-data-commons.version>1.9.2.RELEASE</spring-data-commons.version>
+		<spring-data-commons.version>1.13.6.RELEASE</spring-data-commons.version>
 	</properties>
 
 	<developers>

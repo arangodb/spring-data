@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoCursor;
@@ -73,7 +74,6 @@ import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.convert.DBEntityDeserializer;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.ConvertingPropertyAccessor;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.util.MapBuilder;
