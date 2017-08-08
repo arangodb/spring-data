@@ -553,12 +553,10 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 				converter.getConversionService());
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null) {
-			accessor.setProperty(idProperty, Optional.ofNullable(documentEntity.getId()));
+			accessor.setProperty(idProperty, documentEntity.getId());
 		}
-		entity.getKeyProperty()
-				.ifPresent(key -> accessor.setProperty(key, Optional.ofNullable(documentEntity.getKey())));
-		entity.getRevProperty()
-				.ifPresent(rev -> accessor.setProperty(rev, Optional.ofNullable(documentEntity.getRev())));
+		entity.getKeyProperty().ifPresent(key -> accessor.setProperty(key, documentEntity.getKey()));
+		entity.getRevProperty().ifPresent(rev -> accessor.setProperty(rev, documentEntity.getRev()));
 	}
 
 	/*
