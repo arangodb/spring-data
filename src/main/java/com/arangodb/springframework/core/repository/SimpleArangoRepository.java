@@ -119,7 +119,11 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 
 	@Override
 	public <S extends T> Iterable<S> findAll(Example<S> example) {
-		return null;
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		ArangoCursor cursor = execute(filter, "", "", bindVars);
+		return cursor.asListRemaining();
 	}
 
 	@Override

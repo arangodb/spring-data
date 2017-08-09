@@ -23,13 +23,6 @@ import static org.junit.Assert.assertTrue;
 public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 
 	@Test
-	public void findOneByExampleTest() {
-		repository.save(john);
-		Customer customer = repository.findOne(Example.of(john));
-		assertEquals("customers do not match", john, customer);
-	}
-
-	@Test
 	public void findOneTest() {
 		repository.save(john);
 		Customer customer = repository.findOne(john.getId());
@@ -144,5 +137,33 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		assertEquals((toBeRetrieved.size() + pageSize - 1) / pageSize , retrievedPage.getTotalPages());
 		List<Customer> expected = toBeRetrieved.subList(pageNumber * pageSize, (pageNumber + 1) * pageSize);
 		assertTrue(equals(expected, retrievedPage, cmp, eq, true));
+	}
+
+	@Test
+	public void findOneByExampleTest() {
+		repository.save(john);
+		Customer customer = repository.findOne(Example.of(john));
+		assertEquals("customers do not match", john, customer);
+	}
+
+	@Test
+	public void findAllByExampleTest() {
+		List<Customer> toBeRetrieved = new LinkedList<>();
+		Customer check1 = new Customer("B", "X", 0);
+		Customer check2 = new Customer("B", "Y", 0);
+
+		toBeRetrieved.add(new Customer("A", "Z", 0));
+		toBeRetrieved.add(check1);
+		toBeRetrieved.add(check2);
+		toBeRetrieved.add(new Customer("C", "V", 0));
+		repository.save(toBeRetrieved);
+		Example<Customer> example = Example.of(new Customer("B", null, 0));
+		Iterable retrieved = repository.findAll(example);
+		List<Customer> retrievedList = new LinkedList<>();
+		retrieved.forEach(e -> retrievedList.add((Customer) e));
+		List<Customer> checkList = new LinkedList<>();
+		checkList.add(check1);
+		checkList.add(check2)
+;		assertTrue(equals(checkList, retrievedList, cmp, eq, false));
 	}
 }
