@@ -4,12 +4,10 @@ import com.arangodb.springframework.testdata.Customer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.security.spec.ECField;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -103,7 +101,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
-	public void findAllSort() {
+	public void findAllSortTest() {
 		List<Customer> toBeRetrieved = new LinkedList<>();
 		toBeRetrieved.add(new Customer("A", "Z", 0));
 		toBeRetrieved.add(new Customer("B", "C", 0));
@@ -118,7 +116,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
-	public void findAllPageable() {
+	public void findAllPageableTest() {
 		List<Customer> toBeRetrieved = new LinkedList<>();
 		toBeRetrieved.add(new Customer("A", "Z", 0));
 		toBeRetrieved.add(new Customer("B", "X", 0));
@@ -138,6 +136,56 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		int pageNumber = 1;
 		int pageSize = 3;
 		Page<Customer> retrievedPage = repository.findAll(new PageRequest(pageNumber, pageSize, sort));
+		assertEquals(toBeRetrieved.size(), retrievedPage.getTotalElements());
+		assertEquals(pageNumber, retrievedPage.getNumber());
+		assertEquals(pageSize, retrievedPage.getSize());
+		assertEquals((toBeRetrieved.size() + pageSize - 1) / pageSize , retrievedPage.getTotalPages());
+		List<Customer> expected = toBeRetrieved.subList(pageNumber * pageSize, (pageNumber + 1) * pageSize);
+		assertTrue(equals(expected, retrievedPage, cmp, eq, true));
+	}
+
+	@Test
+	public void findAllSortByExampleTest() {
+		List<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(new Customer("A", "Z", 0));
+		toBeRetrieved.add(new Customer("B", "C", 0));
+		toBeRetrieved.add(new Customer("B", "D", 0));
+		repository.save(toBeRetrieved);
+		repository.save(new Customer("A", "A", 1));
+		Example<Customer> example = Example.of(new Customer("", "", 0),
+				ExampleMatcher.matchingAny().withIgnoreNullValues().withIgnorePaths(new String[] {"location", "alive"}));
+		List<Sort.Order> orders = new LinkedList<>();
+		orders.add(new Sort.Order(Sort.Direction.ASC, "name"));
+		orders.add(new Sort.Order(Sort.Direction.ASC, "surname"));
+		Sort sort = new Sort(orders);
+		Iterable<Customer> retrieved = repository.findAll(example, sort);
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+	}
+
+	@Test
+	public void findAllPageableByExampleTest() {
+		List<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(new Customer("A", "Z", 0));
+		toBeRetrieved.add(new Customer("B", "X", 0));
+		toBeRetrieved.add(new Customer("B", "Y", 0));
+		toBeRetrieved.add(new Customer("C", "V", 0));
+		toBeRetrieved.add(new Customer("D", "T", 0));
+		toBeRetrieved.add(new Customer("D", "U", 0));
+		toBeRetrieved.add(new Customer("E", "S", 0));
+		toBeRetrieved.add(new Customer("F", "P", 0));
+		toBeRetrieved.add(new Customer("F", "Q", 0));
+		toBeRetrieved.add(new Customer("F", "R", 0));
+		repository.save(toBeRetrieved);
+		repository.save(new Customer("A", "A", 1));
+		Example<Customer> example = Example.of(new Customer("", "", 0), ExampleMatcher.matchingAny()
+				.withIgnoreNullValues().withIgnorePaths(new String[] {"location", "alive"}));
+		List<Sort.Order> orders = new LinkedList<>();
+		orders.add(new Sort.Order(Sort.Direction.ASC, "name"));
+		orders.add(new Sort.Order(Sort.Direction.ASC, "surname"));
+		Sort sort = new Sort(orders);
+		int pageNumber = 1;
+		int pageSize = 3;
+		Page<Customer> retrievedPage = repository.findAll(example, new PageRequest(pageNumber, pageSize, sort));
 		assertEquals(toBeRetrieved.size(), retrievedPage.getTotalElements());
 		assertEquals(pageNumber, retrievedPage.getNumber());
 		assertEquals(pageSize, retrievedPage.getSize());

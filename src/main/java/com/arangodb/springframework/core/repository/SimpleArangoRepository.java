@@ -124,12 +124,24 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 
 	@Override
 	public <S extends T> Iterable<S> findAll(Example<S> example, Sort sort) {
-		return null;
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		String sortString = DerivedQueryCreator.buildSortString(sort);
+		ArangoCursor cursor = execute(filter, sortString, "", bindVars);
+		return cursor.asListRemaining();
 	}
 
 	@Override
 	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
-		return null;
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		String sortString = DerivedQueryCreator.buildSortString(pageable.getSort());
+		String limit = String.format(" LIMIT %d, %d", pageable.getOffset(), pageable.getPageSize());
+		ArangoCursor cursor = execute(filter, sortString, limit, bindVars);
+		List<T> content = cursor.asListRemaining();
+		return new PageImpl<S>((List<S>) content, pageable, cursor.getStats().getFullCount());
 	}
 
 	@Override
