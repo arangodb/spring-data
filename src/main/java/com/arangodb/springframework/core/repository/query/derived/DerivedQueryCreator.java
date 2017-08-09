@@ -79,7 +79,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     @Override
     protected ConjunctionBuilder and(Part part, ConjunctionBuilder base, Iterator<Object> iterator) {
         PartInformation partInformation = createPartInformation(part, iterator);
-        if (partInformation != null) base.add(partInformation);
+        if (partInformation != null) { base.add(partInformation); }
         return base;
     }
 
