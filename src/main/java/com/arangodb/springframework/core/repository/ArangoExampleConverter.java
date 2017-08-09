@@ -46,13 +46,13 @@ public class ArangoExampleConverter<T> {
                 String clause = "true";
                 if (String.class.isAssignableFrom(value.getClass())) {
                     ExampleMatcher.PropertySpecifier specifier = example.getMatcher().getPropertySpecifiers().getForPath(fullPath);
-                    boolean ignoreCase = specifier == null ? example.getMatcher().isIgnoreCaseEnabled() : specifier.getIgnoreCase();
+                    boolean ignoreCase = specifier == null ? example.getMatcher().isIgnoreCaseEnabled() : (specifier.getIgnoreCase() == null ? false : specifier.getIgnoreCase());
                     ExampleMatcher.StringMatcher stringMatcher
                             = (specifier == null || specifier.getStringMatcher() == ExampleMatcher.StringMatcher.DEFAULT)
                             ? example.getMatcher().getDefaultStringMatcher() : specifier.getStringMatcher();
                     if (specifier != null) value = specifier.transformValue(value);
                     String string = (String) value;
-                    clause = String.format("REGEX_TEST(e.%s, @%s, %b)", fieldName, binding, ignoreCase);
+                    clause = String.format("REGEX_TEST(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
                     switch (stringMatcher) {
                         case DEFAULT:
                         case EXACT:
@@ -66,7 +66,7 @@ public class ArangoExampleConverter<T> {
                             break;
                     }
                 } else {
-                    clause = "e." + fieldName + " == @" + binding;
+                    clause = "e." + fullPath + " == @" + binding;
                 }
                 predicateBuilder.append(clause);
                 bindVars.put(binding, value);
