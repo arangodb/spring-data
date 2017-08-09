@@ -22,13 +22,8 @@ package com.arangodb.springframework.testdata;
 
 import java.util.Collection;
 
+import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
-
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Key;
-import com.arangodb.springframework.annotation.Ref;
-import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.annotation.Rev;
 
 /**
  * @author Mark Vollmary
