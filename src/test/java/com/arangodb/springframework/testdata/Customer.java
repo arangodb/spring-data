@@ -48,6 +48,7 @@ public class Customer {
 	private Iterable<Integer> integerList;
 	private String[] stringArray;
 	private Iterable<String> stringList;
+	private Customer nestedCustomer;
 
 	@Ref
 	private ShoppingCart shoppingCart;
@@ -189,6 +190,14 @@ public class Customer {
 		this.stringList = stringList;
 	}
 
+	public Customer getNestedCustomer() {
+		return nestedCustomer;
+	}
+
+	public void setNestedCustomer(Customer nestedCustomer) {
+		this.nestedCustomer = nestedCustomer;
+	}
+
 	@Override
 	public boolean equals(final Object o) {
 		if (!(o instanceof Customer)) {
@@ -214,4 +223,5 @@ public class Customer {
 	public String toString() {
 		return "Customer {id: " + id + ", name: " + name + ", surname: " + surname + ", age: " + age + "}";
 	}
+
 }
