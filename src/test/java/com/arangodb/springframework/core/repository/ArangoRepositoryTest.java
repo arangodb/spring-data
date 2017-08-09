@@ -278,10 +278,10 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("C", "", 76));
 		repository.save(toBeRetrieved);
 		Customer exampleCustomer = new Customer("Abba", "Bbaaaa", 100);
-		exampleCustomer.setNestedCustomer(new Customer(null, "aaa", 53));
+		exampleCustomer.setNestedCustomer(new Customer("aaa", null, 53));
 		Example<Customer> example = Example.of(exampleCustomer,
-				ExampleMatcher.matchingAny().withMatcher("nestedCustomer.name", match -> match.endsWith())
-						.withIgnoreCase("nestedCusomer.surname").withIgnoreNullValues());
+				ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
+						.withIgnoreCase("nestedCusomer.name").withIgnoreNullValues());
 		Customer retrieved = repository.findOne(example);
 		assertEquals(check, retrieved);
 	}
