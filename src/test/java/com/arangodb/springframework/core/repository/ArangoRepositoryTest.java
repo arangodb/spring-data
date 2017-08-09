@@ -212,4 +212,39 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		List<Customer> expected = toBeRetrieved.subList(pageNumber * pageSize, (pageNumber + 1) * pageSize);
 		assertTrue(equals(expected, retrievedPage, cmp, eq, true));
 	}
+
+	@Test
+	public void countByExampleTest() {
+		List<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(new Customer("A", "Z", 0));
+		toBeRetrieved.add(new Customer("B", "X", 0));
+		toBeRetrieved.add(new Customer("B", "Y", 0));
+		toBeRetrieved.add(new Customer("C", "V", 0));
+		toBeRetrieved.add(new Customer("D", "T", 0));
+		toBeRetrieved.add(new Customer("D", "U", 0));
+		toBeRetrieved.add(new Customer("E", "S", 0));
+		toBeRetrieved.add(new Customer("F", "P", 0));
+		toBeRetrieved.add(new Customer("F", "Q", 0));
+		toBeRetrieved.add(new Customer("F", "R", 0));
+		repository.save(toBeRetrieved);
+		Example<Customer> example = Example.of(new Customer("", "", 0), ExampleMatcher.matchingAny()
+				.withIgnoreNullValues().withIgnorePaths(new String[] {"location", "alive"}));
+		long size = repository.count(example);
+		assertTrue(size == toBeRetrieved.size());
+	}
+
+	@Test
+	public void existsByExampleTest() {
+		List<Customer> toBeRetrieved = new LinkedList<>();
+		Customer checker = new Customer("I", "Exist", 25, true);
+		toBeRetrieved.add(new Customer("A", "Z", 0));
+		toBeRetrieved.add(new Customer("B", "X", 0));
+		toBeRetrieved.add(new Customer("B", "Y", 0));
+		toBeRetrieved.add(new Customer("C", "V", 0));
+		toBeRetrieved.add(checker);
+		repository.save(toBeRetrieved);
+		Example<Customer> example = Example.of(checker);
+		boolean exists = repository.exists(example);
+		assertTrue(exists);
+	}
 }

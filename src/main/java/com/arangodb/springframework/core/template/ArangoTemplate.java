@@ -559,9 +559,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		entity.getRevProperty().ifPresent(rev -> accessor.setProperty(rev, documentEntity.getRev()));
 	}
 
-	/*
-	 * Added by Mark McC
-	 */
 	@Override
 	public boolean exists(final String id, final Class<?> entityClass) throws DataAccessException {
 		try {

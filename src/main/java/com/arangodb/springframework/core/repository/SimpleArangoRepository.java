@@ -150,12 +150,17 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 
 	@Override
 	public <S extends T> long count(Example<S> example) {
-		return 0;
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		String query = String.format("FOR e IN %s%s COLLECT WITH COUNT INTO LENGTH RETURN LENGTH", getCollectionName(), filter);
+		ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
+		return cursor.next();
 	}
 
 	@Override
 	public <S extends T> boolean exists(Example<S> example) {
-		return false;
+		return count(example) > 0;
 	}
 
 	private ArangoCursor<T> execute(String filter, String sort, String limit, Map<String, Object> bindVars) {
