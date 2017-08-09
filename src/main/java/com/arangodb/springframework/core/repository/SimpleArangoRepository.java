@@ -153,7 +153,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 		Map<String, Object> bindVars = new HashMap<>();
 		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
 		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
-		String query = String.format("FOR e IN %s%s COLLECT WITH COUNT INTO LENGTH RETURN LENGTH", getCollectionName(), filter);
+		String query = String.format("FOR e IN %s%s COLLECT WITH COUNT INTO length RETURN length", getCollectionName(), filter);
 		ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
 		return cursor.next();
 	}

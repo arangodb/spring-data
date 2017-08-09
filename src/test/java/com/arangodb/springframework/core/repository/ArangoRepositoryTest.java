@@ -164,6 +164,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		assertTrue(equals(checkList, retrievedList, cmp, eq, false));
 	}
 
+	@Test
 	public void findAllSortByExampleTest() {
 		List<Customer> toBeRetrieved = new LinkedList<>();
 		toBeRetrieved.add(new Customer("A", "Z", 0));
@@ -257,10 +258,6 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("B", "", 43));
 		toBeRetrieved.add(new Customer("C", "", 76));
 		repository.save(toBeRetrieved);
-//		Example<Customer> example = Example.of(new Customer(null, "bb", 100),
-//				ExampleMatcher.matching().withMatcher("surname", match -> match.startsWith()));
-//		Example<Customer> example = Example.of(new Customer(null, "bb", 100),
-//				ExampleMatcher.matching().withStringMatcher(ExampleMatcher.StringMatcher.STARTING).withIgnoreCase("surname").withIgnoreNullValues());
 		Example<Customer> example = Example.of(new Customer(null, "bb", 100),
 				ExampleMatcher.matching().withMatcher("surname", match -> match.startsWith())
 						.withIgnoreCase("surname").withIgnoreNullValues());
@@ -272,13 +269,13 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	public void endingWithByExampleNestedTest() {
 		List<Customer> toBeRetrieved = new LinkedList<>();
 		Customer check = new Customer("Abba", "Bbaaaa", 100);
-		check.setNestedCustomer(new Customer("Baabbaaa", "", 67));
+		check.setNestedCustomer(new Customer("$B*\\wa?[a.b]baaa", "", 67));
 		toBeRetrieved.add(check);
 		toBeRetrieved.add(new Customer("B", "", 43));
 		toBeRetrieved.add(new Customer("C", "", 76));
 		repository.save(toBeRetrieved);
 		Customer exampleCustomer = new Customer("Abba", "Bbaaaa", 100);
-		exampleCustomer.setNestedCustomer(new Customer("aaa", null, 67));
+		exampleCustomer.setNestedCustomer(new Customer("B*\\wa?[a.b]baAa", null, 67));
 		Example<Customer> example = Example.of(exampleCustomer,
 				ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
 						.withIgnoreCase("nestedCustomer.name").withIgnoreNullValues());

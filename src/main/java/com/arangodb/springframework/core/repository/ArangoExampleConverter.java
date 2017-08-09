@@ -29,27 +29,29 @@ public class ArangoExampleConverter<T> {
         return predicateBuilder.toString();
     }
 
-    private void traversePropertyTree(Example<T> example, StringBuilder predicateBuilder, Map<String, Object> bindVars, String path, ArangoPersistentEntity<?> entity, Object object) {
-        if (object == null) return;
+    private void traversePropertyTree(Example<T> example, StringBuilder predicateBuilder, Map<String, Object> bindVars,
+                                      String path, ArangoPersistentEntity<?> entity, Object object) {
         String delimiter = example.getMatcher().isAllMatching() ? " AND " : " OR ";
         PersistentPropertyAccessor accessor = entity.getPropertyAccessor(object);
         entity.doWithProperties((ArangoPersistentProperty property) -> {
-            String fullPath = path + (path.length() == 0 ? "" : ".") + property.getName();
+            String fullPath = path + (path.length() == 0 ? "" : ".") + property.getFieldName();
             Object value = accessor.getProperty(property);
             if (property.isEntity() && value != null) {
                 ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(property.getType());
                 traversePropertyTree(example, predicateBuilder, bindVars, fullPath, persistentEntity, value);
-            } else if (!example.getMatcher().isIgnoredPath(fullPath) && value != null || example.getMatcher().getNullHandler().equals(ExampleMatcher.NullHandler.INCLUDE)) {
-                String fieldName = property.getFieldName();
+            } else if (!example.getMatcher().isIgnoredPath(fullPath) && value != null
+                    || example.getMatcher().getNullHandler().equals(ExampleMatcher.NullHandler.INCLUDE)) {
                 if (predicateBuilder.length() > 0) predicateBuilder.append(delimiter);
                 String binding = Integer.toString(bindVars.size());
-                String clause = "true";
-                if (String.class.isAssignableFrom(value.getClass())) {
-                    ExampleMatcher.PropertySpecifier specifier = example.getMatcher().getPropertySpecifiers().getForPath(fullPath);
-                    boolean ignoreCase = specifier == null ? example.getMatcher().isIgnoreCaseEnabled() : (specifier.getIgnoreCase() == null ? false : specifier.getIgnoreCase());
-                    ExampleMatcher.StringMatcher stringMatcher
-                            = (specifier == null || specifier.getStringMatcher() == ExampleMatcher.StringMatcher.DEFAULT)
-                            ? example.getMatcher().getDefaultStringMatcher() : specifier.getStringMatcher();
+                String clause;
+                if (value != null && String.class.isAssignableFrom(value.getClass())) {
+                    ExampleMatcher.PropertySpecifier specifier = example.getMatcher().getPropertySpecifiers()
+                            .getForPath(fullPath);
+                    boolean ignoreCase = specifier == null ? example.getMatcher().isIgnoreCaseEnabled()
+                            : (specifier.getIgnoreCase() == null ? false : specifier.getIgnoreCase());
+                    ExampleMatcher.StringMatcher stringMatcher = (specifier == null || specifier.getStringMatcher()
+                            == ExampleMatcher.StringMatcher.DEFAULT) ? example.getMatcher().getDefaultStringMatcher()
+                            : specifier.getStringMatcher();
                     if (specifier != null) value = specifier.transformValue(value);
                     String string = (String) value;
                     clause = String.format("REGEX_TEST(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
@@ -92,7 +94,6 @@ public class ArangoExampleConverter<T> {
     }
 
     private static String escape(String string) {
-        if (string == null) return null;
         StringBuilder stringBuilder = new StringBuilder();
         for (Character character : string.toCharArray()) {
             if (SPECIAL_CHARACTERS.contains(character)) stringBuilder.append('\\');
