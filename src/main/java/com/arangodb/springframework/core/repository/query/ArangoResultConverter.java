@@ -39,6 +39,7 @@ public class ArangoResultConverter {
             typeMap.put(GeoResult.class, ArangoResultConverter.class.getMethod("convertGeoResult"));
             typeMap.put(GeoResults.class, ArangoResultConverter.class.getMethod("convertGeoResults"));
             typeMap.put(GeoPage.class, ArangoResultConverter.class.getMethod("convertGeoPage"));
+            typeMap.put(Optional.class, ArangoResultConverter.class.getMethod("convertOptional"));
             typeMap.put("array", ArangoResultConverter.class.getMethod("convertArray"));
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
@@ -81,6 +82,8 @@ public class ArangoResultConverter {
         cursor.forEachRemaining(o -> list.add(buildGeoResult(o)));
         return new GeoResults(list);
     }
+
+    public Optional convertOptional() { return Optional.ofNullable(result.hasNext() ? result.next() : null); }
 
     public List convertList() {
         return result.asListRemaining();
