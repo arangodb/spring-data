@@ -12,6 +12,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 
@@ -47,8 +48,8 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Test
 	public void findOneByIdAqlPotentialNameClashTest() {
 		repository.save(customers);
-		Customer retrieved = repository.findOneByIdAqlPotentialNameClash(john.getId());
-		assertEquals(john, retrieved);
+		Optional<Customer> retrieved = repository.findOneByIdAqlPotentialNameClash(john.getId());
+		assertEquals(john, retrieved.get());
 	}
 
 	@Test(expected = IllegalArgumentException.class)
