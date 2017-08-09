@@ -32,7 +32,7 @@ public class ArangoExampleConverter<T> {
         PersistentPropertyAccessor accessor = persistentEntity.getPropertyAccessor(example.getProbe());
         persistentEntity.doWithProperties((ArangoPersistentProperty property) -> {
             Object value = accessor.getProperty(property);
-            if (value != null || example.getMatcher().getNullHandler().equals(ExampleMatcher.NullHandler.INCLUDE)) {
+            if (!example.getMatcher().isIgnoredPath(property.getName()) && value != null || example.getMatcher().getNullHandler().equals(ExampleMatcher.NullHandler.INCLUDE)) {
                 String fieldName = property.getFieldName();
                 if (predicateBuilder.length() > 0) predicateBuilder.append(delimiter);
                 String binding = Integer.toString(bindVars.size());
