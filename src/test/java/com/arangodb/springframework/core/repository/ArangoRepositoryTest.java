@@ -4,6 +4,7 @@ import com.arangodb.springframework.testdata.Customer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,6 +21,13 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
+
+	@Test
+	public void findOneByExampleTest() {
+		repository.save(john);
+		Customer customer = repository.findOne(Example.of(john));
+		assertEquals("customers do not match", john, customer);
+	}
 
 	@Test
 	public void findOneTest() {
