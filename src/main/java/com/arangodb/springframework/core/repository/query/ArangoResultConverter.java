@@ -54,8 +54,8 @@ public class ArangoResultConverter {
 
     public Object convertResult(Class type) {
         try {
-            if (type.isArray()) return typeMap.get("array").invoke(this, null);
-            if (!typeMap.containsKey(type)) return result.next();
+            if (type.isArray()) { return typeMap.get("array").invoke(this, null); }
+            if (!typeMap.containsKey(type)) { return result.next(); }
             return typeMap.get(type).invoke(this, null);
         } catch (Exception e) {
             e.printStackTrace();
