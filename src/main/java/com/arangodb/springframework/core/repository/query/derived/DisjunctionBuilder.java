@@ -9,7 +9,7 @@ public class DisjunctionBuilder {
 
     private static final String ARRAY_DELIMITER = ", ";
     private static final String PREDICATE_DELIMITER = " OR ";
-    private static final String SUBQUERY_TEMPLATE = "(FOR e in %s FILTER %s RETURN e)";
+    private static final String SUBQUERY_TEMPLATE = "(FOR e in %s FILTER %s RETURN %s)";
 
     private final DerivedQueryCreator queryCreator;
 
@@ -29,7 +29,7 @@ public class DisjunctionBuilder {
         if (conjunction.isArray()) {
             ++arrays;
             String array = conjunction.hasPredicate() ?
-                    String.format(SUBQUERY_TEMPLATE, conjunction.getArray(), conjunction.getPredicate())
+                    String.format(SUBQUERY_TEMPLATE, conjunction.getArray(), conjunction.getPredicate(), "e")
                     : conjunction.getArray();
             arrayStringBuilder.append((arrayStringBuilder.length() == 0 ? "" : ARRAY_DELIMITER) + array);
         } else {
@@ -43,7 +43,14 @@ public class DisjunctionBuilder {
             return conjunctions.get(0).getArray();
         boolean shouldPredicateBeBuilt = arrayStringBuilder.length() != 0 && predicateStringBuilder.length() != 0;
         if (shouldPredicateBeBuilt) {
-            String array = String.format(SUBQUERY_TEMPLATE, queryCreator.getCollectionName(), predicateStringBuilder.toString());
+            String distanceAdjusted = "e";
+            if (!queryCreator.getGeoFields().isEmpty()) {
+                String geoFields = queryCreator.getGeoFields().size() == 1 ?
+                        String.format("e.%s[0], e.%s[1]", queryCreator.getGeoFields().get(0), queryCreator.getGeoFields().get(0))
+                        : String.format("e.%s, e.%s", queryCreator.getGeoFields().get(0), queryCreator.getGeoFields().get(1));
+                distanceAdjusted = String.format("MERGE(e, {'_distance': DISTANCE(%s, %%f, %%f)})", geoFields);
+            }
+            String array = String.format(SUBQUERY_TEMPLATE, queryCreator.getCollectionName(), predicateStringBuilder.toString(), distanceAdjusted);
             arrayStringBuilder.append((arrayStringBuilder.length() == 0 ? "" : ARRAY_DELIMITER) + array);
         }
         if (arrays > 1 || shouldPredicateBeBuilt)
@@ -58,6 +65,7 @@ public class DisjunctionBuilder {
     }
 
     public Disjunction build() {
-        return new Disjunction(buildArrayString(), buildPredicateSring());
+        String arrayString = String.format(buildArrayString(), queryCreator.getUniquePoint()[0], queryCreator.getUniquePoint()[1]);
+        return new Disjunction(arrayString, buildPredicateSring());
     }
 }

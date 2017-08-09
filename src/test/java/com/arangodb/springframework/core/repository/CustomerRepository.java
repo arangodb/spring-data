@@ -1,12 +1,17 @@
 package com.arangodb.springframework.core.repository;
 
+import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Query;
+import com.arangodb.springframework.core.repository.query.derived.Disjunction;
 import com.arangodb.springframework.core.repository.query.derived.geo.Range;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.annotation.Param;
-import org.springframework.data.geo.Point;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.geo.*;
 
 import java.util.*;
 
@@ -16,10 +21,10 @@ import java.util.*;
 public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	@Query("FOR c IN customer FILTER c._id == @id RETURN c")
-	Customer findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
+	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
 	@Query("FOR c IN customer FILTER c.name == @1 AND c._id == @0 RETURN c")
-	Customer findOneByIdAndNameAql(String id, String name);
+	BaseDocument findOneByIdAndNameAql(String id, String name);
 
 	@Query("FOR c IN customer FILTER c._id == @0 RETURN c")
 	Customer findOneByIdAqlPotentialNameClash(@Param("0") String id);
@@ -78,19 +83,37 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	// GEOSPATIAL
 
-	Customer[] findByRandomExistingFieldNear(Point location);
+	Customer[] findByLocationNear(Point location);
 
-	List<Customer> findByRandomExistingFieldWithinAndName(Point location, Range<Double> distanceRange, String name);
+	List<Customer> findByLocationWithinAndName(Point location, Range<Double> distanceRange, String name);
 
-	Iterable<Customer> findByRandomExistingFieldWithinOrNameAndRandomExistingFieldNear(Point location, double distance, String name, Point location2);
+	Iterable<Customer> findByLocationWithinOrNameAndLocationNear(Point location, Distance distance, String name, Point location2);
 
-	Collection<Customer> findByRandomExistingFieldWithinAndRandomExistingFieldWithinOrName(Point location, int distance, Point location2, Range distanceRange, String name);
+	Collection<Customer> findByLocationWithinAndLocationWithinOrName(Point location, int distance, Point location2, Range distanceRange, String name);
 
 	// ArrayList not supported, use List instead
-	List<Customer> findByNameOrRandomExistingFieldWithinOrNameAndSurnameOrNameAndRandomExistingFieldNearAndSurnameAndRandomExistingFieldWithin(
+	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
 			String name1, Point location1, double distance, String name2, String surname1, String name3, Point location2, String surname2, Point location3, Range<Double> distanceRange);
 
 	// EXISTS
 
-	Customer[] findByRandomExistingFieldExistsAndStringListAllIgnoreCase(String field, List<String> stringList);
+	Customer[] findByAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
+
+	// SORT
+
+	Customer[] findByNameOrderBySurnameAsc(Sort sort, String name);
+
+	// PAGEABLE
+
+	Page<Customer> readByNameAndSurname(Pageable pageable, String name, AqlQueryOptions options, String surname);
+
+	// GEO_RESULT, GEO_RESULTS, GEO_PAGE
+
+	GeoResult<Customer> queryByLocationWithin(Point location, double distance);
+
+	GeoResults<Customer> findByLocationWithin(Point location, Range<Double> distanceRange);
+
+	GeoPage<Customer> findByLocationNear(Point location, Pageable pageable);
+
+	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(String name, String surname, Point location1, double distance, Point location2, Range distanceRange);
 }

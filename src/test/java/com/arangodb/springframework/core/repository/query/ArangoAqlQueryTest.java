@@ -1,7 +1,9 @@
 package com.arangodb.springframework.core.repository.query;
 
 import com.arangodb.ArangoDBException;
+import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.testdata.Customer;
 import org.junit.Test;
@@ -9,7 +11,6 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -25,15 +26,22 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Test
 	public void findOneByIdAqlWithNamedParameterTest() {
 		repository.save(customers);
-		Customer retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(), OPTIONS);
-		assertEquals(john, retrieved);
+		Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(), OPTIONS);
+		Customer retrievedCustomer = template.getConverter().read(Customer.class, new DBDocumentEntity(retrieved));
+		assertEquals(john, retrievedCustomer);
 	}
 
 	@Test
 	public void findOneByIdAndNameAqlTest() {
 		repository.save(customers);
-		Customer retrieved = repository.findOneByIdAndNameAql(john.getId(), john.getName());
-		assertEquals(john, retrieved);
+		BaseDocument retrieved = repository.findOneByIdAndNameAql(john.getId(), john.getName());
+		Map<String, Object> allProperties = new HashMap<>();
+		allProperties.put("_id", retrieved.getId());
+		allProperties.put("_key", retrieved.getKey());
+		allProperties.put("_rev", retrieved.getRevision());
+		retrieved.getProperties().forEach((k, v) -> allProperties.put(k, v));
+		Customer retrievedCustomer = template.getConverter().read(Customer.class, new DBDocumentEntity(allProperties));
+		assertEquals(john, retrievedCustomer);
 	}
 
 	@Test
