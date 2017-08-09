@@ -3,15 +3,11 @@ package com.arangodb.springframework.core.repository;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.util.Assert;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -26,23 +22,35 @@ public class ArangoExampleConverter<T> {
     }
 
     public String convertExampleToPredicate(Example<T> example, final Map<String, Object> bindVars) {
-        String delimiter = example.getMatcher().isAllMatching() ? " AND " : " OR ";
         StringBuilder predicateBuilder = new StringBuilder();
         ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(example.getProbeType());
-        PersistentPropertyAccessor accessor = persistentEntity.getPropertyAccessor(example.getProbe());
-        persistentEntity.doWithProperties((ArangoPersistentProperty property) -> {
+        Assert.isTrue(example.getProbe() != null, "Probe in Example cannot be null");
+        traversePropertyTree(example, predicateBuilder, bindVars, "", persistentEntity, example.getProbe());
+        return predicateBuilder.toString();
+    }
+
+    private void traversePropertyTree(Example<T> example, StringBuilder predicateBuilder, Map<String, Object> bindVars, String path, ArangoPersistentEntity<?> entity, Object object) {
+        if (object == null) return;
+        String delimiter = example.getMatcher().isAllMatching() ? " AND " : " OR ";
+        PersistentPropertyAccessor accessor = entity.getPropertyAccessor(object);
+        entity.doWithProperties((ArangoPersistentProperty property) -> {
+            String fullPath = path + (path.length() == 0 ? "" : ".") + property.getName();
             Object value = accessor.getProperty(property);
-            if (!example.getMatcher().isIgnoredPath(property.getName()) && value != null || example.getMatcher().getNullHandler().equals(ExampleMatcher.NullHandler.INCLUDE)) {
+            if (property.isEntity() && value != null) {
+                ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(property.getType());
+                traversePropertyTree(example, predicateBuilder, bindVars, fullPath, persistentEntity, value);
+            } else if (!example.getMatcher().isIgnoredPath(fullPath) && value != null || example.getMatcher().getNullHandler().equals(ExampleMatcher.NullHandler.INCLUDE)) {
                 String fieldName = property.getFieldName();
                 if (predicateBuilder.length() > 0) predicateBuilder.append(delimiter);
                 String binding = Integer.toString(bindVars.size());
                 String clause = "true";
                 if (String.class.isAssignableFrom(value.getClass())) {
-                    ExampleMatcher.PropertySpecifier specifier = example.getMatcher().getPropertySpecifiers().getForPath(property.getName());
+                    ExampleMatcher.PropertySpecifier specifier = example.getMatcher().getPropertySpecifiers().getForPath(fullPath);
                     boolean ignoreCase = specifier == null ? example.getMatcher().isIgnoreCaseEnabled() : specifier.getIgnoreCase();
                     ExampleMatcher.StringMatcher stringMatcher
                             = (specifier == null || specifier.getStringMatcher() == ExampleMatcher.StringMatcher.DEFAULT)
                             ? example.getMatcher().getDefaultStringMatcher() : specifier.getStringMatcher();
+                    if (specifier != null) value = specifier.transformValue(value);
                     String string = (String) value;
                     clause = String.format("REGEX_TEST(e.%s, @%s, %b)", fieldName, binding, ignoreCase);
                     switch (stringMatcher) {
@@ -64,7 +72,6 @@ public class ArangoExampleConverter<T> {
                 bindVars.put(binding, value);
             }
         });
-        return predicateBuilder.toString();
     }
 
     private static final Set<Character> SPECIAL_CHARACTERS = new HashSet<>();
@@ -85,6 +92,7 @@ public class ArangoExampleConverter<T> {
     }
 
     private static String escape(String string) {
+        if (string == null) return null;
         StringBuilder stringBuilder = new StringBuilder();
         for (Character character : string.toCharArray()) {
             if (SPECIAL_CHARACTERS.contains(character)) stringBuilder.append('\\');
