@@ -295,4 +295,30 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		Customer retrieved = repository.findOne(example);
 		assertEquals(check, retrieved);
 	}
+
+	@Test
+	public void endingWithByExampleNestedIncludeNullTest() {
+		List<Customer> toBeRetrieved = new LinkedList<>();
+		Customer check = new Customer("Abba", "Bbaaaa", 100);
+		Customer nested = new Customer("$B*\\wa?[a.b]baaa", "", 67);
+		Customer nested2 = new Customer("qwerty", "", 10);
+		nested2.setAddress(new Address("123456"));
+		nested.setNestedCustomer(nested2);
+		check.setNestedCustomer(nested);
+		toBeRetrieved.add(check);
+		toBeRetrieved.add(new Customer("B", "", 43));
+		toBeRetrieved.add(new Customer("C", "", 76));
+		repository.save(toBeRetrieved);
+		Customer exampleCustomer = new Customer("Abba", "Bbaaaa", 100);
+		Customer nested3 = new Customer("B*\\wa?[a.b]baAa", "", 66);
+		nested3.setNestedCustomer(nested2);
+		exampleCustomer.setNestedCustomer(nested3);
+		Example<Customer> example = Example.of(exampleCustomer, ExampleMatcher.matching()
+				.withMatcher("nestedCustomer.name", match -> match.endsWith())
+				.withIgnorePaths(new String[] { "id", "key", "rev" })
+				.withIgnoreCase("nestedCustomer.name").withIncludeNullValues()
+				.withTransformer("nestedCustomer.age", o -> ((int) o) + 1));
+		Customer retrieved = repository.findOne(example);
+		assertEquals(check, retrieved);
+	}
 }
