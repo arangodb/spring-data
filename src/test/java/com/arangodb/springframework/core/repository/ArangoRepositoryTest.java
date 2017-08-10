@@ -23,7 +23,12 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	@Test
 	public void findOneTest() {
 		repository.save(john);
-		Customer customer = repository.findOne(john.getId());
+		String id = john.getId();
+		Customer customer = repository.findOne(id);
+		assertEquals("customers do not match", john, customer);
+		john.setAge(100);
+		repository.save(john);
+		customer = repository.findOne(id);
 		assertEquals("customers do not match", john, customer);
 	}
 

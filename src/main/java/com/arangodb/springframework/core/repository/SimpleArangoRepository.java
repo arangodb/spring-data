@@ -1,7 +1,6 @@
 package com.arangodb.springframework.core.repository;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.ArangoDB;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.Assert;
 
 import java.util.*;
 
@@ -37,7 +35,12 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public <S extends T> S save(S entity) {
-		arangoOperations.insertDocument(entity);
+		try { arangoOperations.insertDocument(entity); }
+		catch (Exception e) {
+			DBEntity dbEntity = new DBDocumentEntity();
+			arangoOperations.getConverter().write(entity, dbEntity);
+			arangoOperations.updateDocument((String) dbEntity.get("_id"), entity);
+		}
 		return entity;
 	}
 
