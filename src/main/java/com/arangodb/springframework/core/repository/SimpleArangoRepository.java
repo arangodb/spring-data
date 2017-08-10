@@ -1,7 +1,6 @@
 package com.arangodb.springframework.core.repository;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.ArangoDB;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.Assert;
 
 import java.util.*;
 
@@ -37,7 +35,12 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public <S extends T> S save(S entity) {
-		arangoOperations.insertDocument(entity);
+		try { arangoOperations.insertDocument(entity); }
+		catch (Exception e) {
+			DBEntity dbEntity = new DBDocumentEntity();
+			arangoOperations.getConverter().write(entity, dbEntity);
+			arangoOperations.updateDocument((String) dbEntity.get("_id"), entity);
+		}
 		return entity;
 	}
 
@@ -119,7 +122,11 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 
 	@Override
 	public <S extends T> Iterable<S> findAll(Example<S> example) {
-		return null;
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		ArangoCursor cursor = execute(filter, "", "", bindVars);
+		return cursor.asListRemaining();
 	}
 
 	@Override
@@ -146,12 +153,17 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 
 	@Override
 	public <S extends T> long count(Example<S> example) {
-		return 0;
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		String query = String.format("FOR e IN %s%s COLLECT WITH COUNT INTO length RETURN length", getCollectionName(), filter);
+		ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
+		return cursor.next();
 	}
 
 	@Override
 	public <S extends T> boolean exists(Example<S> example) {
-		return false;
+		return count(example) > 0;
 	}
 
 	private ArangoCursor<T> execute(String filter, String sort, String limit, Map<String, Object> bindVars) {
