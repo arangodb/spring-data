@@ -697,8 +697,4 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document.value6, is(entity.value6));
 	}
 
-	public static class ArrayTestEntity extends BasicTestEntity {
-		private String[] value;
-	}
-
 }
