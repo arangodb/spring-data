@@ -343,6 +343,32 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		}
 	}
 
+	public static class NestedReferenceTestEntity extends BasicTestEntity {
+		private NestedReferenceSubTestEntity sub;
+	}
+
+	public static class NestedReferenceSubTestEntity {
+		@Ref
+		private Collection<BasicTestEntity> entities;
+	}
+
+	@Test
+	public void testNestedRef() {
+		final NestedReferenceTestEntity o = new NestedReferenceTestEntity();
+		o.sub = new NestedReferenceSubTestEntity();
+		o.sub.entities = new ArrayList<>();
+		final BasicTestEntity e = new BasicTestEntity();
+		o.sub.entities.add(e);
+		template.insertDocument(e);
+		template.insertDocument(o);
+		final NestedReferenceTestEntity document = template.getDocument(o.id, NestedReferenceTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.sub, is(notNullValue()));
+		assertThat(document.sub.entities, is(notNullValue()));
+		assertThat(document.sub.entities.size(), is(1));
+		assertThat(document.sub.entities.iterator().next().id, is(e.id));
+	}
+
 	@Edge
 	public static class BasicEdgeTestEntity extends BasicTestEntity {
 		@From

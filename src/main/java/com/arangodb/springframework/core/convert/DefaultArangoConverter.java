@@ -382,7 +382,15 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Optional<Class<?>> customWriteTarget = Optional
 				.ofNullable(conversions.getCustomWriteTarget(source.getClass()));
 		final Class<?> targetType = customWriteTarget.orElseGet(() -> property.getTypeInformation().getType());
-		sink.put(fieldName, conversionService.convert(source, targetType));
+		final DBEntity document = new DBDocumentEntity();
+		final Optional<? extends ArangoPersistentEntity<?>> persistentEntity = Optional
+				.ofNullable(context.getPersistentEntity(targetType));
+		if (persistentEntity.isPresent()) {
+			write(source, document, persistentEntity);
+			sink.put(fieldName, document);
+		} else {
+			sink.put(fieldName, conversionService.convert(source, targetType));
+		}
 		return;
 	}
 
