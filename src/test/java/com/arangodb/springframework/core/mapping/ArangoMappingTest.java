@@ -664,12 +664,19 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		private final String value1;
 		private final boolean value2;
 		private final double value3;
+		private final long value4;
+		private final int value5;
+		private final String[] value6;
 
-		public ConstructorWithMultipleParamsTestEntity(final String value1, final boolean value2, final double value3) {
+		public ConstructorWithMultipleParamsTestEntity(final String value1, final boolean value2, final double value3,
+			final long value4, final int value5, final String[] value6) {
 			super();
 			this.value1 = value1;
 			this.value2 = value2;
 			this.value3 = value3;
+			this.value4 = value4;
+			this.value5 = value5;
+			this.value6 = value6;
 		}
 
 	}
@@ -677,7 +684,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void constructorWithMultipleParams() {
 		final ConstructorWithMultipleParamsTestEntity entity = new ConstructorWithMultipleParamsTestEntity("test", true,
-				3.5);
+				3.5, 13L, 69, new String[] { "a", "b" });
 		template.insertDocument(entity);
 		final ConstructorWithMultipleParamsTestEntity document = template.getDocument(entity.getId(),
 			ConstructorWithMultipleParamsTestEntity.class);
@@ -685,6 +692,13 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document.value1, is(entity.value1));
 		assertThat(document.value2, is(entity.value2));
 		assertThat(document.value3, is(entity.value3));
+		assertThat(document.value4, is(entity.value4));
+		assertThat(document.value5, is(entity.value5));
+		assertThat(document.value6, is(entity.value6));
+	}
+
+	public static class ArrayTestEntity extends BasicTestEntity {
+		private String[] value;
 	}
 
 }
