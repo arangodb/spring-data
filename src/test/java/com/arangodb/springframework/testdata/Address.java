@@ -22,8 +22,6 @@ package com.arangodb.springframework.testdata;
 
 import org.springframework.data.annotation.Id;
 
-import java.util.Collection;
-
 /**
  * @author Mark Vollmary
  *
@@ -33,7 +31,6 @@ public class Address {
 	@Id
 	private String id;
 	private String zipCode;
-	private Iterable<String> iter;
 
 	public Address() {
 		super();

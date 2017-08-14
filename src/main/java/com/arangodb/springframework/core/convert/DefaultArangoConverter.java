@@ -263,7 +263,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final ArangoPersistentProperty property,
 		final A annotation) {
 		return resolverFactory.getRelationResolver(annotation).flatMap(resolver -> {
-			if (property.isCollectionLike()) {
+			if (property.isCollectionLike() && parentId != null) {
 				return Optional.of(resolver.resolveMultiple(parentId.toString(),
 					getComponentType(property.getTypeInformation()).getType(), annotation));
 			} else if (source != null) {

@@ -8,6 +8,7 @@
 	<bean id="arangoTemplate" class="com.arangodb.springframework.core.template.ArangoTemplate">
 		<constructor-arg ref="arango" />
 		<constructor-arg ref="database" />
+		<constructor-arg ref="arangoConverter" />
 	</bean>
 	
 </beans>

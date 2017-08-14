@@ -6,6 +6,7 @@ import com.arangodb.springframework.testdata.Customer;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.GeoResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -27,8 +28,10 @@ public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 	protected Customer bob;
 	protected Set<Customer> customers;
 	protected Set<String> ids;
-	protected Comparator<Customer> cmp = (a, b) -> (a.getId().compareTo(b.getId()));
-	protected BiPredicate<Customer, Customer> eq = (a, b) -> (a.getId().compareTo(b.getId()) == 0);
+	protected Comparator<Object> cmp = Comparator.comparing(o -> ((Customer) o).getId());
+	protected BiPredicate<Object, Object> eq = (a, b) -> cmp.compare(a, b) == 0;
+	protected Comparator<Object> geoCmp = Comparator.comparing(o -> ((GeoResult<Customer>) o).getContent().getId());
+	protected BiPredicate<Object, Object> geoEq = (o1, o2) -> geoCmp.compare(o1, o2) == 0;
 
 	@Before
 	public void createMockCustomers() {
@@ -40,23 +43,23 @@ public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 		ids = new HashSet<>();
 	}
 
-	protected <T> boolean equals(Object it1, Object it2, Comparator<T> cmp, BiPredicate<T, T> eq, boolean shouldOrderMatter) {
-		Function<Object, List<T>> iterableToSortedList = it -> {
-			List<T> l = new ArrayList<>();
+	protected boolean equals(Object it1, Object it2, Comparator<Object> cmp, BiPredicate<Object, Object> eq, boolean shouldOrderMatter) {
+		Function<Object, List> iterableToSortedList = it -> {
+			List l = new ArrayList();
 			if (it != null) {
 				if (it.getClass().isArray()) {
 					Object[] array = (Object[]) it;
-					for (Object e : array) l.add((T) e);
+					for (Object e : array) { l.add(e); }
 				} else {
-					Iterable<T> iterable = (Iterable<T>) it;
-					for (T e : iterable) l.add(e);
+					Iterable iterable = (Iterable) it;
+					for (Object e : iterable) { l.add(e); }
 				}
 			}
-			if (!shouldOrderMatter) l.sort(cmp);
+			if (!shouldOrderMatter) { l.sort(cmp); }
 			return l;
 		};
-		List<T> l1 = iterableToSortedList.apply(it1);
-		List<T> l2 = iterableToSortedList.apply(it2);
+		List l1 = iterableToSortedList.apply(it1);
+		List l2 = iterableToSortedList.apply(it2);
 		if (l1.size() != l2.size()) return false;
 		for (int i = 0; i < l1.size(); ++i) if (!eq.test(l1.get(i), l2.get(i))) return false;
 		return true;

@@ -1,15 +1,16 @@
 package com.arangodb.springframework.core.repository;
 
+import com.arangodb.ArangoCursor;
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.convert.DBDocumentEntity;
+import com.arangodb.springframework.core.convert.DBEntity;
+import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.Assert;
 
 import java.util.*;
 
@@ -22,6 +23,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleArangoRepository.class);
 
 	private ArangoOperations arangoOperations;
+	private ArangoExampleConverter exampleConverter;
 	private Class<T> domainClass;
 
 
@@ -29,10 +31,16 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 		super();
 		this.arangoOperations = arangoOperations;
 		this.domainClass = domainClass;
+		this.exampleConverter = new ArangoExampleConverter((ArangoMappingContext) arangoOperations.getConverter().getMappingContext());
 	}
 
 	@Override public <S extends T> S save(S entity) {
-		arangoOperations.insertDocument(entity);
+		try { arangoOperations.insertDocument(entity); }
+		catch (Exception e) {
+			DBEntity dbEntity = new DBDocumentEntity();
+			arangoOperations.getConverter().write(entity, dbEntity);
+			arangoOperations.updateDocument((String) dbEntity.get("_id"), entity);
+		}
 		return entity;
 	}
 
@@ -85,20 +93,81 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 
 	@Override
 	public Iterable<T> findAll(Sort sort) {
-		String query = String.format("FOR e IN %s%s RETURN e", getCollectionName(), DerivedQueryCreator.buildSortString(sort));
-		return arangoOperations.query(query, new HashMap<>(), null, domainClass).asListRemaining();
+		String sortString = DerivedQueryCreator.buildSortString(sort);
+		return execute("", sortString, "", new HashMap<>()).asListRemaining();
 	}
 
 	@Override
 	public Page<T> findAll(Pageable pageable) {
-		if (pageable == null) LOGGER.debug("Pageable in findAll(Pageable) is null");
-		String query = String.format("FOR e IN %s%s LIMIT %d, %d RETURN e",
-				getCollectionName(), DerivedQueryCreator.buildSortString(pageable.getSort()), pageable.getOffset(), pageable.getPageSize());
-		List<T> content = (List<T>) arangoOperations.query(query, new HashMap<>(), null, domainClass).asListRemaining();
-		return new PageImpl<T>(content, pageable, count());
+		if (pageable == null) { LOGGER.debug("Pageable in findAll(Pageable) is null"); }
+		String sort = DerivedQueryCreator.buildSortString(pageable.getSort());
+		String limit = String.format(" LIMIT %d, %d", pageable.getOffset(), pageable.getPageSize());
+		ArangoCursor<T> result = execute("", sort, limit, new HashMap<>());
+		List<T> content = result.asListRemaining();
+		return new PageImpl<T>(content, pageable, result.getStats().getFullCount());
 	}
 
 	private String getCollectionName() {
 		return arangoOperations.getConverter().getMappingContext().getPersistentEntity(domainClass).getCollection();
+	}
+
+	@Override
+	public <S extends T> S findOne(Example<S> example) {
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		ArangoCursor cursor = execute(filter, "", "", bindVars);
+		return cursor.hasNext() ? (S) cursor.next() : null;
+	}
+
+	@Override
+	public <S extends T> Iterable<S> findAll(Example<S> example) {
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		ArangoCursor cursor = execute(filter, "", "", bindVars);
+		return cursor.asListRemaining();
+	}
+
+	@Override
+	public <S extends T> Iterable<S> findAll(Example<S> example, Sort sort) {
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		String sortString = DerivedQueryCreator.buildSortString(sort);
+		ArangoCursor cursor = execute(filter, sortString, "", bindVars);
+		return cursor.asListRemaining();
+	}
+
+	@Override
+	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		String sortString = DerivedQueryCreator.buildSortString(pageable.getSort());
+		String limit = String.format(" LIMIT %d, %d", pageable.getOffset(), pageable.getPageSize());
+		ArangoCursor cursor = execute(filter, sortString, limit, bindVars);
+		List<T> content = cursor.asListRemaining();
+		return new PageImpl<S>((List<S>) content, pageable, cursor.getStats().getFullCount());
+	}
+
+	@Override
+	public <S extends T> long count(Example<S> example) {
+		Map<String, Object> bindVars = new HashMap<>();
+		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		String query = String.format("FOR e IN %s%s COLLECT WITH COUNT INTO length RETURN length", getCollectionName(), filter);
+		ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
+		return cursor.next();
+	}
+
+	@Override
+	public <S extends T> boolean exists(Example<S> example) {
+		return count(example) > 0;
+	}
+
+	private ArangoCursor<T> execute(String filter, String sort, String limit, Map<String, Object> bindVars) {
+		String query = String.format("FOR e IN %s%s%s%s RETURN e", getCollectionName(), filter, sort, limit);
+		return arangoOperations.query(query, bindVars, limit.length() == 0 ? null : new AqlQueryOptions().fullCount(true), domainClass);
 	}
 }
