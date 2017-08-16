@@ -3,6 +3,7 @@ package com.arangodb.springframework.core.repository.query.derived;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
 
+import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -277,7 +278,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         int distance = (int) convertAngleToDistance(11);
         int lowerBound = (int) convertAngleToDistance(5);
         int upperBound = (int) convertAngleToDistance(15);
-        Collection<Customer> retrieved = repository.findByLocationWithinAndLocationWithinOrName(new Point(0, 20), distance, new Point(0, 0), new Range<>(lowerBound, upperBound), "+++");
+        Collection<Customer> retrieved = repository.findByLocationWithinAndLocationWithinOrName(new Point(0, 20),
+                distance, new Ring(new Point(0, 0), new Range<>(lowerBound, upperBound)), "+++");
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 
