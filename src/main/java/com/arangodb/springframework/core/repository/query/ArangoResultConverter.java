@@ -23,24 +23,24 @@ public class ArangoResultConverter {
     private ArangoOperations operations;
     private Class domainClass;
 
-    private static Map<Object, Method> typeMap = new HashMap<>();
+    private static Map<Object, Method> TYPE_MAP = new HashMap<>();
 
     static {
         try {
-            typeMap.put(List.class, ArangoResultConverter.class.getMethod("convertList"));
-            typeMap.put(Iterable.class, ArangoResultConverter.class.getMethod("convertList"));
-            typeMap.put(Collection.class, ArangoResultConverter.class.getMethod("convertList"));
-            typeMap.put(Page.class, ArangoResultConverter.class.getMethod("convertPage"));
-            typeMap.put(Slice.class, ArangoResultConverter.class.getMethod("convertPage"));
-            typeMap.put(Set.class, ArangoResultConverter.class.getMethod("convertSet"));
-            typeMap.put(BaseDocument.class, ArangoResultConverter.class.getMethod("convertBaseDocument"));
-            typeMap.put(BaseEdgeDocument.class, ArangoResultConverter.class.getMethod("convertBaseEdgeDocument"));
-            typeMap.put(ArangoCursor.class, ArangoResultConverter.class.getMethod("convertArangoCursor"));
-            typeMap.put(GeoResult.class, ArangoResultConverter.class.getMethod("convertGeoResult"));
-            typeMap.put(GeoResults.class, ArangoResultConverter.class.getMethod("convertGeoResults"));
-            typeMap.put(GeoPage.class, ArangoResultConverter.class.getMethod("convertGeoPage"));
-            typeMap.put(Optional.class, ArangoResultConverter.class.getMethod("convertOptional"));
-            typeMap.put("array", ArangoResultConverter.class.getMethod("convertArray"));
+            TYPE_MAP.put(List.class, ArangoResultConverter.class.getMethod("convertList"));
+            TYPE_MAP.put(Iterable.class, ArangoResultConverter.class.getMethod("convertList"));
+            TYPE_MAP.put(Collection.class, ArangoResultConverter.class.getMethod("convertList"));
+            TYPE_MAP.put(Page.class, ArangoResultConverter.class.getMethod("convertPage"));
+            TYPE_MAP.put(Slice.class, ArangoResultConverter.class.getMethod("convertPage"));
+            TYPE_MAP.put(Set.class, ArangoResultConverter.class.getMethod("convertSet"));
+            TYPE_MAP.put(BaseDocument.class, ArangoResultConverter.class.getMethod("convertBaseDocument"));
+            TYPE_MAP.put(BaseEdgeDocument.class, ArangoResultConverter.class.getMethod("convertBaseEdgeDocument"));
+            TYPE_MAP.put(ArangoCursor.class, ArangoResultConverter.class.getMethod("convertArangoCursor"));
+            TYPE_MAP.put(GeoResult.class, ArangoResultConverter.class.getMethod("convertGeoResult"));
+            TYPE_MAP.put(GeoResults.class, ArangoResultConverter.class.getMethod("convertGeoResults"));
+            TYPE_MAP.put(GeoPage.class, ArangoResultConverter.class.getMethod("convertGeoPage"));
+            TYPE_MAP.put(Optional.class, ArangoResultConverter.class.getMethod("convertOptional"));
+            TYPE_MAP.put("array", ArangoResultConverter.class.getMethod("convertArray"));
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
@@ -55,9 +55,9 @@ public class ArangoResultConverter {
 
     public Object convertResult(Class type) {
         try {
-            if (type.isArray()) { return typeMap.get("array").invoke(this, null); }
-            if (!typeMap.containsKey(type)) { return result.next(); }
-            return typeMap.get(type).invoke(this, null);
+            if (type.isArray()) { return TYPE_MAP.get("array").invoke(this, null); }
+            if (!TYPE_MAP.containsKey(type)) { return getNext(result); }
+            return TYPE_MAP.get(type).invoke(this, null);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -70,20 +70,40 @@ public class ArangoResultConverter {
         return set;
     }
 
+    private GeoResult buildGeoResult(ArangoCursor cursor) {
+        GeoResult geoResult = null;
+        while (cursor.hasNext() && geoResult == null) {
+            Object object = cursor.next();
+            Map<String, Object> map = (Map<String, Object>) object;
+            Double distanceInMeters = (Double) map.get("_distance");
+            if (distanceInMeters == null) { continue; }
+            Object entity = operations.getConverter().read(domainClass, new DBDocumentEntity(map));
+            Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
+            geoResult = new GeoResult(entity, distance);
+        }
+        return geoResult;
+    }
+
     private GeoResult buildGeoResult(Object object) {
+        if (object == null) { return null; }
         Map<String, Object> map = (Map<String, Object>) object;
         Object entity = operations.getConverter().read(domainClass, new DBDocumentEntity(map));
-        Distance distance = new Distance(((double) map.get("_distance")) / 1000, Metrics.KILOMETERS);
+        Double distanceInMeters = (Double) map.get("_distance");
+        if (distanceInMeters == null) { return null; }
+        Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
         return new GeoResult(entity, distance);
     }
 
     private GeoResults buildGeoResults(ArangoCursor cursor) {
         List<GeoResult> list = new LinkedList<>();
-        cursor.forEachRemaining(o -> list.add(buildGeoResult(o)));
+        cursor.forEachRemaining(o -> {
+            GeoResult geoResult = buildGeoResult(o);
+            if (geoResult != null) { list.add(geoResult); }
+        });
         return new GeoResults(list);
     }
 
-    public Optional convertOptional() { return Optional.ofNullable(result.hasNext() ? result.next() : null); }
+    public Optional convertOptional() { return Optional.ofNullable(getNext(result)); }
 
     public List convertList() {
         return result.asListRemaining();
@@ -97,20 +117,20 @@ public class ArangoResultConverter {
     }
 
     public BaseDocument convertBaseDocument() {
-        return new BaseDocument((Map<String, Object>) result.next());
+        Object next = getNext(result);
+        return next == null ? null : new BaseDocument((Map<String, Object>) next);
     }
 
     public BaseEdgeDocument convertBaseEdgeDocument() {
-        return new BaseEdgeDocument((Map<String, Object>) result.next());
+        Object next = getNext(result);
+        return next == null ? null : new BaseEdgeDocument((Map<String, Object>) next);
     }
 
     public ArangoCursor convertArangoCursor() {
         return result;
     }
 
-    public GeoResult convertGeoResult() {
-        return buildGeoResult(result.next());
-    }
+    public GeoResult convertGeoResult() { return buildGeoResult(result); }
 
     public GeoResults convertGeoResults() {
         return buildGeoResults(result);
@@ -124,6 +144,7 @@ public class ArangoResultConverter {
         return result.asListRemaining().toArray();
     }
 
+    private Object getNext(ArangoCursor cursor) { return cursor.hasNext() ? cursor.next() : null; }
 }
 
 

@@ -175,7 +175,6 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	}
 
 	private Object convertResult(ArangoCursor result) {
-		if (!result.hasNext()) return null;
 		ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations, domainClass);
 		return resultConverter.convertResult(method.getReturnType());
 	}
