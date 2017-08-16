@@ -196,9 +196,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 			this.source = source;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getPropertyValue(final ArangoPersistentProperty property) {
-			return read(source.get(property.getFieldName()), property.getTypeInformation());
+			return (T) convertIfNecessary(read(source.get(property.getFieldName()), property.getTypeInformation()),
+				property.getType());
 		}
 
 	}
@@ -381,7 +383,15 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Optional<Class<?>> customWriteTarget = Optional
 				.ofNullable(conversions.getCustomWriteTarget(source.getClass()));
 		final Class<?> targetType = customWriteTarget.orElseGet(() -> property.getTypeInformation().getType());
-		sink.put(fieldName, conversionService.convert(source, targetType));
+		final DBEntity document = new DBDocumentEntity();
+		final Optional<? extends ArangoPersistentEntity<?>> persistentEntity = Optional
+				.ofNullable(context.getPersistentEntity(targetType));
+		if (persistentEntity.isPresent()) {
+			write(source, document, persistentEntity);
+			sink.put(fieldName, document);
+		} else {
+			sink.put(fieldName, conversionService.convert(source, targetType));
+		}
 		return;
 	}
 
@@ -476,4 +486,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 				&& !VPackSlice.class.isAssignableFrom(type);
 	}
 
+	@SuppressWarnings("unchecked")
+	private <T> T convertIfNecessary(final Object source, final Class<T> type) {
+		return (T) (source == null ? source
+				: type.isAssignableFrom(source.getClass()) ? source : conversionService.convert(source, type));
+	}
 }
