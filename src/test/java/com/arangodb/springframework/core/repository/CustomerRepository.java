@@ -1,5 +1,6 @@
 package com.arangodb.springframework.core.repository;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
@@ -30,7 +31,7 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 	Optional<Customer> findOneByIdAqlPotentialNameClash(@Param("0") String id);
 
 	@Query("FOR c IN customer FILTER c._id == @0 AND c.name == @0 RETURN c")
-	Customer findOneByIdAqlParamNameClash(String id, @Param("0") String name);
+	ArangoCursor<Customer> findOneByIdAqlParamNameClash(String id, @Param("0") String name);
 
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
 	Customer findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map bindVars);

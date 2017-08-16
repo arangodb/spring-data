@@ -1,5 +1,6 @@
 package com.arangodb.springframework.core.repository.query;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDBException;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
@@ -54,8 +55,8 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void findOneByIdAqlParamNameClashTest() {
 		repository.save(customers);
-		Customer retrieved = repository.findOneByIdAqlParamNameClash(john.getId(), john.getName());
-		assertEquals(john, retrieved);
+		ArangoCursor<Customer> retrieved = repository.findOneByIdAqlParamNameClash(john.getId(), john.getName());
+		assertEquals(john, retrieved.next());
 	}
 
 	@Test
