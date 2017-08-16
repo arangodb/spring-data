@@ -36,7 +36,7 @@
 
 # Getting Started
 
-Spring Data ArangoDB requires ArangoDB 3.1 or higher - which you can download [here](https://www.arangodb.com/download/) - and Java 6 or higher. To use Spring Data ArangoDB in your project, your build automation tool needs to be configured to include and use the Spring Data ArangoDB dependency. Example with Maven:
+Spring Data ArangoDB requires ArangoDB 3.1 or higher - which you can download [here](https://www.arangodb.com/download/) - and Java 8 or higher. To use Spring Data ArangoDB in your project, your build automation tool needs to be configured to include and use the Spring Data ArangoDB dependency. Example with Maven:
 
 ``` xml
 <dependency>
@@ -61,6 +61,7 @@ You can use Java to instantiate and configure an instance of `ArangoTemplate` as
 
 ``` java
 @Configuration
+@EnableArangoRepositories(basePackages = { "com.company.mypackage" })
 public class MyConfiguration extends AbstractArangoConfiguration {
 
   @Override
@@ -151,71 +152,79 @@ public class MySpringBean {
 
 ## Return types
 
-The method return type for single results can be a primitive type, a POJO/domain class, `Map<String, Object>`, `BaseDocument`, `BaseEdgeDocument` or `VPackSlice`.
-The method return type for multiple results can additionally be `ArangoCursor<Type>`, `Iterable<Type>`, `Collection<Type>`, `List<Type>` where Type can be everything a single result can be.
+The method return type for single results can be a primitive type, a POJO/domain class, `Map<String, Object>`, `BaseDocument`, `BaseEdgeDocument`, `Optional<Type>`, `GeoResult<Type>`.
+The method return type for multiple results can additionally be `ArangoCursor<Type>`, `Iterable<Type>`, `Collection<Type>`, `List<Type>`, `Set<Type>`, `Page<Type>`, `Slice<Type>`, `GeoPage<Type>`, `GeoResult<Type>` where Type can be everything a single result can be.
 
 ## Query Methods
 
-Queries using ArangoDB Query Language (AQL) can be supplied with the @Query annotation on methods.
+Queries using ArangoDB Query Language (AQL) can be supplied with the @Query annotation on methods. AqlQueryOptions can also be passed to the driver.
+
+``` java
+public interface MyRepository extends Repository<Customer, String>{
+
+  @Query("FOR c IN customers FILTER c.name == @0 AND c.surname == @1 RETURN c")
+  ArangoCursor<Customer> query(String name, AqlQueryOptions options, String surname);
+
+}
+```
 
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
   @Query("FOR c IN customers FILTER c.name == @name RETURN c")
-  ArangoCursor<Customer> query(String name);
+  ArangoCursor<Customer> query(@Param("name") String name);
 
 }
 ```
 
-The Bind Parameters will be substituted by the actual method parameter. In addition you can use a parameter bindVars from type Map<String, Object> as your Bind Parameters. You can then fill the map with any parameter used in the query. (see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information about Bind Parameters)
+The Bind Parameters will be substituted by the actual method parameter. In addition you can use a parameter bindVars from type Map<String, Object> as your Bind Parameters. You can then fill the map with any parameter used in the query. (see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information about Bind Parameters). Parameters with the same name will override those in the bindVars.
 
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
   @Query("FOR c IN customers FILTER c.name == @name RETURN c")
-  ArangoCursor<Customer> query(Map<String, Object> bindVars);
+  ArangoCursor<Customer> query(@BindVars Map<String, Object> bindVars);
 
 }
 ```
 
-## Finder Methods
+## Derived Methods
 
-Spring Data ArangoDB supports Queries derived from methods names by splitting it into its semantic parts and converting into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `count..By` from the method and parse the rest. The By acts as a separator to indicate the start of the criteria for the query to be build. You can define conditions on entity properties and concatenate them with `And` and `Or`.
+Spring Data ArangoDB supports Queries derived from methods names by splitting it into its semantic parts and converting into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `stream..By`, `count..By`, `exists..By`, `delete..By`, `remove..By` from the method and parse the rest. The By acts as a separator to indicate the start of the criteria for the query to be build. You can define conditions on entity properties and concatenate them with `And` and `Or`.
 
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
 
-  // FOR c IN customers FILTER c.name == @name RETURN c
+  // FOR c IN customers FILTER c.name == @0 RETURN c
   ArangoCursor<Customer> findByName(String name);
   ArangoCursor<Customer> getByName(String name);
 
   // FOR c IN customers
-  // FILTER c.name == @name && c.age == @age
+  // FILTER c.name == @0 && c.age == @1
   // RETURN c
   ArangoCursor<Customer> findByNameAndAge(String name, int age);
 
   // FOR c IN customers
-  // FILTER c.name == @name || c.age == @age
+  // FILTER c.name == @0 || c.age == @1
   // RETURN c
   ArangoCursor<Customer> findByNameOrAge(String name, int age);
 }
 ```
 
-You can apply sorting for one or multiple sort criteria by appending `SortBy` or `OrderBy` to the method and `Asc` or `Desc` for the directions.
+You can apply sorting for one or multiple sort criteria by appending `OrderBy` to the method and `Asc` or `Desc` for the directions.
 
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
 
   // FOR c IN customers
-  // FITLER c.name == @name
+  // FITLER c.name == @0
   // SORT c.age DESC RETURN c
-  ArangoCursor<Customer> findByNameSortByAgeDesc(String name);
   ArangoCursor<Customer> getByNameOrderByAgeDesc(String name);
 
   // FOR c IN customers
-  // FILTER c.name = @name
+  // FILTER c.name = @0
   // SORT c.name ASC, c.age DESC RETURN c
-  ArangoCursor<Customer> findByNameSortByNameAscAndAgeDesc(String name);
+  ArangoCursor<Customer> findByNameOrderByNameAscAndAgeDesc(String name);
 
 }
 ```
@@ -225,7 +234,7 @@ public interface MyRepository extends Repository<Customer, String> {
 Property expressions can refer only to direct and nested properties of the managed domain class. The algorithm checks the domain class for the entire expression as the property. If the check fails, the algorithm splits up the expression at the camel case parts from the right and tries to find the corresponding property.
 
 ``` java
-@Document(name="customers")
+@Document("customers")
 public class Customer {
   private Address address;
 }
@@ -246,7 +255,7 @@ public interface MyRepository extends Repository<Customer, String> {
 It is possible for the algorithm to select the wrong property if the domain class has also an property which match the first split of the expression. To resolve this ambiguity you can use _ as a separator inside your method-name to define traversal points.
 
 ``` java
-@Document(name="customers")
+@Document("customers")
 public class Customer {
   private Address address;
   private AddressZip addressZip;
@@ -306,7 +315,7 @@ This special parameter works with both query-methods and finder-methods. Keep in
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
 
-  @Query("FOR c IN customers FILTER c.name == @name RETURN c")
+  @Query("FOR c IN customers FILTER c.name == @0 RETURN c")
   Iterable<Customer> query(String name, AqlQueryOptions options);
 
   Iterable<Customer> findByName(String name, AqlQueryOptions options);
@@ -335,7 +344,7 @@ In this section we will describe the features and conventions for mapping Java o
 
 ## Type conventions
 
-ArangoDB use [VelocyPack](https://github.com/arangodb/velocypack) as internal storage format which supports a big number of data types. In addition Spring Data ArangoDB offers - with the underlying Java driver - built-in converters to add additional types to the mapping. These converters are separated for each mapping direction (Java <-> VelocyPack) with the classes `VPackSerializer` and `VPackDeserializer`.
+ArangoDB uses [VelocyPack](https://github.com/arangodb/velocypack) as it's internal storage format which supports a large number of data types. In addition Spring Data ArangoDB offers - with the underlying Java driver - built-in converters to add additional types to the mapping. These converters are separated for each mapping direction (Java <-> VelocyPack) with the classes `VPackSerializer` and `VPackDeserializer`.
 
 Java type | VelocyPack type
 ----------|----------------
@@ -362,35 +371,35 @@ java.lang.byte[] | string (Base64)
 
 annotation | level | description
 -----------|-------|------------
-@Document | class | marked this class as a candidate for mapping
-@Edge | class | marked this class as a candidate for mapping
-@Graph | class | marked this class as part of a named graph
-@Id | field | stored the field as the system field _id
-@Key | field | stored the field as the system field _key
-@Rev | field | stored the field as the system field _rev
-@Field("alt-name") | field | stored the field with an alternative name
-@Ref | field | stored the _id of the referenced document and not the nested document
-@From | field | stored the _id of the referenced document as the system field _from
-@To | field | stored the _id of the referenced document as the system field _to
+@Document | class | marks this class as a candidate for mapping
+@Edge | class | marks this class as a candidate for mapping
+@Graph | class | marks this class as part of a named graph
+@Id | field | stores the field as the system field _id
+@Key | field | stores the field as the system field _key
+@Rev | field | stores the field as the system field _rev
+@Field("alt-name") | field | stores the field with an alternative name
+@Ref | field | stores the _id of the referenced document and not the nested document
+@From | field | stores the _id of the referenced document as the system field _from
+@To | field | stores the _id of the referenced document as the system field _to
 @Relations | field | vertices which are connected over edges
-@HashIndex | class | described an hash index
-@HashIndexed | field | described how to index the field
-@SkiplistIndex | class | described an skiplist index
-@SkiplistIndexed | field | described how to index the field
-@PersistentIndex | class | described an persistent index
-@PersistentIndexed | field | described how to index the field
-@GeoIndex | class | described an geo index
-@GeoIndexed | field | described how to index the field
-@FulltextIndex | class | described an fulltext index
-@FulltextIndexed | field | described how to index the field
+@HashIndex | class | describes a hash index
+@HashIndexed | field | describes how to index the field
+@SkiplistIndex | class | describes a skiplist index
+@SkiplistIndexed | field | describes how to index the field
+@PersistentIndex | class | describes a persistent index
+@PersistentIndexed | field | describes how to index the field
+@GeoIndex | class | describes a geo index
+@GeoIndexed | field | describes how to index the field
+@FulltextIndex | class | describes a fulltext index
+@FulltextIndexed | field | describes how to index the field
 @Transient, @Expose | field | excludes the field from serialisation/deserialisation
 
 ### Document
 
-The annotations `@Document` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameter is `name` to specify the collection name in the database. The annotation `@Document` specify the collection type to `DOCUMENT`.
+The annotations `@Document` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameter is `value` to specify the collection name in the database. The annotation `@Document` specify the collection type to `DOCUMENT`.
 
 ``` java
-@Document(name="persons")
+@Document(value="persons")
 public class Person {
   ...
 }
@@ -398,10 +407,10 @@ public class Person {
 
 ### Edge
 
-The annotations `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are `name` to specify the collection name in the database. The annotation `@Edge` specify the collection type to `EDGE`.
+The annotations `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are `value` to specify the collection name in the database. The annotation `@Edge` specify the collection type to `EDGE`.
 
 ``` java
-@Edge(name="relations")
+@Edge("relations")
 public class Relation {
   ...
 }
@@ -412,13 +421,13 @@ public class Relation {
 With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate document in another collection described in the `@Document` annotation of the nested object class. To successfully persist an instance of your object the referencing field has to be null or it's instance has to provide a field with the annotation `@Id` including an valid id.
 
 ``` java
-@Document(name="persons")
+@Document(value="persons")
 public class Person {
   @Ref
   private Address address;
 }
 
-@Document(name="addresses")
+@Document("addresses")
 public class Address {
   @Id
   private String id;
@@ -464,7 +473,7 @@ Without the annotation `@Ref` at the field `address`, the stored document would 
 With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameter is `edge`. With `edge` you define the edge collection - which should be used in the traversal - using the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
 
 ``` java
-@Document(name="persons")
+@Document(value="persons")
 public class Person {
   @Relations(edge=Relation.class, depth=1, direction=Direction.ANY)
   private List<Person> friends;
@@ -481,7 +490,7 @@ public class Relation {
 With the annotations `@From` and `@To` applied on a collection or array field in a class annotated with `@Document` the nested edge objects are fetched from the database. Each of the nested edge objects has to be stored as separate edge document in the edge collection described in the `@Edge` annotation of the nested object class with the *_id* of the parent document as field *_from* or *_to*.
 
 ``` java
-@Document(name="persons")
+@Document("persons")
 public class Person {
   @From
   private List<Relation> relations;
@@ -524,7 +533,7 @@ and the representation of *Relation* in collection *relations*:
 With the annotations `@From` and `@To` applied on a field in a class annotated with `@Edge` the nested object is fetched from the database. The nested object has to be stored as a separate document in the collection described in the `@Document` annotation of the nested object class. The *_id* field of this nested object is stored in the fields *_from* or *_to* within the edge document.
 
 ``` java
-@Edge(name="relations")
+@Edge("relations")
 public class Relation {
   @From
   private Person c1;
@@ -532,7 +541,7 @@ public class Relation {
   private Person c2;
 }
 
-@Document(name="persons")
+@Document(value="persons")
 public class Person {
   @Id
   private String id;
@@ -565,7 +574,7 @@ and the representation of *Person* in collection *persons*:
 
 ### Index and Indexed annotations
 
-With the `@<IndexType>Indexed` annotations user defined indexes can be created on collection level by annotating single fields of a class.
+With the `@<IndexType>Indexed` annotations user defined indexes can be created at a collection level by annotating single fields of a class.
 
 Possible `@<IndexType>Indexed` annotations are:
 * `@HashIndexed`
