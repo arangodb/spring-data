@@ -457,8 +457,11 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         Customer customer5 = new Customer("", "", 0);
         customer5.setLocation(new int[] {0, 35});
         repository.save(customer5);
-        double distance = convertAngleToDistance(10);
-        Range<Double> distanceRange = new Range<>(convertAngleToDistance(20), convertAngleToDistance(30));
+        double distanceInMeters = convertAngleToDistance(10);
+        Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
+        Range<Distance> distanceRange = new Range<>(
+                new Distance(convertAngleToDistance(20) / 1000, Metrics.KILOMETERS),
+                new Distance(convertAngleToDistance(30) / 1000, Metrics.KILOMETERS));
         Point location = new Point(0, 0);
         GeoResults<Customer> retrieved = repository.findByNameOrSurnameAndLocationWithinOrLocationWithin("+", "+", location, distance, location, distanceRange);
         List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();

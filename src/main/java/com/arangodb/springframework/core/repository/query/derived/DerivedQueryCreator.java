@@ -246,7 +246,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     private void bindRange(Range range, int bindings) {
         Object lowerBound = range.getLowerBound();
         Object upperBound = range.getUpperBound();
-        if (lowerBound.getClass().isInstance(Distance.class) && upperBound.getClass() == lowerBound.getClass()) {
+        if (lowerBound.getClass() == Distance.class && upperBound.getClass() == lowerBound.getClass()) {
             lowerBound = convertDistanceToMeters((Distance) lowerBound);
             upperBound = convertDistanceToMeters((Distance) upperBound);
         }
