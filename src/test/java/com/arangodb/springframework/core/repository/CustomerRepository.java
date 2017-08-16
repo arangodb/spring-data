@@ -4,12 +4,11 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Query;
-import com.arangodb.springframework.core.repository.query.derived.Disjunction;
-import com.arangodb.springframework.core.repository.query.derived.geo.Range;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.*;
 

@@ -3,9 +3,10 @@ package com.arangodb.springframework.core.repository.query.derived;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.repository.query.ArangoParameterAccessor;
-import com.arangodb.springframework.core.repository.query.derived.geo.Range;
+import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.*;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
@@ -171,7 +172,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         for (int i = 0; i < arguments; ++i) {
             Assert.isTrue(iterator.hasNext(), "Too few arguments passed");
             Object caseAdjusted = ignoreArgumentCase(iterator.next(), shouldIgnoreCase);
-            if (caseAdjusted.getClass() == Box.class) {
+            if (caseAdjusted.getClass() == Ring.class) {
+                break;
+            } else if (caseAdjusted.getClass() == Box.class) {
                 Box box = (Box) caseAdjusted;
                 Point first = box.getFirst();
                 Point second = box.getSecond();

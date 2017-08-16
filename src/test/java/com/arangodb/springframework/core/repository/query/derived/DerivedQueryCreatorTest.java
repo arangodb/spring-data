@@ -3,7 +3,6 @@ package com.arangodb.springframework.core.repository.query.derived;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
 
-import com.arangodb.springframework.core.repository.query.derived.geo.Range;
 import com.arangodb.springframework.testdata.Customer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
