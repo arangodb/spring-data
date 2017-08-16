@@ -106,6 +106,8 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	// EXISTS
 
+	boolean existsByName(String name);
+
 	Customer[] findByAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
 
 	// SORT
