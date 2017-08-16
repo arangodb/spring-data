@@ -33,20 +33,17 @@ import java.util.regex.Pattern;
  */
 public class ArangoAqlQuery implements RepositoryQuery {
 
-	private static final Set<Class<?>> RETURN_TYPES_USING_MAP = new HashSet<>();
 	private static final Set<Class<?>> GEO_RETURN_TYPES = new HashSet<>();
+	private static final Set<Class<?>> DESERIALIZABLE_TYPES = new HashSet<>();
 
 	static {
-		RETURN_TYPES_USING_MAP.add(Map.class);
-		RETURN_TYPES_USING_MAP.add(BaseDocument.class);
-		RETURN_TYPES_USING_MAP.add(BaseEdgeDocument.class);
-		RETURN_TYPES_USING_MAP.add(GeoResult.class);
-		RETURN_TYPES_USING_MAP.add(GeoResults.class);
-		RETURN_TYPES_USING_MAP.add(GeoPage.class);
-
 		GEO_RETURN_TYPES.add(GeoResult.class);
 		GEO_RETURN_TYPES.add(GeoResults.class);
 		GEO_RETURN_TYPES.add(GeoPage.class);
+
+		DESERIALIZABLE_TYPES.add(Map.class);
+		DESERIALIZABLE_TYPES.add(BaseDocument.class);
+		DESERIALIZABLE_TYPES.add(BaseEdgeDocument.class);
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ArangoAqlQuery.class);
@@ -148,7 +145,8 @@ public class ArangoAqlQuery implements RepositoryQuery {
 
 	private Class<?> getResultClass() {
 		if (isCountProjection || isExistsProjection) return Integer.class;
-		if (RETURN_TYPES_USING_MAP.contains(method.getReturnType())) return Object.class;
+		if (GEO_RETURN_TYPES.contains(method.getReturnType())) return Object.class;
+		if (DESERIALIZABLE_TYPES.contains(method.getReturnType())) return method.getReturnType();
 		return domainClass;
 	}
 

@@ -33,8 +33,6 @@ public class ArangoResultConverter {
             TYPE_MAP.put(Page.class, ArangoResultConverter.class.getMethod("convertPage"));
             TYPE_MAP.put(Slice.class, ArangoResultConverter.class.getMethod("convertPage"));
             TYPE_MAP.put(Set.class, ArangoResultConverter.class.getMethod("convertSet"));
-            TYPE_MAP.put(BaseDocument.class, ArangoResultConverter.class.getMethod("convertBaseDocument"));
-            TYPE_MAP.put(BaseEdgeDocument.class, ArangoResultConverter.class.getMethod("convertBaseEdgeDocument"));
             TYPE_MAP.put(ArangoCursor.class, ArangoResultConverter.class.getMethod("convertArangoCursor"));
             TYPE_MAP.put(GeoResult.class, ArangoResultConverter.class.getMethod("convertGeoResult"));
             TYPE_MAP.put(GeoResults.class, ArangoResultConverter.class.getMethod("convertGeoResults"));
@@ -114,16 +112,6 @@ public class ArangoResultConverter {
     }
     public Set convertSet() {
         return buildSet(result);
-    }
-
-    public BaseDocument convertBaseDocument() {
-        Object next = getNext(result);
-        return next == null ? null : new BaseDocument((Map<String, Object>) next);
-    }
-
-    public BaseEdgeDocument convertBaseEdgeDocument() {
-        Object next = getNext(result);
-        return next == null ? null : new BaseEdgeDocument((Map<String, Object>) next);
     }
 
     public ArangoCursor convertArangoCursor() {
