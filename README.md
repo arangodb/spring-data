@@ -46,6 +46,8 @@ Spring Data ArangoDB requires ArangoDB 3.1 or higher - which you can download [h
 </dependency>
 ```
 
+There is a demonstration app in the test.java.com.arangodb.springframework.example package, which contains common use cases
+and examples of how to use Spring Data ArangoDB's functionality.
 # Template
 
 ## Introduction
