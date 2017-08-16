@@ -97,7 +97,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         String array = disjunction.getArray().length() == 0 ? collectionName : disjunction.getArray();
         String predicate = disjunction.getPredicate().length() == 0 ? "" : " FILTER " + disjunction.getPredicate();
         String queryTemplate = "FOR e IN %s%s%s%s%s%s%s"; // collection predicate count sort limit pageable queryType
-        String count = tree.isCountProjection() ? ((tree.isDistinct() ? " COLLECT entity = e" : "")
+        String count = (tree.isCountProjection() || tree.isExistsProjection()) ? ((tree.isDistinct() ? " COLLECT entity = e" : "")
                 + " COLLECT WITH COUNT INTO length") : "";
         String limit = tree.isLimiting() ? String.format(" LIMIT %d", tree.getMaxResults()) : "";
         String pageable = accessor.getPageable() == null ? "" : String.format(" LIMIT %d, %d",
@@ -105,10 +105,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         String geoFields = String.format("%s[0], %s[1]", uniqueLocation, uniqueLocation);
         String distanceAdjusted = getGeoFields().isEmpty() ? "e" : String.format(
                 "MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields, getUniquePoint()[0], getUniquePoint()[1]);
-        String type = tree.isDelete() ? (" REMOVE e IN " + collectionName) :
-                (tree.isCountProjection() ? " RETURN length" : String.format(" RETURN %s", distanceAdjusted));
+        String type = tree.isDelete() ? (" REMOVE e IN " + collectionName)
+                : ((tree.isCountProjection() || tree.isExistsProjection()) ? " RETURN length"
+                        : String.format(" RETURN %s", distanceAdjusted));
         String sortString = buildSortString(sort);
-        if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()) {
+        if ((!this.geoFields.isEmpty() || isUnique != null && isUnique)
+                && !tree.isDelete() && !tree.isCountProjection() && !tree.isExistsProjection()) {
             String distanceSortKey = String.format(" SORT distance(%s, %f, %f)",
                     geoFields, getUniquePoint()[0], getUniquePoint()[1]);
             if (sortString.length() == 0) { sortString = distanceSortKey; }

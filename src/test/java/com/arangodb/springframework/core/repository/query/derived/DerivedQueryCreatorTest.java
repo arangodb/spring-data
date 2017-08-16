@@ -471,6 +471,13 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
     }
 
+    @Test
+    public void existsTest() {
+        repository.save(john);
+        assertTrue(repository.existsByName("John"));
+        assertTrue(!repository.existsByName("Bob"));
+    }
+
     private double convertAngleToDistance(int angle) {
         final int EARTH_RADIUS = 6371000;
         return 2 * Math.PI * EARTH_RADIUS * (angle / 360.0);

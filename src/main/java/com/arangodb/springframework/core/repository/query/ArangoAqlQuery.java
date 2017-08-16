@@ -57,6 +57,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	private final RepositoryMetadata metadata;
 	private ArangoParameterAccessor accessor;
 	private boolean isCountProjection = false;
+	private boolean isExistsProjection = false;
 	private final ProjectionFactory factory;
 
 	public ArangoAqlQuery(Class<?> domainClass, Method method, RepositoryMetadata metadata,
@@ -81,6 +82,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		if (query == null) {
 			PartTree tree = new PartTree(method.getName(), domainClass);
 			isCountProjection = tree.isCountProjection();
+			isExistsProjection = tree.isExistsProjection();
 			accessor = new ArangoParameterAccessor(new ArangoParameters(method), arguments);
 			options = accessor.getAqlQueryOptions();
 			if (Page.class.isAssignableFrom(method.getReturnType())) {
@@ -145,7 +147,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	}
 
 	private Class<?> getResultClass() {
-		if (isCountProjection) return Integer.class;
+		if (isCountProjection || isExistsProjection) return Integer.class;
 		if (RETURN_TYPES_USING_MAP.contains(method.getReturnType())) return Object.class;
 		return domainClass;
 	}
@@ -175,6 +177,10 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	}
 
 	private Object convertResult(ArangoCursor result) {
+		if (isExistsProjection) {
+			if (!result.hasNext()) return false;
+			return ((int) result.next()) > 0;
+		}
 		ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations, domainClass);
 		return resultConverter.convertResult(method.getReturnType());
 	}
