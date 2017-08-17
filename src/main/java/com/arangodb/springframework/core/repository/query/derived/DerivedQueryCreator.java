@@ -183,9 +183,16 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             Object caseAdjusted = ignoreArgumentCase(iterator.next(), shouldIgnoreCase);
             if (caseAdjusted.getClass() == Polygon.class) {
                 type = ArgumentProcessingResult.Type.POLYGON;
-                //Polygon polygon = (Polygon) caseAdjusted;
-                //polygon.forEach(p -> );
-
+                Polygon polygon = (Polygon) caseAdjusted;
+                List<List<Double>> points = new LinkedList<>();
+                polygon.forEach(p -> {
+                    List<Double> point = new LinkedList<>();
+                    point.add(p.getY());
+                    point.add(p.getX());
+                    points.add(point);
+                });
+                bindVars.put(Integer.toString(bindingCounter + bindings++), points);
+                break;
             } else if (caseAdjusted.getClass() == Ring.class) {
                 type = ArgumentProcessingResult.Type.RANGE;
                 Point point = ((Ring) caseAdjusted).getPoint();
@@ -439,7 +446,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                         bindingCounter + 2, ignorePropertyCase(part), ignorePropertyCase(part), bindingCounter + 3);
                 break;
             case POLYGON:
-                //TODO
+                clause = String.format("IS_IN_POLYGON(@%d, %s[0], %s[1])",
+                        bindingCounter, ignorePropertyCase(part), ignorePropertyCase(part));
                 break;
         }
         bindingCounter += bindings;

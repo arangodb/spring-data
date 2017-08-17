@@ -478,6 +478,34 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         assertTrue(!repository.existsByName("Bob"));
     }
 
+    @Test
+    public void polygonTest() {
+        int[][] locations = {
+                {11, 31},
+                {20, 20},
+                {20, 40},
+                {70, 30},
+                {40, 10},
+                {-10, -10},
+                {-10, 20},
+                {-10, 60},
+                {30, 50},
+                {10, 20},
+                {5, 30}
+        };
+        Customer[] customers = new Customer[11];
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        for (int i = 0; i < customers.length; ++i) {
+            customers[i] = new Customer("", "", 0);
+            customers[i].setLocation(locations[i]);
+            repository.save(customers[i]);
+            if (i < 3) { toBeRetrieved.add(customers[i]); }
+        }
+        Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10), new Point(30, 20));
+        List<Customer> retrieved = repository.findByLocationWithin(polygon);
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
     private double convertAngleToDistance(int angle) {
         final int EARTH_RADIUS = 6371000;
         return 2 * Math.PI * EARTH_RADIUS * (angle / 360.0);

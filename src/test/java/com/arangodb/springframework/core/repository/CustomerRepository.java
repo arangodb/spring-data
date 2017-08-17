@@ -99,6 +99,8 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	Collection<Customer> findByLocationWithinAndLocationWithinOrName(Point location, int distance, Ring ring, String name);
 
+	List<Customer> findByLocationWithin(Polygon polygon);
+
 	// ArrayList not supported, use List instead
 	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
 			String name1, Point location1, double distance, String name2, String surname1, String name3,
