@@ -84,6 +84,7 @@ public class CustomConversions {
 		toRegister.addAll(converters);
 		toRegister.add(CustomToStringConverter.INSTANCE);
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
+		toRegister.addAll(TimeStringConverters.getConvertersToRegister());
 		toRegister.addAll(JodaTimeStringConverters.getConvertersToRegister());
 
 		for (final Object c : toRegister) {

@@ -720,4 +720,24 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document.value4, is(entity.value4));
 	}
 
+	public static class Java8TimeTestEntity extends BasicTestEntity {
+		private java.time.Instant value1;
+		private java.time.LocalDate value2;
+		private java.time.LocalDateTime value3;
+	}
+
+	@Test
+	public void timeMapping() {
+		final Java8TimeTestEntity entity = new Java8TimeTestEntity();
+		entity.value1 = java.time.Instant.now();
+		entity.value2 = java.time.LocalDate.now();
+		entity.value3 = java.time.LocalDateTime.now();
+		template.insertDocument(entity);
+		final Java8TimeTestEntity document = template.getDocument(entity.getId(), Java8TimeTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value1, is(entity.value1));
+		assertThat(document.value2, is(entity.value2));
+		assertThat(document.value3, is(entity.value3));
+	}
+
 }
