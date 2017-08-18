@@ -199,8 +199,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getPropertyValue(final ArangoPersistentProperty property) {
-			return (T) convertIfNecessary(read(source.get(property.getFieldName()), property.getTypeInformation()),
-				property.getType());
+			TypeInformation typeInformation = property.getTypeInformation();
+			Class type = property.getType();
+			String fieldName = property.getFieldName();
+			return (T) convertIfNecessary(read(source.get(fieldName), typeInformation), type);
 		}
 
 	}
