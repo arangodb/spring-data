@@ -33,20 +33,17 @@ import java.util.regex.Pattern;
  */
 public class ArangoAqlQuery implements RepositoryQuery {
 
-	private static final Set<Class<?>> RETURN_TYPES_USING_MAP = new HashSet<>();
 	private static final Set<Class<?>> GEO_RETURN_TYPES = new HashSet<>();
+	private static final Set<Class<?>> DESERIALIZABLE_TYPES = new HashSet<>();
 
 	static {
-		RETURN_TYPES_USING_MAP.add(Map.class);
-		RETURN_TYPES_USING_MAP.add(BaseDocument.class);
-		RETURN_TYPES_USING_MAP.add(BaseEdgeDocument.class);
-		RETURN_TYPES_USING_MAP.add(GeoResult.class);
-		RETURN_TYPES_USING_MAP.add(GeoResults.class);
-		RETURN_TYPES_USING_MAP.add(GeoPage.class);
-
 		GEO_RETURN_TYPES.add(GeoResult.class);
 		GEO_RETURN_TYPES.add(GeoResults.class);
 		GEO_RETURN_TYPES.add(GeoPage.class);
+
+		DESERIALIZABLE_TYPES.add(Map.class);
+		DESERIALIZABLE_TYPES.add(BaseDocument.class);
+		DESERIALIZABLE_TYPES.add(BaseEdgeDocument.class);
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ArangoAqlQuery.class);
@@ -57,6 +54,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	private final RepositoryMetadata metadata;
 	private ArangoParameterAccessor accessor;
 	private boolean isCountProjection = false;
+	private boolean isExistsProjection = false;
 	private final ProjectionFactory factory;
 
 	public ArangoAqlQuery(Class<?> domainClass, Method method, RepositoryMetadata metadata,
@@ -81,6 +79,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		if (query == null) {
 			PartTree tree = new PartTree(method.getName(), domainClass);
 			isCountProjection = tree.isCountProjection();
+			isExistsProjection = tree.isExistsProjection();
 			accessor = new ArangoParameterAccessor(new ArangoParameters(method), arguments);
 			options = accessor.getAqlQueryOptions();
 			if (Page.class.isAssignableFrom(method.getReturnType())) {
@@ -145,8 +144,9 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	}
 
 	private Class<?> getResultClass() {
-		if (isCountProjection) return Integer.class;
-		if (RETURN_TYPES_USING_MAP.contains(method.getReturnType())) return Object.class;
+		if (isCountProjection || isExistsProjection) return Integer.class;
+		if (GEO_RETURN_TYPES.contains(method.getReturnType())) return Object.class;
+		if (DESERIALIZABLE_TYPES.contains(method.getReturnType())) return method.getReturnType();
 		return domainClass;
 	}
 
@@ -175,7 +175,10 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	}
 
 	private Object convertResult(ArangoCursor result) {
-		if (!result.hasNext()) return null;
+		if (isExistsProjection) {
+			if (!result.hasNext()) return false;
+			return ((int) result.next()) > 0;
+		}
 		ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations, domainClass);
 		return resultConverter.convertResult(method.getReturnType());
 	}

@@ -343,6 +343,32 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		}
 	}
 
+	public static class NestedReferenceTestEntity extends BasicTestEntity {
+		private NestedReferenceSubTestEntity sub;
+	}
+
+	public static class NestedReferenceSubTestEntity {
+		@Ref
+		private Collection<BasicTestEntity> entities;
+	}
+
+	@Test
+	public void testNestedRef() {
+		final NestedReferenceTestEntity o = new NestedReferenceTestEntity();
+		o.sub = new NestedReferenceSubTestEntity();
+		o.sub.entities = new ArrayList<>();
+		final BasicTestEntity e = new BasicTestEntity();
+		o.sub.entities.add(e);
+		template.insertDocument(e);
+		template.insertDocument(o);
+		final NestedReferenceTestEntity document = template.getDocument(o.id, NestedReferenceTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.sub, is(notNullValue()));
+		assertThat(document.sub.entities, is(notNullValue()));
+		assertThat(document.sub.entities.size(), is(1));
+		assertThat(document.sub.entities.iterator().next().id, is(e.id));
+	}
+
 	@Edge
 	public static class BasicEdgeTestEntity extends BasicTestEntity {
 		@From
@@ -638,12 +664,19 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		private final String value1;
 		private final boolean value2;
 		private final double value3;
+		private final long value4;
+		private final int value5;
+		private final String[] value6;
 
-		public ConstructorWithMultipleParamsTestEntity(final String value1, final boolean value2, final double value3) {
+		public ConstructorWithMultipleParamsTestEntity(final String value1, final boolean value2, final double value3,
+			final long value4, final int value5, final String[] value6) {
 			super();
 			this.value1 = value1;
 			this.value2 = value2;
 			this.value3 = value3;
+			this.value4 = value4;
+			this.value5 = value5;
+			this.value6 = value6;
 		}
 
 	}
@@ -651,10 +684,56 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void constructorWithMultipleParams() {
 		final ConstructorWithMultipleParamsTestEntity entity = new ConstructorWithMultipleParamsTestEntity("test", true,
-				3.5);
+				3.5, 13L, 69, new String[] { "a", "b" });
 		template.insertDocument(entity);
 		final ConstructorWithMultipleParamsTestEntity document = template.getDocument(entity.getId(),
 			ConstructorWithMultipleParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value1, is(entity.value1));
+		assertThat(document.value2, is(entity.value2));
+		assertThat(document.value3, is(entity.value3));
+		assertThat(document.value4, is(entity.value4));
+		assertThat(document.value5, is(entity.value5));
+		assertThat(document.value6, is(entity.value6));
+	}
+
+	public static class JodaTestEntity extends BasicTestEntity {
+		private org.joda.time.DateTime value1;
+		private org.joda.time.Instant value2;
+		private org.joda.time.LocalDate value3;
+		private org.joda.time.LocalDateTime value4;
+	}
+
+	@Test
+	public void jodaMapping() {
+		final JodaTestEntity entity = new JodaTestEntity();
+		entity.value1 = org.joda.time.DateTime.now();
+		entity.value2 = org.joda.time.Instant.now();
+		entity.value3 = org.joda.time.LocalDate.now();
+		entity.value4 = org.joda.time.LocalDateTime.now();
+		template.insertDocument(entity);
+		final JodaTestEntity document = template.getDocument(entity.getId(), JodaTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value1, is(entity.value1));
+		assertThat(document.value2, is(entity.value2));
+		assertThat(document.value3, is(entity.value3));
+		assertThat(document.value4, is(entity.value4));
+	}
+
+	public static class Java8TimeTestEntity extends BasicTestEntity {
+		private java.time.Instant value1;
+		private java.time.LocalDate value2;
+		private java.time.LocalDateTime value3;
+	}
+
+	@Test
+	public void timeMapping() {
+		final Java8TimeTestEntity entity = new Java8TimeTestEntity();
+		entity.value1 = java.time.Instant.now();
+		entity.value2 = java.time.LocalDate.now();
+		entity.value3 = java.time.LocalDateTime.now();
+		template.insertDocument(entity);
+		final Java8TimeTestEntity document = template.getDocument(entity.getId(), Java8TimeTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value1, is(entity.value1));
 		assertThat(document.value2, is(entity.value2));
