@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.*;
-import org.springframework.data.mapping.PersistentProperty;
-import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
@@ -49,6 +47,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     private Boolean isUnique = null;
     private int bindingCounter = 0;
     private int varsUsed = 0;
+    private boolean checkUnique = false;
 
     public DerivedQueryCreator(ArangoMappingContext context, Class<?> domainClass, PartTree tree,
             ArangoParameterAccessor accessor, Map<String, Object> bindVars, List<String> geoFields, boolean useFunctions) {
@@ -325,6 +324,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     }
 
     private void checkUniquePoint(Point point) {
+        if (!checkUnique) return;
         boolean isStillUnique = (uniquePoint == null || uniquePoint.equals(point));
         if (!isStillUnique) isUnique = false;
         if (!geoFields.isEmpty()) {
@@ -351,6 +351,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     }
 
     private void checkUniqueLocation(Part part) {
+        if (!checkUnique) return;
         isUnique = isUnique == null ? true : isUnique;
         isUnique = (uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part))) ? isUnique : false;
         uniqueLocation = ignorePropertyCase(part);
@@ -365,6 +366,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         int arguments = 0;
         Boolean borderStatus = null;
         boolean ignoreBindVars = false;
+        checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
         Class<?> type = part.getProperty().getLeafProperty().getOwningType().getType();
         ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(type);
         String collectionName = persistentEntity == null? this.collectionName : persistentEntity.getCollection();
@@ -475,9 +477,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 arguments = 1;
                 break;
             case NEAR:
-                if (part.getProperty().toDotPath().split(".").length <= 1) {
-                    checkUniqueLocation(part);
-                }
+                checkUniqueLocation(part);
                 if (useFunctions) {
                     isArray = true;
                     clause = String.format("NEAR(%s, @%d, @%d, COUNT(%s), '_distance')", collectionName,
@@ -489,9 +489,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 arguments = 1;
                 break;
             case WITHIN:
-                if (part.getProperty().toDotPath().split(".").length <= 1) {
-                    checkUniqueLocation(part);
-                }
+                checkUniqueLocation(part);
                 if (useFunctions) {
                     isArray = true;
                     clause = String.format("WITHIN(%s, @%d, @%d, @%d, '_distance')",
@@ -511,13 +509,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         }
         if (!geoFields.isEmpty()) { Assert.isTrue(isUnique == null || isUnique,
                 "Distance is ambiguous for multiple locations"); }
-        ArgumentProcessingResult result = bindArguments(iterator, shouldIgnoreCase(part), arguments, borderStatus, ignoreBindVars);
+        ArgumentProcessingResult result = bindArguments(iterator, shouldIgnoreCase(part), arguments, borderStatus,
+                ignoreBindVars);
         int bindings = result.bindings;
         switch (result.type) {
             case RANGE:
-                if (part.getProperty().toDotPath().split(".").length <= 1) {
-                    checkUniqueLocation(part);
-                }
+                checkUniqueLocation(part);
                 if (useFunctions) {
                     isArray = true;
                     clause = String.format(
