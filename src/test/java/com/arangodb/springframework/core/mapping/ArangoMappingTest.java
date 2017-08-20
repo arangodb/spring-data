@@ -697,4 +697,47 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document.value6, is(entity.value6));
 	}
 
+	public static class JodaTestEntity extends BasicTestEntity {
+		private org.joda.time.DateTime value1;
+		private org.joda.time.Instant value2;
+		private org.joda.time.LocalDate value3;
+		private org.joda.time.LocalDateTime value4;
+	}
+
+	@Test
+	public void jodaMapping() {
+		final JodaTestEntity entity = new JodaTestEntity();
+		entity.value1 = org.joda.time.DateTime.now();
+		entity.value2 = org.joda.time.Instant.now();
+		entity.value3 = org.joda.time.LocalDate.now();
+		entity.value4 = org.joda.time.LocalDateTime.now();
+		template.insertDocument(entity);
+		final JodaTestEntity document = template.getDocument(entity.getId(), JodaTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value1, is(entity.value1));
+		assertThat(document.value2, is(entity.value2));
+		assertThat(document.value3, is(entity.value3));
+		assertThat(document.value4, is(entity.value4));
+	}
+
+	public static class Java8TimeTestEntity extends BasicTestEntity {
+		private java.time.Instant value1;
+		private java.time.LocalDate value2;
+		private java.time.LocalDateTime value3;
+	}
+
+	@Test
+	public void timeMapping() {
+		final Java8TimeTestEntity entity = new Java8TimeTestEntity();
+		entity.value1 = java.time.Instant.now();
+		entity.value2 = java.time.LocalDate.now();
+		entity.value3 = java.time.LocalDateTime.now();
+		template.insertDocument(entity);
+		final Java8TimeTestEntity document = template.getDocument(entity.getId(), Java8TimeTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value1, is(entity.value1));
+		assertThat(document.value2, is(entity.value2));
+		assertThat(document.value3, is(entity.value3));
+	}
+
 }

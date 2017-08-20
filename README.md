@@ -159,7 +159,12 @@ The method return type for multiple results can additionally be `ArangoCursor<Ty
 
 ## Query Methods
 
-Queries using ArangoDB Query Language (AQL) can be supplied with the @Query annotation on methods. AqlQueryOptions can also be passed to the driver.
+Queries using ArangoDB Query Language (AQL) can be supplied with the @Query annotation on methods. AqlQueryOptions can also be passed to the driver, as an argument
+anywhere in the method signature.
+
+There are three ways of passing bind parameters to the query in the query annotation.
+
+Using number matching, arguments will be substituted into the query in the order they are passed to the query method, ignoring any AqlQueryOptions.
 
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
@@ -170,29 +175,51 @@ public interface MyRepository extends Repository<Customer, String>{
 }
 ```
 
+With the @Param annotation, the argument will be placed in the query at the place corresponding to the value passed to
+the @Param annotation.
+
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
-  @Query("FOR c IN customers FILTER c.name == @name RETURN c")
-  ArangoCursor<Customer> query(@Param("name") String name);
+  @Query("FOR c IN customers FILTER c.name == @name AND c.surname == @surname RETURN c")
+  ArangoCursor<Customer> query(@Param("name") String name, @Param("surname") String surname);
 
 }
 ```
 
-The Bind Parameters will be substituted by the actual method parameter. In addition you can use a parameter bindVars from type Map<String, Object> as your Bind Parameters. You can then fill the map with any parameter used in the query. (see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information about Bind Parameters). Parameters with the same name will override those in the bindVars.
+ In addition you can use a parameter bindVars 
+of type Map<String, Object> as your Bind Parameters. You can then fill the map with any parameter used in the query. 
+(see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information 
+about Bind Parameters).
 
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
-  @Query("FOR c IN customers FILTER c.name == @name RETURN c")
+  @Query("FOR c IN customers FILTER c.name == @name AND c.surname = @surname RETURN c")
   ArangoCursor<Customer> query(@BindVars Map<String, Object> bindVars);
+
+}
+```
+
+A mixture of any of these methods can be used. Parameters with the same name from an @Param annotation will override 
+those in the bindVars.
+
+``` java
+public interface MyRepository extends Repository<Customer, String>{
+
+  @Query("FOR c IN customers FILTER c.name == @name AND c.surname = @surname RETURN c")
+  ArangoCursor<Customer> query(@BindVars Map<String, Object> bindVars, @Param("name") String name);
 
 }
 ```
 
 ## Derived Methods
 
-Spring Data ArangoDB supports Queries derived from methods names by splitting it into its semantic parts and converting into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `stream..By`, `count..By`, `exists..By`, `delete..By`, `remove..By` from the method and parse the rest. The By acts as a separator to indicate the start of the criteria for the query to be build. You can define conditions on entity properties and concatenate them with `And` and `Or`.
+Spring Data ArangoDB supports Queries derived from methods names by splitting it into its semantic parts and converting 
+into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `stream..By`, `count..By`, 
+`exists..By`, `delete..By`, `remove..By` from the method and parse the rest. The By acts as a separator to indicate the 
+start of the criteria for the query to be build. You can define conditions on entity properties and concatenate them 
+with `And` and `Or`.
 
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
@@ -230,6 +257,11 @@ public interface MyRepository extends Repository<Customer, String> {
 
 }
 ```
+
+###Geospatial queries
+
+To use a geospatial query on a collection, a geo index must exist on that collection. A geo index can be created on a 
+field which is a two element array, corresponding to latitude and longitude coordinates.
 
 ## Property expression
 
