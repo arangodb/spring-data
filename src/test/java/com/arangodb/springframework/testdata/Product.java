@@ -20,16 +20,14 @@
 
 package com.arangodb.springframework.testdata;
 
+import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
-
-import com.arangodb.springframework.annotation.Field;
-import com.arangodb.springframework.annotation.Key;
-import com.arangodb.springframework.annotation.Rev;
 
 /**
  * @author Mark Vollmary
  *
  */
+@GeoIndex(fields = {"location"})
 public class Product {
 
 	@Id
@@ -41,6 +39,7 @@ public class Product {
 	private String name;
 	@Field("description")
 	private String desc;
+	private double[] location;
 
 	public Product() {
 		super();
@@ -49,6 +48,11 @@ public class Product {
 	public Product(final String name) {
 		super();
 		this.name = name;
+	}
+
+	public Product(final String name, double[] location) {
+		this(name);
+		this.location = location;
 	}
 
 	public String getId() {

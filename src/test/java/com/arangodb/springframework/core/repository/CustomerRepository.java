@@ -101,7 +101,6 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	List<Customer> findByLocationWithin(Polygon polygon);
 
-	// ArrayList not supported, use List instead
 	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
 			String name1, Point location1, double distance, String name2, String surname1, String name3,
 			Point location2, String surname2, Point location3, Range<Double> distanceRange);
@@ -110,7 +109,7 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	boolean existsByName(String name);
 
-	Customer[] findByAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
+	Customer[] findByNestedCustomerAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
 
 	// SORT
 
@@ -130,4 +129,14 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(
 			String name, String surname, Point location1, Distance distance, Point location2, Range<Distance> distanceRange);
+
+	// NESTED PROPERTIES
+
+	List<Customer> findByNestedCustomerName(String name);
+
+	// REFERENCES
+
+	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(Point location, double distance);
+
+	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsNameLike(String name);
 }

@@ -36,7 +36,7 @@ public class ArangoExampleConverter<T> {
             String fullPath = path + (path.length() == 0 ? "" : ".") + property.getFieldName();
             String fullJavaPath = javaPath + (javaPath.length() == 0 ? "" : ".") + property.getName();
             Object value = accessor.getProperty(property);
-            if (property.isEntity() && value != null) {
+            if (property.isEntity() && value != null) {//ref?
                 ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(property.getType());
                 traversePropertyTree(example, predicateBuilder, bindVars, fullPath, fullJavaPath, persistentEntity, value);
             } else if (!example.getMatcher().isIgnoredPath(fullJavaPath) && (value != null

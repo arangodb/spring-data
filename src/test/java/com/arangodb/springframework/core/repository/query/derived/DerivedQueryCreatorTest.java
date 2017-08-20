@@ -5,6 +5,9 @@ import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest
 
 import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.Product;
+import com.arangodb.springframework.testdata.ShoppingCart;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.data.domain.*;
@@ -335,12 +338,13 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         List<Customer> toBeRetrieved = new LinkedList<>();
         Customer customer1 = new Customer("", "", 0);
         customer1.setStringList(stringList);
+        customer1.setNestedCustomer(new Customer("nested", "", 0));
         toBeRetrieved.add(customer1);
         repository.save(toBeRetrieved);
         Customer customer2 = new Customer("", "", 0);
         customer2.setStringList(stringList3);
         repository.save(customer2);
-        Customer[] retrieved = repository.findByAliveExistsAndStringListAllIgnoreCase(stringList2);
+        Customer[] retrieved = repository.findByNestedCustomerAliveExistsAndStringListAllIgnoreCase(stringList2);
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 
@@ -503,6 +507,114 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         }
         Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10), new Point(30, 20));
         List<Customer> retrieved = repository.findByLocationWithin(polygon);
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void nestedPropertiesTest() {
+        john.setNestedCustomer(bob);
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        toBeRetrieved.add(john);
+        repository.save(toBeRetrieved);
+        repository.save(bob);
+        List<Customer> retrieved = repository.findByNestedCustomerName("Bob");
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void referenceTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        Customer customer1 = new Customer("", "", 0);
+        Customer customer11 = new Customer("", "", 0);
+        ShoppingCart cart11 = new ShoppingCart();
+        Product product1 = new Product("asdf1");
+        template.insertDocument(product1);
+        Product product2 = new Product("2");
+        template.insertDocument(product2);
+        cart11.setProducts(Arrays.asList(product1, product2));
+        template.insertDocument(cart11);
+        customer11.setShoppingCart(cart11);
+        template.insertDocument(customer11);
+        Customer customer12 = new Customer("", "", 0);
+        ShoppingCart cart12 = new ShoppingCart();
+        Product product3 = new Product("3");
+        template.insertDocument(product3);
+        Product product4 = new Product("4");
+        template.insertDocument(product4);
+        cart12.setProducts(Arrays.asList(product3, product4));
+        template.insertDocument(cart12);
+        customer12.setShoppingCart(cart12);
+        template.insertDocument(customer12);
+        Customer nested1 = new Customer("", "", 0);
+        nested1.setNestedCustomer(customer11);
+        template.insertDocument(nested1);
+        Customer nested2 = new Customer("", "", 0);
+        nested2.setNestedCustomer(customer12);
+        template.insertDocument(nested2);
+        customer1.setNestedCustomers(Arrays.asList(nested1, nested2));
+        repository.save(customer1);
+        toBeRetrieved.add(customer1);
+        Customer customer2 = new Customer("", "", 0);
+        Customer customer21 = new Customer("", "", 0);
+        ShoppingCart cart21 = new ShoppingCart();
+        cart21.setProducts(Arrays.asList(product2, product3, product4));
+        template.insertDocument(cart21);
+        Customer nested3 = new Customer("", "", 0);
+        nested3.setNestedCustomer(customer21);
+        template.insertDocument(nested3);
+        customer2.setNestedCustomers(Arrays.asList(nested2, nested3));
+        repository.save(customer2);
+        repository.save(toBeRetrieved);
+        List<Customer> retrieved = repository.findByNestedCustomersNestedCustomerShoppingCartProductsNameLike("%1%");
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void referenceGeospatialTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        Customer customer1 = new Customer("", "", 0);
+        Customer customer11 = new Customer("", "", 0);
+        ShoppingCart cart11 = new ShoppingCart();
+        Product product1 = new Product("asdf1", new double[] {10, 12});
+        template.insertDocument(product1);
+        Product product2 = new Product("2", new double[] {30, 42});
+        template.insertDocument(product2);
+        cart11.setProducts(Arrays.asList(product1, product2));
+        template.insertDocument(cart11);
+        customer11.setShoppingCart(cart11);
+        template.insertDocument(customer11);
+        Customer customer12 = new Customer("", "", 0);
+        ShoppingCart cart12 = new ShoppingCart();
+        Product product3 = new Product("3", new double[] {40, 62});
+        template.insertDocument(product3);
+        Product product4 = new Product("4", new double[] {50, 52});
+        template.insertDocument(product4);
+        cart12.setProducts(Arrays.asList(product3, product4));
+        template.insertDocument(cart12);
+        customer12.setShoppingCart(cart12);
+        template.insertDocument(customer12);
+        Customer nested1 = new Customer("", "", 0);
+        nested1.setNestedCustomer(customer11);
+        template.insertDocument(nested1);
+        Customer nested2 = new Customer("", "", 0);
+        nested2.setNestedCustomer(customer12);
+        template.insertDocument(nested2);
+        customer1.setNestedCustomers(Arrays.asList(nested1, nested2));
+        repository.save(customer1);
+        toBeRetrieved.add(customer1);
+        Customer customer2 = new Customer("", "", 0);
+        Customer customer21 = new Customer("", "", 0);
+        ShoppingCart cart21 = new ShoppingCart();
+        cart21.setProducts(Arrays.asList(product2, product3, product4));
+        template.insertDocument(cart21);
+        Customer nested3 = new Customer("", "", 0);
+        nested3.setNestedCustomer(customer21);
+        template.insertDocument(nested3);
+        customer2.setNestedCustomers(Arrays.asList(nested2, nested3));
+        repository.save(customer2);
+        repository.save(toBeRetrieved);
+        List<Customer> retrieved = repository.findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(
+                new Point(1, 2), convertAngleToDistance(25));
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 

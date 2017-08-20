@@ -51,6 +51,7 @@ public class Customer {
 	private String[] stringArray;
 	private Iterable<String> stringList;
 	private Customer nestedCustomer;
+	private Iterable<Customer> nestedCustomers;
 
 	@Ref
 	private ShoppingCart shoppingCart;
@@ -197,6 +198,10 @@ public class Customer {
 	public void setNestedCustomer(Customer nestedCustomer) {
 		this.nestedCustomer = nestedCustomer;
 	}
+
+	public Iterable<Customer> getNestedCustomers() { return nestedCustomers; }
+
+	public void setNestedCustomers(Iterable<Customer> nestedCustomers) { this.nestedCustomers = nestedCustomers; }
 
 	@Override
 	public boolean equals(final Object o) {
