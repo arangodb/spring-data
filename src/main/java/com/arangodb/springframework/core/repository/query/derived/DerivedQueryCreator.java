@@ -54,7 +54,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             ArangoParameterAccessor accessor, Map<String, Object> bindVars, List<String> geoFields, boolean useFunctions) {
         super(tree, accessor);
         this.context = context;
-        this.collectionName = context.getPersistentEntity(domainClass).getCollection();
+        String collectionName = context.getPersistentEntity(domainClass).getCollection();
+        if (collectionName.split("-").length > 1) { collectionName = "`" + collectionName + "`"; }
+        this.collectionName = collectionName;
         this.tree = tree;
         this.bindVars = bindVars;
         this.accessor = accessor;
@@ -176,6 +178,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                     String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
                     String entity = "e" + Integer.toString(++varsUsed);
                     String collection = context.getPersistentEntity(property.getComponentType()).getCollection();
+                    if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
                     String name = simpleProperties.toString() + property.getFieldName();
                     simpleProperties = new StringBuilder();
                     String iteration = String.format(TEMPLATE, entity, collection, entity, prevEntity, name);
@@ -201,6 +204,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                     String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
                     String entity = "e" + Integer.toString(++varsUsed);
                     String collection = context.getPersistentEntity(property.getType()).getCollection();
+                    if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
                     String name = simpleProperties.toString() + property.getFieldName();
                     simpleProperties = new StringBuilder();
                     String iteration = String.format(TEMPLATE, entity, collection, entity, prevEntity, name);
@@ -364,6 +368,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         Class<?> type = part.getProperty().getLeafProperty().getOwningType().getType();
         ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(type);
         String collectionName = persistentEntity == null? this.collectionName : persistentEntity.getCollection();
+        if (collectionName.split("-").length > 1) { collectionName = "`" + collectionName + "`"; }
         //TODO possibly refactor in the future if the complexity of this block does not increase
         switch (part.getType()) {
             case SIMPLE_PROPERTY:
@@ -470,7 +475,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 arguments = 1;
                 break;
             case NEAR:
-                if (part.getProperty().toDotPath().split(".").length == 0) {
+                if (part.getProperty().toDotPath().split(".").length <= 1) {
                     checkUniqueLocation(part);
                 }
                 if (useFunctions) {
@@ -484,7 +489,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 arguments = 1;
                 break;
             case WITHIN:
-                if (part.getProperty().toDotPath().split(".").length == 0) {
+                if (part.getProperty().toDotPath().split(".").length <= 1) {
                     checkUniqueLocation(part);
                 }
                 if (useFunctions) {
@@ -510,7 +515,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         int bindings = result.bindings;
         switch (result.type) {
             case RANGE:
-                if (part.getProperty().toDotPath().split(".").length == 0) {
+                if (part.getProperty().toDotPath().split(".").length <= 1) {
                     checkUniqueLocation(part);
                 }
                 if (useFunctions) {

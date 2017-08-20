@@ -32,7 +32,7 @@ import com.arangodb.springframework.annotation.Ref;
  * @author Mark Vollmary
  *
  */
-@Document("shoppingCart")
+@Document("shopping-cart")
 public class ShoppingCart {
 
 	@Id
