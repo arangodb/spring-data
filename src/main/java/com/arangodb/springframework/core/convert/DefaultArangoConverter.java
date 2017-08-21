@@ -165,7 +165,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Optional<? extends ArangoPersistentEntity<?>> persistentEntity) {
 		final ArangoPersistentEntity<?> entity = persistentEntity.orElseThrow(
 			() -> new MappingException("No mapping metadata found for type " + type.getType().getName()));
-
 		final EntityInstantiator instantiatorFor = instantiators.getInstantiatorFor(entity);
 		final ParameterValueProvider<ArangoPersistentProperty> provider = getParameterProvider(entity, source);
 		final Object instance = instantiatorFor.createInstance(entity, provider);
@@ -200,8 +199,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getPropertyValue(final ArangoPersistentProperty property) {
-			return (T) convertIfNecessary(read(source.get(property.getFieldName()), property.getTypeInformation()),
-				property.getType());
+			TypeInformation typeInformation = property.getTypeInformation();
+			Class type = property.getType();
+			String fieldName = property.getFieldName();
+			return (T) convertIfNecessary(read(source.get(fieldName), typeInformation), type);
 		}
 
 	}

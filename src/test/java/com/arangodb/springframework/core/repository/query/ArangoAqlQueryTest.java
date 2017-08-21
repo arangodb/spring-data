@@ -1,5 +1,6 @@
 package com.arangodb.springframework.core.repository.query;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDBException;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
@@ -10,11 +11,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by F625633 on 12/07/2017.
@@ -55,8 +55,8 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void findOneByIdAqlParamNameClashTest() {
 		repository.save(customers);
-		Customer retrieved = repository.findOneByIdAqlParamNameClash(john.getId(), john.getName());
-		assertEquals(john, retrieved);
+		ArangoCursor<Customer> retrieved = repository.findOneByIdAqlParamNameClash(john.getId(), john.getName());
+		assertEquals(john, retrieved.next());
 	}
 
 	@Test
@@ -153,5 +153,16 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.save(customers);
 		Customer retrieved = repository.findOneByIdInNamedCollectionAqlRejected(john.getId().split("/")[0], john.getId());
 		assertEquals(john, retrieved);
+	}
+
+	@Test
+	public void findManyBySurnameTest() {
+		List<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(new Customer("James", "Smith", 35));
+		toBeRetrieved.add(new Customer("Matt", "Smith", 34));
+		repository.save(toBeRetrieved);
+		List<Customer> retrieved = repository.findManyBySurname("Smith");
+		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+
 	}
 }

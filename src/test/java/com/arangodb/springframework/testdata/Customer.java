@@ -21,6 +21,7 @@
 package com.arangodb.springframework.testdata;
 
 import java.util.Collection;
+import java.util.List;
 
 import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
@@ -44,7 +45,8 @@ public class Customer {
 	private Address address;
 
 	private boolean alive;
-	private int[] location = new int[2];
+	@GeoIndexed
+	private int[] location;
 	private Iterable<Integer> integerList;
 	private String[] stringArray;
 	private Iterable<String> stringList;
@@ -55,9 +57,7 @@ public class Customer {
 	@Relations(edge = Owns.class)
 	private Collection<Product> owns;
 
-	public Customer() {
-		super();
-	}
+	public Customer() { super(); }
 
 	public Customer(final String name, final String surname, final int age) {
 		super();

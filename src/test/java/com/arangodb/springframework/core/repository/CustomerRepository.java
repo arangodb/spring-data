@@ -1,15 +1,16 @@
 package com.arangodb.springframework.core.repository;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Query;
-import com.arangodb.springframework.core.repository.query.derived.Disjunction;
-import com.arangodb.springframework.core.repository.query.derived.geo.Range;
+import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.*;
 
@@ -30,7 +31,7 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 	Optional<Customer> findOneByIdAqlPotentialNameClash(@Param("0") String id);
 
 	@Query("FOR c IN customer FILTER c._id == @0 AND c.name == @0 RETURN c")
-	Customer findOneByIdAqlParamNameClash(String id, @Param("0") String name);
+	ArangoCursor<Customer> findOneByIdAqlParamNameClash(String id, @Param("0") String name);
 
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
 	Customer findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map bindVars);
@@ -63,13 +64,18 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 	@Query("FOR c IN @collection FILTER c._id == @1 RETURN c")
 	Customer findOneByIdInNamedCollectionAqlRejected(@Param("collection") String collection, String id);
 
+	@Query("FOR c in customer FILTER c.surname == @0 RETURN c")
+	List<Customer> findManyBySurname(String surname);
+
 	Set<Customer> findDistinctByNameAfter(String name);
 
 	List<Customer> findByNameNotIgnoreCaseAndAgeLessThanIgnoreCaseOrderByNameDesc(String name, int age);
 
-	Iterable<Customer> findTop3ByAgeInAndStringArrayIgnoreCaseOrNameNotInAndIntegerListIgnoreCaseOrderByAgeAscNameDescAllIgnoreCase(int[] ages, String[] stringArray, String[] names, List<Integer> integerList);
+	Iterable<Customer> findTop3ByAgeInAndStringArrayIgnoreCaseOrNameNotInAndIntegerListIgnoreCaseOrderByAgeAscNameDescAllIgnoreCase(
+			int[] ages, String[] stringArray, String[] names, List<Integer> integerList);
 
-	Customer[] findDistinctByAgeGreaterThanEqualOrStringArrayAndNameBeforeOrIntegerListOrderByNameAscAgeAscAllIgnoreCase(int age, String[] stringArray, String name, List<Integer> integerList);
+	Customer[] findDistinctByAgeGreaterThanEqualOrStringArrayAndNameBeforeOrIntegerListOrderByNameAscAgeAscAllIgnoreCase(
+			int age, String[] stringArray, String name, List<Integer> integerList);
 
 	Collection<Customer> findTop2DistinctByStringArrayContainingIgnoreCaseOrIntegerListNotNullIgnoreCaseOrderByNameAsc(String string);
 
@@ -87,15 +93,22 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	List<Customer> findByLocationWithinAndName(Point location, Range<Double> distanceRange, String name);
 
-	Iterable<Customer> findByLocationWithinOrNameAndLocationNear(Point location, Distance distance, String name, Point location2);
+	Iterable<Customer> findByLocationWithinOrNameAndLocationNear(Circle circle, String name, Point location2);
 
-	Collection<Customer> findByLocationWithinAndLocationWithinOrName(Point location, int distance, Point location2, Range distanceRange, String name);
+	List<Customer> findByLocationWithin(Box box);
+
+	Collection<Customer> findByLocationWithinAndLocationWithinOrName(Point location, int distance, Ring ring, String name);
+
+	List<Customer> findByLocationWithin(Polygon polygon);
 
 	// ArrayList not supported, use List instead
 	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
-			String name1, Point location1, double distance, String name2, String surname1, String name3, Point location2, String surname2, Point location3, Range<Double> distanceRange);
+			String name1, Point location1, double distance, String name2, String surname1, String name3,
+			Point location2, String surname2, Point location3, Range<Double> distanceRange);
 
 	// EXISTS
+
+	boolean existsByName(String name);
 
 	Customer[] findByAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
 
@@ -115,5 +128,6 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	GeoPage<Customer> findByLocationNear(Point location, Pageable pageable);
 
-	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(String name, String surname, Point location1, double distance, Point location2, Range distanceRange);
+	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(
+			String name, String surname, Point location1, Distance distance, Point location2, Range<Distance> distanceRange);
 }

@@ -455,7 +455,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		try {
 			final DBEntity doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
 				DBEntity.class, options);
-			return fromDBEntity(entityClass, doc);
+			T t = fromDBEntity(entityClass, doc);
+			return t;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
