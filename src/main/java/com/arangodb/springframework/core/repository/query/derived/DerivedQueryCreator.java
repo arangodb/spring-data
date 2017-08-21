@@ -96,7 +96,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
     protected String complete(ConjunctionBuilder criteria, Sort sort) {
         if (tree.isDistinct() && !tree.isCountProjection()) LOGGER.debug(
                 "Use of 'Distinct' is meaningful only in count queries");
-        disjunctionBuilder.add(criteria.build());
+        if (criteria != null) { disjunctionBuilder.add(criteria.build()); }
         Disjunction disjunction = disjunctionBuilder.build();
         String array = disjunction.getArray().length() == 0 ? collectionName : disjunction.getArray();
         String predicate = disjunction.getPredicate().length() == 0 ? "" : " FILTER " + disjunction.getPredicate();
