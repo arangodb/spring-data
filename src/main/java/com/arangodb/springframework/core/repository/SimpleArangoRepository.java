@@ -34,20 +34,20 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 		this.exampleConverter = new ArangoExampleConverter((ArangoMappingContext) arangoOperations.getConverter().getMappingContext());
 	}
 
+	// TODO refactor once template.upsert() is implemented
 	@Override public <S extends T> S save(S entity) {
-		try { arangoOperations.insertDocument(entity); }
-		catch (Exception e) {
-			DBEntity dbEntity = new DBDocumentEntity();
-			arangoOperations.getConverter().write(entity, dbEntity);
-			arangoOperations.updateDocument((String) dbEntity.get("_id"), entity);
-		}
+		DBEntity dbEntity = new DBDocumentEntity();
+		arangoOperations.getConverter().write(entity, dbEntity);
+		String id = (String) dbEntity.get("_id");
+		if (id == null || !exists(id)) { entity = arangoOperations.insertDocument(entity).getNew(); }
+		else { entity = arangoOperations.updateDocument(id, entity).getNew(); }
 		return entity;
 	}
 
+	// TODO refactor once template.upsert() is implemented
 	@Override public <S extends T> Iterable<S> save(Iterable<S> entities) {
-		Collection<Object> entityCollection = new ArrayList<>();
-		entities.forEach(entityCollection::add);
-		arangoOperations.insertDocuments(entityCollection, this.domainClass);
+		Collection<S> newEntities = new LinkedList<>();
+		if (entities != null) { entities.forEach(e -> newEntities.add(save(e))); }
 		return entities;
 	}
 
