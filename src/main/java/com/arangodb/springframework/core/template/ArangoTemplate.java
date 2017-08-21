@@ -84,6 +84,7 @@ import com.arangodb.util.MapBuilder;
  */
 public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
+	private ArangoDBVersion version;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final ArangoConverter converter;
 	private final ArangoDB arango;
@@ -109,6 +110,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		this.converter = converter;
 		this.exceptionTranslator = exceptionTranslator;
 		collectionCache = new HashMap<>();
+		version = null;
 	}
 
 	private ArangoDatabase db() {
@@ -297,7 +299,10 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public ArangoDBVersion getVersion() throws DataAccessException {
 		try {
-			return arango.getVersion();
+			if (version == null) {
+				version = arango.getVersion();
+			}
+			return version;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -455,7 +460,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		try {
 			final DBEntity doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
 				DBEntity.class, options);
-			T t = fromDBEntity(entityClass, doc);
+			final T t = fromDBEntity(entityClass, doc);
 			return t;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
