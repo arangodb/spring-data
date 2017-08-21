@@ -199,10 +199,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getPropertyValue(final ArangoPersistentProperty property) {
-			TypeInformation typeInformation = property.getTypeInformation();
-			Class type = property.getType();
-			String fieldName = property.getFieldName();
-			return (T) convertIfNecessary(read(source.get(fieldName), typeInformation), type);
+			final Optional<Object> referenceOrRelation = readReferenceOrRelation(source.get("_id"),
+				source.get(property.getFieldName()), property);
+			return (T) referenceOrRelation.orElseGet(() -> convertIfNecessary(
+				read(source.get(property.getFieldName()), property.getTypeInformation()), property.getType()));
 		}
 
 	}
@@ -210,6 +210,15 @@ public class DefaultArangoConverter implements ArangoConverter {
 	private void readProperty(
 		final Object parentId,
 		final ConvertingPropertyAccessor accessor,
+		final Object source,
+		final ArangoPersistentProperty property) {
+		final Optional<Object> referenceOrRelation = readReferenceOrRelation(parentId, source, property);
+		accessor.setProperty(property,
+			referenceOrRelation.orElseGet(() -> (read(source, property.getTypeInformation()))));
+	}
+
+	private Optional<Object> readReferenceOrRelation(
+		final Object parentId,
 		final Object source,
 		final ArangoPersistentProperty property) {
 		Optional<Object> tmp = Optional.empty();
@@ -230,7 +239,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 				break;
 			}
 		}
-		accessor.setProperty(property, tmp.orElse(read(source, property.getTypeInformation())));
+		return tmp;
 	}
 
 	@SuppressWarnings("unchecked")

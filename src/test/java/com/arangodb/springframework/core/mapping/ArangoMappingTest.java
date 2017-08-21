@@ -697,6 +697,293 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document.value6, is(entity.value6));
 	}
 
+	public static class ConstructorWithRefParamsTestEntity extends BasicTestEntity {
+		@Ref
+		private final BasicTestEntity value1;
+		@Ref
+		private final Collection<BasicTestEntity> value2;
+
+		public ConstructorWithRefParamsTestEntity(final BasicTestEntity value1,
+			final Collection<BasicTestEntity> value2) {
+			super();
+			this.value1 = value1;
+			this.value2 = value2;
+		}
+	}
+
+	@Test
+	public void constructorWithRefParams() {
+		final BasicTestEntity value1 = new BasicTestEntity();
+		final BasicTestEntity value2 = new BasicTestEntity();
+		final BasicTestEntity value3 = new BasicTestEntity();
+		template.insertDocument(value1);
+		template.insertDocument(value2);
+		template.insertDocument(value3);
+		final ConstructorWithRefParamsTestEntity entity = new ConstructorWithRefParamsTestEntity(value1,
+				Arrays.asList(value2, value3));
+		template.insertDocument(entity);
+		final ConstructorWithRefParamsTestEntity document = template.getDocument(entity.id,
+			ConstructorWithRefParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value1.id, is(value1.id));
+		assertThat(document.value2.size(), is(2));
+		assertThat(document.value2.stream().map((e) -> e.id).collect(Collectors.toList()),
+			hasItems(value2.id, value3.id));
+	}
+
+	public static class ConstructorWithRefLazyParamsTestEntity extends BasicTestEntity {
+		@Ref(lazy = true)
+		private final BasicTestEntity value1;
+		@Ref(lazy = true)
+		private final Collection<BasicTestEntity> value2;
+
+		public ConstructorWithRefLazyParamsTestEntity(final BasicTestEntity value1,
+			final Collection<BasicTestEntity> value2) {
+			super();
+			this.value1 = value1;
+			this.value2 = value2;
+		}
+	}
+
+	@Test
+	public void constructorWithRefLazyParams() {
+		final BasicTestEntity value1 = new BasicTestEntity();
+		final BasicTestEntity value2 = new BasicTestEntity();
+		final BasicTestEntity value3 = new BasicTestEntity();
+		template.insertDocument(value1);
+		template.insertDocument(value2);
+		template.insertDocument(value3);
+		final ConstructorWithRefLazyParamsTestEntity entity = new ConstructorWithRefLazyParamsTestEntity(value1,
+				Arrays.asList(value2, value3));
+		template.insertDocument(entity);
+		final ConstructorWithRefLazyParamsTestEntity document = template.getDocument(entity.id,
+			ConstructorWithRefLazyParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value1.getId(), is(value1.id));
+		assertThat(document.value2.size(), is(2));
+		assertThat(document.value2.stream().map((e) -> e.getId()).collect(Collectors.toList()),
+			hasItems(value2.id, value3.id));
+	}
+
+	public static class ConstructorWithRelationsParamsTestEntity extends BasicTestEntity {
+		@Relations(edge = BasicEdgeTestEntity.class)
+		private final Collection<BasicTestEntity> value;
+
+		public ConstructorWithRelationsParamsTestEntity(final Collection<BasicTestEntity> value) {
+			super();
+			this.value = value;
+		}
+	}
+
+	@Test
+	public void constructorWithRelationsParams() {
+		final BasicTestEntity vertex1 = new BasicTestEntity();
+		final BasicTestEntity vertex2 = new BasicTestEntity();
+		template.insertDocument(vertex1);
+		template.insertDocument(vertex2);
+		final ConstructorWithRelationsParamsTestEntity entity = new ConstructorWithRelationsParamsTestEntity(
+				Arrays.asList(vertex1, vertex2));
+		template.insertDocument(entity);
+		template.insertDocument(new BasicEdgeTestEntity(entity, vertex1));
+		template.insertDocument(new BasicEdgeTestEntity(entity, vertex2));
+		final ConstructorWithRelationsParamsTestEntity document = template.getDocument(entity.id,
+			ConstructorWithRelationsParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()),
+			hasItems(vertex1.id, vertex2.id));
+	}
+
+	public static class ConstructorWithRelationsLazyParamsTestEntity extends BasicTestEntity {
+		@Relations(edge = BasicEdgeTestEntity.class, lazy = true)
+		private final Collection<BasicTestEntity> value;
+
+		public ConstructorWithRelationsLazyParamsTestEntity(final Collection<BasicTestEntity> value) {
+			super();
+			this.value = value;
+		}
+	}
+
+	@Test
+	public void constructorWithRelationsLazyParams() {
+		final BasicTestEntity vertex1 = new BasicTestEntity();
+		final BasicTestEntity vertex2 = new BasicTestEntity();
+		template.insertDocument(vertex1);
+		template.insertDocument(vertex2);
+		final ConstructorWithRelationsLazyParamsTestEntity entity = new ConstructorWithRelationsLazyParamsTestEntity(
+				Arrays.asList(vertex1, vertex2));
+		template.insertDocument(entity);
+		template.insertDocument(new BasicEdgeTestEntity(entity, vertex1));
+		template.insertDocument(new BasicEdgeTestEntity(entity, vertex2));
+		final ConstructorWithRelationsLazyParamsTestEntity document = template.getDocument(entity.id,
+			ConstructorWithRelationsLazyParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()),
+			hasItems(vertex1.id, vertex2.id));
+	}
+
+	public static class ConstructorWithFromParamsTestEntity extends BasicTestEntity {
+		@From
+		private final Collection<BasicEdgeTestEntity> value;
+
+		public ConstructorWithFromParamsTestEntity(final Collection<BasicEdgeTestEntity> value) {
+			super();
+			this.value = value;
+		}
+	}
+
+	@Test
+	public void constructorWithFromParams() {
+		final ConstructorWithFromParamsTestEntity entity = new ConstructorWithFromParamsTestEntity(null);
+		template.insertDocument(entity);
+		final BasicTestEntity to = new BasicTestEntity();
+		template.insertDocument(to);
+		final BasicEdgeTestEntity edge1 = new BasicEdgeTestEntity(entity, to);
+		final BasicEdgeTestEntity edge2 = new BasicEdgeTestEntity(entity, to);
+		template.insertDocument(edge1);
+		template.insertDocument(edge2);
+		final ConstructorWithFromParamsTestEntity document = template.getDocument(entity.id,
+			ConstructorWithFromParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()), hasItems(edge1.id, edge2.id));
+	}
+
+	public static class ConstructorWithFromLazyParamsTestEntity extends BasicTestEntity {
+		@From(lazy = true)
+		private final Collection<BasicEdgeTestEntity> value;
+
+		public ConstructorWithFromLazyParamsTestEntity(final Collection<BasicEdgeTestEntity> value) {
+			super();
+			this.value = value;
+		}
+	}
+
+	@Test
+	public void constructorWithFromLazyParams() {
+		final ConstructorWithFromLazyParamsTestEntity entity = new ConstructorWithFromLazyParamsTestEntity(null);
+		template.insertDocument(entity);
+		final BasicTestEntity to = new BasicTestEntity();
+		template.insertDocument(to);
+		final BasicEdgeTestEntity edge1 = new BasicEdgeTestEntity(entity, to);
+		final BasicEdgeTestEntity edge2 = new BasicEdgeTestEntity(entity, to);
+		template.insertDocument(edge1);
+		template.insertDocument(edge2);
+		final ConstructorWithFromLazyParamsTestEntity document = template.getDocument(entity.id,
+			ConstructorWithFromLazyParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value.stream().map((e) -> e.getId()).collect(Collectors.toList()),
+			hasItems(edge1.id, edge2.id));
+	}
+
+	public static class ConstructorWithToParamsTestEntity extends BasicTestEntity {
+		@To
+		private final Collection<BasicEdgeTestEntity> value;
+
+		public ConstructorWithToParamsTestEntity(final Collection<BasicEdgeTestEntity> value) {
+			super();
+			this.value = value;
+		}
+	}
+
+	@Test
+	public void constructorWithToParams() {
+		final ConstructorWithToParamsTestEntity entity = new ConstructorWithToParamsTestEntity(null);
+		template.insertDocument(entity);
+		final BasicTestEntity from = new BasicTestEntity();
+		template.insertDocument(from);
+		final BasicEdgeTestEntity edge1 = new BasicEdgeTestEntity(from, entity);
+		final BasicEdgeTestEntity edge2 = new BasicEdgeTestEntity(from, entity);
+		template.insertDocument(edge1);
+		template.insertDocument(edge2);
+		final ConstructorWithToParamsTestEntity document = template.getDocument(entity.id,
+			ConstructorWithToParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()), hasItems(edge1.id, edge2.id));
+	}
+
+	public static class ConstructorWithToLazyParamsTestEntity extends BasicTestEntity {
+		@To(lazy = true)
+		private final Collection<BasicEdgeTestEntity> value;
+
+		public ConstructorWithToLazyParamsTestEntity(final Collection<BasicEdgeTestEntity> value) {
+			super();
+			this.value = value;
+		}
+	}
+
+	@Test
+	public void constructorWithToLazyParams() {
+		final ConstructorWithToLazyParamsTestEntity entity = new ConstructorWithToLazyParamsTestEntity(null);
+		template.insertDocument(entity);
+		final BasicTestEntity from = new BasicTestEntity();
+		template.insertDocument(from);
+		final BasicEdgeTestEntity edge1 = new BasicEdgeTestEntity(from, entity);
+		final BasicEdgeTestEntity edge2 = new BasicEdgeTestEntity(from, entity);
+		template.insertDocument(edge1);
+		template.insertDocument(edge2);
+		final ConstructorWithToLazyParamsTestEntity document = template.getDocument(entity.id,
+			ConstructorWithToLazyParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value.stream().map((e) -> e.getId()).collect(Collectors.toList()),
+			hasItems(edge1.id, edge2.id));
+	}
+
+	public static class EdgeConstructorWithFromToParamsTestEntity extends BasicEdgeTestEntity {
+		@From
+		private final BasicTestEntity from;
+		@To
+		private final BasicTestEntity to;
+
+		public EdgeConstructorWithFromToParamsTestEntity(final BasicTestEntity from, final BasicTestEntity to) {
+			super();
+			this.from = from;
+			this.to = to;
+		}
+	}
+
+	@Test
+	public void edgeConstructorWithFromToParams() {
+		final BasicTestEntity from = new BasicTestEntity();
+		final BasicTestEntity to = new BasicTestEntity();
+		template.insertDocument(from);
+		template.insertDocument(to);
+		final EdgeConstructorWithFromToParamsTestEntity edge = new EdgeConstructorWithFromToParamsTestEntity(from, to);
+		template.insertDocument(edge);
+		final EdgeConstructorWithFromToParamsTestEntity document = template.getDocument(edge.id,
+			EdgeConstructorWithFromToParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.from.id, is(from.id));
+		assertThat(document.to.id, is(to.id));
+	}
+
+	public static class EdgeConstructorWithFromToLazyParamsTestEntity extends BasicEdgeTestEntity {
+		@From
+		private final BasicTestEntity from;
+		@To
+		private final BasicTestEntity to;
+
+		public EdgeConstructorWithFromToLazyParamsTestEntity(final BasicTestEntity from, final BasicTestEntity to) {
+			super();
+			this.from = from;
+			this.to = to;
+		}
+	}
+
+	@Test
+	public void edgeConstructorWithFromToLazyParams() {
+		final BasicTestEntity from = new BasicTestEntity();
+		final BasicTestEntity to = new BasicTestEntity();
+		template.insertDocument(from);
+		template.insertDocument(to);
+		final EdgeConstructorWithFromToLazyParamsTestEntity edge = new EdgeConstructorWithFromToLazyParamsTestEntity(
+				from, to);
+		template.insertDocument(edge);
+		final EdgeConstructorWithFromToLazyParamsTestEntity document = template.getDocument(edge.id,
+			EdgeConstructorWithFromToLazyParamsTestEntity.class);
+		assertThat(document, is(notNullValue()));
+		assertThat(document.from.getId(), is(from.id));
+		assertThat(document.to.getId(), is(to.id));
+	}
+
 	public static class JodaTestEntity extends BasicTestEntity {
 		private org.joda.time.DateTime value1;
 		private org.joda.time.Instant value2;
