@@ -527,6 +527,31 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		return insert(value, new DocumentCreateOptions());
 	}
 
+	@Override
+	public <T> void upsert(final T value, final UpsertStrategie strategie) throws DataAccessException {
+		final Class<? extends Object> entityClass = value.getClass();
+		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
+		final ArangoPersistentProperty idProperty = entity.getIdProperty();
+		if (idProperty != null) {
+			final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(
+					entity.getPropertyAccessor(value), converter.getConversionService());
+			final Object id = accessor.getProperty(idProperty);
+			if (id != null) {
+				switch (strategie) {
+				case UPDATE:
+					update(id.toString(), value);
+					break;
+				case REPLACE:
+				default:
+					replace(id.toString(), value);
+					break;
+				}
+				return;
+			}
+		}
+		insert(value);
+	}
+
 	private void updateDBFields(
 		final Iterable<Object> values,
 		final Class<?> entityClass,

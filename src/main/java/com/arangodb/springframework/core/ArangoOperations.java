@@ -111,6 +111,12 @@ public interface ArangoOperations {
 
 	<T> DocumentCreateEntity<T> insert(T value) throws DataAccessException;
 
+	public enum UpsertStrategie {
+		REPLACE, UPDATE
+	}
+
+	<T> void upsert(T value, UpsertStrategie strategie) throws DataAccessException;
+
 	boolean exists(String id, Class<?> entityClass) throws DataAccessException;
 
 	void dropDatabase() throws DataAccessException;
