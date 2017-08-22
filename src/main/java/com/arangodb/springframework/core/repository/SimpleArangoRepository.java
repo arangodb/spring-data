@@ -35,11 +35,11 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public <S extends T> S save(S entity) {
-		try { arangoOperations.insertDocument(entity); }
+		try { arangoOperations.insert(entity); }
 		catch (Exception e) {
 			DBEntity dbEntity = new DBDocumentEntity();
 			arangoOperations.getConverter().write(entity, dbEntity);
-			arangoOperations.updateDocument((String) dbEntity.get("_id"), entity);
+			arangoOperations.update((String) dbEntity.get("_id"), entity);
 		}
 		return entity;
 	}
@@ -47,12 +47,12 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	@Override public <S extends T> Iterable<S> save(Iterable<S> entities) {
 		Collection<Object> entityCollection = new ArrayList<>();
 		entities.forEach(entityCollection::add);
-		arangoOperations.insertDocuments(entityCollection, this.domainClass);
+		arangoOperations.insert(entityCollection, this.domainClass);
 		return entities;
 	}
 
 	@Override public T findOne(String id) {
-		return arangoOperations.getDocument(id, domainClass);
+		return arangoOperations.find(id, domainClass);
 	}
 
 	@Override public boolean exists(String s) {
@@ -60,11 +60,11 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public Iterable<T> findAll() {
-		return arangoOperations.getDocuments(domainClass);
+		return arangoOperations.findAll(domainClass);
 	}
 
 	@Override public Iterable<T> findAll(Iterable<String> strings) {
-		return arangoOperations.getDocuments(strings, domainClass);
+		return arangoOperations.find(strings, domainClass);
 	}
 
 	@Override public long count() {
@@ -72,7 +72,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public void delete(String s) {
-		arangoOperations.deleteDocument(s, domainClass);
+		arangoOperations.delete(s, domainClass);
 	}
 
 	@Override public void delete(T entity) {
@@ -80,7 +80,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 		try { id = (String) arangoOperations.getConverter().getMappingContext().getPersistentEntity(domainClass)
 					.getIdProperty().getField().get(entity); }
 		catch (IllegalAccessException e) { e.printStackTrace(); }
-		arangoOperations.deleteDocument(id, domainClass);
+		arangoOperations.delete(id, domainClass);
 	}
 
 	@Override public void delete(Iterable<? extends T> entities) {
