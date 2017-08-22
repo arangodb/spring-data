@@ -3,6 +3,7 @@ package com.arangodb.springframework.core.repository;
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.ArangoOperations.UpsertStrategie;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
@@ -35,12 +36,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public <S extends T> S save(S entity) {
-		try { arangoOperations.insert(entity); }
-		catch (Exception e) {
-			DBEntity dbEntity = new DBDocumentEntity();
-			arangoOperations.getConverter().write(entity, dbEntity);
-			arangoOperations.update((String) dbEntity.get("_id"), entity);
-		}
+		arangoOperations.upsert(entity, UpsertStrategie.UPDATE);
 		return entity;
 	}
 
