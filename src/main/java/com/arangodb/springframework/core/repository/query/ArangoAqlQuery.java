@@ -99,7 +99,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			}
 			query = new DerivedQueryCreator((ArangoMappingContext) operations.getConverter().getMappingContext(),
 					domainClass, tree, accessor, bindVars, geoFields,
-					operations.getVersion().getVersion().compareTo("93.2.0") < 0).createQuery();
+					operations.getVersion().getVersion().compareTo("3.2.0") < 0).createQuery();
 		} else if (arguments != null) {
 			String fixedQuery = removeAqlStringLiterals(query);
 			Set<String> bindings = getBindings(fixedQuery);
