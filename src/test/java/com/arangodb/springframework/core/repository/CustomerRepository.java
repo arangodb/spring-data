@@ -5,6 +5,7 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Query;
+import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.annotation.Param;
@@ -25,6 +26,7 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
 	@Query("FOR c IN customer FILTER c.name == @1 AND c._id == @0 RETURN c")
+	@QueryOptions(cache = true, ttl = 128)
 	BaseDocument findOneByIdAndNameAql(String id, String name);
 
 	@Query("FOR c IN customer FILTER c._id == @0 RETURN c")

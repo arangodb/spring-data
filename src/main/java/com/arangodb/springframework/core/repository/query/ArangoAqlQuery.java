@@ -8,6 +8,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Param;
 import com.arangodb.springframework.annotation.Query;
+import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
@@ -75,7 +76,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	public Object execute(Object[] arguments) {
 		Map<String, Object> bindVars = new HashMap<>();
 		String query = getQueryAnnotationValue();
-		AqlQueryOptions options = null;
+		AqlQueryOptions options = getAqlQueryOptions();
 		if (query == null) {
 			PartTree tree = new PartTree(method.getName(), domainClass);
 			isCountProjection = tree.isCountProjection();
@@ -142,6 +143,24 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			mergeBindVars(bindVars, bindVarsLocal);
 		}
 		return convertResult(operations.query(query, bindVars, options, getResultClass()));
+	}
+
+	private AqlQueryOptions getAqlQueryOptions() {
+		QueryOptions queryOptions = method.getAnnotation(QueryOptions.class);
+		if (queryOptions == null) { return null; }
+		AqlQueryOptions options = new AqlQueryOptions();
+		int batchSize = queryOptions.batchSize();
+		if (batchSize != -1) { options.batchSize(batchSize); }
+		int maxPlans = queryOptions.maxPlans();
+		if (maxPlans != -1) { options.maxPlans(maxPlans); }
+		int ttl = queryOptions.ttl();
+		if (ttl != -1) { options.ttl(ttl); }
+		options.cache(queryOptions.cache());
+		options.count(queryOptions.count());
+		options.fullCount(queryOptions.fullCount());
+		options.profile(queryOptions.profile());
+		options.rules(Arrays.asList(queryOptions.rules()));
+		return options;
 	}
 
 	private Class<?> getResultClass() {
