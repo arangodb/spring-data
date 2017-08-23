@@ -4,8 +4,6 @@ import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
-import com.arangodb.springframework.core.convert.DBDocumentEntity;
-import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
 import org.slf4j.Logger;
@@ -41,9 +39,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public <S extends T> Iterable<S> save(Iterable<S> entities) {
-		Collection<Object> entityCollection = new ArrayList<>();
-		entities.forEach(entityCollection::add);
-		arangoOperations.insert(entityCollection, this.domainClass);
+		arangoOperations.upsert(entities, UpsertStrategy.UPDATE);
 		return entities;
 	}
 
