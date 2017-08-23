@@ -5,6 +5,7 @@ import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest
 
 import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.IncompleteCustomer;
 import com.arangodb.springframework.testdata.Product;
 import com.arangodb.springframework.testdata.ShoppingCart;
 import org.junit.Ignore;
@@ -344,6 +345,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         Customer customer2 = new Customer("", "", 0);
         customer2.setStringList(stringList3);
         repository.save(customer2);
+        template.insert(new IncompleteCustomer("Incomplete", stringList2));
         Customer[] retrieved = repository.findByNestedCustomerAliveExistsAndStringListAllIgnoreCase(stringList2);
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
