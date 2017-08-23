@@ -61,6 +61,8 @@ import com.arangodb.velocypack.VPackSlice;
  */
 public class DefaultArangoConverter implements ArangoConverter {
 
+	private static final String _ID = "_id";
+	private static final String _KEY = "_key";
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final CustomConversions conversions;
 	private final GenericConversionService conversionService;
@@ -172,11 +174,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 				conversionService);
 
 		entity.doWithProperties((final ArangoPersistentProperty property) -> {
-			readProperty(source.get("_id"), accessor, source.get(property.getFieldName()), property);
+			readProperty(source.get(_ID), accessor, source.get(property.getFieldName()), property);
 		});
 		entity.doWithAssociations((final Association<ArangoPersistentProperty> association) -> {
 			final ArangoPersistentProperty property = association.getInverse();
-			readProperty(source.get("_id"), accessor, source.get(property.getFieldName()), property);
+			readProperty(source.get(_ID), accessor, source.get(property.getFieldName()), property);
 		});
 		return instance;
 	}
@@ -199,7 +201,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getPropertyValue(final ArangoPersistentProperty property) {
-			final Optional<Object> referenceOrRelation = readReferenceOrRelation(source.get("_id"),
+			final Optional<Object> referenceOrRelation = readReferenceOrRelation(source.get(_ID),
 				source.get(property.getFieldName()), property);
 			return (T) referenceOrRelation.orElseGet(() -> convertIfNecessary(
 				read(source.get(property.getFieldName()), property.getTypeInformation()), property.getType()));
@@ -349,6 +351,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 				writeProperty(property, sink, inverse);
 			}
 		});
+		final Object id = sink.get(_ID);
+		if (id != null && sink.get(_KEY) == null) {
+			sink.put(_KEY, determineDocumentKeyFromId(id.toString()));
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -502,4 +508,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return (T) (source == null ? source
 				: type.isAssignableFrom(source.getClass()) ? source : conversionService.convert(source, type));
 	}
+
+	private String determineDocumentKeyFromId(final String id) {
+		final String[] split = id.split("/");
+		return split[split.length - 1];
+	}
+
 }
