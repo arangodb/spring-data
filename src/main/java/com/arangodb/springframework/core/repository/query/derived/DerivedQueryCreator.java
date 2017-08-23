@@ -476,6 +476,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 clause = String.format("@%d IN %s", bindingCounter, ignorePropertyCase(part, property));
                 arguments = 1;
                 break;
+            case NOT_CONTAINING:
+                isArray = false;
+                clause = String.format("@%d NOT IN %s", bindingCounter, ignorePropertyCase(part, property));
+                arguments = 1;
+                break;
             case NEAR:
                 checkUniqueLocation(part);
                 if (useFunctions) {
