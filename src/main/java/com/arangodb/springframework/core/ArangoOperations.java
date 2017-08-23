@@ -142,6 +142,8 @@ public interface ArangoOperations {
 	 * attributes from the patch documents will be added to the existing documents if they do not yet exist, and
 	 * overwritten in the existing documents if they do exist there.
 	 * 
+	 * @param <T>
+	 * 
 	 * @param values
 	 *            A list of documents
 	 * @param entityClass
@@ -151,8 +153,8 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> update(
-		Iterable<Object> values,
+	<T> MultiDocumentEntity<DocumentUpdateEntity<Object>> update(
+		Iterable<T> values,
 		Class<?> entityClass,
 		DocumentUpdateOptions options) throws DataAccessException;
 
@@ -162,6 +164,8 @@ public interface ArangoOperations {
 	 * attributes from the patch documents will be added to the existing documents if they do not yet exist, and
 	 * overwritten in the existing documents if they do exist there.
 	 * 
+	 * @param <T>
+	 * 
 	 * @param values
 	 *            A list of documents
 	 * @param entityClass
@@ -169,7 +173,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> update(Iterable<Object> values, Class<?> entityClass)
+	<T> MultiDocumentEntity<DocumentUpdateEntity<Object>> update(Iterable<T> values, Class<?> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -206,23 +210,7 @@ public interface ArangoOperations {
 	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
 	 * specified by the _key attributes in the documents in values.
 	 * 
-	 * @param values
-	 *            A List of documents
-	 * @param entityClass
-	 *            The entity type of the documents
-	 * @param options
-	 *            Additional options, can be null
-	 * @return information about the documents
-	 * @throws DataAccessException
-	 */
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> replace(
-		Iterable<Object> values,
-		Class<?> entityClass,
-		DocumentReplaceOptions options) throws DataAccessException;
-
-	/**
-	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
-	 * specified by the _key attributes in the documents in values.
+	 * @param <T>
 	 * 
 	 * @param values
 	 *            A List of documents
@@ -233,7 +221,27 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> replace(Iterable<Object> values, Class<?> entityClass)
+	<T> MultiDocumentEntity<DocumentUpdateEntity<Object>> replace(
+		Iterable<T> values,
+		Class<?> entityClass,
+		DocumentReplaceOptions options) throws DataAccessException;
+
+	/**
+	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
+	 * specified by the _key attributes in the documents in values.
+	 * 
+	 * @param <T>
+	 * 
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<DocumentUpdateEntity<Object>> replace(Iterable<T> values, Class<?> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -294,6 +302,8 @@ public interface ArangoOperations {
 	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
 	 * _key is given, a new unique _key is generated automatically.
 	 * 
+	 * @param <T>
+	 * 
 	 * @param values
 	 *            A List of documents
 	 * @param entityClass
@@ -303,14 +313,16 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<DocumentCreateEntity<Object>> insert(
-		Iterable<Object> values,
+	<T> MultiDocumentEntity<DocumentCreateEntity<Object>> insert(
+		Iterable<T> values,
 		Class<?> entityClass,
 		DocumentCreateOptions options) throws DataAccessException;
 
 	/**
 	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
 	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param <T>
 	 * 
 	 * @param values
 	 *            A List of documents
@@ -319,7 +331,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<DocumentCreateEntity<Object>> insert(Iterable<Object> values, Class<?> entityClass)
+	<T> MultiDocumentEntity<DocumentCreateEntity<Object>> insert(Iterable<T> values, Class<?> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -359,6 +371,18 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 */
 	<T> void upsert(T value, UpsertStrategy strategy) throws DataAccessException;
+
+	/**
+	 * Creates new documents from the given documents, unless there already exists. In that case it updates or replaces
+	 * the documents, depending on the chosen strategy.
+	 * 
+	 * @param value
+	 *            A List of documents
+	 * @param strategy
+	 *            The strategy to use when not inserting the document
+	 * @throws DataAccessException
+	 */
+	<T> void upsert(Iterable<T> value, UpsertStrategy strategy) throws DataAccessException;
 
 	/**
 	 * Checks whether the document exists by reading a single document head
