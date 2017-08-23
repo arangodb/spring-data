@@ -286,7 +286,7 @@ public interface MyRepository extends Repository<Customer, String> {
 }
 ```
 
-###Geospatial queries
+### Geospatial queries
 
 Geospatial queries are a subsection of derived queries. To use a geospatial query on a collection, a geo index must
 exist on that collection. A geo index can be created on a field which is a two element array, corresponding to latitude 
