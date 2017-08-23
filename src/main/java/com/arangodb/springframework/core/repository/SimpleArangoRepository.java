@@ -3,7 +3,7 @@ package com.arangodb.springframework.core.repository;
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.ArangoOperations.UpsertStrategie;
+import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
@@ -37,7 +37,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 
 	// TODO refactor once template.upsert() is implemented
 	@Override public <S extends T> S save(S entity) {
-		arangoOperations.upsert(entity, UpsertStrategie.UPDATE);
+		arangoOperations.upsert(entity, UpsertStrategy.UPDATE);
 		return entity;
 	}
 

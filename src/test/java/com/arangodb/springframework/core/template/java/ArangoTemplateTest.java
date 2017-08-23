@@ -44,7 +44,7 @@ import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
-import com.arangodb.springframework.core.ArangoOperations.UpsertStrategie;
+import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.Product;
@@ -96,20 +96,20 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void upsertReplace() {
 		final Customer customer = new Customer("John", "Doe", 30);
-		template.upsert(customer, UpsertStrategie.REPLACE);
+		template.upsert(customer, UpsertStrategy.REPLACE);
 		assertThat(template.find(customer.getId(), Customer.class).getAge(), is(30));
 		customer.setAge(35);
-		template.upsert(customer, UpsertStrategie.REPLACE);
+		template.upsert(customer, UpsertStrategy.REPLACE);
 		assertThat(template.find(customer.getId(), Customer.class).getAge(), is(35));
 	}
 
 	@Test
 	public void upsertUpdate() {
 		final Customer customer = new Customer("John", "Doe", 30);
-		template.upsert(customer, UpsertStrategie.UPDATE);
+		template.upsert(customer, UpsertStrategy.UPDATE);
 		assertThat(template.find(customer.getId(), Customer.class).getAge(), is(30));
 		customer.setAge(35);
-		template.upsert(customer, UpsertStrategie.UPDATE);
+		template.upsert(customer, UpsertStrategy.UPDATE);
 		assertThat(template.find(customer.getId(), Customer.class).getAge(), is(35));
 	}
 

@@ -528,7 +528,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public <T> void upsert(final T value, final UpsertStrategie strategie) throws DataAccessException {
+	public <T> void upsert(final T value, final UpsertStrategy strategie) throws DataAccessException {
 		final Class<? extends Object> entityClass = value.getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();

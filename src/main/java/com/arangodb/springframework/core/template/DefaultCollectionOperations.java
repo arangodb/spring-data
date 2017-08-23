@@ -28,6 +28,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoDBException;
+import com.arangodb.entity.CollectionPropertiesEntity;
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.Permissions;
 import com.arangodb.model.FulltextIndexOptions;
@@ -82,6 +83,15 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			final Long count = collection.count().getCount();
 			return count != null ? count.longValue() : -1;
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
+	public CollectionPropertiesEntity getProperties() throws DataAccessException {
+		try {
+			return collection.getProperties();
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
