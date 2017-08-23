@@ -90,7 +90,7 @@ public @interface Document {
 	 *         is used to determine the target shard. Note: Values of shard key attributes cannot be changed once set.
 	 *         This option is meaningless in a single server setup.
 	 */
-	String[] shardKeys() default "";
+	String[] shardKeys() default {};
 
 	/**
 	 * @return (The default is 1): in a cluster, this value determines the number of shards to create for the
