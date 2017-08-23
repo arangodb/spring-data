@@ -92,7 +92,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			if (GEO_RETURN_TYPES.contains(method.getReturnType())) {
 				operations.collection(operations.getConverter().getMappingContext().getPersistentEntity(domainClass).getCollection())
 						.getIndexes().forEach(i -> {
-							if ((i.getType() == IndexType.geo1 || i.getType() == IndexType.geo2) && geoFields.isEmpty()) {
+							if ((i.getType() == IndexType.geo1) && geoFields.isEmpty()) {
 								i.getFields().forEach(f -> geoFields.add(f));
 							}
 						});

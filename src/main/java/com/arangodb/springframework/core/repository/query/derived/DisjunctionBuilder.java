@@ -45,9 +45,7 @@ public class DisjunctionBuilder {
         if (shouldPredicateBeBuilt) {
             String distanceAdjusted = "e";
             if (!queryCreator.getGeoFields().isEmpty()) {
-                String geoFields = queryCreator.getGeoFields().size() == 1 ?
-                        String.format("e.%s[0], e.%s[1]", queryCreator.getGeoFields().get(0), queryCreator.getGeoFields().get(0))
-                        : String.format("e.%s, e.%s", queryCreator.getGeoFields().get(0), queryCreator.getGeoFields().get(1));
+                String geoFields = String.format("e.%s[0], e.%s[1]", queryCreator.getGeoFields().get(0), queryCreator.getGeoFields().get(0));
                 distanceAdjusted = String.format("MERGE(e, {'_distance': DISTANCE(%s, %%f, %%f)})", geoFields);
             }
             String array = String.format(SUBQUERY_TEMPLATE, queryCreator.getCollectionName(), predicateStringBuilder.toString(), distanceAdjusted);
