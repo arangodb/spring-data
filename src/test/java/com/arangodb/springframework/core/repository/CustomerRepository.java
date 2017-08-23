@@ -37,7 +37,7 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	@QueryOptions(maxPlans = 1000, ttl = 128)
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
-	Customer findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map bindVars);
+	ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map bindVars);
 
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
 	Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map bindVars);
