@@ -46,16 +46,16 @@ public interface CollectionOperations {
 
 	Collection<IndexEntity> getIndexes() throws DataAccessException;
 
-	IndexEntity ensureHashIndex(Collection<String> fields, HashIndexOptions options) throws DataAccessException;
+	IndexEntity ensureHashIndex(Iterable<String> fields, HashIndexOptions options) throws DataAccessException;
 
-	IndexEntity ensureSkiplistIndex(Collection<String> fields, SkiplistIndexOptions options) throws DataAccessException;
+	IndexEntity ensureSkiplistIndex(Iterable<String> fields, SkiplistIndexOptions options) throws DataAccessException;
 
-	IndexEntity ensurePersistentIndex(Collection<String> fields, PersistentIndexOptions options)
+	IndexEntity ensurePersistentIndex(Iterable<String> fields, PersistentIndexOptions options)
 			throws DataAccessException;
 
-	IndexEntity ensureGeoIndex(Collection<String> fields, GeoIndexOptions options) throws DataAccessException;
+	IndexEntity ensureGeoIndex(Iterable<String> fields, GeoIndexOptions options) throws DataAccessException;
 
-	IndexEntity ensureFulltextIndex(Collection<String> fields, FulltextIndexOptions options) throws DataAccessException;
+	IndexEntity ensureFulltextIndex(Iterable<String> fields, FulltextIndexOptions options) throws DataAccessException;
 
 	void dropIndex(String id) throws DataAccessException;
 

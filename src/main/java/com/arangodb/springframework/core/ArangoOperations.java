@@ -20,7 +20,6 @@
 
 package com.arangodb.springframework.core;
 
-import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.dao.DataAccessException;
@@ -55,64 +54,68 @@ public interface ArangoOperations {
 	<T> ArangoCursor<T> query(String query, Map<String, Object> bindVars, AqlQueryOptions options, Class<T> entityClass)
 			throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(
-		Collection<Object> values,
+	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> delete(
+		Iterable<Object> values,
 		Class<T> entityClass,
 		DocumentDeleteOptions options) throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(Collection<Object> values, Class<T> entityClass)
+	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> delete(Iterable<Object> values, Class<T> entityClass)
 			throws DataAccessException;
 
-	<T> DocumentDeleteEntity<T> deleteDocument(String id, Class<T> entityClass, DocumentDeleteOptions options)
+	<T> DocumentDeleteEntity<T> delete(String id, Class<T> entityClass, DocumentDeleteOptions options)
 			throws DataAccessException;
 
-	<T> DocumentDeleteEntity<Void> deleteDocument(String id, Class<T> entityClass) throws DataAccessException;
+	<T> DocumentDeleteEntity<Void> delete(String id, Class<T> entityClass) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(
-		Collection<Object> values,
+	MultiDocumentEntity<DocumentUpdateEntity<Object>> update(
+		Iterable<Object> values,
 		Class<?> entityClass,
 		DocumentUpdateOptions options) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(Collection<Object> values, Class<?> entityClass)
+	MultiDocumentEntity<DocumentUpdateEntity<Object>> update(Iterable<Object> values, Class<?> entityClass)
 			throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> updateDocument(String id, T value, DocumentUpdateOptions options)
-			throws DataAccessException;
+	<T> DocumentUpdateEntity<T> update(String id, T value, DocumentUpdateOptions options) throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> updateDocument(String id, T value) throws DataAccessException;
+	<T> DocumentUpdateEntity<T> update(String id, T value) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(
-		Collection<Object> values,
+	MultiDocumentEntity<DocumentUpdateEntity<Object>> replace(
+		Iterable<Object> values,
 		Class<?> entityClass,
 		DocumentReplaceOptions options) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(Collection<Object> values, Class<?> entityClass)
+	MultiDocumentEntity<DocumentUpdateEntity<Object>> replace(Iterable<Object> values, Class<?> entityClass)
 			throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> replaceDocument(String id, T value, DocumentReplaceOptions options)
-			throws DataAccessException;
+	<T> DocumentUpdateEntity<T> replace(String id, T value, DocumentReplaceOptions options) throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> replaceDocument(String id, T value) throws DataAccessException;
+	<T> DocumentUpdateEntity<T> replace(String id, T value) throws DataAccessException;
 
-	<T> T getDocument(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
+	<T> T find(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
 
-	<T> T getDocument(String id, Class<T> entityClass) throws DataAccessException;
+	<T> T find(String id, Class<T> entityClass) throws DataAccessException;
 
-	<T> Iterable<T> getDocuments(Class<T> entityClass) throws DataAccessException;
+	<T> Iterable<T> findAll(Class<T> entityClass) throws DataAccessException;
 
-	<T> Iterable<T> getDocuments(final Iterable<String> ids, final Class<T> entityClass) throws DataAccessException;
+	<T> Iterable<T> find(final Iterable<String> ids, final Class<T> entityClass) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(
-		Collection<Object> values,
+	MultiDocumentEntity<DocumentCreateEntity<Object>> insert(
+		Iterable<Object> values,
 		Class<?> entityClass,
 		DocumentCreateOptions options) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(Collection<Object> values, Class<?> entityClass)
+	MultiDocumentEntity<DocumentCreateEntity<Object>> insert(Iterable<Object> values, Class<?> entityClass)
 			throws DataAccessException;
 
-	<T> DocumentCreateEntity<T> insertDocument(T value, DocumentCreateOptions options) throws DataAccessException;
+	<T> DocumentCreateEntity<T> insert(T value, DocumentCreateOptions options) throws DataAccessException;
 
-	<T> DocumentCreateEntity<T> insertDocument(T value) throws DataAccessException;
+	<T> DocumentCreateEntity<T> insert(T value) throws DataAccessException;
+
+	public enum UpsertStrategie {
+		REPLACE, UPDATE
+	}
+
+	<T> void upsert(T value, UpsertStrategie strategie) throws DataAccessException;
 
 	boolean exists(String id, Class<?> entityClass) throws DataAccessException;
 
@@ -126,7 +129,7 @@ public interface ArangoOperations {
 
 	UserOperations user(String username);
 
-	Collection<UserEntity> getUsers() throws DataAccessException;
+	Iterable<UserEntity> getUsers() throws DataAccessException;
 
 	ArangoConverter getConverter();
 
