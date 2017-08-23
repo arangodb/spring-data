@@ -16,6 +16,7 @@
   * [Return types](#return-types)
   * [Query Methods](#query-methods)
   * [Derived Methods](#derived-methods)
+    * [Geospatial queries](#geospatial-queries)
   * [Property expression](#property-expression)
   * [Special parameter handling](#special-parameter-handling)
     * [Bind parameters](#bind-parameters)
