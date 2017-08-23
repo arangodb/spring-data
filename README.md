@@ -246,7 +246,7 @@ IsIn, In | findByNameIn(String[] names) | doc.name IN names
 IsNotIn, NotIn | findByNameIsNotIn(String[] names) | doc.name NOT IN names
 IsContaining, Containing, Contains | findByFriendsContaining(String name) | name IN doc.friends
 IsNotContaining, NotContaining, NotContains | findByFriendsNotContains(String name) | name NOT IN doc.friends
-Exists | findByNameExists() | HAS(doc, name)
+Exists | findByFriendNameExists() | HAS(doc.friend, name)
 
 
 ``` java
