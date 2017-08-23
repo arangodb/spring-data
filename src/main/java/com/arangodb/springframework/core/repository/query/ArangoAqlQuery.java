@@ -8,6 +8,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Param;
 import com.arangodb.springframework.annotation.Query;
+import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
@@ -75,13 +76,14 @@ public class ArangoAqlQuery implements RepositoryQuery {
 	public Object execute(Object[] arguments) {
 		Map<String, Object> bindVars = new HashMap<>();
 		String query = getQueryAnnotationValue();
-		AqlQueryOptions options = null;
+		AqlQueryOptions options = getAqlQueryOptions();
+		boolean optionsFound = false;
 		if (query == null) {
 			PartTree tree = new PartTree(method.getName(), domainClass);
 			isCountProjection = tree.isCountProjection();
 			isExistsProjection = tree.isExistsProjection();
 			accessor = new ArangoParameterAccessor(new ArangoParameters(method), arguments);
-			options = accessor.getAqlQueryOptions();
+			options = updateAqlQueryOptions(options, accessor.getAqlQueryOptions());
 			if (Page.class.isAssignableFrom(method.getReturnType())) {
 				if (options == null) { options = new AqlQueryOptions().fullCount(true); }
 				else options = options.fullCount(true);
@@ -107,8 +109,9 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			boolean bindVarsFound = false;
 			for (int i = 0; i < arguments.length; ++i) {
 				if (arguments[i] instanceof AqlQueryOptions) {
-					Assert.isTrue(options == null, "AqlQueryOptions are already set");
-					options = (AqlQueryOptions) arguments[i];
+					Assert.isTrue(!optionsFound, "AqlQueryOptions are already set");
+					optionsFound = true;
+					options = updateAqlQueryOptions(options, (AqlQueryOptions) arguments[i]);
 					continue;
 				}
 				String parameter = null;
@@ -142,6 +145,45 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			mergeBindVars(bindVars, bindVarsLocal);
 		}
 		return convertResult(operations.query(query, bindVars, options, getResultClass()));
+	}
+
+	private AqlQueryOptions updateAqlQueryOptions(AqlQueryOptions oldStatic, AqlQueryOptions newDynamic) {
+		if (oldStatic == null) { return  newDynamic; }
+		Integer batchSize = newDynamic.getBatchSize();
+		if (batchSize != null) { oldStatic.batchSize(batchSize); }
+		Integer maxPlans = newDynamic.getMaxPlans();
+		if (maxPlans != null) { oldStatic.maxPlans(maxPlans); }
+		Integer ttl = newDynamic.getTtl();
+		if (ttl != null) { oldStatic.ttl(ttl); }
+		Boolean cache = newDynamic.getCache();
+		if (cache != null) { oldStatic.cache(cache); }
+		Boolean count = newDynamic.getCount();
+		if (count != null) { oldStatic.count(count); }
+		Boolean fullCount = newDynamic.getFullCount();
+		if (fullCount != null) { oldStatic.fullCount(fullCount); }
+		Boolean profile = newDynamic.getProfile();
+		if (profile != null) { oldStatic.profile(profile); }
+		Collection<String> rules = newDynamic.getRules();
+		if (rules != null) { oldStatic.rules(rules); }
+		return oldStatic;
+	}
+
+	private AqlQueryOptions getAqlQueryOptions() {
+		QueryOptions queryOptions = method.getAnnotation(QueryOptions.class);
+		if (queryOptions == null) { return null; }
+		AqlQueryOptions options = new AqlQueryOptions();
+		int batchSize = queryOptions.batchSize();
+		if (batchSize != -1) { options.batchSize(batchSize); }
+		int maxPlans = queryOptions.maxPlans();
+		if (maxPlans != -1) { options.maxPlans(maxPlans); }
+		int ttl = queryOptions.ttl();
+		if (ttl != -1) { options.ttl(ttl); }
+		options.cache(queryOptions.cache());
+		options.count(queryOptions.count());
+		options.fullCount(queryOptions.fullCount());
+		options.profile(queryOptions.profile());
+		options.rules(Arrays.asList(queryOptions.rules()));
+		return options;
 	}
 
 	private Class<?> getResultClass() {

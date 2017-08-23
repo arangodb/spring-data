@@ -114,6 +114,38 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	}
 
 	@Test
+	public void upsertReplaceMultiple() {
+		final Customer c1 = new Customer("John", "Doe", 30);
+		final Customer c2 = new Customer("John2", "Doe2", 30);
+		template.upsert(Arrays.asList(c1, c2), UpsertStrategy.REPLACE);
+		assertThat(template.find(c1.getId(), Customer.class).getAge(), is(30));
+		assertThat(template.find(c2.getId(), Customer.class).getAge(), is(30));
+		c1.setAge(35);
+		c2.setAge(35);
+		final Customer c3 = new Customer("John3", "Doe2", 30);
+		template.upsert(Arrays.asList(c1, c2, c3), UpsertStrategy.REPLACE);
+		assertThat(template.find(c1.getId(), Customer.class).getAge(), is(35));
+		assertThat(template.find(c2.getId(), Customer.class).getAge(), is(35));
+		assertThat(template.find(c3.getId(), Customer.class).getAge(), is(30));
+	}
+
+	@Test
+	public void upsertUpdateMultiple() {
+		final Customer c1 = new Customer("John", "Doe", 30);
+		final Customer c2 = new Customer("John2", "Doe2", 30);
+		template.upsert(Arrays.asList(c1, c2), UpsertStrategy.UPDATE);
+		assertThat(template.find(c1.getId(), Customer.class).getAge(), is(30));
+		assertThat(template.find(c2.getId(), Customer.class).getAge(), is(30));
+		c1.setAge(35);
+		c2.setAge(35);
+		final Customer c3 = new Customer("John3", "Doe2", 30);
+		template.upsert(Arrays.asList(c1, c2, c3), UpsertStrategy.UPDATE);
+		assertThat(template.find(c1.getId(), Customer.class).getAge(), is(35));
+		assertThat(template.find(c2.getId(), Customer.class).getAge(), is(35));
+		assertThat(template.find(c3.getId(), Customer.class).getAge(), is(30));
+	}
+
+	@Test
 	public void getDocument() {
 		final DocumentCreateEntity<Customer> res = template
 				.insert(new Customer("John", "Doe", 30, new Address("22162–1010")));

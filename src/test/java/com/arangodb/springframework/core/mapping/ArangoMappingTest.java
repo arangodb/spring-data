@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.entity.DocumentCreateEntity;
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.annotation.Document;
@@ -53,6 +55,7 @@ import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
 import com.arangodb.springframework.annotation.To;
+import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
@@ -113,6 +116,23 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(entity.getRev(), is(ref.getRev()));
 	}
 
+	public static class OnlyIdTestEntity {
+		@Id
+		private String id;
+	}
+
+	@Test
+	public void supplementKey() {
+		final OnlyIdTestEntity value = new OnlyIdTestEntity();
+		template.insert(value);
+		final List<BasicTestEntity> result = template.query("RETURN @doc", new MapBuilder().put("doc", value).get(),
+			new AqlQueryOptions(), BasicTestEntity.class).asListRemaining();
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).getId(), is(value.id));
+		assertThat(result.get(0).getKey(), is(value.id.split("/")[1]));
+		assertThat(result.get(0).getRev(), is(nullValue()));
+	}
+
 	public static class FieldNameTestEntity extends BasicTestEntity {
 		@Field("alt-test")
 		private String test;
@@ -152,8 +172,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final SingleNestedDocumentTestEntity entity = new SingleNestedDocumentTestEntity();
 		entity.entity = new NestedDocumentTestEntity("test");
 		template.insert(entity);
-		final SingleNestedDocumentTestEntity document = template.find(entity.id,
-			SingleNestedDocumentTestEntity.class);
+		final SingleNestedDocumentTestEntity document = template.find(entity.id, SingleNestedDocumentTestEntity.class);
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entity, is(notNullValue()));
 		assertThat(document.entity.test, is("test"));
