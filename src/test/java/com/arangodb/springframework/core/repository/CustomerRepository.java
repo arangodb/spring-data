@@ -82,6 +82,8 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	Collection<Customer> findTop2DistinctByStringArrayContainingIgnoreCaseOrIntegerListNotNullIgnoreCaseOrderByNameAsc(String string);
 
+	Collection<Customer> findByStringArrayNotContainingIgnoreCase(String string);
+
 	int countByAgeGreaterThanOrStringArrayNullAndIntegerList(int age, List<Integer> integerList);
 
 	Integer countDistinctByAliveTrueOrNameLikeOrAgeLessThanEqual(String pattern, int age);

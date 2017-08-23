@@ -121,6 +121,20 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
     }
 
     @Test
+    public void NotContainingTest() {
+        Collection<Customer> toBeRetrieved = new LinkedList<>();
+        Customer customer1 = new Customer("A", "B", 55);
+        Customer customer2 = new Customer("C", "D", 44);
+        customer1.setStringArray(new String[] {"hello", "greetings"});
+        customer2.setStringArray(new String[] {"goodbye", "see you later"});
+        toBeRetrieved.add(customer2);
+        repository.save(customer1);
+        repository.save(customer2);
+        Collection<Customer> retrieved = repository.findByStringArrayNotContainingIgnoreCase("Hello");
+        assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+    }
+
+    @Test
     public void findTest() {
         Customer customer1 = new Customer("%_\\name", "%surname%", 20);
         repository.save(customer1);
