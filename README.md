@@ -15,7 +15,7 @@
   * [Instantiating](#instantiating)
   * [Return types](#return-types)
   * [Query Methods](#query-methods)
-  * [Finder Methods](#finder-methods)
+  * [Derived Methods](#derived-methods)
   * [Property expression](#property-expression)
   * [Special parameter handling](#special-parameter-handling)
     * [Bind parameters](#bind-parameters)
