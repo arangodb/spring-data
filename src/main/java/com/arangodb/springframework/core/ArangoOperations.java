@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.dao.DataAccessException;
 
@@ -272,9 +273,9 @@ public interface ArangoOperations {
 	 */
 	<T> DocumentUpdateEntity<T> replace(String id, T value) throws DataAccessException;
 
-	<T> T find(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
+	<T> Optional<T> find(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
 
-	<T> T find(String id, Class<T> entityClass) throws DataAccessException;
+	<T> Optional<T> find(String id, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Reads all documents from a collection

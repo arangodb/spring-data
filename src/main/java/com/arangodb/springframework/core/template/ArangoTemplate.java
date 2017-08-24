@@ -452,20 +452,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public <T> T find(final String id, final Class<T> entityClass, final DocumentReadOptions options)
+	public <T> Optional<T> find(final String id, final Class<T> entityClass, final DocumentReadOptions options)
 			throws DataAccessException {
 		try {
 			final DBEntity doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
 				DBEntity.class, options);
-			final T t = fromDBEntity(entityClass, doc);
-			return t;
+			return Optional.ofNullable(fromDBEntity(entityClass, doc));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public <T> T find(final String id, final Class<T> entityClass) throws DataAccessException {
+	public <T> Optional<T> find(final String id, final Class<T> entityClass) throws DataAccessException {
 		return find(id, entityClass, new DocumentReadOptions());
 	}
 

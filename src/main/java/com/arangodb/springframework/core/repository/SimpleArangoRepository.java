@@ -44,7 +44,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	}
 
 	@Override public T findOne(String id) {
-		return arangoOperations.find(id, domainClass);
+		return arangoOperations.find(id, domainClass).orElse(null);
 	}
 
 	@Override public boolean exists(String s) {

@@ -47,7 +47,7 @@ public class ToResolver extends AbstractResolver<To> implements RelationResolver
 	}
 
 	private Object internalResolveOne(final String id, final Class<?> type) {
-		return template.find(id, type);
+		return template.find(id, type).get();
 	}
 
 	@Override
