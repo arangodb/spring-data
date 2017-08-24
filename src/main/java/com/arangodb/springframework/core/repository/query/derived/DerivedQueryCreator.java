@@ -197,6 +197,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         final String PREDICATE_TEMPLATE = "(%s FILTER %%s RETURN 1)[0] == 1";
         PersistentPropertyPath persistentPropertyPath = context.getPersistentPropertyPath(part.getProperty());
         StringBuilder simpleProperties = new StringBuilder();
+        StringBuilder edgesBuilder = new StringBuilder();
+        int edgeCounter = 0;
         String predicateTemplate = "";
         int propertiesLeft = persistentPropertyPath.getLength();
         for (Object object : persistentPropertyPath) {
@@ -206,8 +208,29 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 simpleProperties.append(property.getFieldName());
                 break;
             }
-            if (property.isCollectionLike()) {
-                if (property.getRelations().isPresent() || property.getRef().isPresent()) {
+            if (property.getRelations().isPresent()) {
+                // graph traversal
+                final String TEMPLATE = "FOR %s IN %s %s.%s_id %d %s";
+                String nested = simpleProperties.toString();
+                if (!nested.isEmpty()) { nested += "."; }
+                String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
+                String entity = "e" + Integer.toString(++varsUsed);
+                String direction = property.getRelations().get().direction().name();//or toString?
+                String collection = context.getPersistentEntity(property.getRelations().get().edge()).getCollection();
+                if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
+                edgesBuilder.append((edgesBuilder.length() == 0 ? "" : ", ") + collection);
+                ++edgeCounter;
+                // what is depth() of and edge collection?
+                String edges = edgesBuilder.toString();
+                edgesBuilder = new StringBuilder();
+                edgeCounter = 0;
+                simpleProperties = new StringBuilder();
+                String iteration = String.format(TEMPLATE, entity, direction, prevEntity, nested, edgeCounter, edges);
+                String predicate = String.format(PREDICATE_TEMPLATE, iteration);
+                predicateTemplate = predicateTemplate.length() == 0
+                        ? predicate : String.format(predicateTemplate, predicate);
+            } else if (property.isCollectionLike()) {
+                if (property.getRef().isPresent()) {
                     // collection of references
                     final String TEMPLATE = "FOR %s IN %s FILTER %s._id IN %s.%s";
                     String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
