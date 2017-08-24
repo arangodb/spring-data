@@ -231,9 +231,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 String edges = edgesBuilder.toString();
                 simpleProperties = new StringBuilder();
                 edgesBuilder = new StringBuilder();
-                edgeCounter = 0;
                 String iteration = String.format(TEMPLATE, entity, edgeCounter, direction, prevEntity, nested, edges);
                 String predicate = String.format(PREDICATE_TEMPLATE, iteration);
+                edgeCounter = 0;
                 predicateTemplate = predicateTemplate.length() == 0
                         ? predicate : String.format(predicateTemplate, predicate);
             } else if (property.isCollectionLike()) {
