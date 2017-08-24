@@ -200,13 +200,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         StringBuilder simpleProperties = new StringBuilder();
         String predicateTemplate = "";
         int propertiesLeft = persistentPropertyPath.getLength();
-        List<Boolean> propertiesRelationsStatus = new ArrayList<>();
-        persistentPropertyPath.forEach(p -> {
-            propertiesRelationsStatus.add(((ArangoPersistentProperty) p).getRelations().isPresent());
-        });
-        int i = 0;
         for (Object object : persistentPropertyPath) {
-            ++i;
             --propertiesLeft;
             ArangoPersistentProperty property = (ArangoPersistentProperty) object;
             if (simpleProperties.length() != 0) { simpleProperties.append("."); }
