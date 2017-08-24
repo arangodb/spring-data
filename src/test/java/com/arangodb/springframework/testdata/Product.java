@@ -41,6 +41,9 @@ public class Product {
 	private String desc;
 	private double[] location;
 
+	@Relations(edge = Contains.class)
+	private Material contains;
+
 	public Product() {
 		super();
 	}
@@ -93,6 +96,14 @@ public class Product {
 
 	public void setDesc(final String desc) {
 		this.desc = desc;
+	}
+
+	public Material getContains() {
+		return contains;
+	}
+
+	public void setContains(Material contains) {
+		this.contains = contains;
 	}
 
 }

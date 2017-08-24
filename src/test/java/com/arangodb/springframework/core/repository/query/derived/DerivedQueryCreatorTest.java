@@ -4,10 +4,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
 
 import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
-import com.arangodb.springframework.testdata.Customer;
-import com.arangodb.springframework.testdata.IncompleteCustomer;
-import com.arangodb.springframework.testdata.Product;
-import com.arangodb.springframework.testdata.ShoppingCart;
+import com.arangodb.springframework.testdata.*;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -631,6 +628,48 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         repository.save(toBeRetrieved);
         List<Customer> retrieved = repository.findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(
                 new Point(1, 2), convertAngleToDistance(25));
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void relationsTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        List<Customer> customers = new LinkedList<>();
+        List<Customer> retrieved;
+        Customer john = new Customer("John", "Smith", 52);
+        Customer adam = new Customer("Adam", "Smith", 294);
+        Customer matt = new Customer("Matt", "Smith", 34);
+        Product phone = new Product("phone");
+        Product car = new Product("car");
+        Product chair = new Product("chair");
+        Material wood = new Material("wood");
+        Material metal = new Material("metal");
+        Material glass = new Material("glass");
+
+        phone.setContains(glass);
+        car.setContains(metal);
+        chair.setContains(wood);
+
+        Collection<Product> johnStuff = new LinkedList<>();
+        johnStuff.add(phone);
+        johnStuff.add(car);
+        john.setOwns(johnStuff);
+
+        Collection<Product> adamStuff = new LinkedList<>();
+        adamStuff.add(chair);
+        adam.setOwns(adamStuff);
+
+        Collection<Product> mattStuff = new LinkedList<>();
+        mattStuff.add(phone);
+        mattStuff.add(car);
+        mattStuff.add(chair);
+        matt.setOwns(mattStuff);
+
+        repository.save(customers);
+        toBeRetrieved.add(john);
+        toBeRetrieved.add(matt);
+
+        retrieved = repository.getByOwns(phone);
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 
