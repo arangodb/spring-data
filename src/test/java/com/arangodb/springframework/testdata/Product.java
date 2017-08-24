@@ -43,7 +43,7 @@ public class Product {
 
 	private Product nestedProduct;
 
-	@Relations(edge = Contains.class)
+	@Relations(edges = { Contains.class })
 	private Material contains;
 
 	public Product() {

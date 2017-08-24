@@ -55,7 +55,7 @@ public class Customer {
 
 	@Ref
 	private ShoppingCart shoppingCart;
-	@Relations(edge = Owns.class)
+	@Relations(edge = Owns.class, edges = { Owns.class })
 	private Collection<Product> owns;
 
 	public Customer() { super(); }

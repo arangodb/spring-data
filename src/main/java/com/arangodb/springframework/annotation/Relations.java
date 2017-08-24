@@ -41,6 +41,8 @@ public @interface Relations {
 
 	Class<?>[] edges() default {};
 
+	int depth() default 1;
+
 	int minDepth() default 1;
 
 	int maxDepth() default 1;

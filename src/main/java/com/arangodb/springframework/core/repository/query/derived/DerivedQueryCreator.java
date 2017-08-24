@@ -1,5 +1,6 @@
 package com.arangodb.springframework.core.repository.query.derived;
 
+import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.mapping.*;
 import com.arangodb.springframework.core.repository.query.ArangoParameterAccessor;
 import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
@@ -215,23 +216,24 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             }
             if (property.getRelations().isPresent()) {
                 // graph traversal
-                final String TEMPLATE = "FOR %s IN %d %s %s.%s_id %s";
+                final String TEMPLATE = "FOR %s IN %s %s %s.%s_id %s";
                 String nested = simpleProperties.toString();
                 if (!nested.isEmpty()) { nested += "."; }
-                String direction = property.getRelations().get().direction().name();
-                Class<?>[] edgeClasses = context.getPersistentEntity(property.getRelations().get().edges();
+                Relations relations = property.getRelations().get();
+                String direction = relations.direction().name();
+                String depths = String.format("%s..%d", relations.minDepth(), relations.maxDepth());
+                Class<?>[] edgeClasses = relations.edges();
                 StringBuilder edgesBuilder = new StringBuilder();
                 for (Class<?> edge : edgeClasses) {
                     String collection = context.getPersistentEntity(edge).getCollection();
                     if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
                     edgesBuilder.append((edgesBuilder.length() == 0 ? "" : ", ") + collection);
                 }
-                if (propertiesRelationsStatus.get(i) && propertiesLeft != 1) { continue; }
                 String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
                 String entity = "e" + Integer.toString(++varsUsed);
                 String edges = edgesBuilder.toString();
                 simpleProperties = new StringBuilder();
-                String iteration = String.format(TEMPLATE, entity, edgeClasses.length, direction, prevEntity, nested, edges);
+                String iteration = String.format(TEMPLATE, entity, depths, direction, prevEntity, nested, edges);
                 String predicate = String.format(PREDICATE_TEMPLATE, iteration);
                 predicateTemplate = predicateTemplate.length() == 0
                         ? predicate : String.format(predicateTemplate, predicate);
