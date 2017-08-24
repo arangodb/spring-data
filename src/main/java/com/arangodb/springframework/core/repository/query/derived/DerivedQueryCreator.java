@@ -210,7 +210,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             }
             if (property.getRelations().isPresent()) {
                 // graph traversal
-                final String TEMPLATE = "FOR %s IN %s %s.%s_id %d %s";
+                final String TEMPLATE = "FOR %s IN %d %s %s.%s_id %s";
                 String nested = simpleProperties.toString();
                 if (!nested.isEmpty()) { nested += "."; }
                 String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
@@ -223,10 +223,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 // what is depth() of and edge collection?
                 String edges = edgesBuilder.toString();
                 edgesBuilder = new StringBuilder();
-                edgeCounter = 0;
                 simpleProperties = new StringBuilder();
-                String iteration = String.format(TEMPLATE, entity, direction, prevEntity, nested, edgeCounter, edges);
+                String iteration = String.format(TEMPLATE, entity, edgeCounter, direction, prevEntity, nested, edges);
                 String predicate = String.format(PREDICATE_TEMPLATE, iteration);
+                edgeCounter = 0;
                 predicateTemplate = predicateTemplate.length() == 0
                         ? predicate : String.format(predicateTemplate, predicate);
             } else if (property.isCollectionLike()) {

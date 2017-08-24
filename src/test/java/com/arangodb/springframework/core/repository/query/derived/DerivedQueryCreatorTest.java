@@ -645,31 +645,31 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         Material wood = new Material("wood");
         Material metal = new Material("metal");
         Material glass = new Material("glass");
-
-        phone.setContains(glass);
-        car.setContains(metal);
-        chair.setContains(wood);
-
+        template.insert(phone);
+        template.insert(car);
+        template.insert(chair);
+        customers.add(john);
+        customers.add(matt);
+        customers.add(adam);
+        repository.save(customers);
+        template.insert(new Owns(john, phone));
+        template.insert(new Owns(john, car));
         Collection<Product> johnStuff = new LinkedList<>();
         johnStuff.add(phone);
         johnStuff.add(car);
-        john.setOwns(johnStuff);
-
+        template.insert(new Owns(adam, chair));
         Collection<Product> adamStuff = new LinkedList<>();
         adamStuff.add(chair);
-        adam.setOwns(adamStuff);
-
+        template.insert(new Owns(matt, phone));
+        template.insert(new Owns(matt, car));
+        template.insert(new Owns(matt, chair));
         Collection<Product> mattStuff = new LinkedList<>();
         mattStuff.add(phone);
         mattStuff.add(car);
         mattStuff.add(chair);
-        matt.setOwns(mattStuff);
-
-        repository.save(customers);
         toBeRetrieved.add(john);
         toBeRetrieved.add(matt);
-
-        retrieved = repository.getByOwns(phone);
+        retrieved = repository.getByOwnsName(phone.getName());
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 
