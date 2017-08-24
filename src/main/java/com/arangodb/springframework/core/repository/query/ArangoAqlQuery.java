@@ -30,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by F625633 on 12/07/2017.
+ * Implements execute(Object[]) method which is called every time a user-defined AQL or derived method is called
  */
 public class ArangoAqlQuery implements RepositoryQuery {
 
@@ -72,13 +72,18 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return new ArangoQueryMethod(method, metadata, factory);
 	}
 
+	/**
+	 * This method contains main logic showing how all user-defined methods are implemented
+	 * @param arguments
+	 * @return
+	 */
 	@Override
 	public Object execute(Object[] arguments) {
 		Map<String, Object> bindVars = new HashMap<>();
 		String query = getQueryAnnotationValue();
 		AqlQueryOptions options = getAqlQueryOptions();
 		boolean optionsFound = false;
-		if (query == null) {
+		if (query == null) { // derived method
 			PartTree tree = new PartTree(method.getName(), domainClass);
 			isCountProjection = tree.isCountProjection();
 			isExistsProjection = tree.isExistsProjection();
@@ -100,9 +105,8 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			query = new DerivedQueryCreator((ArangoMappingContext) operations.getConverter().getMappingContext(),
 					domainClass, tree, accessor, bindVars, geoFields,
 					operations.getVersion().getVersion().compareTo("3.2.0") < 0).createQuery();
-		} else if (arguments != null) {
-			String fixedQuery = removeAqlStringLiterals(query);
-			Set<String> bindings = getBindings(fixedQuery);
+		} else if (arguments != null) { // AQL query method
+			Set<String> bindings = getBindings(query);
 			Annotation[][] annotations = method.getParameterAnnotations();
 			Assert.isTrue(arguments.length == annotations.length, "arguments.length != annotations.length");
 			Map<String, Object> bindVarsLocal = new HashMap<>();
@@ -147,6 +151,12 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return convertResult(operations.query(query, bindVars, options, getResultClass()));
 	}
 
+	/**
+	 * Merges AqlQueryOptions derived from @QueryOptions with dynamically passed AqlQueryOptions which takes priority
+	 * @param oldStatic
+	 * @param newDynamic
+	 * @return
+	 */
 	private AqlQueryOptions updateAqlQueryOptions(AqlQueryOptions oldStatic, AqlQueryOptions newDynamic) {
 		if (oldStatic == null) { return  newDynamic; }
 		Integer batchSize = newDynamic.getBatchSize();
@@ -193,6 +203,11 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return domainClass;
 	}
 
+	/**
+	 * Returns Param or BindVars Annotation if it is present in the given array or null otherwise
+	 * @param annotations
+	 * @return
+	 */
 	private Annotation getSpecialAnnotation(Annotation[] annotations) {
 		Annotation specialAnnotation = null;
 		for (Annotation annotation : annotations) {
@@ -209,6 +224,11 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return query == null ? null : query.value();
 	}
 
+	/**
+	 * Merges bindVars Map passed by a user with a Map created from the rest of the arguments which take priority
+	 * @param bindVars
+	 * @param bindVarsLocal
+	 */
 	private void mergeBindVars(Map<String, Object> bindVars, Map<String, Object> bindVarsLocal) {
 		for (String key : bindVarsLocal.keySet()) {
 			if (bindVars.containsKey(key))
@@ -253,9 +273,17 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return fixedQuery.toString();
 	}
 
+	/**
+	 * Returns all bindings used in AQL query String
+	 * including bindings prefixed with both single and double '@' character
+	 * ignoring AQL string literals
+	 * @param query
+	 * @return
+	 */
 	private Set<String> getBindings(String query) {
+		String fixedQuery = removeAqlStringLiterals(query);
 		Set<String> bindings = new HashSet<>();
-		Matcher matcher = Pattern.compile("@\\S+").matcher(query);
+		Matcher matcher = Pattern.compile("@\\S+").matcher(fixedQuery);
 		while (matcher.find())
 			bindings.add(matcher.group().substring(1));
 		return bindings;
