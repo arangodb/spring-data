@@ -18,17 +18,17 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.template.java;
+package com.arangodb.springframework.core.template;
 
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -40,9 +40,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.BaseDocument;
-import com.arangodb.entity.DocumentCreateEntity;
-import com.arangodb.entity.DocumentDeleteEntity;
-import com.arangodb.entity.DocumentUpdateEntity;
+import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
@@ -73,7 +71,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	@Test
 	public void insertDocument() {
-		final DocumentCreateEntity<Customer> res = template.insert(new Customer("John", "Doe", 30));
+		final DocumentEntity res = template.insert(new Customer("John", "Doe", 30));
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getId(), is(notNullValue()));
 	}
@@ -86,7 +84,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		c3.setKey("3");
 		final Customer c4 = new Customer();
 		c4.setKey("3");
-		final MultiDocumentEntity<DocumentCreateEntity<Object>> res = template.insert(Arrays.asList(c1, c2, c3, c4),
+		final MultiDocumentEntity<? extends DocumentEntity> res = template.insert(Arrays.asList(c1, c2, c3, c4),
 			Customer.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(3));
@@ -100,20 +98,20 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public void upsertReplace() {
 		final Customer customer = new Customer("John", "Doe", 30);
 		template.upsert(customer, UpsertStrategy.REPLACE);
-		assertThat(template.find(customer.getId(), Customer.class).getAge(), is(30));
+		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(30));
 		customer.setAge(35);
 		template.upsert(customer, UpsertStrategy.REPLACE);
-		assertThat(template.find(customer.getId(), Customer.class).getAge(), is(35));
+		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(35));
 	}
 
 	@Test
 	public void upsertUpdate() {
 		final Customer customer = new Customer("John", "Doe", 30);
 		template.upsert(customer, UpsertStrategy.UPDATE);
-		assertThat(template.find(customer.getId(), Customer.class).getAge(), is(30));
+		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(30));
 		customer.setAge(35);
 		template.upsert(customer, UpsertStrategy.UPDATE);
-		assertThat(template.find(customer.getId(), Customer.class).getAge(), is(35));
+		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(35));
 	}
 
 	@Test
@@ -121,15 +119,15 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Customer c1 = new Customer("John", "Doe", 30);
 		final Customer c2 = new Customer("John2", "Doe2", 30);
 		template.upsert(Arrays.asList(c1, c2), UpsertStrategy.REPLACE);
-		assertThat(template.find(c1.getId(), Customer.class).getAge(), is(30));
-		assertThat(template.find(c2.getId(), Customer.class).getAge(), is(30));
+		assertThat(template.find(c1.getId(), Customer.class).get().getAge(), is(30));
+		assertThat(template.find(c2.getId(), Customer.class).get().getAge(), is(30));
 		c1.setAge(35);
 		c2.setAge(35);
 		final Customer c3 = new Customer("John3", "Doe2", 30);
 		template.upsert(Arrays.asList(c1, c2, c3), UpsertStrategy.REPLACE);
-		assertThat(template.find(c1.getId(), Customer.class).getAge(), is(35));
-		assertThat(template.find(c2.getId(), Customer.class).getAge(), is(35));
-		assertThat(template.find(c3.getId(), Customer.class).getAge(), is(30));
+		assertThat(template.find(c1.getId(), Customer.class).get().getAge(), is(35));
+		assertThat(template.find(c2.getId(), Customer.class).get().getAge(), is(35));
+		assertThat(template.find(c3.getId(), Customer.class).get().getAge(), is(30));
 	}
 
 	@Test
@@ -137,22 +135,21 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Customer c1 = new Customer("John", "Doe", 30);
 		final Customer c2 = new Customer("John2", "Doe2", 30);
 		template.upsert(Arrays.asList(c1, c2), UpsertStrategy.UPDATE);
-		assertThat(template.find(c1.getId(), Customer.class).getAge(), is(30));
-		assertThat(template.find(c2.getId(), Customer.class).getAge(), is(30));
+		assertThat(template.find(c1.getId(), Customer.class).get().getAge(), is(30));
+		assertThat(template.find(c2.getId(), Customer.class).get().getAge(), is(30));
 		c1.setAge(35);
 		c2.setAge(35);
 		final Customer c3 = new Customer("John3", "Doe2", 30);
 		template.upsert(Arrays.asList(c1, c2, c3), UpsertStrategy.UPDATE);
-		assertThat(template.find(c1.getId(), Customer.class).getAge(), is(35));
-		assertThat(template.find(c2.getId(), Customer.class).getAge(), is(35));
-		assertThat(template.find(c3.getId(), Customer.class).getAge(), is(30));
+		assertThat(template.find(c1.getId(), Customer.class).get().getAge(), is(35));
+		assertThat(template.find(c2.getId(), Customer.class).get().getAge(), is(35));
+		assertThat(template.find(c3.getId(), Customer.class).get().getAge(), is(30));
 	}
 
 	@Test
 	public void getDocument() {
-		final DocumentCreateEntity<Customer> res = template
-				.insert(new Customer("John", "Doe", 30, new Address("22162–1010")));
-		final Customer customer = template.find(res.getId(), Customer.class);
+		final DocumentEntity res = template.insert(new Customer("John", "Doe", 30, new Address("22162–1010")));
+		final Customer customer = template.find(res.getId(), Customer.class).get();
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("John"));
 		assertThat(customer.getSurname(), is("Doe"));
@@ -187,11 +184,10 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	@Test
 	public void replaceDocument() {
-		final DocumentCreateEntity<Customer> res = template.insert(new Customer("John", "Doe", 30));
-		final DocumentUpdateEntity<Customer> replaceDocument = template.replace(res.getId(),
-			new Customer("Jane", "Doe", 26));
+		final DocumentEntity res = template.insert(new Customer("John", "Doe", 30));
+		final DocumentEntity replaceDocument = template.replace(res.getId(), new Customer("Jane", "Doe", 26));
 		assertThat(replaceDocument, is(notNullValue()));
-		final Customer customer = template.find(res.getId(), Customer.class);
+		final Customer customer = template.find(res.getId(), Customer.class).get();
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("Jane"));
 		assertThat(customer.getSurname(), is("Doe"));
@@ -200,30 +196,30 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	@Test
 	public void replaceDocuments() {
-		final DocumentCreateEntity<Product> a = template.insert(new Product("a"));
-		final DocumentCreateEntity<Product> b = template.insert(new Product("b"));
+		final DocumentEntity a = template.insert(new Product("a"));
+		final DocumentEntity b = template.insert(new Product("b"));
 
-		final Product documentA = template.find(a.getId(), Product.class);
+		final Product documentA = template.find(a.getId(), Product.class).get();
 		documentA.setName("aa");
-		final Product documentB = template.find(b.getId(), Product.class);
+		final Product documentB = template.find(b.getId(), Product.class).get();
 		documentB.setName("bb");
 
-		final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = template
-				.replace(Arrays.asList(documentA, documentB), Product.class);
+		final MultiDocumentEntity<? extends DocumentEntity> res = template.replace(Arrays.asList(documentA, documentB),
+			Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 
-		final Product newA = template.find(a.getId(), Product.class);
+		final Product newA = template.find(a.getId(), Product.class).get();
 		assertThat(newA.getName(), is("aa"));
-		final Product newB = template.find(b.getId(), Product.class);
+		final Product newB = template.find(b.getId(), Product.class).get();
 		assertThat(newB.getName(), is("bb"));
 	}
 
 	@Test
 	public void updateDocument() {
-		final DocumentCreateEntity<Customer> res = template.insert(new Customer("John", "Doe", 30));
+		final DocumentEntity res = template.insert(new Customer("John", "Doe", 30));
 		template.update(res.getId(), new Customer("Jane", "Doe", 26));
-		final Customer customer = template.find(res.getId(), Customer.class);
+		final Customer customer = template.find(res.getId(), Customer.class).get();
 		assertThat(customer, is(notNullValue()));
 		assertThat(customer.getName(), is("Jane"));
 		assertThat(customer.getSurname(), is("Doe"));
@@ -232,50 +228,50 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	@Test
 	public void updateDocuments() {
-		final DocumentCreateEntity<Product> a = template.insert(new Product("a"));
-		final DocumentCreateEntity<Product> b = template.insert(new Product("b"));
+		final DocumentEntity a = template.insert(new Product("a"));
+		final DocumentEntity b = template.insert(new Product("b"));
 
-		final Product documentA = template.find(a.getId(), Product.class);
+		final Product documentA = template.find(a.getId(), Product.class).get();
 		documentA.setName("aa");
-		final Product documentB = template.find(b.getId(), Product.class);
+		final Product documentB = template.find(b.getId(), Product.class).get();
 		documentB.setName("bb");
 
-		final MultiDocumentEntity<DocumentUpdateEntity<Object>> res = template
-				.update(Arrays.asList(documentA, documentB), Product.class);
+		final MultiDocumentEntity<? extends DocumentEntity> res = template.update(Arrays.asList(documentA, documentB),
+			Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 
-		final Product newA = template.find(a.getId(), Product.class);
+		final Product newA = template.find(a.getId(), Product.class).get();
 		assertThat(newA.getName(), is("aa"));
-		final Product newB = template.find(b.getId(), Product.class);
+		final Product newB = template.find(b.getId(), Product.class).get();
 		assertThat(newB.getName(), is("bb"));
 	}
 
 	@Test
 	public void deleteDocument() {
-		final DocumentCreateEntity<Customer> res = template.insert(new Customer("John", "Doe", 30));
+		final DocumentEntity res = template.insert(new Customer("John", "Doe", 30));
 		template.delete(res.getId(), Customer.class);
-		final Customer customer = template.find(res.getId(), Customer.class);
-		assertThat(customer, is(nullValue()));
+		final Optional<Customer> customer = template.find(res.getId(), Customer.class);
+		assertThat(customer.isPresent(), is(false));
 	}
 
 	@Test
 	public void deleteDocuments() {
-		final DocumentCreateEntity<Product> a = template.insert(new Product("a"));
-		final DocumentCreateEntity<Product> b = template.insert(new Product("b"));
+		final DocumentEntity a = template.insert(new Product("a"));
+		final DocumentEntity b = template.insert(new Product("b"));
 
-		final Product documentA = template.find(a.getId(), Product.class);
-		final Product documentB = template.find(b.getId(), Product.class);
+		final Product documentA = template.find(a.getId(), Product.class).get();
+		final Product documentB = template.find(b.getId(), Product.class).get();
 
-		final MultiDocumentEntity<DocumentDeleteEntity<Product>> res = template
-				.delete(Arrays.asList(documentA, documentB), Product.class);
+		final MultiDocumentEntity<? extends DocumentEntity> res = template.delete(Arrays.asList(documentA, documentB),
+			Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 
-		final Product deletedA = template.find(a.getId(), Product.class);
-		assertThat(deletedA, is(nullValue()));
-		final Product deletedB = template.find(b.getId(), Product.class);
-		assertThat(deletedB, is(nullValue()));
+		final Optional<Product> deletedA = template.find(a.getId(), Product.class);
+		assertThat(deletedA.isPresent(), is(false));
+		final Optional<Product> deletedB = template.find(b.getId(), Product.class);
+		assertThat(deletedB.isPresent(), is(false));
 	}
 
 	@Test

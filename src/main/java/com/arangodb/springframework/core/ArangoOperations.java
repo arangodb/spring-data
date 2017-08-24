@@ -21,21 +21,19 @@
 package com.arangodb.springframework.core;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.dao.DataAccessException;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
 import com.arangodb.entity.ArangoDBVersion;
-import com.arangodb.entity.DocumentCreateEntity;
-import com.arangodb.entity.DocumentDeleteEntity;
-import com.arangodb.entity.DocumentUpdateEntity;
+import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.entity.UserEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.DocumentCreateOptions;
-import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
@@ -86,42 +84,10 @@ public interface ArangoOperations {
 	 *            The keys of the documents or the documents themselves
 	 * @param entityClass
 	 *            The entity type of the documents
-	 * @param options
-	 *            Additional options, can be null
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> delete(
-		Iterable<Object> values,
-		Class<T> entityClass,
-		DocumentDeleteOptions options) throws DataAccessException;
-
-	/**
-	 * Removes multiple document
-	 * 
-	 * @param values
-	 *            The keys of the documents or the documents themselves
-	 * @param entityClass
-	 *            The entity type of the documents
-	 * @return information about the documents
-	 * @throws DataAccessException
-	 */
-	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> delete(Iterable<Object> values, Class<T> entityClass)
-			throws DataAccessException;
-
-	/**
-	 * Removes a document
-	 * 
-	 * @param id
-	 *            The id or key of the document
-	 * @param entityClass
-	 *            The entity type of the document
-	 * @param options
-	 *            Additional options, can be null
-	 * @return information about the document
-	 * @throws DataAccessException
-	 */
-	<T> DocumentDeleteEntity<T> delete(String id, Class<T> entityClass, DocumentDeleteOptions options)
+	MultiDocumentEntity<? extends DocumentEntity> delete(Iterable<Object> values, Class<?> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -134,7 +100,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentDeleteEntity<Void> delete(String id, Class<T> entityClass) throws DataAccessException;
+	DocumentEntity delete(String id, Class<?> entityClass) throws DataAccessException;
 
 	/**
 	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
@@ -153,9 +119,9 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentUpdateEntity<Object>> update(
+	<T> MultiDocumentEntity<? extends DocumentEntity> update(
 		Iterable<T> values,
-		Class<?> entityClass,
+		Class<T> entityClass,
 		DocumentUpdateOptions options) throws DataAccessException;
 
 	/**
@@ -173,7 +139,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentUpdateEntity<Object>> update(Iterable<T> values, Class<?> entityClass)
+	<T> MultiDocumentEntity<? extends DocumentEntity> update(Iterable<T> values, Class<T> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -190,7 +156,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentUpdateEntity<T> update(String id, T value, DocumentUpdateOptions options) throws DataAccessException;
+	<T> DocumentEntity update(String id, T value, DocumentUpdateOptions options) throws DataAccessException;
 
 	/**
 	 * Partially updates the document identified by document id or key. The value must contain a document with the
@@ -204,7 +170,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentUpdateEntity<T> update(String id, T value) throws DataAccessException;
+	<T> DocumentEntity update(String id, T value) throws DataAccessException;
 
 	/**
 	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
@@ -221,9 +187,9 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentUpdateEntity<Object>> replace(
+	<T> MultiDocumentEntity<? extends DocumentEntity> replace(
 		Iterable<T> values,
-		Class<?> entityClass,
+		Class<T> entityClass,
 		DocumentReplaceOptions options) throws DataAccessException;
 
 	/**
@@ -241,7 +207,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentUpdateEntity<Object>> replace(Iterable<T> values, Class<?> entityClass)
+	<T> MultiDocumentEntity<? extends DocumentEntity> replace(Iterable<T> values, Class<T> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -257,7 +223,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentUpdateEntity<T> replace(String id, T value, DocumentReplaceOptions options) throws DataAccessException;
+	<T> DocumentEntity replace(String id, T value, DocumentReplaceOptions options) throws DataAccessException;
 
 	/**
 	 * Replaces the document with key with the one in the body, provided there is such a document and no precondition is
@@ -270,11 +236,11 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentUpdateEntity<T> replace(String id, T value) throws DataAccessException;
+	<T> DocumentEntity replace(String id, T value) throws DataAccessException;
 
-	<T> T find(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
+	<T> Optional<T> find(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
 
-	<T> T find(String id, Class<T> entityClass) throws DataAccessException;
+	<T> Optional<T> find(String id, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Reads all documents from a collection
@@ -313,9 +279,9 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentCreateEntity<Object>> insert(
+	<T> MultiDocumentEntity<? extends DocumentEntity> insert(
 		Iterable<T> values,
-		Class<?> entityClass,
+		Class<T> entityClass,
 		DocumentCreateOptions options) throws DataAccessException;
 
 	/**
@@ -331,7 +297,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentCreateEntity<Object>> insert(Iterable<T> values, Class<?> entityClass)
+	<T> MultiDocumentEntity<? extends DocumentEntity> insert(Iterable<T> values, Class<T> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -344,7 +310,7 @@ public interface ArangoOperations {
 	 *            Additional options, can be null
 	 * @return information about the document
 	 */
-	<T> DocumentCreateEntity<T> insert(T value, DocumentCreateOptions options) throws DataAccessException;
+	<T> DocumentEntity insert(T value, DocumentCreateOptions options) throws DataAccessException;
 
 	/**
 	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
@@ -354,7 +320,7 @@ public interface ArangoOperations {
 	 *            A representation of a single document
 	 * @return information about the document
 	 */
-	<T> DocumentCreateEntity<T> insert(T value) throws DataAccessException;
+	<T> DocumentEntity insert(T value) throws DataAccessException;
 
 	public enum UpsertStrategy {
 		REPLACE, UPDATE
