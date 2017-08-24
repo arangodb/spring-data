@@ -9,6 +9,7 @@ import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.annotation.Param;
+import com.arangodb.springframework.testdata.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -144,4 +145,8 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(Point location, double distance);
 
 	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsNameLike(String name);
+
+	// Graph traversal
+
+	List<Customer> getByOwns(Product product);
 }
