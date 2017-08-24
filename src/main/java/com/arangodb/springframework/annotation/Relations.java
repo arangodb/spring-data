@@ -37,9 +37,13 @@ public @interface Relations {
 		ANY, OUTBOUND, INBOUND
 	}
 
-	Class<?> edge();
+	Class<?> edge() default Relations.class;
 
-	int depth() default 1;
+	Class<?>[] edges() default {};
+
+	int minDepth() default 1;
+
+	int maxDepth() default 1;
 
 	Direction direction() default Direction.ANY;
 
