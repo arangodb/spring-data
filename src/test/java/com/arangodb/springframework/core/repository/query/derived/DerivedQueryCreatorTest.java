@@ -662,7 +662,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
     }
 
     @Test
-    public void getByOwnsContainsNameTest() {
+    public void relationsMultiLevelTest() {
         List<Customer> toBeRetrieved = new LinkedList<>();
         List<Customer> customers = new LinkedList<>();
         List<Customer> retrieved;

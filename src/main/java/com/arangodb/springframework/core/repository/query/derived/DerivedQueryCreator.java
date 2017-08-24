@@ -207,9 +207,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         });
         int i = 0;
         for (Object object : persistentPropertyPath) {
+            ++i;
+            --propertiesLeft;
             ArangoPersistentProperty property = (ArangoPersistentProperty) object;
             if (simpleProperties.length() != 0) { simpleProperties.append("."); }
-            if (propertiesLeft == 1) {
+            if (propertiesLeft == 0) {
                 if (true);//TODO
                 simpleProperties.append(property.getFieldName());
                 break;
@@ -219,15 +221,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 final String TEMPLATE = "FOR %s IN %d %s %s.%s_id %s";
                 String nested = simpleProperties.toString();
                 if (!nested.isEmpty()) { nested += "."; }
-                String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
-                String entity = "e" + Integer.toString(++varsUsed);
-                String direction = property.getRelations().get().direction().name();//or toString?
+                String direction = property.getRelations().get().direction().name();
                 String collection = context.getPersistentEntity(property.getRelations().get().edge()).getCollection();
                 if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
                 edgesBuilder.append((edgesBuilder.length() == 0 ? "" : ", ") + collection);
                 ++edgeCounter;
-                if (propertiesRelationsStatus.get(i + 1)) { continue; }
-                // what is depth() of and edge collection?
+                if (propertiesRelationsStatus.get(i) && propertiesLeft != 1) { continue; }
+                String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
+                String entity = "e" + Integer.toString(++varsUsed);
                 String edges = edgesBuilder.toString();
                 simpleProperties = new StringBuilder();
                 edgesBuilder = new StringBuilder();
@@ -281,8 +282,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                     simpleProperties.append(property.getFieldName());
                 }
             }
-            --propertiesLeft;
-            ++i;
         }
         return new String[] {
                 predicateTemplate,
