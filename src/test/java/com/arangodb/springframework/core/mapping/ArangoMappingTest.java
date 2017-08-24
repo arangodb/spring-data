@@ -42,7 +42,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.arangodb.entity.DocumentCreateEntity;
+import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
@@ -108,7 +108,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 
 	@Test
 	public void idKeyRev() {
-		final DocumentCreateEntity<BasicTestEntity> ref = template.insert(new BasicTestEntity());
+		final DocumentEntity ref = template.insert(new BasicTestEntity());
 		final BasicTestEntity entity = template.find(ref.getId(), BasicTestEntity.class).get();
 		assertThat(entity, is(notNullValue()));
 		assertThat(entity.getId(), is(ref.getId()));
@@ -142,7 +142,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void fieldNameAnnotation() {
 		final FieldNameTestEntity entity = new FieldNameTestEntity();
 		entity.test = "1234";
-		final DocumentCreateEntity<FieldNameTestEntity> res = template.insert(entity);
+		final DocumentEntity res = template.insert(entity);
 		final VPackSlice slice = template.driver().db(ArangoTestConfiguration.DB).getDocument(res.getId(),
 			VPackSlice.class);
 		assertThat(slice, is(notNullValue()));
