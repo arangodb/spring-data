@@ -197,8 +197,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         final String PREDICATE_TEMPLATE = "(%s FILTER %%s RETURN 1)[0] == 1";
         PersistentPropertyPath persistentPropertyPath = context.getPersistentPropertyPath(part.getProperty());
         StringBuilder simpleProperties = new StringBuilder();
-        StringBuilder edgesBuilder = new StringBuilder();
-        int edgeCounter = 0;
         String predicateTemplate = "";
         int propertiesLeft = persistentPropertyPath.getLength();
         List<Boolean> propertiesRelationsStatus = new ArrayList<>();
@@ -212,7 +210,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             ArangoPersistentProperty property = (ArangoPersistentProperty) object;
             if (simpleProperties.length() != 0) { simpleProperties.append("."); }
             if (propertiesLeft == 0) {
-                if (true);//TODO
                 simpleProperties.append(property.getFieldName());
                 break;
             }
@@ -222,19 +219,20 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 String nested = simpleProperties.toString();
                 if (!nested.isEmpty()) { nested += "."; }
                 String direction = property.getRelations().get().direction().name();
-                String collection = context.getPersistentEntity(property.getRelations().get().edge()).getCollection();
-                if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
-                edgesBuilder.append((edgesBuilder.length() == 0 ? "" : ", ") + collection);
-                ++edgeCounter;
+                Class<?>[] edgeClasses = context.getPersistentEntity(property.getRelations().get().edges();
+                StringBuilder edgesBuilder = new StringBuilder();
+                for (Class<?> edge : edgeClasses) {
+                    String collection = context.getPersistentEntity(edge).getCollection();
+                    if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
+                    edgesBuilder.append((edgesBuilder.length() == 0 ? "" : ", ") + collection);
+                }
                 if (propertiesRelationsStatus.get(i) && propertiesLeft != 1) { continue; }
                 String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
                 String entity = "e" + Integer.toString(++varsUsed);
                 String edges = edgesBuilder.toString();
                 simpleProperties = new StringBuilder();
-                edgesBuilder = new StringBuilder();
-                String iteration = String.format(TEMPLATE, entity, edgeCounter, direction, prevEntity, nested, edges);
+                String iteration = String.format(TEMPLATE, entity, edgeClasses.length, direction, prevEntity, nested, edges);
                 String predicate = String.format(PREDICATE_TEMPLATE, iteration);
-                edgeCounter = 0;
                 predicateTemplate = predicateTemplate.length() == 0
                         ? predicate : String.format(predicateTemplate, predicate);
             } else if (property.isCollectionLike()) {
