@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.dao.DataAccessException;
@@ -284,7 +285,7 @@ public interface ArangoOperations {
 	 * @return the documents
 	 * @throws DataAccessException
 	 */
-	<T> Iterable<T> findAll(Class<T> entityClass) throws DataAccessException;
+	<T> Collection<T> findAll(Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Reads multiple documents
@@ -296,7 +297,7 @@ public interface ArangoOperations {
 	 * @return the documents
 	 * @throws DataAccessException
 	 */
-	<T> Iterable<T> find(final Iterable<String> ids, final Class<T> entityClass) throws DataAccessException;
+	<T> Collection<T> find(final Iterable<String> ids, final Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
