@@ -47,6 +47,7 @@ import com.arangodb.entity.UserEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.DocumentCreateOptions;
+import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
@@ -326,17 +327,36 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public MultiDocumentEntity<? extends DocumentEntity> delete(
 		final Iterable<Object> values,
+		final Class<?> entityClass,
+		final DocumentDeleteOptions options) throws DataAccessException {
+		try {
+			return _collection(entityClass).deleteDocuments(DBCollectionEntity.class.cast(toDBEntity(values)),
+				entityClass, options);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
+	public MultiDocumentEntity<? extends DocumentEntity> delete(
+		final Iterable<Object> values,
 		final Class<?> entityClass) throws DataAccessException {
-		return _collection(entityClass).deleteDocuments(DBCollectionEntity.class.cast(toDBEntity(values)));
+		return delete(values, entityClass, new DocumentDeleteOptions());
+	}
+
+	@Override
+	public DocumentEntity delete(final String id, final Class<?> entityClass, final DocumentDeleteOptions options)
+			throws DataAccessException {
+		try {
+			return _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), entityClass, options);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	@Override
 	public DocumentEntity delete(final String id, final Class<?> entityClass) throws DataAccessException {
-		try {
-			return _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id));
-		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
-		}
+		return delete(id, entityClass, new DocumentDeleteOptions());
 	}
 
 	@Override

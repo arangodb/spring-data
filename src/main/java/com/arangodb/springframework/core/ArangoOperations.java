@@ -34,6 +34,7 @@ import com.arangodb.entity.UserEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.DocumentCreateOptions;
+import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
@@ -84,11 +85,42 @@ public interface ArangoOperations {
 	 *            The keys of the documents or the documents themselves
 	 * @param entityClass
 	 *            The entity type of the documents
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	MultiDocumentEntity<? extends DocumentEntity> delete(
+		Iterable<Object> values,
+		Class<?> entityClass,
+		DocumentDeleteOptions options) throws DataAccessException;
+
+	/**
+	 * Removes multiple document
+	 * 
+	 * @param values
+	 *            The keys of the documents or the documents themselves
+	 * @param entityClass
+	 *            The entity type of the documents
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
 	MultiDocumentEntity<? extends DocumentEntity> delete(Iterable<Object> values, Class<?> entityClass)
 			throws DataAccessException;
+
+	/**
+	 * Removes a document
+	 * 
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity type of the document
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	DocumentEntity delete(String id, Class<?> entityClass, DocumentDeleteOptions options) throws DataAccessException;
 
 	/**
 	 * Removes a document
