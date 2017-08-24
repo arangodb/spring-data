@@ -88,7 +88,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	@Override
 	public Iterable<T> findAll(Sort sort) {
 		String sortString = DerivedQueryCreator.buildSortString(sort);
-		return execute("", sortString, "", new HashMap<>()).asListRemaining();
+		return execute("", sortString, "", new HashMap<>());
 	}
 
 	@Override
@@ -120,7 +120,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 		String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
 		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
 		ArangoCursor cursor = execute(filter, "", "", bindVars);
-		return cursor.asListRemaining();
+		return cursor;
 	}
 
 	@Override
@@ -130,7 +130,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 		String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
 		String sortString = DerivedQueryCreator.buildSortString(sort);
 		ArangoCursor cursor = execute(filter, sortString, "", bindVars);
-		return cursor.asListRemaining();
+		return cursor;
 	}
 
 	@Override

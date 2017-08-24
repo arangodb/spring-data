@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.template.java;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -28,6 +29,8 @@ import static org.junit.Assert.assertThat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -156,6 +159,30 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customer.getAge(), is(30));
 		assertThat(customer.getAddress(), is(notNullValue()));
 		assertThat(customer.getAddress().getZipCode(), is("22162–1010"));
+	}
+
+	@Test
+	public void getDocuments() {
+		final Customer c1 = new Customer("John", "Doe", 30);
+		final Customer c2 = new Customer("John2", "Doe", 30);
+		template.insert(Arrays.asList(c1, c2), Customer.class);
+		final Iterable<Customer> customers = template.find(Arrays.asList(c1.getId(), c2.getId()), Customer.class);
+		assertThat(customers, is(notNullValue()));
+		assertThat(
+			StreamSupport.stream(customers.spliterator(), false).map((e) -> e.getId()).collect(Collectors.toList()),
+			hasItems(c1.getId(), c2.getId()));
+	}
+
+	@Test
+	public void getAllDocuments() {
+		final Customer c1 = new Customer("John", "Doe", 30);
+		final Customer c2 = new Customer("John2", "Doe", 30);
+		template.insert(Arrays.asList(c1, c2), Customer.class);
+		final Iterable<Customer> customers = template.findAll(Customer.class);
+		assertThat(customers, is(notNullValue()));
+		assertThat(
+			StreamSupport.stream(customers.spliterator(), false).map((e) -> e.getId()).collect(Collectors.toList()),
+			hasItems(c1.getId(), c2.getId()));
 	}
 
 	@Test
