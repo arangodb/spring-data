@@ -149,4 +149,6 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 	// Graph traversal
 
 	List<Customer> getByOwnsName(String name);
+
+	List<Customer> getByOwnsContainsName(String name);
 }

@@ -632,7 +632,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
     }
 
     @Test
-    public void relationsTest() {
+    public void getByOwnsNameTest() {
         List<Customer> toBeRetrieved = new LinkedList<>();
         List<Customer> customers = new LinkedList<>();
         List<Customer> retrieved;
@@ -642,9 +642,6 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         Product phone = new Product("phone");
         Product car = new Product("car");
         Product chair = new Product("chair");
-        Material wood = new Material("wood");
-        Material metal = new Material("metal");
-        Material glass = new Material("glass");
         template.insert(phone);
         template.insert(car);
         template.insert(chair);
@@ -654,22 +651,53 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         repository.save(customers);
         template.insert(new Owns(john, phone));
         template.insert(new Owns(john, car));
-        Collection<Product> johnStuff = new LinkedList<>();
-        johnStuff.add(phone);
-        johnStuff.add(car);
         template.insert(new Owns(adam, chair));
-        Collection<Product> adamStuff = new LinkedList<>();
-        adamStuff.add(chair);
         template.insert(new Owns(matt, phone));
         template.insert(new Owns(matt, car));
         template.insert(new Owns(matt, chair));
-        Collection<Product> mattStuff = new LinkedList<>();
-        mattStuff.add(phone);
-        mattStuff.add(car);
-        mattStuff.add(chair);
         toBeRetrieved.add(john);
         toBeRetrieved.add(matt);
         retrieved = repository.getByOwnsName(phone.getName());
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void getByOwnsContainsNameTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        List<Customer> customers = new LinkedList<>();
+        List<Customer> retrieved;
+        Customer john = new Customer("John", "Smith", 52);
+        Customer adam = new Customer("Adam", "Smith", 294);
+        Customer matt = new Customer("Matt", "Smith", 34);
+        Product phone = new Product("phone");
+        Product car = new Product("car");
+        Product chair = new Product("chair");
+        template.insert(phone);
+        template.insert(car);
+        template.insert(chair);
+        Material wood = new Material("wood");
+        Material metal = new Material("metal");
+        Material glass = new Material("glass");
+        template.insert(wood);
+        template.insert(metal);
+        template.insert(glass);
+        customers.add(john);
+        customers.add(matt);
+        customers.add(adam);
+        repository.save(customers);
+        template.insert(new Owns(john, phone));
+        template.insert(new Owns(john, car));
+        template.insert(new Owns(adam, chair));
+        template.insert(new Owns(matt, phone));
+        template.insert(new Owns(matt, car));
+        template.insert(new Owns(matt, chair));
+        template.insert(new Contains(phone, glass));
+        template.insert(new Contains(car, metal));
+        template.insert(new Contains(car, glass));
+        template.insert(new Contains(chair, wood));
+        toBeRetrieved.add(adam);
+        toBeRetrieved.add(matt);
+        retrieved = repository.getByOwnsContainsName(wood.getName());
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 
