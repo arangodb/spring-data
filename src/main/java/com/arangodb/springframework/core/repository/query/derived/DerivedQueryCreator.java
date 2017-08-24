@@ -201,10 +201,16 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         int edgeCounter = 0;
         String predicateTemplate = "";
         int propertiesLeft = persistentPropertyPath.getLength();
+        List<Boolean> propertiesRelationsStatus = new ArrayList<>();
+        persistentPropertyPath.forEach(p -> {
+            propertiesRelationsStatus.add(((ArangoPersistentProperty) p).getRelations().isPresent());
+        });
+        int i = 0;
         for (Object object : persistentPropertyPath) {
             ArangoPersistentProperty property = (ArangoPersistentProperty) object;
             if (simpleProperties.length() != 0) { simpleProperties.append("."); }
             if (propertiesLeft == 1) {
+                if (true);//TODO
                 simpleProperties.append(property.getFieldName());
                 break;
             }
@@ -220,13 +226,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
                 edgesBuilder.append((edgesBuilder.length() == 0 ? "" : ", ") + collection);
                 ++edgeCounter;
+                if (propertiesRelationsStatus.get(i + 1)) { continue; }
                 // what is depth() of and edge collection?
                 String edges = edgesBuilder.toString();
-                edgesBuilder = new StringBuilder();
                 simpleProperties = new StringBuilder();
+                edgesBuilder = new StringBuilder();
+                edgeCounter = 0;
                 String iteration = String.format(TEMPLATE, entity, edgeCounter, direction, prevEntity, nested, edges);
                 String predicate = String.format(PREDICATE_TEMPLATE, iteration);
-                edgeCounter = 0;
                 predicateTemplate = predicateTemplate.length() == 0
                         ? predicate : String.format(predicateTemplate, predicate);
             } else if (property.isCollectionLike()) {
@@ -275,6 +282,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                 }
             }
             --propertiesLeft;
+            ++i;
         }
         return new String[] {
                 predicateTemplate,
