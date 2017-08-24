@@ -203,16 +203,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         for (Object object : persistentPropertyPath) {
             --propertiesLeft;
             ArangoPersistentProperty property = (ArangoPersistentProperty) object;
-            if (simpleProperties.length() != 0) { simpleProperties.append("."); }
             if (propertiesLeft == 0) {
-                simpleProperties.append(property.getFieldName());
+                simpleProperties.append("." + property.getFieldName());
                 break;
             }
             if (property.getRelations().isPresent()) {
                 // graph traversal
-                final String TEMPLATE = "FOR %s IN %s %s %s.%s_id %s";
+                final String TEMPLATE = "FOR %s IN %s %s %s%s._id %s";
                 String nested = simpleProperties.toString();
-                if (!nested.isEmpty()) { nested += "."; }
                 Relations relations = property.getRelations().get();
                 String direction = relations.direction().name();
                 String depths = String.format("%s..%d", relations.minDepth(), relations.maxDepth());
@@ -234,12 +232,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             } else if (property.isCollectionLike()) {
                 if (property.getRef().isPresent()) {
                     // collection of references
-                    final String TEMPLATE = "FOR %s IN %s FILTER %s._id IN %s.%s";
+                    final String TEMPLATE = "FOR %s IN %s FILTER %s._id IN %s%s";
                     String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
                     String entity = "e" + Integer.toString(++varsUsed);
                     String collection = context.getPersistentEntity(property.getComponentType()).getCollection();
                     if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
-                    String name = simpleProperties.toString() + property.getFieldName();
+                    String name = simpleProperties.toString() + "." + property.getFieldName();
                     simpleProperties = new StringBuilder();
                     String iteration = String.format(TEMPLATE, entity, collection, entity, prevEntity, name);
                     String predicate = String.format(PREDICATE_TEMPLATE, iteration);
@@ -247,10 +245,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                             ? predicate : String.format(predicateTemplate, predicate);
                 } else {
                     // collection
-                    final String TEMPLATE = "FOR %s IN TO_ARRAY(%s.%s)";
+                    final String TEMPLATE = "FOR %s IN TO_ARRAY(%s%s)";
                     String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
                     String entity = "e" + Integer.toString(++varsUsed);
-                    String name = simpleProperties.toString() + property.getFieldName();
+                    String name = simpleProperties.toString() + "." + property.getFieldName();
                     simpleProperties = new StringBuilder();
                     String iteration = String.format(TEMPLATE, entity, prevEntity, name);
                     String predicate = String.format(PREDICATE_TEMPLATE, iteration);
@@ -260,12 +258,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
             } else {
                 if (property.getRef().isPresent() || property.getFrom().isPresent() || property.getTo().isPresent()) {
                     // single reference
-                    final String TEMPLATE = "FOR %s IN %s FILTER %s._id == %s.%s";
+                    final String TEMPLATE = "FOR %s IN %s FILTER %s._id == %s%s";
                     String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
                     String entity = "e" + Integer.toString(++varsUsed);
                     String collection = context.getPersistentEntity(property.getType()).getCollection();
                     if (collection.split("-").length > 1) { collection = "`" + collection + "`"; }
-                    String name = simpleProperties.toString() + property.getFieldName();
+                    String name = simpleProperties.toString() + "." + property.getFieldName();
                     simpleProperties = new StringBuilder();
                     String iteration = String.format(TEMPLATE, entity, collection, entity, prevEntity, name);
                     String predicate = String.format(PREDICATE_TEMPLATE, iteration);
@@ -273,13 +271,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
                             ? predicate : String.format(predicateTemplate, predicate);
                 } else {
                     // simple property
-                    simpleProperties.append(property.getFieldName());
+                    simpleProperties.append("." + property.getFieldName());
                 }
             }
         }
         return new String[] {
                 predicateTemplate,
-                "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed)) + "." + simpleProperties.toString()
+                "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed)) + simpleProperties.toString()
         };
     }
 

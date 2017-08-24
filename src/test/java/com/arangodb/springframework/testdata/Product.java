@@ -41,7 +41,7 @@ public class Product {
 	private String desc;
 	private double[] location;
 
-	private Product nestedProduct;
+	private Product nested;
 
 	@Relations(edges = { Contains.class })
 	private Material contains;
