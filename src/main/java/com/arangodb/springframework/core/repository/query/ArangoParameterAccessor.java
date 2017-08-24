@@ -13,7 +13,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created by F625633 on 03/08/2017.
+ * The main class used to access parameters of a user-defined method.
+ * It wraps ParametersParameterAccessor which catches special parameters Sort and Pageable,
+ * and catches Arango-specific parameters e.g. AqlQueryOptions
  */
 public class ArangoParameterAccessor implements ParameterAccessor {
     private final ParametersParameterAccessor accessor;

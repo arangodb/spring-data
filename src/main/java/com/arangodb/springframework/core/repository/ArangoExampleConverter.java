@@ -11,7 +11,8 @@ import org.springframework.util.Assert;
 import java.util.*;
 
 /**
- * Created by user on 08/08/17.
+ * Converts Example to String representing predicate expression
+ * and puts necessary bindings in the given bindVars Map
  */
 public class ArangoExampleConverter<T> {
 

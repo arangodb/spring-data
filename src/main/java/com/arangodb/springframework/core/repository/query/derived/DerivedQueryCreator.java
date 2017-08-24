@@ -17,7 +17,7 @@ import org.springframework.util.Assert;
 import java.util.*;
 
 /**
- * Created by F625633 on 24/07/2017.
+ * Creates a full AQL query from a PartTree and ArangoParameterAccessor
  */
 public class DerivedQueryCreator extends AbstractQueryCreator<String, ConjunctionBuilder> {
 
@@ -92,6 +92,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return criteria;
     }
 
+    /**
+     * Builds a full AQL query from a built Disjunction, additional information from PartTree
+     * and special parameters caught by ArangoParameterAccessor
+     * @param criteria
+     * @param sort
+     * @return
+     */
     @Override
     protected String complete(ConjunctionBuilder criteria, Sort sort) {
         if (tree.isDistinct() && !tree.isCountProjection()) LOGGER.debug(
@@ -123,6 +130,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return String.format(queryTemplate, array, predicate, count, sortString, limit, pageable, type);
     }
 
+    /**
+     * Builds a String representing SORT statement from a given Sort object
+     * @param sort
+     * @return
+     */
     public static String buildSortString(Sort sort) {
         if (sort == null) LOGGER.debug("Sort in findAll(Sort) is null");
         StringBuilder sortBuilder = new StringBuilder(sort == null ? "" : " SORT");
@@ -132,6 +144,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return sortBuilder.toString();
     }
 
+    /**
+     * Escapes special characters which could be used in an operand of LIKE operator
+     * @param string
+     * @return
+     */
     private String escapeSpecialCharacters(String string) {
         StringBuilder escaped = new StringBuilder();
         for (char character : string.toCharArray()) {
@@ -146,17 +163,36 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return ignorePropertyCase(part, property);
     }
 
+    /**
+     * Wrapps property expression in order to lower case.
+     * Only properties of type String or Iterable<String> are lowered
+     * @param part
+     * @param property
+     * @return
+     */
     private String ignorePropertyCase(Part part, String property) {
         if (!shouldIgnoreCase(part)) return property;
         if (!part.getProperty().getLeafProperty().isCollection()) return "LOWER(" + property + ")";
         return String.format("(FOR i IN TO_ARRAY(%s) RETURN LOWER(i))", property);
     }
 
+    /**
+     * Returns a String representing a full propertyPath e.g. "e.product.name"
+     * @param part
+     * @return
+     */
     private String getProperty(Part part) {
         return "e." + context.getPersistentPropertyPath(part.getProperty()).toPath(null,
                 ArangoPersistentProperty::getFieldName);
     }
 
+    /**
+     * Creates a predicate template with one String placeholder for a Part-specific predicate expression
+     * from properties in PropertyPath which represent references or collections,
+     * and, also, returns a 2nd String representing property to be used in a Part-specific predicate expression
+     * @param part
+     * @return
+     */
     private String[] createPredicateTemplateAndPropertyString(Part part) {
         final String PREDICATE_TEMPLATE = "(%s FILTER %%s RETURN 1)[0] == 1";
         PersistentPropertyPath persistentPropertyPath = context.getPersistentPropertyPath(part.getProperty());
@@ -223,6 +259,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         };
     }
 
+    /**
+     * Lowers case of a given argument if its type is String, Iterable<String> or String[] if shouldIgnoreCase is true
+     * @param argument
+     * @param shouldIgnoreCase
+     * @return
+     */
     private Object ignoreArgumentCase(Object argument, boolean shouldIgnoreCase) {
         if (!shouldIgnoreCase) return argument;
         if (argument instanceof String) return ((String) argument).toLowerCase();
@@ -237,6 +279,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return lowered;
     }
 
+    /**
+     * Determines whether the case for a Part should be ignored
+     * based on property type and IgnoreCase keywords in the method name
+     * @param part
+     * @return
+     */
     private boolean shouldIgnoreCase(Part part) {
         Class<?> propertyClass = part.getProperty().getLeafProperty().getType();
         boolean isLowerable = String.class.isAssignableFrom(propertyClass);
@@ -248,6 +296,15 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return shouldIgnoreCase;
     }
 
+    /**
+     * Puts actual arguments in bindVars Map based on Part-specific information and types of arguments.
+     * @param iterator
+     * @param shouldIgnoreCase
+     * @param arguments
+     * @param borderStatus
+     * @param ignoreBindVars
+     * @return
+     */
     private ArgumentProcessingResult bindArguments(Iterator<Object> iterator, boolean shouldIgnoreCase, int arguments, Boolean borderStatus,
                               boolean ignoreBindVars) {
         int bindings = 0;
@@ -323,8 +380,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return new ArgumentProcessingResult(type, bindings);
     }
 
+    /**
+     * Ensures that Points used in geospatial parts of non-nested properties are the same
+     * in case geospatial return type is expected
+     * @param point
+     */
     private void checkUniquePoint(Point point) {
-        if (!checkUnique) return;
+        if (!checkUnique) { return; }
         boolean isStillUnique = (uniquePoint == null || uniquePoint.equals(point));
         if (!isStillUnique) isUnique = false;
         if (!geoFields.isEmpty()) {
@@ -350,13 +412,28 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return distance.getNormalizedValue() * Metrics.KILOMETERS.getMultiplier() * 1000;
     }
 
+    /**
+     * Ensures that the same geo fields are used in geospatial parts of non-nested properties are the same
+     * in case geospatial return type is expected
+     * @param part
+     */
     private void checkUniqueLocation(Part part) {
         if (!checkUnique) return;
         isUnique = isUnique == null ? true : isUnique;
         isUnique = (uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part))) ? isUnique : false;
+        if (!geoFields.isEmpty()) {
+            Assert.isTrue(isUnique,"Different location fields are used - Distance is ambiguous");
+        }
         uniqueLocation = ignorePropertyCase(part);
     }
 
+    /**
+     * Creates a PartInformation containing a String representing either a predicate or array expression,
+     * and binds arguments from Iterator for a given Part
+     * @param part
+     * @param iterator
+     * @return
+     */
     private PartInformation createPartInformation(Part part, Iterator<Object> iterator) {
         String[] templateAndProperty = createPredicateTemplateAndPropertyString(part);
         String template = templateAndProperty[0];
@@ -565,6 +642,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
         return String.format("(FOR u IN %s RETURN UNSET(u, '_distance'))", clause);
     }
 
+    /**
+     * Stores how many bindings where used in a Part
+     * and if or what kind of special type clause should be created
+     */
     private static class ArgumentProcessingResult {
 
         private final Type type;
