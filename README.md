@@ -412,8 +412,8 @@ annotation, as shown below. AqlQueryOptions from an annotation and those from an
 those in the argument taking precedence. 
 
 The `AqlQueryOptions` allows you to set the cursor time-to-life, batch-size, caching flag and several other settings. 
-This special parameter works with both query-methods and finder-methods. Keep in mind that some options
- - like time-to-life - are only effective if the method return type is`ArangoCursor<T>` or `Iterable<T>`.
+This special parameter works with both query-methods and finder-methods. Keep in mind that some options, 
+like time-to-life, are only effective if the method return type is`ArangoCursor<T>` or `Iterable<T>`.
 
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
