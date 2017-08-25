@@ -111,6 +111,7 @@ In addition you can use the *arangodb.properties* or a custom properties file to
 ```
 arangodb.host=127.0.0.1
 arangodb.port=8529
+# arangodb.hosts=127.0.0.1:8529 could be used instead
 arangodb.user=root
 arangodb.password=
 ```
