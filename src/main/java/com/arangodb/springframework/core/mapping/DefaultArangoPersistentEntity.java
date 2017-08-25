@@ -154,7 +154,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 			options.replicationFactor(annotation.replicationFactor());
 		}
 		final String[] shardKeys = annotation.shardKeys();
-		if (shardKeys.length > 1 || (shardKeys.length > 0 && StringUtils.hasText(shardKeys[0]))) {
+		if (shardKeys.length > 0) {
 			options.shardKeys(shardKeys);
 		}
 		if (annotation.numberOfShards() > -1) {

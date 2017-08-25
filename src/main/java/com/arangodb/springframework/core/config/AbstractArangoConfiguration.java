@@ -31,6 +31,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 
 import com.arangodb.ArangoDB;
+import com.arangodb.ArangoDBException;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
@@ -112,7 +113,7 @@ public abstract class AbstractArangoConfiguration {
 						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
 					}
 				} catch (final Exception e) {
-					// TODO
+					throw new ArangoDBException(e);
 				}
 				return Optional.ofNullable(resolver);
 			}
@@ -130,7 +131,7 @@ public abstract class AbstractArangoConfiguration {
 						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
 					}
 				} catch (final Exception e) {
-					// TODO
+					throw new ArangoDBException(e);
 				}
 				return Optional.ofNullable(resolver);
 			}

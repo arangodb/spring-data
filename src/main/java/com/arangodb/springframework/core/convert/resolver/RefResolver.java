@@ -52,7 +52,7 @@ public class RefResolver extends AbstractResolver<Ref>
 
 	@Override
 	public Object resolve(final String id, final Class<?> type, final Ref annotation) {
-		return template.getDocument(id, type);
+		return template.find(id, type).get();
 	}
 
 }

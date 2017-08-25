@@ -15,7 +15,8 @@
   * [Instantiating](#instantiating)
   * [Return types](#return-types)
   * [Query Methods](#query-methods)
-  * [Finder Methods](#finder-methods)
+  * [Derived Methods](#derived-methods)
+    * [Geospatial queries](#geospatial-queries)
   * [Property expression](#property-expression)
   * [Special parameter handling](#special-parameter-handling)
     * [Bind parameters](#bind-parameters)
@@ -59,16 +60,25 @@ The `ArangoTemplate` class is the default implementation of the operations inter
 
 ### Java-Configuration
 
-You can use Java to instantiate and configure an instance of `ArangoTemplate` as show below. Setup the underlying driver (`ArangoDB.Builder`) with default configuration automatically loads a properties file arangodb.properties, if exists in the classpath.
+You can use Java to instantiate and configure an instance of `ArangoTemplate` as show below. Setting up the underlying driver
+(`ArangoDB.Builder`) with default configuration automatically loads a properties file arangodb.properties, if it exists in 
+the classpath.
 
 ``` java
 @Configuration
 @EnableArangoRepositories(basePackages = { "com.company.mypackage" })
 public class MyConfiguration extends AbstractArangoConfiguration {
-
+  
+  //Instantiation of ArangoTemplate
   @Override
   public ArangoDB.Builder arango() {
     return new ArangoDB.Builder();
+  }
+  
+  //Name of the database to be used
+  @Override
+  public String database() {
+    return "example-database";
   }
 
 }
@@ -101,6 +111,7 @@ In addition you can use the *arangodb.properties* or a custom properties file to
 ```
 arangodb.host=127.0.0.1
 arangodb.port=8529
+# arangodb.hosts=127.0.0.1:8529 could be used instead
 arangodb.user=root
 arangodb.password=
 ```
@@ -137,7 +148,7 @@ You can use Spring’s XML bean schema to configure `ArangoTemplate` as show bel
 
 ## Introduction
 
-Spring Data Commons provide a composable repository infrastructure which Spring Data ArangoDB is built on. These allow for interface-based composition of repositories consisting of provided default implementations for certain interfaces (like `CrudRepository`) and custom implementations for other methods.
+Spring Data Commons provides a composable repository infrastructure which Spring Data ArangoDB is built on. These allow for interface-based composition of repositories consisting of provided default implementations for certain interfaces (like `CrudRepository`) and custom implementations for other methods.
 
 ## Instantiating
 
@@ -164,12 +175,12 @@ anywhere in the method signature.
 
 There are three ways of passing bind parameters to the query in the query annotation.
 
-Using number matching, arguments will be substituted into the query in the order they are passed to the query method, ignoring any AqlQueryOptions.
+Using number matching, arguments will be substituted into the query in the order they are passed to the query method.
 
 ``` java
 public interface MyRepository extends Repository<Customer, String>{
 
-  @Query("FOR c IN customers FILTER c.name == @0 AND c.surname == @1 RETURN c")
+  @Query("FOR c IN customers FILTER c.name == @0 AND c.surname == @2 RETURN c")
   ArangoCursor<Customer> query(String name, AqlQueryOptions options, String surname);
 
 }
@@ -217,9 +228,37 @@ public interface MyRepository extends Repository<Customer, String>{
 
 Spring Data ArangoDB supports Queries derived from methods names by splitting it into its semantic parts and converting 
 into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `stream..By`, `count..By`, 
-`exists..By`, `delete..By`, `remove..By` from the method and parse the rest. The By acts as a separator to indicate the 
-start of the criteria for the query to be build. You can define conditions on entity properties and concatenate them 
+`exists..By`, `delete..By`, `remove..By` from the method and parses the rest. The By acts as a separator to indicate the 
+start of the criteria for the query to be built. You can define conditions on entity properties and concatenate them 
 with `And` and `Or`.
+
+The complete list of part types for derived methods is below, where doc is a document in the database
+
+Keyword | Sample | Predicate
+----------|----------------|--------
+IsGreaterThan, GreaterThan, After | findByAgeGreaterThan(int age) | doc.age > age
+IsGreaterThanEqual, GreaterThanEqual | findByAgeIsGreaterThanEqual(int age) | doc.age >= age
+IsLessThan, LessThan, Before | findByAgeIsLessThan(int age) | doc.age < age
+IsLessThanEqualLessThanEqual | findByAgeLessThanEqual(int age) | doc.age <= age
+IsBetween, Between | findByAgeBetween(int lower, int upper) | lower < doc.age < upper
+IsNotNull, NotNull | findByNameNotNull() | doc.name != null
+IsNull, Null | findByNameNull() | doc.name == null
+IsLike, Like | findByNameLike(String name) | doc.name LIKE name
+IsNotLike, NotLike | findByNameNotLike(String name) | NOT(doc.name LIKE name)
+IsStartingWith, StartingWith, StartsWith | findByNameStartsWith(String prefix) | doc.name LIKE prefix
+IsEndingWith, EndingWith, EndsWith | findByNameEndingWith(String suffix) | doc.name LIKE suffix
+Regex, MatchesRegex, Matches | findByNameRegex(String pattern) | REGEX_TEST(doc.name, name, ignoreCase)
+(No Keyword) | findByFirstName(String name) | doc.name == name
+IsTrue, True | findByActiveTrue() | doc.active == true
+IsFalse, False | findByActiveFalse() | doc.active == false
+Is, Equals | findByAgeEquals(int age) | doc.age == age
+IsNot, Not | findByAgeNot(int age) | doc.age != age
+IsIn, In | findByNameIn(String[] names) | doc.name IN names
+IsNotIn, NotIn | findByNameIsNotIn(String[] names) | doc.name NOT IN names
+IsContaining, Containing, Contains | findByFriendsContaining(String name) | name IN doc.friends
+IsNotContaining, NotContaining, NotContains | findByFriendsNotContains(String name) | name NOT IN doc.friends
+Exists | findByFriendNameExists() | HAS(doc.friend, name)
+
 
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
@@ -253,15 +292,38 @@ public interface MyRepository extends Repository<Customer, String> {
   // FOR c IN customers
   // FILTER c.name = @0
   // SORT c.name ASC, c.age DESC RETURN c
-  ArangoCursor<Customer> findByNameOrderByNameAscAndAgeDesc(String name);
+  ArangoCursor<Customer> findByNameOrderByNameAscAgeDesc(String name);
 
 }
 ```
 
-###Geospatial queries
+### Geospatial queries
 
-To use a geospatial query on a collection, a geo index must exist on that collection. A geo index can be created on a 
-field which is a two element array, corresponding to latitude and longitude coordinates.
+Geospatial queries are a subsection of derived queries. To use a geospatial query on a collection, a geo index must
+exist on that collection. A geo index can be created on a field which is a two element array, corresponding to latitude 
+and longitude coordinates. 
+
+As a subsection of derived queries, geospatial queries support all the same return types, but also support the three
+return types `GeoPage, GeoResult and Georesults`. These types must be used in order to get the distance of each document
+as generated by the query.
+
+There are two kinds of geospatial query, Near and Within. Near sorts  documents by distance from the given point, while
+within both sorts and filters documents, returning those within the given distance range or shape.
+
+``` java
+public interface MyRepository extends Repository<City, String> {
+
+    GeoResult<City> getByLocationNear(Point point);
+    
+    GeoResults<City> findByLocationWithinOrLocationWithin(Box box, Polygon polygon);
+    
+    //Equivalent queries
+    GeoResults<City> findByLocationWithinOrLocationWithin(Point point, int distance);
+    GeoResults<City> findByLocationWithinOrLocationWithin(Point point, Distance distance);
+    GeoResults<City> findByLocationWithinOrLocationWithin(Circle circle);
+
+}
+```
 
 ## Property expression
 
@@ -286,7 +348,9 @@ public interface MyRepository extends Repository<Customer, String> {
 }
 ```
 
-It is possible for the algorithm to select the wrong property if the domain class has also an property which match the first split of the expression. To resolve this ambiguity you can use _ as a separator inside your method-name to define traversal points.
+It is possible for the algorithm to select the wrong property if the domain class also has a property which 
+matches the first split of the expression. To resolve this ambiguity you can use _ as a separator inside your method-name 
+to define traversal points.
 
 ``` java
 @Document("customers")
@@ -343,20 +407,32 @@ ArangoCursor<Customer> cursor = myRepo.query(bindVars);
 
 ### AQL query options
 
-You can set additional options for the query and the created cursor over the class `AqlQueryOptions` which you can simply define as a method parameter without a specific name. The `AqlQueryOptions` allows you to set the cursor time-to-life, batch-size, caching flag and several other settings.
-This special parameter works with both query-methods and finder-methods. Keep in mind that some options - like time-to-life - are only effective if the method return type is `ArangoCursor<T>` or `Iterable<T>`.
+You can set additional options for the query and the created cursor over the class `AqlQueryOptions` which you can 
+simply define as a method parameter without a specific name. AqlQuery options can also be defined with the @QueryOptions
+annotation, as shown below. AqlQueryOptions from an annotation and those from an argument are merged if both exist, with
+those in the argument taking precedence. 
+
+The `AqlQueryOptions` allows you to set the cursor time-to-life, batch-size, caching flag and several other settings. 
+This special parameter works with both query-methods and finder-methods. Keep in mind that some options, 
+like time-to-life, are only effective if the method return type is`ArangoCursor<T>` or `Iterable<T>`.
 
 ``` java
 public interface MyRepository extends Repository<Customer, String> {
 
+
   @Query("FOR c IN customers FILTER c.name == @0 RETURN c")
-  Iterable<Customer> query(String name, AqlQueryOptions options);
+  Iterable<Customer> query(String name, AqlQueryOptions options); 
+  
 
   Iterable<Customer> findByName(String name, AqlQueryOptions options);
+  
 
-  ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode, AqlQueryOptions options);
+  @QueryOptions(maxPlans = 1000, ttl = 128)
+  ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode);
+  
 
   @Query("FOR c IN customers FILTER c[@field] == @value RETURN c")
+  @QueryOptions(cache = true, ttl = 128)
   ArangoCursor<Customer> query(Map<String, Object> bindVars, AqlQueryOptions options);
 
 }
@@ -430,7 +506,9 @@ annotation | level | description
 
 ### Document
 
-The annotations `@Document` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameter is `value` to specify the collection name in the database. The annotation `@Document` specify the collection type to `DOCUMENT`.
+The annotations `@Document` applied to a class marks this class as a candidate for mapping to the database. The most 
+relevant parameter is `value` to specify the collection name in the database. The annotation `@Document` specifies the 
+collection type to `DOCUMENT`.
 
 ``` java
 @Document(value="persons")
@@ -441,7 +519,9 @@ public class Person {
 
 ### Edge
 
-The annotations `@Edge` applied to a class marked this class as a candidate for mapping to the database. The most relevant parameters are `value` to specify the collection name in the database. The annotation `@Edge` specify the collection type to `EDGE`.
+The annotations `@Edge` applied to a class marks this class as a candidate for mapping to the database. The most 
+relevant parameter is `value` to specify the collection name in the database. The annotation `@Edge` specifies the 
+collection type to `EDGE`.
 
 ``` java
 @Edge("relations")
@@ -452,7 +532,11 @@ public class Relation {
 
 ### Reference
 
-With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate document in another collection described in the `@Document` annotation of the nested object class. To successfully persist an instance of your object the referencing field has to be null or it's instance has to provide a field with the annotation `@Id` including an valid id.
+With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document. 
+The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate 
+document in another collection described in the `@Document` annotation of the nested object class. To successfully 
+persist an instance of your object the referencing field has to be null or it's instance has to provide a field with 
+the annotation `@Id` including a valid id.
 
 ``` java
 @Document(value="persons")
@@ -504,7 +588,11 @@ Without the annotation `@Ref` at the field `address`, the stored document would 
 
 ### Relations
 
-With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameter is `edge`. With `edge` you define the edge collection - which should be used in the traversal - using the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
+With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested
+objects are fetched from the database over a graph traversal with your current object as the starting point. The most 
+relevant parameter is `edge`. With `edge` you define the edge collection - which should be used in the traversal - using 
+the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the 
+parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
 
 ``` java
 @Document(value="persons")
@@ -604,7 +692,7 @@ and the representation of *Person* in collection *persons*:
 }
 ```
 
-**Note:** If you want to save an instance of *Relation*, both *Person* objects (from & to) already has to be persisted and the class *Person* needs a field with the annotation `@Id` so it can hold the persisted *_id* from the database. 
+**Note:** If you want to save an instance of *Relation*, both *Person* objects (from & to) already have to be persisted and the class *Person* needs a field with the annotation `@Id` so it can hold the persisted *_id* from the database. 
 
 ### Index and Indexed annotations
 
@@ -648,12 +736,14 @@ Possible `@<IndexType>Index` annotations are:
 * `@GeoIndex`
 * `@FulltextIndex`
 
-The following example creates a single hash index on the fields `name` and `age`:
+The following example creates a single hash index on the fields `name` and `age`, note that if a field is renamed in the
+database with @Field, the new field name must be used in the index declaration:
 ``` java
-@HashIndex(fields = {"name", "age"})
+@HashIndex(fields = {"fullname", "age"})
 public class Person {
+  @Field("fullname")  
   private String name;
-
+  
   private int age;
 }
 ```
@@ -683,7 +773,7 @@ public class Person {
 }
 ```
 
-The `@<IndexType>Index` annotations can be used multiple times to create more than one index on this way.
+The `@<IndexType>Index` annotations can be used multiple times to create more than one index in this way.
 
 The following example creates a hash index on the fields `name` and `age` and a separate hash index on the fields `name` and `gender`:
 ``` java

@@ -20,17 +20,15 @@
 
 package com.arangodb.springframework.core;
 
-import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.dao.DataAccessException;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
 import com.arangodb.entity.ArangoDBVersion;
-import com.arangodb.entity.DocumentCreateEntity;
-import com.arangodb.entity.DocumentDeleteEntity;
-import com.arangodb.entity.DocumentUpdateEntity;
+import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.entity.UserEntity;
 import com.arangodb.model.AqlQueryOptions;
@@ -48,85 +46,412 @@ import com.arangodb.springframework.core.convert.ArangoConverter;
  */
 public interface ArangoOperations {
 
+	/**
+	 * Give direct access to the underlying driver
+	 * 
+	 * @return main access object of the driver
+	 */
 	ArangoDB driver();
 
+	/**
+	 * Returns the server name and version number.
+	 * 
+	 * @return the server version, number
+	 * @throws DataAccessException
+	 */
 	ArangoDBVersion getVersion() throws DataAccessException;
 
+	/**
+	 * Create a cursor and return the first results
+	 * 
+	 * @param query
+	 *            contains the query string to be executed
+	 * @param bindVars
+	 *            key/value pairs representing the bind parameters
+	 * @param options
+	 *            Additional options, can be null
+	 * @param entityClass
+	 *            The entity type of the result
+	 * @return cursor of the results
+	 * @throws DataAccessException
+	 */
 	<T> ArangoCursor<T> query(String query, Map<String, Object> bindVars, AqlQueryOptions options, Class<T> entityClass)
 			throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(
-		Collection<Object> values,
-		Class<T> entityClass,
+	/**
+	 * Removes multiple document
+	 * 
+	 * @param values
+	 *            The keys of the documents or the documents themselves
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	MultiDocumentEntity<? extends DocumentEntity> delete(
+		Iterable<Object> values,
+		Class<?> entityClass,
 		DocumentDeleteOptions options) throws DataAccessException;
 
-	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteDocuments(Collection<Object> values, Class<T> entityClass)
+	/**
+	 * Removes multiple document
+	 * 
+	 * @param values
+	 *            The keys of the documents or the documents themselves
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	MultiDocumentEntity<? extends DocumentEntity> delete(Iterable<Object> values, Class<?> entityClass)
 			throws DataAccessException;
 
-	<T> DocumentDeleteEntity<T> deleteDocument(String id, Class<T> entityClass, DocumentDeleteOptions options)
-			throws DataAccessException;
+	/**
+	 * Removes a document
+	 * 
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity type of the document
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	DocumentEntity delete(String id, Class<?> entityClass, DocumentDeleteOptions options) throws DataAccessException;
 
-	<T> DocumentDeleteEntity<Void> deleteDocument(String id, Class<T> entityClass) throws DataAccessException;
+	/**
+	 * Removes a document
+	 * 
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity type of the document
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	DocumentEntity delete(String id, Class<?> entityClass) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(
-		Collection<Object> values,
-		Class<?> entityClass,
+	/**
+	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
+	 * values. Vales must contain a list of document updates with the attributes to patch (the patch documents). All
+	 * attributes from the patch documents will be added to the existing documents if they do not yet exist, and
+	 * overwritten in the existing documents if they do exist there.
+	 * 
+	 * @param <T>
+	 * 
+	 * @param values
+	 *            A list of documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<? extends DocumentEntity> update(
+		Iterable<T> values,
+		Class<T> entityClass,
 		DocumentUpdateOptions options) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> updateDocuments(Collection<Object> values, Class<?> entityClass)
+	/**
+	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
+	 * values. Vales must contain a list of document updates with the attributes to patch (the patch documents). All
+	 * attributes from the patch documents will be added to the existing documents if they do not yet exist, and
+	 * overwritten in the existing documents if they do exist there.
+	 * 
+	 * @param <T>
+	 * 
+	 * @param values
+	 *            A list of documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<? extends DocumentEntity> update(Iterable<T> values, Class<T> entityClass)
 			throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> updateDocument(String id, T value, DocumentUpdateOptions options)
-			throws DataAccessException;
+	/**
+	 * Partially updates the document identified by document id or key. The value must contain a document with the
+	 * attributes to patch (the patch document). All attributes from the patch document will be added to the existing
+	 * document if they do not yet exist, and overwritten in the existing document if they do exist there.
+	 * 
+	 * @param id
+	 *            The id or key of the document
+	 * @param value
+	 *            A representation of a single document
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	<T> DocumentEntity update(String id, T value, DocumentUpdateOptions options) throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> updateDocument(String id, T value) throws DataAccessException;
+	/**
+	 * Partially updates the document identified by document id or key. The value must contain a document with the
+	 * attributes to patch (the patch document). All attributes from the patch document will be added to the existing
+	 * document if they do not yet exist, and overwritten in the existing document if they do exist there.
+	 * 
+	 * @param id
+	 *            The id or key of the document
+	 * @param value
+	 *            A representation of a single document
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	<T> DocumentEntity update(String id, T value) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(
-		Collection<Object> values,
-		Class<?> entityClass,
+	/**
+	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
+	 * specified by the _key attributes in the documents in values.
+	 * 
+	 * @param <T>
+	 * 
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<? extends DocumentEntity> replace(
+		Iterable<T> values,
+		Class<T> entityClass,
 		DocumentReplaceOptions options) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentUpdateEntity<Object>> replaceDocuments(Collection<Object> values, Class<?> entityClass)
+	/**
+	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
+	 * specified by the _key attributes in the documents in values.
+	 * 
+	 * @param <T>
+	 * 
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<? extends DocumentEntity> replace(Iterable<T> values, Class<T> entityClass)
 			throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> replaceDocument(String id, T value, DocumentReplaceOptions options)
-			throws DataAccessException;
+	/**
+	 * Replaces the document with key with the one in the body, provided there is such a document and no precondition is
+	 * violated
+	 * 
+	 * @param id
+	 *            The id or key of the document
+	 * @param value
+	 *            A representation of a single document (POJO, VPackSlice or String for Json)
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	<T> DocumentEntity replace(String id, T value, DocumentReplaceOptions options) throws DataAccessException;
 
-	<T> DocumentUpdateEntity<T> replaceDocument(String id, T value) throws DataAccessException;
+	/**
+	 * Replaces the document with key with the one in the body, provided there is such a document and no precondition is
+	 * violated
+	 * 
+	 * @param id
+	 *            The id or key of the document
+	 * @param value
+	 *            A representation of a single document (POJO, VPackSlice or String for Json)
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	<T> DocumentEntity replace(String id, T value) throws DataAccessException;
 
-	<T> T getDocument(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
+	<T> Optional<T> find(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
 
-	<T> T getDocument(String id, Class<T> entityClass) throws DataAccessException;
+	<T> Optional<T> find(String id, Class<T> entityClass) throws DataAccessException;
 
-	<T> Iterable<T> getDocuments(Class<T> entityClass) throws DataAccessException;
+	/**
+	 * Reads all documents from a collection
+	 * 
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @return the documents
+	 * @throws DataAccessException
+	 */
+	<T> Iterable<T> findAll(Class<T> entityClass) throws DataAccessException;
 
-	<T> Iterable<T> getDocuments(final Iterable<String> ids, final Class<T> entityClass) throws DataAccessException;
+	/**
+	 * Reads multiple documents
+	 * 
+	 * @param ids
+	 *            The ids or keys of the documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @return the documents
+	 * @throws DataAccessException
+	 */
+	<T> Iterable<T> find(final Iterable<String> ids, final Class<T> entityClass) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(
-		Collection<Object> values,
-		Class<?> entityClass,
+	/**
+	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param <T>
+	 * 
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<? extends DocumentEntity> insert(
+		Iterable<T> values,
+		Class<T> entityClass,
 		DocumentCreateOptions options) throws DataAccessException;
 
-	MultiDocumentEntity<DocumentCreateEntity<Object>> insertDocuments(Collection<Object> values, Class<?> entityClass)
+	/**
+	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param <T>
+	 * 
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<? extends DocumentEntity> insert(Iterable<T> values, Class<T> entityClass)
 			throws DataAccessException;
 
-	<T> DocumentCreateEntity<T> insertDocument(T value, DocumentCreateOptions options) throws DataAccessException;
+	/**
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param value
+	 *            A representation of a single document
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the document
+	 */
+	<T> DocumentEntity insert(T value, DocumentCreateOptions options) throws DataAccessException;
 
-	<T> DocumentCreateEntity<T> insertDocument(T value) throws DataAccessException;
+	/**
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param value
+	 *            A representation of a single document
+	 * @return information about the document
+	 */
+	<T> DocumentEntity insert(T value) throws DataAccessException;
 
+	public enum UpsertStrategy {
+		REPLACE, UPDATE
+	}
+
+	/**
+	 * Creates a new document from the given document, unless there is already a document with the id given. In that
+	 * case it updates or replaces the document, depending on the chosen strategy.
+	 * 
+	 * @param value
+	 *            A representation of a single document
+	 * @param strategy
+	 *            The strategy to use when not inserting the document
+	 * @throws DataAccessException
+	 */
+	<T> void upsert(T value, UpsertStrategy strategy) throws DataAccessException;
+
+	/**
+	 * Creates new documents from the given documents, unless there already exists. In that case it updates or replaces
+	 * the documents, depending on the chosen strategy.
+	 * 
+	 * @param value
+	 *            A List of documents
+	 * @param strategy
+	 *            The strategy to use when not inserting the document
+	 * @throws DataAccessException
+	 */
+	<T> void upsert(Iterable<T> value, UpsertStrategy strategy) throws DataAccessException;
+
+	/**
+	 * Checks whether the document exists by reading a single document head
+	 * 
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity type of the document
+	 * @return true if the document exists, false if not
+	 * @throws DataAccessException
+	 */
 	boolean exists(String id, Class<?> entityClass) throws DataAccessException;
 
+	/**
+	 * Drop an existing database
+	 * 
+	 * @throws DataAccessException
+	 */
 	void dropDatabase() throws DataAccessException;
 
+	/**
+	 * Returns the operations interface for a collection. If the collection does not exists, it is created
+	 * automatically.
+	 * 
+	 * @param entityClass
+	 *            The entity type representing the collection
+	 * @return {@link CollectionOperations}
+	 * @throws DataAccessException
+	 */
 	CollectionOperations collection(Class<?> entityClass) throws DataAccessException;
 
+	/**
+	 * Returns the operations interface for a collection. If the collection does not exists, it is created
+	 * automatically.
+	 * 
+	 * @param name
+	 *            The name of the collection
+	 * @return {@link CollectionOperations}
+	 * @throws DataAccessException
+	 */
 	CollectionOperations collection(String name) throws DataAccessException;
 
+	/**
+	 * Returns the operations interface for a collection. If the collection does not exists, it is created
+	 * automatically.
+	 * 
+	 * @param name
+	 *            The name of the collection
+	 * @param options
+	 *            Additional options for collection creation, can be null
+	 * @return {@link CollectionOperations}
+	 * @throws DataAccessException
+	 */
 	CollectionOperations collection(String name, CollectionCreateOptions options) throws DataAccessException;
 
+	/**
+	 * Return the operations interface for a user. The user is not created automatically if it does not exists.
+	 * 
+	 * @param username
+	 *            The name of the user
+	 * @return {@link UserOperations}
+	 */
 	UserOperations user(String username);
 
-	Collection<UserEntity> getUsers() throws DataAccessException;
+	/**
+	 * Fetches data about all users. You can only execute this call if you have access to the _system database.
+	 * 
+	 * @return informations about all users
+	 * @throws DataAccessException
+	 */
+	Iterable<UserEntity> getUsers() throws DataAccessException;
 
 	ArangoConverter getConverter();
 

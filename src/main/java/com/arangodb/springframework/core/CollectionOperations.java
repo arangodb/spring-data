@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import org.springframework.dao.DataAccessException;
 
+import com.arangodb.entity.CollectionPropertiesEntity;
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.Permissions;
 import com.arangodb.model.FulltextIndexOptions;
@@ -38,31 +39,145 @@ import com.arangodb.model.SkiplistIndexOptions;
  */
 public interface CollectionOperations {
 
+	/**
+	 * Drops the collection
+	 * 
+	 * @throws DataAccessException
+	 */
 	void drop() throws DataAccessException;
 
+	/**
+	 * Removes all documents from the collection, but leaves the indexes intact
+	 * 
+	 * @throws DataAccessException
+	 */
 	void truncate() throws DataAccessException;
 
+	/**
+	 * Counts the documents in a collection
+	 * 
+	 * @return number of
+	 * @throws DataAccessException
+	 */
 	long count() throws DataAccessException;
 
+	/**
+	 * Reads the properties of the specified collection
+	 * 
+	 * @return properties of the collection
+	 * @throws DataAccessException
+	 */
+	CollectionPropertiesEntity getProperties() throws DataAccessException;
+
+	/**
+	 * Returns all indexes of the collection
+	 * 
+	 * @return information about the indexes
+	 * @throws DataAccessException
+	 */
 	Collection<IndexEntity> getIndexes() throws DataAccessException;
 
-	IndexEntity ensureHashIndex(Collection<String> fields, HashIndexOptions options) throws DataAccessException;
+	/**
+	 * Creates a hash index for the collection if it does not already exist.
+	 * 
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensureHashIndex(Iterable<String> fields, HashIndexOptions options) throws DataAccessException;
 
-	IndexEntity ensureSkiplistIndex(Collection<String> fields, SkiplistIndexOptions options) throws DataAccessException;
+	/**
+	 * Creates a skip-list index for the collection, if it does not already exist.
+	 * 
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensureSkiplistIndex(Iterable<String> fields, SkiplistIndexOptions options) throws DataAccessException;
 
-	IndexEntity ensurePersistentIndex(Collection<String> fields, PersistentIndexOptions options)
+	/**
+	 * Creates a persistent index for the collection, if it does not already exist.
+	 * 
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensurePersistentIndex(Iterable<String> fields, PersistentIndexOptions options)
 			throws DataAccessException;
 
-	IndexEntity ensureGeoIndex(Collection<String> fields, GeoIndexOptions options) throws DataAccessException;
+	/**
+	 * Creates a geo-spatial index for the collection, if it does not already exist.
+	 * 
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensureGeoIndex(Iterable<String> fields, GeoIndexOptions options) throws DataAccessException;
 
-	IndexEntity ensureFulltextIndex(Collection<String> fields, FulltextIndexOptions options) throws DataAccessException;
+	/**
+	 * Creates a fulltext index for the collection, if it does not already exist.
+	 * 
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensureFulltextIndex(Iterable<String> fields, FulltextIndexOptions options) throws DataAccessException;
 
+	/**
+	 * Deletes an index
+	 * 
+	 * @param id
+	 *            The index-handle
+	 * @throws DataAccessException
+	 */
 	void dropIndex(String id) throws DataAccessException;
 
+	/**
+	 * Grants or revoke access to the collection for user user. You need permission to the _system database in order to
+	 * execute this call.
+	 * 
+	 * @param username
+	 *            The name of the user
+	 * @param permissions
+	 *            The permissions the user grant
+	 * @throws DataAccessException
+	 */
 	void grantAccess(String username, Permissions permissions) throws DataAccessException;
 
+	/**
+	 * Clear the collection access level, revert back to the default access level.
+	 * 
+	 * @param username
+	 *            The name of the user
+	 * @since ArangoDB 3.2.0
+	 * @throws DataAccessException
+	 */
 	void resetAccess(String username) throws DataAccessException;
 
+	/**
+	 * Get the collection access level
+	 * 
+	 * @param username
+	 *            The name of the user
+	 * @return permissions of the user
+	 * @since ArangoDB 3.2.0
+	 * @throws DataAccessException
+	 */
 	Permissions getPermissions(String username) throws DataAccessException;
 
 }

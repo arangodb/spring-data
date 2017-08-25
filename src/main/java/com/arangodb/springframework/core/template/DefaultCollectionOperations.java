@@ -28,6 +28,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoDBException;
+import com.arangodb.entity.CollectionPropertiesEntity;
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.Permissions;
 import com.arangodb.model.FulltextIndexOptions;
@@ -88,6 +89,15 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	}
 
 	@Override
+	public CollectionPropertiesEntity getProperties() throws DataAccessException {
+		try {
+			return collection.getProperties();
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
 	public Collection<IndexEntity> getIndexes() throws DataAccessException {
 		try {
 			return collection.getIndexes();
@@ -97,50 +107,50 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	}
 
 	@Override
-	public IndexEntity ensureHashIndex(final Collection<String> fields, final HashIndexOptions options)
+	public IndexEntity ensureHashIndex(final Iterable<String> fields, final HashIndexOptions options)
 			throws DataAccessException {
 		try {
-			return collection.createHashIndex(fields, options);
+			return collection.ensureHashIndex(fields, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public IndexEntity ensureSkiplistIndex(final Collection<String> fields, final SkiplistIndexOptions options)
+	public IndexEntity ensureSkiplistIndex(final Iterable<String> fields, final SkiplistIndexOptions options)
 			throws DataAccessException {
 		try {
-			return collection.createSkiplistIndex(fields, options);
+			return collection.ensureSkiplistIndex(fields, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public IndexEntity ensurePersistentIndex(final Collection<String> fields, final PersistentIndexOptions options)
+	public IndexEntity ensurePersistentIndex(final Iterable<String> fields, final PersistentIndexOptions options)
 			throws DataAccessException {
 		try {
-			return collection.createPersistentIndex(fields, options);
+			return collection.ensurePersistentIndex(fields, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public IndexEntity ensureGeoIndex(final Collection<String> fields, final GeoIndexOptions options)
+	public IndexEntity ensureGeoIndex(final Iterable<String> fields, final GeoIndexOptions options)
 			throws DataAccessException {
 		try {
-			return collection.createGeoIndex(fields, options);
+			return collection.ensureGeoIndex(fields, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
 	}
 
 	@Override
-	public IndexEntity ensureFulltextIndex(final Collection<String> fields, final FulltextIndexOptions options)
+	public IndexEntity ensureFulltextIndex(final Iterable<String> fields, final FulltextIndexOptions options)
 			throws DataAccessException {
 		try {
-			return collection.createFulltextIndex(fields, options);
+			return collection.ensureFulltextIndex(fields, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
