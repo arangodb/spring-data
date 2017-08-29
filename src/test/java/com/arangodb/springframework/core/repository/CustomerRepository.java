@@ -26,7 +26,8 @@ import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Param;
 import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.annotation.QueryOptions;
-import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
+import com.arangodb.springframework.repository.ArangoRepository;
+import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
 
 /**

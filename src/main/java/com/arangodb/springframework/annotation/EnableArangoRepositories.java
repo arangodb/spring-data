@@ -30,8 +30,8 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
-import com.arangodb.springframework.core.repository.ArangoRepositoriesRegistrar;
-import com.arangodb.springframework.core.repository.ArangoRepositoryFactoryBean;
+import com.arangodb.springframework.repository.ArangoRepositoriesRegistrar;
+import com.arangodb.springframework.repository.ArangoRepositoryFactoryBean;
 
 /**
  * Created by F625633 on 07/07/2017.

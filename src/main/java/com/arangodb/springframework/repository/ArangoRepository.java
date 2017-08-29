@@ -18,26 +18,15 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query.derived.geo;
+package com.arangodb.springframework.repository;
 
-import org.springframework.data.domain.Range;
-import org.springframework.data.geo.Point;
+import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.QueryByExampleExecutor;
 
-public class Ring<T extends Comparable<T>> {
-
-	private final Point point;
-	private final Range<T> range;
-
-	public Ring(final Point point, final Range<T> range) {
-		this.point = point;
-		this.range = range;
-	}
-
-	public Point getPoint() {
-		return point;
-	}
-
-	public Range<T> getRange() {
-		return range;
-	}
+/**
+ * Created by F625633 on 06/07/2017.
+ */
+@NoRepositoryBean
+public interface ArangoRepository<T> extends PagingAndSortingRepository<T, String>, QueryByExampleExecutor<T> {
 }

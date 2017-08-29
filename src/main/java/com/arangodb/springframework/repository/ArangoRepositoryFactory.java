@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository;
+package com.arangodb.springframework.repository;
 
 import java.io.Serializable;
 
@@ -30,7 +30,7 @@ import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.repository.query.ArangoQueryLookupStrategy;
+import com.arangodb.springframework.repository.query.ArangoQueryLookupStrategy;
 
 /**
  * Created by F625633 on 06/07/2017.

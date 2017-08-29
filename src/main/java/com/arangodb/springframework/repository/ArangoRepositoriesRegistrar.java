@@ -18,21 +18,26 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository;
+package com.arangodb.springframework.repository;
 
-import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
+import java.lang.annotation.Annotation;
+
+import org.springframework.data.repository.config.RepositoryBeanDefinitionRegistrarSupport;
+import org.springframework.data.repository.config.RepositoryConfigurationExtension;
+
+import com.arangodb.springframework.annotation.EnableArangoRepositories;
 
 /**
  * Created by F625633 on 07/07/2017.
  */
-public class ArangoRepositoryConfigurationExtension extends RepositoryConfigurationExtensionSupport {
+public class ArangoRepositoriesRegistrar extends RepositoryBeanDefinitionRegistrarSupport {
 	@Override
-	protected String getModulePrefix() {
-		return null;
+	protected Class<? extends Annotation> getAnnotation() {
+		return EnableArangoRepositories.class;
 	}
 
 	@Override
-	public String getRepositoryFactoryClassName() {
-		return ArangoRepositoryFactoryBean.class.getName();
+	protected RepositoryConfigurationExtension getExtension() {
+		return new ArangoRepositoryConfigurationExtension();
 	}
 }

@@ -18,26 +18,26 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query.derived;
+package com.arangodb.springframework.repository.query.derived.geo;
 
-/**
- * Created by F625633 on 24/07/2017.
- */
-public class Disjunction {
+import org.springframework.data.domain.Range;
+import org.springframework.data.geo.Point;
 
-	private final String array;
-	private final String predicate;
+public class Ring<T extends Comparable<T>> {
 
-	public Disjunction(final String array, final String predicate) {
-		this.array = array;
-		this.predicate = predicate;
+	private final Point point;
+	private final Range<T> range;
+
+	public Ring(final Point point, final Range<T> range) {
+		this.point = point;
+		this.range = range;
 	}
 
-	public String getArray() {
-		return array;
+	public Point getPoint() {
+		return point;
 	}
 
-	public String getPredicate() {
-		return predicate;
+	public Range<T> getRange() {
+		return range;
 	}
 }

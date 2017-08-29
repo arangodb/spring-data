@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query.derived;
+package com.arangodb.springframework.repository.query.derived;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -47,8 +47,8 @@ import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.repository.query.ArangoParameterAccessor;
-import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
+import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
+import com.arangodb.springframework.repository.query.derived.geo.Ring;
 
 /**
  * Creates a full AQL query from a PartTree and ArangoParameterAccessor

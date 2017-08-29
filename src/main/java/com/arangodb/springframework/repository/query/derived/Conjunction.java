@@ -18,15 +18,38 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository;
-
-import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.QueryByExampleExecutor;
+package com.arangodb.springframework.repository.query.derived;
 
 /**
- * Created by F625633 on 06/07/2017.
+ * Created by F625633 on 24/07/2017.
  */
-@NoRepositoryBean
-public interface ArangoRepository<T> extends PagingAndSortingRepository<T, String>, QueryByExampleExecutor<T> {
+public class Conjunction {
+
+	private final String array;
+	private final String predicate;
+
+	public Conjunction(final String array, final String predicate) {
+		this.array = array;
+		this.predicate = predicate;
+	}
+
+	public String getArray() {
+		return array;
+	}
+
+	public String getPredicate() {
+		return predicate;
+	}
+
+	public boolean isArray() {
+		return !array.isEmpty();
+	}
+
+	public boolean hasPredicate() {
+		return !predicate.isEmpty();
+	}
+
+	public boolean isComposite() {
+		return isArray() && hasPredicate();
+	}
 }

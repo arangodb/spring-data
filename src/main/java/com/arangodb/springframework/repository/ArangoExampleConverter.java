@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository;
+package com.arangodb.springframework.repository;
 
 import java.util.HashSet;
 import java.util.Map;

@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query;
+package com.arangodb.springframework.repository.query;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -57,7 +57,7 @@ import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
-import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
+import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 
 /**
  * Implements execute(Object[]) method which is called every time a user-defined AQL or derived method is called

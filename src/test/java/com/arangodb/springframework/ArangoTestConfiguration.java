@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.arangodb.ArangoDB;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
-import com.arangodb.springframework.core.config.AbstractArangoConfiguration;
+import com.arangodb.springframework.config.AbstractArangoConfiguration;
 
 /**
  * @author Mark Vollmary

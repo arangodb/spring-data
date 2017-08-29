@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query;
+package com.arangodb.springframework.repository.query;
 
 import java.util.Iterator;
 import java.util.LinkedList;

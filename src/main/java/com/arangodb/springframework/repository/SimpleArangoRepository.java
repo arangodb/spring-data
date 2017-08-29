@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository;
+package com.arangodb.springframework.repository;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,7 +39,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
-import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
+import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 
 /**
  * The implementation of all CRUD, paging and sorting functionality in ArangoRepository from the Spring Data Commons

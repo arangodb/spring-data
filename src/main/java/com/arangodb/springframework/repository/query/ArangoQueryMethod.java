@@ -18,41 +18,31 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query;
+package com.arangodb.springframework.repository.query;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
-import org.springframework.core.MethodParameter;
-import org.springframework.data.repository.query.Parameter;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.repository.query.QueryMethod;
 
 /**
  * Created by F625633 on 12/07/2017.
  */
-public class ArangoParameters extends Parameters<ArangoParameters, ArangoParameters.ArangoParameter> {
+public class ArangoQueryMethod extends QueryMethod {
 
-	public ArangoParameters(final Method method) {
-		super(method);
-	}
-
-	public ArangoParameters(final List<ArangoParameter> parameters) {
-		super(parameters);
+	public ArangoQueryMethod(final Method method, final RepositoryMetadata metadata, final ProjectionFactory factory) {
+		super(method, metadata, factory);
 	}
 
 	@Override
-	protected ArangoParameter createParameter(final MethodParameter parameter) {
-		return new ArangoParameter(parameter);
+	public Parameters<?, ?> getParameters() {
+		return super.getParameters();
 	}
 
 	@Override
-	protected ArangoParameters createFrom(final List<ArangoParameter> parameters) {
-		return new ArangoParameters(parameters);
-	}
-
-	protected static class ArangoParameter extends Parameter {
-		public ArangoParameter(final MethodParameter parameter) {
-			super(parameter);
-		}
+	public Parameters<?, ?> createParameters(final Method method) {
+		return new ArangoParameters(method);
 	}
 }

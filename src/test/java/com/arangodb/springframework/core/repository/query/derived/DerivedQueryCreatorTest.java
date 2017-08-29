@@ -30,7 +30,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
-import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
+import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Contains;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.IncompleteCustomer;

@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query.derived;
+package com.arangodb.springframework.repository.query.derived;
 
 /**
  * Created by F625633 on 24/07/2017.

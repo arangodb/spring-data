@@ -18,17 +18,17 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query.derived;
+package com.arangodb.springframework.repository.query.derived;
 
 /**
  * Created by F625633 on 24/07/2017.
  */
-public class Conjunction {
+public class Disjunction {
 
 	private final String array;
 	private final String predicate;
 
-	public Conjunction(final String array, final String predicate) {
+	public Disjunction(final String array, final String predicate) {
 		this.array = array;
 		this.predicate = predicate;
 	}
@@ -39,17 +39,5 @@ public class Conjunction {
 
 	public String getPredicate() {
 		return predicate;
-	}
-
-	public boolean isArray() {
-		return !array.isEmpty();
-	}
-
-	public boolean hasPredicate() {
-		return !predicate.isEmpty();
-	}
-
-	public boolean isComposite() {
-		return isArray() && hasPredicate();
 	}
 }

@@ -18,31 +18,35 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.repository.query;
+package com.arangodb.springframework.repository.query;
 
 import java.lang.reflect.Method;
 
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.query.Parameters;
-import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.RepositoryQuery;
+
+import com.arangodb.springframework.core.ArangoOperations;
 
 /**
  * Created by F625633 on 12/07/2017.
  */
-public class ArangoQueryMethod extends QueryMethod {
+public class ArangoQueryLookupStrategy implements QueryLookupStrategy {
 
-	public ArangoQueryMethod(final Method method, final RepositoryMetadata metadata, final ProjectionFactory factory) {
-		super(method, metadata, factory);
+	private final ArangoOperations operations;
+
+	public ArangoQueryLookupStrategy(final ArangoOperations operations) {
+		this.operations = operations;
 	}
 
 	@Override
-	public Parameters<?, ?> getParameters() {
-		return super.getParameters();
-	}
-
-	@Override
-	public Parameters<?, ?> createParameters(final Method method) {
-		return new ArangoParameters(method);
+	public RepositoryQuery resolveQuery(
+		final Method method,
+		final RepositoryMetadata metadata,
+		final ProjectionFactory factory,
+		final NamedQueries namedQueries) {
+		return new ArangoAqlQuery(metadata.getDomainType(), method, metadata, operations, factory);
 	}
 }
