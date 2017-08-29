@@ -20,14 +20,19 @@
 
 package com.arangodb.springframework.testdata;
 
-import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
+
+import com.arangodb.springframework.annotation.Field;
+import com.arangodb.springframework.annotation.GeoIndex;
+import com.arangodb.springframework.annotation.Key;
+import com.arangodb.springframework.annotation.Relations;
+import com.arangodb.springframework.annotation.Rev;
 
 /**
  * @author Mark Vollmary
  *
  */
-@GeoIndex(fields = {"location"})
+@GeoIndex(fields = { "location" })
 public class Product {
 
 	@Id
@@ -55,7 +60,7 @@ public class Product {
 		this.name = name;
 	}
 
-	public Product(final String name, double[] location) {
+	public Product(final String name, final double[] location) {
 		this(name);
 		this.location = location;
 	}
@@ -104,8 +109,24 @@ public class Product {
 		return contains;
 	}
 
-	public void setContains(Material contains) {
+	public void setContains(final Material contains) {
 		this.contains = contains;
+	}
+
+	public double[] getLocation() {
+		return location;
+	}
+
+	public void setLocation(final double[] location) {
+		this.location = location;
+	}
+
+	public Product getNested() {
+		return nested;
+	}
+
+	public void setNested(final Product nested) {
+		this.nested = nested;
 	}
 
 }

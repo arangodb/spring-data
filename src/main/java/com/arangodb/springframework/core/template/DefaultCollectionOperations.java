@@ -60,6 +60,11 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	}
 
 	@Override
+	public String name() {
+		return collection.name();
+	}
+
+	@Override
 	public void drop() throws DataAccessException {
 		collectionCache.remove(collection.name());
 		try {

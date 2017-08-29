@@ -1,8 +1,13 @@
 package com.arangodb.springframework.core.repository;
 
-import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
-import com.arangodb.springframework.testdata.Customer;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +15,9 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.*;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
+import com.arangodb.springframework.AbstractArangoTest;
+import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.testdata.Customer;
 
 /**
  * Created by F625633 on 12/07/2017.
@@ -30,6 +35,7 @@ public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 	protected Set<String> ids;
 	protected Comparator<Object> cmp = Comparator.comparing(o -> ((Customer) o).getId());
 	protected BiPredicate<Object, Object> eq = (a, b) -> cmp.compare(a, b) == 0;
+	@SuppressWarnings("unchecked")
 	protected Comparator<Object> geoCmp = Comparator.comparing(o -> ((GeoResult<Customer>) o).getContent().getId());
 	protected BiPredicate<Object, Object> geoEq = (o1, o2) -> geoCmp.compare(o1, o2) == 0;
 
@@ -43,25 +49,43 @@ public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 		ids = new HashSet<>();
 	}
 
-	protected boolean equals(Object it1, Object it2, Comparator<Object> cmp, BiPredicate<Object, Object> eq, boolean shouldOrderMatter) {
-		Function<Object, List> iterableToSortedList = it -> {
-			List l = new ArrayList();
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	protected boolean equals(
+		final Object it1,
+		final Object it2,
+		final Comparator<Object> cmp,
+		final BiPredicate<Object, Object> eq,
+		final boolean shouldOrderMatter) {
+		final Function<Object, List> iterableToSortedList = it -> {
+			final List l = new ArrayList();
 			if (it != null) {
 				if (it.getClass().isArray()) {
-					Object[] array = (Object[]) it;
-					for (Object e : array) { l.add(e); }
+					final Object[] array = (Object[]) it;
+					for (final Object e : array) {
+						l.add(e);
+					}
 				} else {
-					Iterable iterable = (Iterable) it;
-					for (Object e : iterable) { l.add(e); }
+					final Iterable iterable = (Iterable) it;
+					for (final Object e : iterable) {
+						l.add(e);
+					}
 				}
 			}
-			if (!shouldOrderMatter) { l.sort(cmp); }
+			if (!shouldOrderMatter) {
+				l.sort(cmp);
+			}
 			return l;
 		};
-		List l1 = iterableToSortedList.apply(it1);
-		List l2 = iterableToSortedList.apply(it2);
-		if (l1.size() != l2.size()) return false;
-		for (int i = 0; i < l1.size(); ++i) if (!eq.test(l1.get(i), l2.get(i))) return false;
+		final List l1 = iterableToSortedList.apply(it1);
+		final List l2 = iterableToSortedList.apply(it2);
+		if (l1.size() != l2.size()) {
+			return false;
+		}
+		for (int i = 0; i < l1.size(); ++i) {
+			if (!eq.test(l1.get(i), l2.get(i))) {
+				return false;
+			}
+		}
 		return true;
 	}
 }

@@ -21,10 +21,15 @@
 package com.arangodb.springframework.testdata;
 
 import java.util.Collection;
-import java.util.List;
 
-import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
+
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.GeoIndexed;
+import com.arangodb.springframework.annotation.Key;
+import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
+import com.arangodb.springframework.annotation.Rev;
 
 /**
  * @author Mark Vollmary
@@ -55,10 +60,12 @@ public class Customer {
 
 	@Ref
 	private ShoppingCart shoppingCart;
-	@Relations(edge = Owns.class, edges = { Owns.class })
+	@Relations(edges = { Owns.class })
 	private Collection<Product> owns;
 
-	public Customer() { super(); }
+	public Customer() {
+		super();
+	}
 
 	public Customer(final String name, final String surname, final int age) {
 		super();
@@ -195,13 +202,21 @@ public class Customer {
 		return nestedCustomer;
 	}
 
-	public void setNestedCustomer(Customer nestedCustomer) {
+	public void setNestedCustomer(final Customer nestedCustomer) {
 		this.nestedCustomer = nestedCustomer;
 	}
 
-	public Iterable<Customer> getNestedCustomers() { return nestedCustomers; }
+	public Iterable<Customer> getNestedCustomers() {
+		return nestedCustomers;
+	}
 
-	public void setNestedCustomers(Iterable<Customer> nestedCustomers) { this.nestedCustomers = nestedCustomers; }
+	public void setNestedCustomers(final Iterable<Customer> nestedCustomers) {
+		this.nestedCustomers = nestedCustomers;
+	}
+
+	public Iterable<String> getStringList() {
+		return stringList;
+	}
 
 	@Override
 	public boolean equals(final Object o) {

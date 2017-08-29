@@ -40,6 +40,13 @@ import com.arangodb.model.SkiplistIndexOptions;
 public interface CollectionOperations {
 
 	/**
+	 * Return the collection name
+	 * 
+	 * @return collection name
+	 */
+	String name();
+
+	/**
 	 * Drops the collection
 	 * 
 	 * @throws DataAccessException

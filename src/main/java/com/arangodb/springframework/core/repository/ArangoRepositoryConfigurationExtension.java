@@ -1,3 +1,23 @@
+/*
+ * DISCLAIMER
+ *
+ * Copyright 2017 ArangoDB GmbH, Cologne, Germany
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright holder is ArangoDB GmbH, Cologne, Germany
+ */
+
 package com.arangodb.springframework.core.repository;
 
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
@@ -6,11 +26,13 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
  * Created by F625633 on 07/07/2017.
  */
 public class ArangoRepositoryConfigurationExtension extends RepositoryConfigurationExtensionSupport {
-	@Override protected String getModulePrefix() {
+	@Override
+	protected String getModulePrefix() {
 		return null;
 	}
 
-	@Override public String getRepositoryFactoryClassName() {
+	@Override
+	public String getRepositoryFactoryClassName() {
 		return ArangoRepositoryFactoryBean.class.getName();
 	}
 }

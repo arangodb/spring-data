@@ -608,7 +608,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	public static class RelationsTestEntity extends BasicTestEntity {
-		@Relations(edge = BasicEdgeTestEntity.class)
+		@Relations(edges = BasicEdgeTestEntity.class)
 		private Collection<BasicTestEntity> entities;
 	}
 
@@ -635,7 +635,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	public static class RelationsLazyTestEntity extends BasicTestEntity {
-		@Relations(edge = BasicEdgeTestEntity.class, lazy = true)
+		@Relations(edges = BasicEdgeTestEntity.class, lazy = true)
 		private Collection<BasicTestEntity> entities;
 	}
 
@@ -786,7 +786,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	public static class ConstructorWithRelationsParamsTestEntity extends BasicTestEntity {
-		@Relations(edge = BasicEdgeTestEntity.class)
+		@Relations(edges = BasicEdgeTestEntity.class)
 		private final Collection<BasicTestEntity> value;
 
 		public ConstructorWithRelationsParamsTestEntity(final Collection<BasicTestEntity> value) {
@@ -814,7 +814,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	public static class ConstructorWithRelationsLazyParamsTestEntity extends BasicTestEntity {
-		@Relations(edge = BasicEdgeTestEntity.class, lazy = true)
+		@Relations(edges = BasicEdgeTestEntity.class, lazy = true)
 		private final Collection<BasicTestEntity> value;
 
 		public ConstructorWithRelationsLazyParamsTestEntity(final Collection<BasicTestEntity> value) {

@@ -37,7 +37,7 @@ public class Person {
 	@Id
 	private String id;
 	private String name;
-	@Relations(edge = Knows.class, lazy = true)
+	@Relations(edges = Knows.class, lazy = true)
 	private Collection<Person> knows;
 
 	public Person() {

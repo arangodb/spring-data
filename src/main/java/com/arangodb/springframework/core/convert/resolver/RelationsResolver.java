@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import com.arangodb.model.AqlQueryOptions;
@@ -54,10 +55,17 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	@Override
 	public Object resolve(final String id, final Class<?> type, final Relations annotation) {
-		return template.query(
-			"WITH @@edge FOR v IN 1.." + Math.max(1, annotation.depth()) + " " + annotation.direction()
-					+ " @start @@edge OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v",
-			new MapBuilder().put("start", id).put("@edge", annotation.edge()).get(), new AqlQueryOptions(), type)
+		return template
+				.query(
+					"WITH @@edges FOR v IN " + Math.max(1, annotation.minDepth()) + ".."
+							+ Math.max(1, annotation.maxDepth()) + " " + annotation.direction()
+							+ " @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v",
+					new MapBuilder().put("start", id)
+							.put("@edges",
+								Arrays.asList(annotation.edges()).stream().map((e) -> template.collection(e).name())
+										.reduce((a, b) -> a + ", " + b).get())
+							.get(),
+					new AqlQueryOptions(), type)
 				.asListRemaining();
 	}
 
