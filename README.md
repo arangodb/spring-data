@@ -8,8 +8,6 @@
 * [Template](#template)
   * [Introduction](#introduction)
   * [Configuration](#configuration)
-  * [Java-Configuration](#java-configuration)
-  * [XML-Configuration](#xml-configuration)
 * [Repositories](#repositories)
   * [Introduction](#introduction)
   * [Instantiating](#instantiating)
@@ -58,23 +56,21 @@ The `ArangoTemplate` class is the default implementation of the operations inter
 
 ## Configuration
 
-### Java-Configuration
-
 You can use Java to instantiate and configure an instance of `ArangoTemplate` as show below. Setting up the underlying driver
-(`ArangoDB.Builder`) with default configuration automatically loads a properties file arangodb.properties, if it exists in 
+(`ArangoDB.Builder`) with default configuration automatically loads a properties file arangodb.properties, if it exists in
 the classpath.
 
 ``` java
 @Configuration
 @EnableArangoRepositories(basePackages = { "com.company.mypackage" })
 public class MyConfiguration extends AbstractArangoConfiguration {
-  
+
   //Instantiation of ArangoTemplate
   @Override
   public ArangoDB.Builder arango() {
     return new ArangoDB.Builder();
   }
-  
+
   //Name of the database to be used
   @Override
   public String database() {
@@ -121,27 +117,6 @@ arangodb.password=
 InputStream in = MyClass.class.getResourceAsStream("my.properties");
 ArangoDB.Builder arangoBuilder = new ArangoDB.Builder().loadProperties(in);
 return new ArangoTemplate(arangoBuilder);
-```
-
-### XML-Configuration
-
-You can use Spring’s XML bean schema to configure `ArangoTemplate` as show below.
-
-``` xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-  xmlns:arango="http://www.arangodb.com/spring/schema/arangodb"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-    http://www.arangodb.com/spring/schema/arangodb http://www.arangodb.com/spring/schema/arangodb/spring-arangodb.xsd">
-
-  <arango:arango host="127.0.0.1" port="8529" username="root" password="" />
-
-  <bean id="arangoTemplate" class="com.arangodb.springframework.core.template.ArangoTemplate">
-    <constructor-arg ref="arango" />
-  </bean>
-
-</beans>
 ```
 
 # Repositories
@@ -198,9 +173,9 @@ public interface MyRepository extends Repository<Customer, String>{
 }
 ```
 
- In addition you can use a parameter bindVars 
-of type Map<String, Object> as your Bind Parameters. You can then fill the map with any parameter used in the query. 
-(see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information 
+ In addition you can use a parameter bindVars
+of type Map<String, Object> as your Bind Parameters. You can then fill the map with any parameter used in the query.
+(see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information
 about Bind Parameters).
 
 ``` java
@@ -212,7 +187,7 @@ public interface MyRepository extends Repository<Customer, String>{
 }
 ```
 
-A mixture of any of these methods can be used. Parameters with the same name from an @Param annotation will override 
+A mixture of any of these methods can be used. Parameters with the same name from an @Param annotation will override
 those in the bindVars.
 
 ``` java
@@ -226,10 +201,10 @@ public interface MyRepository extends Repository<Customer, String>{
 
 ## Derived Methods
 
-Spring Data ArangoDB supports Queries derived from methods names by splitting it into its semantic parts and converting 
-into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `stream..By`, `count..By`, 
-`exists..By`, `delete..By`, `remove..By` from the method and parses the rest. The By acts as a separator to indicate the 
-start of the criteria for the query to be built. You can define conditions on entity properties and concatenate them 
+Spring Data ArangoDB supports Queries derived from methods names by splitting it into its semantic parts and converting
+into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `stream..By`, `count..By`,
+`exists..By`, `delete..By`, `remove..By` from the method and parses the rest. The By acts as a separator to indicate the
+start of the criteria for the query to be built. You can define conditions on entity properties and concatenate them
 with `And` and `Or`.
 
 The complete list of part types for derived methods is below, where doc is a document in the database
@@ -300,8 +275,8 @@ public interface MyRepository extends Repository<Customer, String> {
 ### Geospatial queries
 
 Geospatial queries are a subsection of derived queries. To use a geospatial query on a collection, a geo index must
-exist on that collection. A geo index can be created on a field which is a two element array, corresponding to latitude 
-and longitude coordinates. 
+exist on that collection. A geo index can be created on a field which is a two element array, corresponding to latitude
+and longitude coordinates.
 
 As a subsection of derived queries, geospatial queries support all the same return types, but also support the three
 return types `GeoPage, GeoResult and Georesults`. These types must be used in order to get the distance of each document
@@ -314,9 +289,9 @@ within both sorts and filters documents, returning those within the given distan
 public interface MyRepository extends Repository<City, String> {
 
     GeoResult<City> getByLocationNear(Point point);
-    
+
     GeoResults<City> findByLocationWithinOrLocationWithin(Box box, Polygon polygon);
-    
+
     //Equivalent queries
     GeoResults<City> findByLocationWithinOrLocationWithin(Point point, int distance);
     GeoResults<City> findByLocationWithinOrLocationWithin(Point point, Distance distance);
@@ -348,8 +323,8 @@ public interface MyRepository extends Repository<Customer, String> {
 }
 ```
 
-It is possible for the algorithm to select the wrong property if the domain class also has a property which 
-matches the first split of the expression. To resolve this ambiguity you can use _ as a separator inside your method-name 
+It is possible for the algorithm to select the wrong property if the domain class also has a property which
+matches the first split of the expression. To resolve this ambiguity you can use _ as a separator inside your method-name
 to define traversal points.
 
 ``` java
@@ -407,13 +382,13 @@ ArangoCursor<Customer> cursor = myRepo.query(bindVars);
 
 ### AQL query options
 
-You can set additional options for the query and the created cursor over the class `AqlQueryOptions` which you can 
+You can set additional options for the query and the created cursor over the class `AqlQueryOptions` which you can
 simply define as a method parameter without a specific name. AqlQuery options can also be defined with the @QueryOptions
 annotation, as shown below. AqlQueryOptions from an annotation and those from an argument are merged if both exist, with
-those in the argument taking precedence. 
+those in the argument taking precedence.
 
-The `AqlQueryOptions` allows you to set the cursor time-to-life, batch-size, caching flag and several other settings. 
-This special parameter works with both query-methods and finder-methods. Keep in mind that some options, 
+The `AqlQueryOptions` allows you to set the cursor time-to-life, batch-size, caching flag and several other settings.
+This special parameter works with both query-methods and finder-methods. Keep in mind that some options,
 like time-to-life, are only effective if the method return type is`ArangoCursor<T>` or `Iterable<T>`.
 
 ``` java
@@ -421,15 +396,15 @@ public interface MyRepository extends Repository<Customer, String> {
 
 
   @Query("FOR c IN customers FILTER c.name == @0 RETURN c")
-  Iterable<Customer> query(String name, AqlQueryOptions options); 
-  
+  Iterable<Customer> query(String name, AqlQueryOptions options);
+
 
   Iterable<Customer> findByName(String name, AqlQueryOptions options);
-  
+
 
   @QueryOptions(maxPlans = 1000, ttl = 128)
   ArangoCursor<Customer> findByAddressZipCode(ZipCode zipCode);
-  
+
 
   @Query("FOR c IN customers FILTER c[@field] == @value RETURN c")
   @QueryOptions(cache = true, ttl = 128)
@@ -506,8 +481,8 @@ annotation | level | description
 
 ### Document
 
-The annotations `@Document` applied to a class marks this class as a candidate for mapping to the database. The most 
-relevant parameter is `value` to specify the collection name in the database. The annotation `@Document` specifies the 
+The annotations `@Document` applied to a class marks this class as a candidate for mapping to the database. The most
+relevant parameter is `value` to specify the collection name in the database. The annotation `@Document` specifies the
 collection type to `DOCUMENT`.
 
 ``` java
@@ -519,8 +494,8 @@ public class Person {
 
 ### Edge
 
-The annotations `@Edge` applied to a class marks this class as a candidate for mapping to the database. The most 
-relevant parameter is `value` to specify the collection name in the database. The annotation `@Edge` specifies the 
+The annotations `@Edge` applied to a class marks this class as a candidate for mapping to the database. The most
+relevant parameter is `value` to specify the collection name in the database. The annotation `@Edge` specifies the
 collection type to `EDGE`.
 
 ``` java
@@ -532,10 +507,10 @@ public class Relation {
 
 ### Reference
 
-With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document. 
-The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate 
-document in another collection described in the `@Document` annotation of the nested object class. To successfully 
-persist an instance of your object the referencing field has to be null or it's instance has to provide a field with 
+With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document.
+The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate
+document in another collection described in the `@Document` annotation of the nested object class. To successfully
+persist an instance of your object the referencing field has to be null or it's instance has to provide a field with
 the annotation `@Id` including a valid id.
 
 ``` java
@@ -589,9 +564,9 @@ Without the annotation `@Ref` at the field `address`, the stored document would 
 ### Relations
 
 With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested
-objects are fetched from the database over a graph traversal with your current object as the starting point. The most 
-relevant parameter is `edge`. With `edge` you define the edge collection - which should be used in the traversal - using 
-the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the 
+objects are fetched from the database over a graph traversal with your current object as the starting point. The most
+relevant parameter is `edge`. With `edge` you define the edge collection - which should be used in the traversal - using
+the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the
 parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
 
 ``` java
@@ -692,7 +667,7 @@ and the representation of *Person* in collection *persons*:
 }
 ```
 
-**Note:** If you want to save an instance of *Relation*, both *Person* objects (from & to) already have to be persisted and the class *Person* needs a field with the annotation `@Id` so it can hold the persisted *_id* from the database. 
+**Note:** If you want to save an instance of *Relation*, both *Person* objects (from & to) already have to be persisted and the class *Person* needs a field with the annotation `@Id` so it can hold the persisted *_id* from the database.
 
 ### Index and Indexed annotations
 
@@ -741,9 +716,9 @@ database with @Field, the new field name must be used in the index declaration:
 ``` java
 @HashIndex(fields = {"fullname", "age"})
 public class Person {
-  @Field("fullname")  
+  @Field("fullname")
   private String name;
-  
+
   private int age;
 }
 ```
@@ -760,7 +735,7 @@ public class Person {
 }
 ```
 
-The `@<IndexType>Index` annotations and the `@<IndexType>Indexed` annotations can be used at the same time in one class. 
+The `@<IndexType>Index` annotations and the `@<IndexType>Indexed` annotations can be used at the same time in one class.
 
 The following example creates a hash index on the fields `name` and `age` and a separate hash index on the field `age`:
 ``` java
@@ -783,7 +758,7 @@ public class Person {
   private String name;
 
   private int age;
-  
+
   private Gender gender
 }
 ```
