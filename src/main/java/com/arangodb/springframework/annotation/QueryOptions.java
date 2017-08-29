@@ -29,20 +29,62 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface QueryOptions {
 
+	/**
+	 * @return Maximum number of result documents to be transferred from the server to the client in one roundtrip. If
+	 *         this attribute is not set, a server-controlled default value will be used. A batchSize value of 0 is
+	 *         disallowed.
+	 */
 	int batchSize() default -1;
 
+	/**
+	 * @return Flag to determine whether the AQL query cache shall be used. If set to false, then any query cache lookup
+	 *         will be skipped for the query. If set to true, it will lead to the query cache being checked for the
+	 *         query if the query cache mode is either on or demand.
+	 */
 	boolean cache() default false;
 
+	/**
+	 * @return Indicates whether the number of documents in the result set should be returned in the "count" attribute
+	 *         of the result. Calculating the "count" attribute might have a performance impact for some queries in the
+	 *         future so this option is turned off by default, and "count" is only returned when requested.
+	 */
 	boolean count() default false;
 
+	/**
+	 * @return If set to true and the query contains a LIMIT clause, then the result will have an extra attribute with
+	 *         the sub-attributes stats and fullCount, { ... , "extra": { "stats": { "fullCount": 123 } } }. The
+	 *         fullCount attribute will contain the number of documents in the result before the last LIMIT in the query
+	 *         was applied. It can be used to count the number of documents that match certain filter criteria, but only
+	 *         return a subset of them, in one go. It is thus similar to MySQL's SQL_CALC_FOUND_ROWS hint. Note that
+	 *         setting the option will disable a few LIMIT optimizations and may lead to more documents being processed,
+	 *         and thus make queries run longer. Note that the fullCount attribute will only be present in the result if
+	 *         the query has a LIMIT clause and the LIMIT clause is actually used in the query.
+	 */
 	boolean fullCount() default false;
 
+	/**
+	 * @return Limits the maximum number of plans that are created by the AQL query optimizer.
+	 */
 	int maxPlans() default -1;
 
+	/**
+	 * @return If set to true, then the additional query profiling information will be returned in the sub-attribute
+	 *         profile of the extra return attribute if the query result is not served from the query cache.
+	 */
 	boolean profile() default false;
 
+	/**
+	 * @return A list of to-be-included or to-be-excluded optimizer rules can be put into this attribute, telling the
+	 *         optimizer to include or exclude specific rules. To disable a rule, prefix its name with a -, to enable a
+	 *         rule, prefix it with a +. There is also a pseudo-rule all, which will match all optimizer rules
+	 */
 	String[] rules() default {};
 
+	/**
+	 * @return The time-to-live for the cursor (in seconds). The cursor will be removed on the server automatically
+	 *         after the specified amount of time. This is useful to ensure garbage collection of cursors that are not
+	 *         fully fetched by clients. If not set, a server-defined value will be used.
+	 */
 	int ttl() default -1;
 
 }

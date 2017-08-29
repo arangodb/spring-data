@@ -32,6 +32,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Query {
 
+	/**
+	 * @return The query string to be executed
+	 */
 	String value();
 
 }

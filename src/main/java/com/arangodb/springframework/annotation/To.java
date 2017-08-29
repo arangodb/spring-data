@@ -33,6 +33,9 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface To {
 
+	/**
+	 * @return whether the entity should be loaded lazy
+	 */
 	boolean lazy() default false;
 
 }

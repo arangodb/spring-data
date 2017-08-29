@@ -39,12 +39,27 @@ public @interface Relations {
 
 	Class<?>[] edges();
 
+	/**
+	 * @return edges and vertices returned by this query will start at the traversal depth of min (thus edges and
+	 *         vertices below will not be returned). If not specified, it defaults to 1. The minimal possible value is
+	 *         0.
+	 */
 	int minDepth() default 1;
 
+	/**
+	 * @return up to max length paths are traversed. If omitted, max defaults to min. Thus only the vertices and edges
+	 *         in the range of min are returned. max can not be specified without min.
+	 */
 	int maxDepth() default 1;
 
+	/**
+	 * @return follow outgoing, incoming, or edges pointing in either direction in the traversal
+	 */
 	Direction direction() default Direction.ANY;
 
+	/**
+	 * @return whether the entity should be loaded lazy
+	 */
 	boolean lazy() default false;
 
 }
