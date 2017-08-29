@@ -5,9 +5,11 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Query;
+import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.annotation.Param;
+import com.arangodb.springframework.testdata.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -25,6 +27,7 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
 	@Query("FOR c IN customer FILTER c.name == @1 AND c._id == @0 RETURN c")
+	@QueryOptions(cache = true, ttl = 128)
 	BaseDocument findOneByIdAndNameAql(String id, String name);
 
 	@Query("FOR c IN customer FILTER c._id == @0 RETURN c")
@@ -33,8 +36,9 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 	@Query("FOR c IN customer FILTER c._id == @0 AND c.name == @0 RETURN c")
 	ArangoCursor<Customer> findOneByIdAqlParamNameClash(String id, @Param("0") String name);
 
+	@QueryOptions(maxPlans = 1000, ttl = 128)
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
-	Customer findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map bindVars);
+	ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map bindVars);
 
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
 	Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map bindVars);
@@ -79,6 +83,8 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	Collection<Customer> findTop2DistinctByStringArrayContainingIgnoreCaseOrIntegerListNotNullIgnoreCaseOrderByNameAsc(String string);
 
+	Collection<Customer> findByStringArrayNotContainingIgnoreCase(String string);
+
 	int countByAgeGreaterThanOrStringArrayNullAndIntegerList(int age, List<Integer> integerList);
 
 	Integer countDistinctByAliveTrueOrNameLikeOrAgeLessThanEqual(String pattern, int age);
@@ -101,7 +107,6 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	List<Customer> findByLocationWithin(Polygon polygon);
 
-	// ArrayList not supported, use List instead
 	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
 			String name1, Point location1, double distance, String name2, String surname1, String name3,
 			Point location2, String surname2, Point location3, Range<Double> distanceRange);
@@ -110,7 +115,7 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	boolean existsByName(String name);
 
-	Customer[] findByAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
+	Customer[] findByNestedCustomerAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
 
 	// SORT
 
@@ -130,4 +135,20 @@ public interface CustomerRepository extends ArangoRepository<Customer>{
 
 	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(
 			String name, String surname, Point location1, Distance distance, Point location2, Range<Distance> distanceRange);
+
+	// NESTED PROPERTIES
+
+	List<Customer> findByNestedCustomerName(String name);
+
+	// REFERENCES
+
+	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(Point location, double distance);
+
+	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsNameLike(String name);
+
+	// Graph traversal
+
+	List<Customer> getByOwnsName(String name);
+
+	List<Customer> getByOwnsContainsName(String name);
 }

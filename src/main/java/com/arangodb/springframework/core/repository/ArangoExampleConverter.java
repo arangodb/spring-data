@@ -11,7 +11,8 @@ import org.springframework.util.Assert;
 import java.util.*;
 
 /**
- * Created by user on 08/08/17.
+ * Converts Example to String representing predicate expression
+ * and puts necessary bindings in the given bindVars Map
  */
 public class ArangoExampleConverter<T> {
 
@@ -33,6 +34,7 @@ public class ArangoExampleConverter<T> {
                                       String path, String javaPath, ArangoPersistentEntity<?> entity, Object object) {
         PersistentPropertyAccessor accessor = entity.getPropertyAccessor(object);
         entity.doWithProperties((ArangoPersistentProperty property) -> {
+            if (property.getFrom().isPresent() || property.getTo().isPresent() || property.getRelations().isPresent()) { return; }
             String fullPath = path + (path.length() == 0 ? "" : ".") + property.getFieldName();
             String fullJavaPath = javaPath + (javaPath.length() == 0 ? "" : ".") + property.getName();
             Object value = accessor.getProperty(property);

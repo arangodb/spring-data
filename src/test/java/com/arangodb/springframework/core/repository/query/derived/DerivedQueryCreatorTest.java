@@ -4,7 +4,8 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
 
 import com.arangodb.springframework.core.repository.query.derived.geo.Ring;
-import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.*;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.data.domain.*;
@@ -114,6 +115,20 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         repository.save(new Customer("A", "", 0));
         Collection<Customer> retrieved = repository.findTop2DistinctByStringArrayContainingIgnoreCaseOrIntegerListNotNullIgnoreCaseOrderByNameAsc("string");
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+    }
+
+    @Test
+    public void NotContainingTest() {
+        Collection<Customer> toBeRetrieved = new LinkedList<>();
+        Customer customer1 = new Customer("A", "B", 55);
+        Customer customer2 = new Customer("C", "D", 44);
+        customer1.setStringArray(new String[] {"hello", "greetings"});
+        customer2.setStringArray(new String[] {"goodbye", "see you later"});
+        toBeRetrieved.add(customer2);
+        repository.save(customer1);
+        repository.save(customer2);
+        Collection<Customer> retrieved = repository.findByStringArrayNotContainingIgnoreCase("Hello");
+        assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
     }
 
     @Test
@@ -335,12 +350,14 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         List<Customer> toBeRetrieved = new LinkedList<>();
         Customer customer1 = new Customer("", "", 0);
         customer1.setStringList(stringList);
+        customer1.setNestedCustomer(new Customer("nested", "", 0));
         toBeRetrieved.add(customer1);
         repository.save(toBeRetrieved);
         Customer customer2 = new Customer("", "", 0);
         customer2.setStringList(stringList3);
         repository.save(customer2);
-        Customer[] retrieved = repository.findByAliveExistsAndStringListAllIgnoreCase(stringList2);
+        template.insert(new IncompleteCustomer("Incomplete", stringList2));
+        Customer[] retrieved = repository.findByNestedCustomerAliveExistsAndStringListAllIgnoreCase(stringList2);
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 
@@ -503,6 +520,184 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
         }
         Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10), new Point(30, 20));
         List<Customer> retrieved = repository.findByLocationWithin(polygon);
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void nestedPropertiesTest() {
+        john.setNestedCustomer(bob);
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        toBeRetrieved.add(john);
+        repository.save(toBeRetrieved);
+        repository.save(bob);
+        List<Customer> retrieved = repository.findByNestedCustomerName("Bob");
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void referenceTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        Customer customer1 = new Customer("", "", 0);
+        Customer customer11 = new Customer("", "", 0);
+        ShoppingCart cart11 = new ShoppingCart();
+        Product product1 = new Product("asdf1");
+        template.insert(product1);
+        Product product2 = new Product("2");
+        template.insert(product2);
+        cart11.setProducts(Arrays.asList(product1, product2));
+        template.insert(cart11);
+        customer11.setShoppingCart(cart11);
+        template.insert(customer11);
+        Customer customer12 = new Customer("", "", 0);
+        ShoppingCart cart12 = new ShoppingCart();
+        Product product3 = new Product("3");
+        template.insert(product3);
+        Product product4 = new Product("4");
+        template.insert(product4);
+        cart12.setProducts(Arrays.asList(product3, product4));
+        template.insert(cart12);
+        customer12.setShoppingCart(cart12);
+        template.insert(customer12);
+        Customer nested1 = new Customer("", "", 0);
+        nested1.setNestedCustomer(customer11);
+        template.insert(nested1);
+        Customer nested2 = new Customer("", "", 0);
+        nested2.setNestedCustomer(customer12);
+        template.insert(nested2);
+        customer1.setNestedCustomers(Arrays.asList(nested1, nested2));
+        repository.save(customer1);
+        toBeRetrieved.add(customer1);
+        Customer customer2 = new Customer("", "", 0);
+        Customer customer21 = new Customer("", "", 0);
+        ShoppingCart cart21 = new ShoppingCart();
+        cart21.setProducts(Arrays.asList(product2, product3, product4));
+        template.insert(cart21);
+        Customer nested3 = new Customer("", "", 0);
+        nested3.setNestedCustomer(customer21);
+        template.insert(nested3);
+        customer2.setNestedCustomers(Arrays.asList(nested2, nested3));
+        repository.save(customer2);
+        repository.save(toBeRetrieved);
+        List<Customer> retrieved = repository.findByNestedCustomersNestedCustomerShoppingCartProductsNameLike("%1%");
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void referenceGeospatialTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        Customer customer1 = new Customer("", "", 0);
+        Customer customer11 = new Customer("", "", 0);
+        ShoppingCart cart11 = new ShoppingCart();
+        Product product1 = new Product("asdf1", new double[] {10, 12});
+        template.insert(product1);
+        Product product2 = new Product("2", new double[] {30, 42});
+        template.insert(product2);
+        cart11.setProducts(Arrays.asList(product1, product2));
+        template.insert(cart11);
+        customer11.setShoppingCart(cart11);
+        template.insert(customer11);
+        Customer customer12 = new Customer("", "", 0);
+        ShoppingCart cart12 = new ShoppingCart();
+        Product product3 = new Product("3", new double[] {40, 62});
+        template.insert(product3);
+        Product product4 = new Product("4", new double[] {50, 52});
+        template.insert(product4);
+        cart12.setProducts(Arrays.asList(product3, product4));
+        template.insert(cart12);
+        customer12.setShoppingCart(cart12);
+        template.insert(customer12);
+        Customer nested1 = new Customer("", "", 0);
+        nested1.setNestedCustomer(customer11);
+        template.insert(nested1);
+        Customer nested2 = new Customer("", "", 0);
+        nested2.setNestedCustomer(customer12);
+        template.insert(nested2);
+        customer1.setNestedCustomers(Arrays.asList(nested1, nested2));
+        repository.save(customer1);
+        toBeRetrieved.add(customer1);
+        Customer customer2 = new Customer("", "", 0);
+        Customer customer21 = new Customer("", "", 0);
+        ShoppingCart cart21 = new ShoppingCart();
+        cart21.setProducts(Arrays.asList(product2, product3, product4));
+        template.insert(cart21);
+        Customer nested3 = new Customer("", "", 0);
+        nested3.setNestedCustomer(customer21);
+        template.insert(nested3);
+        customer2.setNestedCustomers(Arrays.asList(nested2, nested3));
+        repository.save(customer2);
+        repository.save(toBeRetrieved);
+        List<Customer> retrieved = repository.findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(
+                new Point(1, 2), convertAngleToDistance(25));
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void relationsSingleLevelTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        List<Customer> customers = new LinkedList<>();
+        List<Customer> retrieved;
+        Customer john = new Customer("John", "Smith", 52);
+        Customer adam = new Customer("Adam", "Smith", 294);
+        Customer matt = new Customer("Matt", "Smith", 34);
+        Product phone = new Product("phone");
+        Product car = new Product("car");
+        Product chair = new Product("chair");
+        template.insert(phone);
+        template.insert(car);
+        template.insert(chair);
+        customers.add(john);
+        customers.add(matt);
+        customers.add(adam);
+        repository.save(customers);
+        template.insert(new Owns(john, phone));
+        template.insert(new Owns(john, car));
+        template.insert(new Owns(adam, chair));
+        template.insert(new Owns(matt, phone));
+        template.insert(new Owns(matt, car));
+        template.insert(new Owns(matt, chair));
+        toBeRetrieved.add(john);
+        toBeRetrieved.add(matt);
+        retrieved = repository.getByOwnsName(phone.getName());
+        assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+    }
+
+    @Test
+    public void relationsMultiLevelTest() {
+        List<Customer> toBeRetrieved = new LinkedList<>();
+        List<Customer> customers = new LinkedList<>();
+        List<Customer> retrieved;
+        Customer john = new Customer("John", "Smith", 52);
+        Customer adam = new Customer("Adam", "Smith", 294);
+        Customer matt = new Customer("Matt", "Smith", 34);
+        Product phone = new Product("phone");
+        Product car = new Product("car");
+        Product chair = new Product("chair");
+        template.insert(phone);
+        template.insert(car);
+        template.insert(chair);
+        Material wood = new Material("wood");
+        Material metal = new Material("metal");
+        Material glass = new Material("glass");
+        template.insert(wood);
+        template.insert(metal);
+        template.insert(glass);
+        customers.add(john);
+        customers.add(matt);
+        customers.add(adam);
+        repository.save(customers);
+        template.insert(new Owns(john, phone));
+        template.insert(new Owns(john, car));
+        template.insert(new Owns(adam, chair));
+        template.insert(new Owns(matt, phone));
+        template.insert(new Owns(matt, car));
+        template.insert(new Owns(matt, chair));
+        template.insert(new Contains(phone, glass));
+        template.insert(new Contains(car, metal));
+        template.insert(new Contains(car, glass));
+        template.insert(new Contains(chair, wood));
+        toBeRetrieved.add(adam);
+        toBeRetrieved.add(matt);
+        retrieved = repository.getByOwnsContainsName(wood.getName());
         assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
     }
 

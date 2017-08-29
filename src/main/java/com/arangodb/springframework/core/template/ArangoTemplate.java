@@ -459,7 +459,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public <T> Iterable<T> findAll(final Class<T> entityClass) throws DataAccessException {
 		final String query = "FOR entity IN @@col RETURN entity";
-		return query(query, new MapBuilder().put("@col", entityClass).get(), null, entityClass);
+		return new Iterable<T>() {
+			@Override
+			public Iterator<T> iterator() {
+				return query(query, new MapBuilder().put("@col", entityClass).get(), null, entityClass);
+			}
+		};
 	}
 
 	@Override

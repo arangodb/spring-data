@@ -65,8 +65,8 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		bindVars.put("name", john.getName());
-		Customer retrieved = repository.findOneByBindVarsAql(OPTIONS, bindVars);
-		assertEquals(john, retrieved);
+		ArangoCursor<Customer> retrieved = repository.findOneByBindVarsAql(OPTIONS.ttl(127).cache(true), bindVars);
+		assertEquals(john, retrieved.next());
 	}
 
 	@Test(expected = ClassCastException.class)
@@ -75,8 +75,8 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		Map<Integer, Object> bindVars = new HashMap<>();
 		bindVars.put(1, john.getId());
 		bindVars.put(2, john.getName());
-		Customer retrieved = repository.findOneByBindVarsAql(OPTIONS, bindVars);
-		assertEquals(john, retrieved);
+		ArangoCursor<Customer> retrieved = repository.findOneByBindVarsAql(OPTIONS, bindVars);
+		assertEquals(john, retrieved.next());
 	}
 
 	@Test

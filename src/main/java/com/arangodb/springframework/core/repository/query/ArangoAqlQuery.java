@@ -8,6 +8,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Param;
 import com.arangodb.springframework.annotation.Query;
+import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.repository.query.derived.DerivedQueryCreator;
@@ -29,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by F625633 on 12/07/2017.
+ * Implements execute(Object[]) method which is called every time a user-defined AQL or derived method is called
  */
 public class ArangoAqlQuery implements RepositoryQuery {
 
@@ -71,17 +72,23 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return new ArangoQueryMethod(method, metadata, factory);
 	}
 
+	/**
+	 * This method contains main logic showing how all user-defined methods are implemented
+	 * @param arguments
+	 * @return
+	 */
 	@Override
 	public Object execute(Object[] arguments) {
 		Map<String, Object> bindVars = new HashMap<>();
 		String query = getQueryAnnotationValue();
-		AqlQueryOptions options = null;
-		if (query == null) {
+		AqlQueryOptions options = getAqlQueryOptions();
+		boolean optionsFound = false;
+		if (query == null) { // derived method
 			PartTree tree = new PartTree(method.getName(), domainClass);
 			isCountProjection = tree.isCountProjection();
 			isExistsProjection = tree.isExistsProjection();
 			accessor = new ArangoParameterAccessor(new ArangoParameters(method), arguments);
-			options = accessor.getAqlQueryOptions();
+			options = updateAqlQueryOptions(options, accessor.getAqlQueryOptions());
 			if (Page.class.isAssignableFrom(method.getReturnType())) {
 				if (options == null) { options = new AqlQueryOptions().fullCount(true); }
 				else options = options.fullCount(true);
@@ -90,24 +97,25 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			if (GEO_RETURN_TYPES.contains(method.getReturnType())) {
 				operations.collection(operations.getConverter().getMappingContext().getPersistentEntity(domainClass).getCollection())
 						.getIndexes().forEach(i -> {
-							if ((i.getType() == IndexType.geo1 || i.getType() == IndexType.geo2) && geoFields.isEmpty()) {
+							if ((i.getType() == IndexType.geo1) && geoFields.isEmpty()) {
 								i.getFields().forEach(f -> geoFields.add(f));
 							}
 						});
 			}
 			query = new DerivedQueryCreator((ArangoMappingContext) operations.getConverter().getMappingContext(),
-					domainClass, tree, accessor, bindVars, geoFields, operations.getVersion().getVersion().compareTo("3.2.0") < 0).createQuery();
-		} else if (arguments != null) {
-			String fixedQuery = removeAqlStringLiterals(query);
-			Set<String> bindings = getBindings(fixedQuery);
+					domainClass, tree, accessor, bindVars, geoFields,
+					operations.getVersion().getVersion().compareTo("3.2.0") < 0).createQuery();
+		} else if (arguments != null) { // AQL query method
+			Set<String> bindings = getBindings(query);
 			Annotation[][] annotations = method.getParameterAnnotations();
 			Assert.isTrue(arguments.length == annotations.length, "arguments.length != annotations.length");
 			Map<String, Object> bindVarsLocal = new HashMap<>();
 			boolean bindVarsFound = false;
 			for (int i = 0; i < arguments.length; ++i) {
 				if (arguments[i] instanceof AqlQueryOptions) {
-					Assert.isTrue(options == null, "AqlQueryOptions are already set");
-					options = (AqlQueryOptions) arguments[i];
+					Assert.isTrue(!optionsFound, "AqlQueryOptions are already set");
+					optionsFound = true;
+					options = updateAqlQueryOptions(options, (AqlQueryOptions) arguments[i]);
 					continue;
 				}
 				String parameter = null;
@@ -143,6 +151,51 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return convertResult(operations.query(query, bindVars, options, getResultClass()));
 	}
 
+	/**
+	 * Merges AqlQueryOptions derived from @QueryOptions with dynamically passed AqlQueryOptions which takes priority
+	 * @param oldStatic
+	 * @param newDynamic
+	 * @return
+	 */
+	private AqlQueryOptions updateAqlQueryOptions(AqlQueryOptions oldStatic, AqlQueryOptions newDynamic) {
+		if (oldStatic == null) { return  newDynamic; }
+		Integer batchSize = newDynamic.getBatchSize();
+		if (batchSize != null) { oldStatic.batchSize(batchSize); }
+		Integer maxPlans = newDynamic.getMaxPlans();
+		if (maxPlans != null) { oldStatic.maxPlans(maxPlans); }
+		Integer ttl = newDynamic.getTtl();
+		if (ttl != null) { oldStatic.ttl(ttl); }
+		Boolean cache = newDynamic.getCache();
+		if (cache != null) { oldStatic.cache(cache); }
+		Boolean count = newDynamic.getCount();
+		if (count != null) { oldStatic.count(count); }
+		Boolean fullCount = newDynamic.getFullCount();
+		if (fullCount != null) { oldStatic.fullCount(fullCount); }
+		Boolean profile = newDynamic.getProfile();
+		if (profile != null) { oldStatic.profile(profile); }
+		Collection<String> rules = newDynamic.getRules();
+		if (rules != null) { oldStatic.rules(rules); }
+		return oldStatic;
+	}
+
+	private AqlQueryOptions getAqlQueryOptions() {
+		QueryOptions queryOptions = method.getAnnotation(QueryOptions.class);
+		if (queryOptions == null) { return null; }
+		AqlQueryOptions options = new AqlQueryOptions();
+		int batchSize = queryOptions.batchSize();
+		if (batchSize != -1) { options.batchSize(batchSize); }
+		int maxPlans = queryOptions.maxPlans();
+		if (maxPlans != -1) { options.maxPlans(maxPlans); }
+		int ttl = queryOptions.ttl();
+		if (ttl != -1) { options.ttl(ttl); }
+		options.cache(queryOptions.cache());
+		options.count(queryOptions.count());
+		options.fullCount(queryOptions.fullCount());
+		options.profile(queryOptions.profile());
+		options.rules(Arrays.asList(queryOptions.rules()));
+		return options;
+	}
+
 	private Class<?> getResultClass() {
 		if (isCountProjection || isExistsProjection) return Integer.class;
 		if (GEO_RETURN_TYPES.contains(method.getReturnType())) return Object.class;
@@ -150,6 +203,11 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return domainClass;
 	}
 
+	/**
+	 * Returns Param or BindVars Annotation if it is present in the given array or null otherwise
+	 * @param annotations
+	 * @return
+	 */
 	private Annotation getSpecialAnnotation(Annotation[] annotations) {
 		Annotation specialAnnotation = null;
 		for (Annotation annotation : annotations) {
@@ -166,6 +224,11 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return query == null ? null : query.value();
 	}
 
+	/**
+	 * Merges bindVars Map passed by a user with a Map created from the rest of the arguments which take priority
+	 * @param bindVars
+	 * @param bindVarsLocal
+	 */
 	private void mergeBindVars(Map<String, Object> bindVars, Map<String, Object> bindVarsLocal) {
 		for (String key : bindVarsLocal.keySet()) {
 			if (bindVars.containsKey(key))
@@ -210,9 +273,17 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		return fixedQuery.toString();
 	}
 
+	/**
+	 * Returns all bindings used in AQL query String
+	 * including bindings prefixed with both single and double '@' character
+	 * ignoring AQL string literals
+	 * @param query
+	 * @return
+	 */
 	private Set<String> getBindings(String query) {
+		String fixedQuery = removeAqlStringLiterals(query);
 		Set<String> bindings = new HashSet<>();
-		Matcher matcher = Pattern.compile("@\\S+").matcher(query);
+		Matcher matcher = Pattern.compile("@\\S+").matcher(fixedQuery);
 		while (matcher.find())
 			bindings.add(matcher.group().substring(1));
 		return bindings;

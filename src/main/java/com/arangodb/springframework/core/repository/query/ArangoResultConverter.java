@@ -14,7 +14,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- * Created by markfmccormick on 07/08/2017.
+ * Class used to convert the result returned from the ArangoDB java driver from ArangoCursor to
+ * the desired type
  */
 public class ArangoResultConverter {
 
@@ -25,6 +26,9 @@ public class ArangoResultConverter {
 
     private static Map<Object, Method> TYPE_MAP = new HashMap<>();
 
+    /**
+     * Build static map of all supported return types and the method used to convert them
+     */
     static {
         try {
             TYPE_MAP.put(List.class, ArangoResultConverter.class.getMethod("convertList"));
@@ -44,6 +48,15 @@ public class ArangoResultConverter {
         }
     }
 
+    /**
+     * @param accessor
+     * @param result
+     *      the query result returned by the driver
+     * @param operations
+     *      instance of arangoTemplate
+     * @param domainClass
+     *      class type of documents
+     */
     public ArangoResultConverter(ArangoParameterAccessor accessor, ArangoCursor result, ArangoOperations operations, Class domainClass) {
         this.accessor = accessor;
         this.result = result;
@@ -51,6 +64,12 @@ public class ArangoResultConverter {
         this.domainClass = domainClass;
     }
 
+    /**
+     * Called to convert result from ArangoCursor to given type, by invoking the appropriate converter method
+     * @param type
+     * @return
+     *      result in desired type
+     */
     public Object convertResult(Class type) {
         try {
             if (type.isArray()) { return TYPE_MAP.get("array").invoke(this, null); }
@@ -62,12 +81,27 @@ public class ArangoResultConverter {
         }
     }
 
+    /**
+     * Creates a Set return type from the given cursor
+     * @param cursor
+     *      query result from driver
+     * @return
+     *      Set containing the results
+     */
     private Set buildSet(ArangoCursor cursor) {
         Set set = new HashSet();
         cursor.forEachRemaining(set::add);
         return set;
     }
 
+    /**
+     * Build a GeoResult from the given ArangoCursor
+     *
+     * @param cursor
+     *      query result from driver
+     * @return
+     *      GeoResult object
+     */
     private GeoResult buildGeoResult(ArangoCursor cursor) {
         GeoResult geoResult = null;
         while (cursor.hasNext() && geoResult == null) {
@@ -82,6 +116,14 @@ public class ArangoResultConverter {
         return geoResult;
     }
 
+    /**
+     * Construct a GeoResult from the given object
+     *
+     * @param object
+     *      object representing one document in the result
+     * @return
+     *  GeoResult object
+     */
     private GeoResult buildGeoResult(Object object) {
         if (object == null) { return null; }
         Map<String, Object> map = (Map<String, Object>) object;
@@ -92,6 +134,14 @@ public class ArangoResultConverter {
         return new GeoResult(entity, distance);
     }
 
+    /**
+     * Build a GeoResults object with the ArangoCursor returned by query execution
+     *
+     * @param cursor
+     *      ArangoCursor containing query results
+     * @return
+     *      GeoResults object with all results
+     */
     private GeoResults buildGeoResults(ArangoCursor cursor) {
         List<GeoResult> list = new LinkedList<>();
         cursor.forEachRemaining(o -> {
