@@ -31,7 +31,7 @@ import com.arangodb.springframework.config.AbstractArangoConfiguration;
  *
  */
 @Configuration
-@EnableArangoRepositories(basePackages = { "com.arangodb.springframework.core.repository" })
+@EnableArangoRepositories(basePackages = { "com.arangodb.springframework.repository" })
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
 	public static final String DB = "spring-test-db";
