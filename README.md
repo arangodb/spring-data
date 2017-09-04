@@ -2,12 +2,12 @@
 
 # Spring Data ArangoDB
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.arangodb/spring-data/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.arangodb/spring-data)
 
 ## Supported versions
 
 <table>
-<tr><th>arangodb-spring-data</th><th>Spring Data</th><th>ArangoDB</th><th>Java version</th></tr>
+<tr><th>Spring Data ArangoDB</th><th>Spring Data</th><th>ArangoDB</th><th>Java version</th></tr>
 <tr><td>1.0.0</td><td>1.13.x</td><td>3.0*, 3.1, 3.2</td><td>1.8+</td></tr>
 </table>
 
@@ -18,7 +18,7 @@ Spring Data ArangoDB requires ArangoDB 3.0 or higher - which you can download [h
 ## Learn more
 * [ArangoDB](https://www.arangodb.com/)
 * [Demo](https://github.com/arangodb/spring-data-demo)
-* [JavaDoc](http://arangodb.github.io/arangodb-spring-data/javadoc-1_0/index.html)
+* [JavaDoc](http://arangodb.github.io/spring-data/javadoc-1_0/index.html)
 * [JavaDoc Java driver](http://arangodb.github.io/arangodb-java-driver/javadoc-4_2/index.html)
 
 ## Table of Contents
@@ -58,7 +58,7 @@ To use Spring Data ArangoDB in your project, your build automation tool needs to
 ``` xml
 <dependency>
   <groupId>com.arangodb</groupId>
-  <artifactId>arangodb-spring-data</artifactId>
+  <artifactId>spring-data</artifactId>
   <version>{version}</version>
 </dependency>
 ```
