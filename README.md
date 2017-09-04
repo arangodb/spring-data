@@ -8,10 +8,12 @@
 
 <table>
 <tr><th>arangodb-spring-data</th><th>Spring Data</th><th>ArangoDB</th><th>Java version</th></tr>
-<tr><td>1.0.0</td><td>1.13.x</td><td>3.0.x, 3.1.x, 3.2.x</td><td>1.8+</td></tr>
+<tr><td>1.0.0</td><td>1.13.x</td><td>3.0*, 3.1, 3.2</td><td>1.8+</td></tr>
 </table>
 
-**Note**: VelocyStream is only supported in ArangoDB 3.1 and above.
+Spring Data ArangoDB requires ArangoDB 3.0 or higher - which you can download [here](https://www.arangodb.com/download/) - and Java 8 or higher.
+
+**Note**: ArangoDB 3.0 does not support the default transport protocol [VelocyStream](https://github.com/arangodb/velocystream). A manual switch to HTTP is required. See chapter [configuration](#configuration). Also ArangoDB 3.0 does not support [geospatial queries](#geospatial-queries).
 
 ## Learn more
 * [ArangoDB](https://www.arangodb.com/)
@@ -51,7 +53,7 @@
 
 # Getting Started
 
-Spring Data ArangoDB requires ArangoDB 3.1 or higher - which you can download [here](https://www.arangodb.com/download/) - and Java 8 or higher. To use Spring Data ArangoDB in your project, your build automation tool needs to be configured to include and use the Spring Data ArangoDB dependency. Example with Maven:
+To use Spring Data ArangoDB in your project, your build automation tool needs to be configured to include and use the Spring Data ArangoDB dependency. Example with Maven:
 
 ``` xml
 <dependency>
@@ -130,6 +132,24 @@ public ArangoDB.Builder arango() {
     .loadProperties(in);
   return arango;
 }
+```
+
+**Note**: When using ArangoDB 3.0 it is required to set the transport protocol to HTTP and fetch the dependency `org.apache.httpcomponents:httpclient`.
+
+``` java
+@Override
+public ArangoDB.Builder arango() {
+  ArangoDB.Builder arango = new ArangoDB.Builder()
+    .useProtocol(Protocol.HTTP_JSON);
+  return arango;
+}
+```
+``` xml
+<dependency>
+  <groupId>org.apache.httpcomponents</groupId>
+  <artifactId>httpclient</artifactId>
+  <version>4.5.1</version>
+</dependency>
 ```
 
 # Template
