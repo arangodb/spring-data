@@ -1,4 +1,4 @@
-package com.arangodb.springframework.core.repository;
+package com.arangodb.springframework.repository;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

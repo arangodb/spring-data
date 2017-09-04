@@ -1,4 +1,4 @@
-package com.arangodb.springframework.core.repository.query;
+package com.arangodb.springframework.repository.query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -18,7 +18,7 @@ import com.arangodb.ArangoDBException;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
-import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
+import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.testdata.Customer;
 
 /**

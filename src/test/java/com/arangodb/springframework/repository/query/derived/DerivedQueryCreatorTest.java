@@ -1,4 +1,4 @@
-package com.arangodb.springframework.core.repository.query.derived;
+package com.arangodb.springframework.repository.query.derived;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,7 +29,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.springframework.core.repository.AbstractArangoRepositoryTest;
+import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Contains;
 import com.arangodb.springframework.testdata.Customer;
