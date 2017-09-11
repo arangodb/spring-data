@@ -315,7 +315,7 @@ public class ArangoAqlQuery implements RepositoryQuery {
 			if (!result.hasNext()) {
 				return false;
 			}
-			return ((int) result.next()) > 0;
+			return Integer.valueOf(result.next().toString()) > 0;
 		}
 		final ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations,
 				domainClass);
