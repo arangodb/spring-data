@@ -25,6 +25,7 @@ import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
 import com.arangodb.internal.ArangoCursorIterator;
 import com.arangodb.internal.InternalArangoDatabase;
+import com.arangodb.internal.net.HostHandle;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 
 /**
@@ -45,7 +46,8 @@ class ArangoExtCursor<T> extends ArangoCursor<T> {
 		final ArangoCursor<T> cursor,
 		final InternalArangoDatabase<?, ?, ?, ?> db,
 		final ArangoCursorExecute execute,
-		final CursorEntity result) {
-		return new ArangoExtCursorIterator<>(cursor, db, execute, result);
+		final CursorEntity result,
+		final HostHandle hostHandle) {
+		return new ArangoExtCursorIterator<>(cursor, db, execute, result, hostHandle);
 	}
 }
