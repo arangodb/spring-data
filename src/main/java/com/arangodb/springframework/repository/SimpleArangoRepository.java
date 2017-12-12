@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,6 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 *            the entity to be saved to the database
 	 * @return the updated entity with any id/key/rev saved
 	 */
-	// TODO refactor once template.upsert() is implemented
 	@Override
 	public <S extends T> S save(final S entity) {
 		arangoOperations.upsert(entity, UpsertStrategy.UPDATE);
@@ -91,9 +91,8 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 *            the iterable of entities to be saved to the database
 	 * @return the iterable of updated entities with any id/key/rev saved in each entity
 	 */
-	// TODO refactor once template.upsert() is implemented
 	@Override
-	public <S extends T> Iterable<S> save(final Iterable<S> entities) {
+	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
 		arangoOperations.upsert(entities, UpsertStrategy.UPDATE);
 		return entities;
 	}
@@ -106,20 +105,20 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 * @return the object representing the document if found
 	 */
 	@Override
-	public T findOne(final String id) {
-		return arangoOperations.find(id, domainClass).orElse(null);
+	public Optional<T> findById(final String id) {
+		return arangoOperations.find(id, domainClass);
 	}
 
 	/**
 	 * Checks if a document exists or not based on the given id or key
 	 *
-	 * @param s
+	 * @param id
 	 *            represents either the key or id of a document to check for
 	 * @return returns true if the document is found, false otherwise
 	 */
 	@Override
-	public boolean exists(final String s) {
-		return arangoOperations.exists(s, domainClass);
+	public boolean existsById(final String id) {
+		return arangoOperations.exists(id, domainClass);
 	}
 
 	/**
@@ -135,13 +134,13 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	/**
 	 * Finds all documents with the an id or key in the argument
 	 *
-	 * @param strings
+	 * @param ids
 	 *            an iterable with ids/keys of documents to get
 	 * @return an iterable with documents in the collection which have a id/key in the argument
 	 */
 	@Override
-	public Iterable<T> findAll(final Iterable<String> strings) {
-		return arangoOperations.find(strings, domainClass);
+	public Iterable<T> findAllById(final Iterable<String> ids) {
+		return arangoOperations.find(ids, domainClass);
 	}
 
 	/**
@@ -157,12 +156,12 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	/**
 	 * Deletes the document with the given id or key
 	 *
-	 * @param s
+	 * @param id
 	 *            id or key of document to be deleted
 	 */
 	@Override
-	public void delete(final String s) {
-		arangoOperations.delete(s, domainClass);
+	public void deleteById(final String id) {
+		arangoOperations.delete(id, domainClass);
 	}
 
 	/**
@@ -189,9 +188,8 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 * @param entities
 	 *            iterable of entities to be deleted from the database
 	 */
-	// TODO refactor if this can be done through one database call
 	@Override
-	public void delete(final Iterable<? extends T> entities) {
+	public void deleteAll(final Iterable<? extends T> entities) {
 		entities.forEach(this::delete);
 	}
 
@@ -258,12 +256,12 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 * @return An object representing the example if it exists, else null
 	 */
 	@Override
-	public <S extends T> S findOne(final Example<S> example) {
+	public <S extends T> Optional<S> findOne(final Example<S> example) {
 		final Map<String, Object> bindVars = new HashMap<>();
 		final String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
 		final String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
 		final ArangoCursor cursor = execute(filter, "", "", bindVars);
-		return cursor.hasNext() ? (S) cursor.next() : null;
+		return cursor.hasNext() ? Optional.ofNullable((S) cursor.next()) : Optional.empty();
 	}
 
 	/**
@@ -378,4 +376,5 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 		return arangoOperations.query(query, bindVars,
 			limit.length() == 0 ? null : new AqlQueryOptions().fullCount(true), domainClass);
 	}
+
 }

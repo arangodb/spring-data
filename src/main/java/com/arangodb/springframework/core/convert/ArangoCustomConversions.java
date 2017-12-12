@@ -20,7 +20,20 @@
 
 package com.arangodb.springframework.core.convert;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.convert.JodaTimeConverters;
+import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
  * @author Mark Vollmary
@@ -28,15 +41,48 @@ import java.util.Collection;
  */
 public class ArangoCustomConversions extends CustomConversions {
 
-	// private static final StoreConversions STORE_CONVERSIONS;
+	private static final StoreConversions STORE_CONVERSIONS;
 
-	// static {
-	// final Collection<?> converters = new ArrayList<>();
-	// STORE_CONVERSIONS = StoreConversions.of(SimpleTypeHolder.DEFAULT, converters);
-	// }
-
-	public ArangoCustomConversions(final Collection<?> converters) {
-		super(converters);
+	static {
+		final Collection<Converter<?, ?>> converters = new ArrayList<>();
+		converters.addAll(JodaTimeConverters.getConvertersToRegister());
+		converters.addAll(TimeStringConverters.getConvertersToRegister());
+		converters.addAll(JodaTimeStringConverters.getConvertersToRegister());
+		STORE_CONVERSIONS = StoreConversions.of(SimpleTypeHolder.DEFAULT, converters);
 	}
 
+	public ArangoCustomConversions(final Collection<?> converters) {
+		super(STORE_CONVERSIONS, converters);
+	}
+
+	@WritingConverter
+	private enum CustomToStringConverter implements GenericConverter {
+
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.springframework.core.convert.converter.GenericConverter#getConvertibleTypes()
+		 */
+		@Override
+		public Set<ConvertiblePair> getConvertibleTypes() {
+
+			final ConvertiblePair localeToString = new ConvertiblePair(Locale.class, String.class);
+			final ConvertiblePair booleanToString = new ConvertiblePair(Character.class, String.class);
+
+			return new HashSet<>(Arrays.asList(localeToString, booleanToString));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.springframework.core.convert.converter.GenericConverter#convert(java.lang.Object,
+		 * org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
+		 */
+		@Override
+		public Object convert(final Object source, final TypeDescriptor sourceType, final TypeDescriptor targetType) {
+			return source.toString();
+		}
+	}
 }

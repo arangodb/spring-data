@@ -23,6 +23,7 @@ package com.arangodb.springframework.repository.query;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -62,7 +63,7 @@ public class ArangoParameterAccessor implements ParameterAccessor {
 	}
 
 	@Override
-	public Class<?> getDynamicProjection() {
+	public Optional<Class<?>> getDynamicProjection() {
 		return accessor.getDynamicProjection();
 	}
 

@@ -32,7 +32,7 @@ public class ArangoRepositoryConfigurationExtension extends RepositoryConfigurat
 	}
 
 	@Override
-	public String getRepositoryFactoryClassName() {
+	public String getRepositoryFactoryBeanClassName() {
 		return ArangoRepositoryFactoryBean.class.getName();
 	}
 }

@@ -160,7 +160,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		final String count = (tree.isCountProjection() || tree.isExistsProjection())
 				? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length") : "";
 		final String limit = tree.isLimiting() ? String.format(" LIMIT %d", tree.getMaxResults()) : "";
-		final String pageable = accessor.getPageable() == null ? ""
+		final String pageable = accessor.getPageable() == null || accessor.getPageable().isUnpaged() ? ""
 				: String.format(" LIMIT %d, %d", accessor.getPageable().getOffset(),
 					accessor.getPageable().getPageSize());
 		final String geoFields = String.format("%s[0], %s[1]", uniqueLocation, uniqueLocation);
@@ -194,8 +194,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		if (sort == null) {
 			LOGGER.debug("Sort in findAll(Sort) is null");
 		}
-		final StringBuilder sortBuilder = new StringBuilder(sort == null ? "" : " SORT");
-		if (sort != null) {
+		final StringBuilder sortBuilder = new StringBuilder();
+		if (sort != null && sort.isSorted()) {
+			sortBuilder.append(" SORT");
 			for (final Sort.Order order : sort) {
 				sortBuilder.append(
 					(sortBuilder.length() == 5 ? " " : ", ") + "e." + order.getProperty() + " " + order.getDirection());
@@ -250,7 +251,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	 * @return
 	 */
 	private String getProperty(final Part part) {
-		return "e." + context.getPersistentPropertyPath(part.getProperty()).toPath(null,
+		return "e." + context.getPersistentPropertyPath(part.getProperty()).toPath(".",
 			ArangoPersistentProperty::getFieldName);
 	}
 
@@ -516,8 +517,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	private int bindRange(final Range<?> range, int bindings) {
-		Object lowerBound = range.getLowerBound();
-		Object upperBound = range.getUpperBound();
+		Object lowerBound = range.getLowerBound().getValue().get();
+		Object upperBound = range.getUpperBound().getValue().get();
 		if (lowerBound.getClass() == Distance.class && upperBound.getClass() == lowerBound.getClass()) {
 			lowerBound = convertDistanceToMeters((Distance) lowerBound);
 			upperBound = convertDistanceToMeters((Distance) upperBound);

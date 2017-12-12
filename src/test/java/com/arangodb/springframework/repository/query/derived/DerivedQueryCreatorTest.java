@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -47,7 +48,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findDistinctTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		repository.save(new Customer("Bill", "", 0));
 		repository.save(new Customer("Alfred", "", 0));
 		final Set<Customer> retrieved = repository.findDistinctByNameAfter("Bill");
@@ -59,7 +60,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		toBeRetrieved.add(new Customer("B", "", 17));
 		toBeRetrieved.add(new Customer("A", "", 0));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		repository.save(new Customer("A", "", 18));
 		repository.save(new Customer("C", "", 0));
 		final List<Customer> retrieved = repository.findByNameNotIgnoreCaseAndAgeLessThanIgnoreCaseOrderByNameDesc("c",
@@ -84,7 +85,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer3 = new Customer("cTa", "", 19);
 		customer3.setStringArray(stringArray);
 		toBeRetrieved.add(customer3);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer4 = new Customer("AAA", "", 19);
 		customer4.setIntegerList(integerList);
 		repository.save(customer4);
@@ -113,7 +114,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer2 = new Customer("dt", "", 1);
 		customer2.setIntegerList(integerList);
 		toBeRetrieved.add(customer2);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		repository.save(new Customer("aaa", "", 17));
 		final Customer customer3 = new Customer("DTHB", "", 17);
 		customer3.setStringArray(stringArray);
@@ -135,7 +136,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer2 = new Customer("B", "", 0);
 		customer2.setStringArray(new String[] { "stRing" });
 		toBeRetrieved.add(customer2);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer3 = new Customer("C", "", 0);
 		customer3.setIntegerList(integerList);
 		repository.save(customer3);
@@ -204,7 +205,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(new Customer("ab", "abb---", 0, true));
 		customers.add(new Customer("a^b", "abb---", 0, true));
 		customers.add(new Customer("", "", 0, true));
-		repository.save(customers);
+		repository.saveAll(customers);
 		repository.removeByNameNotLikeAndSurnameRegexOrAliveFalse("%a_b%", "^a[bc]+");
 		final Iterable<Customer> retrieved = repository.findAll();
 		assertTrue(equals(customers, retrieved, cmp, eq, false));
@@ -214,7 +215,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	public void findNearTest() {
 		john.setLocation(new int[] { 2, 2 });
 		bob.setLocation(new int[] { 50, 45 });
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Customer[] retrieved = repository.findByLocationNear(new Point(10, 20));
 		final Customer[] check = { john, bob };
 		assertTrue(equals(check, retrieved, cmp, eq, true));
@@ -232,17 +233,17 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer3 = new Customer("", "", 0);
 		customer3.setLocation(new int[] { 0, 50 });
 		toBeRetrieved.add(customer3);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer4 = new Customer("", "", 0);
 		customer4.setLocation(new int[] { 0, 0 });
 		repository.save(customer4);
 		final Customer customer5 = new Customer("---", "", 0);
 		customer5.setLocation(new int[] { 10, 10 });
 		repository.save(customer5);
-		final double lowerBound = convertAngleToDistance(10);
-		final double upperBound = convertAngleToDistance(50);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(10));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
 		final List<Customer> retrieved = repository.findByLocationWithinAndName(new Point(0, 0),
-			new Range<>(lowerBound, upperBound), "");
+			Range.of(lowerBound, upperBound), "");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
@@ -255,7 +256,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer2 = new Customer("+++", "", 0);
 		customer2.setLocation(new int[] { 60, 1 });
 		toBeRetrieved.add(customer2);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer3 = new Customer("---", "", 0);
 		customer3.setLocation(new int[] { 0, 180 });
 		repository.save(customer3);
@@ -273,7 +274,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer1 = new Customer("", "", 0);
 		customer1.setLocation(new int[] { 10, 10 });
 		toBeRetrieved.add(customer1);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer2 = new Customer("", "", 0);
 		customer2.setLocation(new int[] { 0, 0 });
 		repository.save(customer2);
@@ -311,7 +312,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer2 = new Customer("vvv", "", 0);
 		customer2.setLocation(new int[] { 10, 0 });
 		toBeRetrieved.add(customer2);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer3 = new Customer("--d", "", 0);
 		customer3.setLocation(new int[] { 19, 0 });
 		repository.save(customer3);
@@ -322,10 +323,10 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		customer5.setLocation(new int[] { 0, 0 });
 		repository.save(customer5);
 		final int distance = (int) convertAngleToDistance(11);
-		final int lowerBound = (int) convertAngleToDistance(5);
-		final int upperBound = (int) convertAngleToDistance(15);
+		final Bound<Integer> lowerBound = Bound.inclusive((int) convertAngleToDistance(5));
+		final Bound<Integer> upperBound = Bound.inclusive((int) convertAngleToDistance(15));
 		final Collection<Customer> retrieved = repository.findByLocationWithinAndLocationWithinOrName(new Point(0, 20),
-			distance, new Ring<>(new Point(0, 0), new Range<>(lowerBound, upperBound)), "+++");
+			distance, new Ring<>(new Point(0, 0), Range.of(lowerBound, upperBound)), "+++");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
@@ -344,7 +345,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer4 = new Customer("Jack", "Sparrow", 0);
 		customer4.setLocation(new int[] { 70, 20 });
 		toBeRetrieved.add(customer4);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer5 = new Customer("Peter", "The Great", 0);
 		customer5.setLocation(new int[] { 0, 89 });
 		repository.save(customer5);
@@ -361,9 +362,9 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		customer9.setLocation(new int[] { 25, 75 });
 		repository.save(customer9);
 		final double distance = convertAngleToDistance(10);
-		final double lowerBound = convertAngleToDistance(10);
-		final double upperBound = convertAngleToDistance(20);
-		final Range<Double> distanceRange = new Range<>(lowerBound, upperBound);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(10));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(20));
+		final Range<Double> distanceRange = Range.of(lowerBound, upperBound);
 		final List<Customer> retrieved = repository
 				.findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin("John",
 					new Point(0, 0), distance, "Peter", "Pen", "Jack", new Point(47, 63), "Sparrow", new Point(10, 60),
@@ -384,7 +385,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		customer1.setStringList(stringList);
 		customer1.setNestedCustomer(new Customer("nested", "", 0));
 		toBeRetrieved.add(customer1);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer2 = new Customer("", "", 0);
 		customer2.setStringList(stringList3);
 		repository.save(customer2);
@@ -399,9 +400,9 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("Tony", "1", 5));
 		toBeRetrieved.add(new Customer("Tony", "2", 3));
 		toBeRetrieved.add(new Customer("Tony", "2", 4));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		repository.save(new Customer("Stark", "0", 0));
-		final Customer[] retrieved = repository.findByNameOrderBySurnameAsc(new Sort("age"), "Tony");
+		final Customer[] retrieved = repository.findByNameOrderBySurnameAsc(Sort.by("age"), "Tony");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
 	}
 
@@ -414,8 +415,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(new Customer("-", "", 3));
 		toBeRetrieved.add(new Customer("", "", 4));
 		repository.save(new Customer("", "", 5));
-		repository.save(toBeRetrieved);
-		final Pageable pageable = new PageRequest(1, 2, new Sort("age"));
+		repository.saveAll(toBeRetrieved);
+		final Pageable pageable = PageRequest.of(1, 2, Sort.by("age"));
 		final Page<Customer> retrieved = repository.readByNameAndSurname(pageable, "",
 			new AqlQueryOptions().fullCount(false), "");
 		assertEquals(5, retrieved.getTotalElements());
@@ -450,17 +451,17 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer2 = new Customer("", "", 0);
 		customer2.setLocation(new int[] { 21, 43 });
 		toBeRetrieved.add(customer2);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer3 = new Customer("", "", 0);
 		customer3.setLocation(new int[] { 70, 50 });
 		repository.save(customer3);
 		final Customer customer4 = new Customer("", "", 0);
 		customer4.setLocation(new int[] { 3, 2 });
 		repository.save(customer4);
-		final double lowerBound = convertAngleToDistance(30);
-		final double upperBound = convertAngleToDistance(50);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(30));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
 		final GeoResults<Customer> retrieved = repository.findByLocationWithin(new Point(1, 0),
-			new Range<>(lowerBound, upperBound));
+			Range.of(lowerBound, upperBound));
 		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
 		expectedGeoResults.add(new GeoResult<>(customer1,
 				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(21, 43)) / 1000, Metrics.KILOMETERS)));
@@ -483,7 +484,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer4 = new Customer("", "", 0);
 		customer4.setLocation(new int[] { 6, 0 });
 		repository.save(customer4);
-		final GeoPage<Customer> retrieved = repository.findByLocationNear(new Point(0, 0), new PageRequest(1, 2));
+		final GeoPage<Customer> retrieved = repository.findByLocationNear(new Point(0, 0), PageRequest.of(1, 2));
 		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
 		expectedGeoResults.add(new GeoResult<>(customer3,
 				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 4)) / 1000, Metrics.KILOMETERS)));
@@ -506,7 +507,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer3 = new Customer("", "", 0);
 		customer3.setLocation(new int[] { 0, 25 });
 		toBeRetrieved.add(customer3);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer customer4 = new Customer("", "", 0);
 		customer4.setLocation(new int[] { 15, 0 });
 		repository.save(customer4);
@@ -515,9 +516,9 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(customer5);
 		final double distanceInMeters = convertAngleToDistance(10);
 		final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
-		final Range<Distance> distanceRange = new Range<>(
-				new Distance(convertAngleToDistance(20) / 1000, Metrics.KILOMETERS),
-				new Distance(convertAngleToDistance(30) / 1000, Metrics.KILOMETERS));
+		final Range<Distance> distanceRange = Range.of(
+			Bound.inclusive(new Distance(convertAngleToDistance(20) / 1000, Metrics.KILOMETERS)),
+			Bound.inclusive(new Distance(convertAngleToDistance(30) / 1000, Metrics.KILOMETERS)));
 		final Point location = new Point(0, 0);
 		final GeoResults<Customer> retrieved = repository.findByNameOrSurnameAndLocationWithinOrLocationWithin("+", "+",
 			location, distance, location, distanceRange);
@@ -563,7 +564,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		john.setNestedCustomer(bob);
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		toBeRetrieved.add(john);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		repository.save(bob);
 		final List<Customer> retrieved = repository.findByNestedCustomerName("Bob");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
@@ -612,7 +613,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		template.insert(nested3);
 		customer2.setNestedCustomers(Arrays.asList(nested2, nested3));
 		repository.save(customer2);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final List<Customer> retrieved = repository
 				.findByNestedCustomersNestedCustomerShoppingCartProductsNameLike("%1%");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
@@ -661,7 +662,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		template.insert(nested3);
 		customer2.setNestedCustomers(Arrays.asList(nested2, nested3));
 		repository.save(customer2);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final List<Customer> retrieved = repository
 				.findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(new Point(1, 2),
 					convertAngleToDistance(25));
@@ -685,7 +686,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		customers.add(john);
 		customers.add(matt);
 		customers.add(adam);
-		repository.save(customers);
+		repository.saveAll(customers);
 		template.insert(new Owns(john, phone));
 		template.insert(new Owns(john, car));
 		template.insert(new Owns(adam, chair));
@@ -721,7 +722,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		customers.add(john);
 		customers.add(matt);
 		customers.add(adam);
-		repository.save(customers);
+		repository.saveAll(customers);
 		template.insert(new Owns(john, phone));
 		template.insert(new Owns(john, car));
 		template.insert(new Owns(adam, chair));

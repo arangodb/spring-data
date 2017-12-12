@@ -34,13 +34,14 @@ import java.util.stream.Collectors;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
 import org.springframework.data.mapping.model.PropertyValueProvider;
@@ -125,8 +126,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			} else if (value instanceof Collection) {
 				map.put(key, read(valueType, new DBCollectionEntity((Collection<? extends Object>) value)));
 			} else if (isSimpleType(valueType.getType())) {
-				final Optional<Class<?>> customWriteTarget = Optional
-						.ofNullable(conversions.getCustomWriteTarget(valueType.getType()));
+				final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(valueType.getType());
 				final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType.getType());
 				map.put(key, conversionService.convert(value, targetType));
 			} else {
@@ -150,8 +150,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			} else if (entry instanceof Collection) {
 				entries.add(read(componentType, new DBCollectionEntity((Collection<? extends Object>) entry)));
 			} else if (isSimpleType(componentType.getType())) {
-				final Optional<Class<?>> customWriteTarget = Optional
-						.ofNullable(conversions.getCustomWriteTarget(componentType.getType()));
+				final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(componentType.getType());
 				final Class<?> targetType = customWriteTarget.orElseGet(() -> componentType.getType());
 				entries.add(conversionService.convert(entry, targetType));
 			} else {
@@ -397,8 +396,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			sink.put(fieldName, map);
 			return;
 		}
-		final Optional<Class<?>> customWriteTarget = Optional
-				.ofNullable(conversions.getCustomWriteTarget(source.getClass()));
+		final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass());
 		final Class<?> targetType = customWriteTarget.orElseGet(() -> property.getTypeInformation().getType());
 		final DBEntity document = new DBDocumentEntity();
 		final Optional<? extends ArangoPersistentEntity<?>> persistentEntity = Optional
@@ -422,8 +420,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			final Object value = entry.getValue();
 			final Class<? extends Object> valueType = value.getClass();
 			if (conversions.isSimpleType(valueType)) {
-				final Optional<Class<?>> customWriteTarget = Optional
-						.ofNullable(conversions.getCustomWriteTarget(valueType));
+				final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(valueType);
 				final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType);
 				sink.put(key.toString(), conversionService.convert(value, targetType));
 			} else {
@@ -438,8 +435,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		for (final Object entry : asCollection(source)) {
 			final Class<? extends Object> valueType = entry.getClass();
 			if (conversions.isSimpleType(valueType)) {
-				final Optional<Class<?>> customWriteTarget = Optional
-						.ofNullable(conversions.getCustomWriteTarget(valueType));
+				final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(valueType);
 				final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType);
 				sink.add(conversionService.convert(entry, targetType));
 			} else {

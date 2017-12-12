@@ -31,7 +31,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findOneByIdAqlWithNamedParameterTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(), OPTIONS);
 		final Customer retrievedCustomer = template.getConverter().read(Customer.class,
 			new DBDocumentEntity(retrieved));
@@ -40,7 +40,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findOneByIdAndNameAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final BaseDocument retrieved = repository.findOneByIdAndNameAql(john.getId(), john.getName());
 		final Map<String, Object> allProperties = new HashMap<>();
 		allProperties.put("_id", retrieved.getId());
@@ -54,21 +54,21 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findOneByIdAqlPotentialNameClashTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Optional<Customer> retrieved = repository.findOneByIdAqlPotentialNameClash(john.getId());
 		assertEquals(john, retrieved.get());
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void findOneByIdAqlParamNameClashTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final ArangoCursor<Customer> retrieved = repository.findOneByIdAqlParamNameClash(john.getId(), john.getName());
 		assertEquals(john, retrieved.next());
 	}
 
 	@Test
 	public void findOneByBindVarsAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		bindVars.put("name", john.getName());
@@ -79,7 +79,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test(expected = ClassCastException.class)
 	public void findOneByBindVarsOfIllegalTypeAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Map<Integer, Object> bindVars = new HashMap<>();
 		bindVars.put(1, john.getId());
 		bindVars.put(2, john.getName());
@@ -89,7 +89,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findOneByComplementingNameAndBindVarsAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		final Customer retrieved = repository.findOneByNameAndBindVarsAql(john.getName(), bindVars);
@@ -98,7 +98,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findOneByOverridingNameAndBindVarsAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		bindVars.put("name", john.getId() + "random");
@@ -108,7 +108,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void findOneByBindVarsAndClashingParametersAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		bindVars.put("name", john.getName());
@@ -119,14 +119,14 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void findOneByNameWithDuplicateOptionsAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Customer retrieved = repository.findOneByNameWithDuplicateOptionsAql(john.getName(), OPTIONS, OPTIONS);
 		assertEquals(john, retrieved);
 	}
 
 	@Test
 	public void findOneByIdAndNameWithBindVarsAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		bindVars.put("0", john.getName() + "random");
@@ -136,7 +136,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findOneByIdInCollectionAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Customer retrieved = repository.findOneByIdInCollectionAql(john.getId().split("/")[0], john.getId(),
 			john.getId());
 		assertEquals(john, retrieved);
@@ -144,7 +144,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findOneByIdInNamedCollectionAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Customer retrieved = repository.findOneByIdInNamedCollectionAql(john.getId().split("/")[0], john.getId(),
 			john.getId());
 		assertEquals(john, retrieved);
@@ -152,7 +152,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test(expected = ArangoDBException.class)
 	public void findOneByIdInIncorrectNamedCollectionAqlTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Customer retrieved = repository.findOneByIdInIncorrectNamedCollectionAql(john.getId().split("/")[0],
 			john.getId(), john.getId());
 		assertEquals(john, retrieved);
@@ -160,7 +160,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test(expected = ArangoDBException.class)
 	public void findOneByIdInNamedCollectionAqlRejectedTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Customer retrieved = repository.findOneByIdInNamedCollectionAqlRejected(john.getId().split("/")[0],
 			john.getId());
 		assertEquals(john, retrieved);
@@ -171,7 +171,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		toBeRetrieved.add(new Customer("James", "Smith", 35));
 		toBeRetrieved.add(new Customer("Matt", "Smith", 34));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final List<Customer> retrieved = repository.findManyBySurname("Smith");
 		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
 

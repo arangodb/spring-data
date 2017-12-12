@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,33 +31,33 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	public void findOneTest() {
 		repository.save(john);
 		final String id = john.getId();
-		Customer customer = repository.findOne(id);
+		Customer customer = repository.findById(id).get();
 		assertEquals("customers do not match", john, customer);
 		john.setAge(100);
 		repository.save(john);
-		customer = repository.findOne(id);
+		customer = repository.findById(id).get();
 		assertEquals("customers do not match", john, customer);
 	}
 
 	@Test
 	public void findAllByIterableTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		ids.add(john.getId());
 		ids.add(bob.getId());
-		final Iterable<Customer> response = repository.findAll(ids);
+		final Iterable<Customer> response = repository.findAllById(ids);
 		assertTrue("customers do not match", equals(customers, response, cmp, eq, false));
 	}
 
 	@Test
 	public void findAllTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Iterable<Customer> response = repository.findAll();
 		assertTrue("customers do not match", equals(customers, response, cmp, eq, false));
 	}
 
 	@Test
 	public void countTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final Long size = repository.count();
 		assertTrue("customer set sizes do not match", customers.size() == size);
 	}
@@ -64,42 +65,42 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	@Test
 	public void existsTest() {
 		repository.save(john);
-		assertTrue("customer does not exist but should", repository.exists(john.getId()));
-		assertFalse("customer exists but should not", repository.exists(john.getId() + "0"));
+		assertTrue("customer does not exist but should", repository.existsById(john.getId()));
+		assertFalse("customer exists but should not", repository.existsById(john.getId() + "0"));
 	}
 
 	@Test
 	public void deleteByEntityTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final String johnId = john.getId();
 		repository.delete(john);
-		assertTrue(repository.exists(bob.getId()));
-		assertFalse(repository.exists(johnId));
+		assertTrue(repository.existsById(bob.getId()));
+		assertFalse(repository.existsById(johnId));
 	}
 
 	@Test
 	public void deleteByIdTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final String johnId = john.getId();
-		repository.delete(johnId);
-		assertTrue(repository.exists(bob.getId()));
-		assertFalse(repository.exists(johnId));
+		repository.deleteById(johnId);
+		assertTrue(repository.existsById(bob.getId()));
+		assertFalse(repository.existsById(johnId));
 	}
 
 	@Test
 	public void deleteByIterableTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		final List<Customer> toDelete = new ArrayList<>();
 		toDelete.add(john);
 		final String johnId = john.getId();
-		repository.delete(toDelete);
-		assertTrue(repository.exists(bob.getId()));
-		assertFalse(repository.exists(johnId));
+		repository.deleteAll(toDelete);
+		assertTrue(repository.existsById(bob.getId()));
+		assertFalse(repository.existsById(johnId));
 	}
 
 	@Test
 	public void deleteAllTest() {
-		repository.save(customers);
+		repository.saveAll(customers);
 		repository.deleteAll();
 		assertTrue(repository.count() == 0);
 	}
@@ -110,11 +111,11 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("A", "Z", 0));
 		toBeRetrieved.add(new Customer("B", "C", 0));
 		toBeRetrieved.add(new Customer("B", "D", 0));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final List<Sort.Order> orders = new LinkedList<>();
 		orders.add(new Sort.Order(Sort.Direction.ASC, "name"));
 		orders.add(new Sort.Order(Sort.Direction.ASC, "surname"));
-		final Sort sort = new Sort(orders);
+		final Sort sort = Sort.by(orders);
 		final Iterable<Customer> retrieved = repository.findAll(sort);
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
 	}
@@ -132,14 +133,14 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("F", "P", 0));
 		toBeRetrieved.add(new Customer("F", "Q", 0));
 		toBeRetrieved.add(new Customer("F", "R", 0));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final List<Sort.Order> orders = new LinkedList<>();
 		orders.add(new Sort.Order(Sort.Direction.ASC, "name"));
 		orders.add(new Sort.Order(Sort.Direction.ASC, "surname"));
-		final Sort sort = new Sort(orders);
+		final Sort sort = Sort.by(orders);
 		final int pageNumber = 1;
 		final int pageSize = 3;
-		final Page<Customer> retrievedPage = repository.findAll(new PageRequest(pageNumber, pageSize, sort));
+		final Page<Customer> retrievedPage = repository.findAll(PageRequest.of(pageNumber, pageSize, sort));
 		assertEquals(toBeRetrieved.size(), retrievedPage.getTotalElements());
 		assertEquals(pageNumber, retrievedPage.getNumber());
 		assertEquals(pageSize, retrievedPage.getSize());
@@ -151,7 +152,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	@Test
 	public void findOneByExampleTest() {
 		repository.save(john);
-		final Customer customer = repository.findOne(Example.of(john));
+		final Customer customer = repository.findOne(Example.of(john)).get();
 		assertEquals("customers do not match", john, customer);
 	}
 
@@ -164,7 +165,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(check1);
 		toBeRetrieved.add(check2);
 		toBeRetrieved.add(new Customer("C", "V", 0));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Example<Customer> example = Example.of(new Customer("B", null, 0));
 		final Iterable<?> retrieved = repository.findAll(example);
 		final List<Customer> retrievedList = new LinkedList<>();
@@ -181,14 +182,14 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("A", "Z", 0));
 		toBeRetrieved.add(new Customer("B", "C", 0));
 		toBeRetrieved.add(new Customer("B", "D", 0));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		repository.save(new Customer("A", "A", 1));
 		final Example<Customer> example = Example.of(new Customer("", "", 0),
 			ExampleMatcher.matchingAny().withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
 		final List<Sort.Order> orders = new LinkedList<>();
 		orders.add(new Sort.Order(Sort.Direction.ASC, "name"));
 		orders.add(new Sort.Order(Sort.Direction.ASC, "surname"));
-		final Sort sort = new Sort(orders);
+		final Sort sort = Sort.by(orders);
 		final Iterable<Customer> retrieved = repository.findAll(example, sort);
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
 	}
@@ -206,17 +207,17 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("F", "P", 0));
 		toBeRetrieved.add(new Customer("F", "Q", 0));
 		toBeRetrieved.add(new Customer("F", "R", 0));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		repository.save(new Customer("A", "A", 1));
 		final Example<Customer> example = Example.of(new Customer("", "", 0),
 			ExampleMatcher.matchingAny().withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
 		final List<Sort.Order> orders = new LinkedList<>();
 		orders.add(new Sort.Order(Sort.Direction.ASC, "name"));
 		orders.add(new Sort.Order(Sort.Direction.ASC, "surname"));
-		final Sort sort = new Sort(orders);
+		final Sort sort = Sort.by(orders);
 		final int pageNumber = 1;
 		final int pageSize = 3;
-		final Page<Customer> retrievedPage = repository.findAll(example, new PageRequest(pageNumber, pageSize, sort));
+		final Page<Customer> retrievedPage = repository.findAll(example, PageRequest.of(pageNumber, pageSize, sort));
 		assertEquals(toBeRetrieved.size(), retrievedPage.getTotalElements());
 		assertEquals(pageNumber, retrievedPage.getNumber());
 		assertEquals(pageSize, retrievedPage.getSize());
@@ -238,7 +239,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("F", "P", 0));
 		toBeRetrieved.add(new Customer("F", "Q", 0));
 		toBeRetrieved.add(new Customer("F", "R", 0));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Example<Customer> example = Example.of(new Customer("", "", 0),
 			ExampleMatcher.matchingAny().withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
 		final long size = repository.count(example);
@@ -254,7 +255,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("B", "Y", 0));
 		toBeRetrieved.add(new Customer("C", "V", 0));
 		toBeRetrieved.add(checker);
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Example<Customer> example = Example.of(checker);
 		final boolean exists = repository.exists(example);
 		assertTrue(exists);
@@ -268,10 +269,10 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("Baabba", "", 67));
 		toBeRetrieved.add(new Customer("B", "", 43));
 		toBeRetrieved.add(new Customer("C", "", 76));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Example<Customer> example = Example.of(new Customer(null, "bb", 100), ExampleMatcher.matching()
 				.withMatcher("surname", match -> match.startsWith()).withIgnoreCase("surname").withIgnoreNullValues());
-		final Customer retrieved = repository.findOne(example);
+		final Customer retrieved = repository.findOne(example).get();
 		assertEquals(check, retrieved);
 	}
 
@@ -287,7 +288,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(check);
 		toBeRetrieved.add(new Customer("B", "", 43));
 		toBeRetrieved.add(new Customer("C", "", 76));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer exampleCustomer = new Customer("Abba", "Bbaaaa", 100);
 		final Customer nested3 = new Customer("B*\\wa?[a.b]baAa", null, 66);
 		nested3.setNestedCustomer(nested2);
@@ -295,8 +296,8 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		final Example<Customer> example = Example.of(exampleCustomer,
 			ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
 					.withIgnoreCase("nestedCustomer.name").withIgnoreNullValues()
-					.withTransformer("nestedCustomer.age", o -> ((int) o) + 1));
-		final Customer retrieved = repository.findOne(example);
+					.withTransformer("nestedCustomer.age", o -> Optional.of(Integer.valueOf(o.get().toString()) + 1)));
+		final Customer retrieved = repository.findOne(example).get();
 		assertEquals(check, retrieved);
 	}
 
@@ -312,7 +313,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(check);
 		toBeRetrieved.add(new Customer("B", "", 43));
 		toBeRetrieved.add(new Customer("C", "", 76));
-		repository.save(toBeRetrieved);
+		repository.saveAll(toBeRetrieved);
 		final Customer exampleCustomer = new Customer("Abba", "Bbaaaa", 100);
 		final Customer nested3 = new Customer("B*\\wa?[a.b]baAa", "", 66);
 		nested3.setNestedCustomer(nested2);
@@ -320,8 +321,9 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		final Example<Customer> example = Example.of(exampleCustomer,
 			ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
 					.withIgnorePaths(new String[] { "id", "key", "rev" }).withIgnoreCase("nestedCustomer.name")
-					.withIncludeNullValues().withTransformer("nestedCustomer.age", o -> ((int) o) + 1));
-		final Customer retrieved = repository.findOne(example);
+					.withIncludeNullValues()
+					.withTransformer("nestedCustomer.age", o -> Optional.of(Integer.valueOf(o.get().toString()) + 1)));
+		final Customer retrieved = repository.findOne(example).get();
 		assertEquals(check, retrieved);
 	}
 }

@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.convert;
 
+import java.util.Collections;
+
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
@@ -116,6 +118,6 @@ class ConverterRegistration {
 	 * @return
 	 */
 	private static boolean isArangoBasicType(final Class<?> type) {
-		return new SimpleTypeHolder().isSimpleType(type);
+		return new SimpleTypeHolder(Collections.emptySet(), true).isSimpleType(type);
 	}
 }

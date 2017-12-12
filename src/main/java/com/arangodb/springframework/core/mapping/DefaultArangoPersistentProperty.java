@@ -20,13 +20,13 @@
 
 package com.arangodb.springframework.core.mapping;
 
-import java.beans.PropertyDescriptor;
 import java.util.Optional;
 
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
@@ -53,10 +53,10 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 
 	private final FieldNamingStrategy fieldNamingStrategy;
 
-	public DefaultArangoPersistentProperty(final java.lang.reflect.Field field,
-		final PropertyDescriptor propertyDescriptor, final PersistentEntity<?, ArangoPersistentProperty> owner,
-		final SimpleTypeHolder simpleTypeHolder, final FieldNamingStrategy fieldNamingStrategy) {
-		super(field, propertyDescriptor, owner, simpleTypeHolder);
+	public DefaultArangoPersistentProperty(final Property property,
+		final PersistentEntity<?, ArangoPersistentProperty> owner, final SimpleTypeHolder simpleTypeHolder,
+		final FieldNamingStrategy fieldNamingStrategy) {
+		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy != null ? fieldNamingStrategy
 				: PropertyNameFieldNamingStrategy.INSTANCE;
 	}

@@ -20,7 +20,7 @@
 
 package com.arangodb.springframework.repository;
 
-import java.io.Serializable;
+import java.util.Optional;
 
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -44,7 +44,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	@Override
-	public <T, ID extends Serializable> EntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
+	public <T, ID> EntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
 		return null;
 	}
 
@@ -60,10 +60,10 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	@Override
-	protected QueryLookupStrategy getQueryLookupStrategy(
+	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(
 		final QueryLookupStrategy.Key key,
 		final EvaluationContextProvider evaluationContextProvider) {
-		return new ArangoQueryLookupStrategy(arangoOperations);
+		return Optional.of(new ArangoQueryLookupStrategy(arangoOperations));
 	}
 
 }
