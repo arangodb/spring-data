@@ -22,6 +22,7 @@ package com.arangodb.springframework.repository;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.Example;
@@ -95,7 +96,7 @@ public class ArangoExampleConverter<T> {
 		final ExampleMatcher.PropertySpecifier specifier = example.getMatcher().getPropertySpecifiers()
 				.getForPath(fullPath);
 		if (specifier != null && value != null) {
-			value = specifier.transformValue(value);
+			value = specifier.transformValue(Optional.of(value));
 		}
 		if (value == null) {
 			clause = String.format("e.%s == null", fullPath);
