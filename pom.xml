@@ -4,7 +4,7 @@
 
 	<groupId>com.arangodb</groupId>
 	<artifactId>arangodb-spring-data</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<inceptionYear>2017</inceptionYear>
 	<packaging>jar</packaging>
 
@@ -38,7 +38,7 @@
 	<developers>
 		<developer>
 			<id>mpv1989</id>
-			<name>Mark</name>
+			<name>Mark Vollmary</name>
 			<url>https://github.com/mpv1989</url>
 		</developer>
 	</developers>
