@@ -96,7 +96,7 @@ public class ArangoExampleConverter<T> {
 		final ExampleMatcher.PropertySpecifier specifier = example.getMatcher().getPropertySpecifiers()
 				.getForPath(fullPath);
 		if (specifier != null && value != null) {
-			value = specifier.transformValue(Optional.of(value));
+			value = specifier.transformValue(Optional.of(value)).orElse(null);
 		}
 		if (value == null) {
 			clause = String.format("e.%s == null", fullPath);
