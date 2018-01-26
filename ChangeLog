@@ -1,0 +1,3 @@
+v1.0.1 (2018-01-26)
+---------------------------
+* fixed missing WITH information in AQL when resolving annotation @Relations (Issue #8)
