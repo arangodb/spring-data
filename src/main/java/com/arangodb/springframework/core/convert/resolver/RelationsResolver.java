@@ -55,18 +55,16 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	@Override
 	public Object resolve(final String id, final Class<?> type, final Relations annotation) {
-		return template
-				.query(
-					"WITH @@edges FOR v IN " + Math.max(1, annotation.minDepth()) + ".."
-							+ Math.max(1, annotation.maxDepth()) + " " + annotation.direction()
-							+ " @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v",
-					new MapBuilder().put("start", id)
-							.put("@edges",
-								Arrays.asList(annotation.edges()).stream().map((e) -> template.collection(e).name())
-										.reduce((a, b) -> a + ", " + b).get())
-							.get(),
-					new AqlQueryOptions(), type)
-				.asListRemaining();
+		return template.query(
+			"WITH @@vertex FOR v IN " + Math.max(1, annotation.minDepth()) + ".." + Math.max(1, annotation.maxDepth())
+					+ " " + annotation.direction()
+					+ " @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v",
+			new MapBuilder().put("start", id)
+					.put("@edges",
+						Arrays.asList(annotation.edges()).stream().map((e) -> template.collection(e).name())
+								.reduce((a, b) -> a + ", " + b).get())
+					.put("@vertex", type).get(),
+			new AqlQueryOptions(), type).asListRemaining();
 	}
 
 }
