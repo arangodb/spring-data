@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.repository;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
@@ -32,11 +33,16 @@ import com.arangodb.springframework.core.ArangoOperations;
  */
 public class ArangoRepositoryFactoryBean<T extends Repository<S, String>, S>
 		extends RepositoryFactoryBeanSupport<T, S, String> {
-	private final ArangoOperations arangoOperations;
 
-	public ArangoRepositoryFactoryBean(final Class<? extends T> repositoryInterface,
-		final ArangoOperations arangoOperations) {
+	private ArangoOperations arangoOperations;
+
+	@Autowired
+	public ArangoRepositoryFactoryBean(final Class<? extends T> repositoryInterface) {
 		super(repositoryInterface);
+	}
+
+	@Autowired
+	public void setArangoOperations(final ArangoOperations arangoOperations) {
 		this.arangoOperations = arangoOperations;
 	}
 
