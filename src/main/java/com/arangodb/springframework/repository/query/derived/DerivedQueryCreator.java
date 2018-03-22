@@ -20,12 +20,16 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +41,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
@@ -88,16 +93,16 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		final boolean useFunctions) {
 		super(tree, accessor);
 		this.context = context;
-		String collectionName = context.getPersistentEntity(domainClass).getCollection();
-		if (collectionName.split("-").length > 1) {
-			collectionName = "`" + collectionName + "`";
-		}
-		this.collectionName = collectionName;
+		this.collectionName = collectionName(context.getPersistentEntity(domainClass).getCollection());
 		this.tree = tree;
 		this.bindVars = bindVars;
 		this.accessor = accessor;
 		this.geoFields = geoFields;
 		this.useFunctions = useFunctions;
+	}
+
+	private static String collectionName(final String collection) {
+		return collection.contains("-") ? "`" + collection + "`" : collection;
 	}
 
 	public String getCollectionName() {
@@ -155,8 +160,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		final String array = disjunction.getArray().length() == 0 ? collectionName : disjunction.getArray();
 		final String predicate = disjunction.getPredicate().length() == 0 ? ""
 				: " FILTER " + disjunction.getPredicate();
-		final String queryTemplate = "FOR e IN %s%s%s%s%s%s%s"; // collection predicate count sort limit pageable
-																// queryType
+		final String queryTemplate = "%sFOR e IN %s%s%s%s%s%s%s"; // collection predicate count sort limit pageable
+																	// queryType
 		final String count = (tree.isCountProjection() || tree.isExistsProjection())
 				? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length") : "";
 		final String limit = tree.isLimiting() ? String.format(" LIMIT %d", tree.getMaxResults()) : "";
@@ -181,7 +186,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				sortString = distanceSortKey + ", " + sortString.substring(5, sortString.length());
 			}
 		}
-		return String.format(queryTemplate, array, predicate, count, sortString, limit, pageable, type);
+		final String withCollections = disjunction.getWith().stream()
+				.map(c -> collectionName(context.getPersistentEntity(c).getCollection())).distinct()
+				.collect(Collectors.joining(", "));
+		final String with = withCollections.isEmpty() ? "" : String.format("WITH %s ", withCollections);
+		return String.format(queryTemplate, with, array, predicate, count, sortString, limit, pageable, type);
 	}
 
 	/**
@@ -769,7 +778,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			}
 			clause = String.format(template, clause);
 		}
-		return clause == null ? null : new PartInformation(isArray, clause);
+		final Collection<Class<?>> with = new ArrayList<>();
+		PropertyPath pp = part.getProperty();
+		do {
+			Optional.ofNullable(pp.isCollection() ? pp.getOwningType().getComponentType() : pp.getOwningType())
+					.filter(t -> context.getPersistentEntity(t) != null).map(t -> t.getType())
+					.ifPresent(t -> with.add(t));
+		} while ((pp = pp.next()) != null);
+		return clause == null ? null : new PartInformation(isArray, clause, with);
 	}
 
 	private String unsetDistance(final String clause) {

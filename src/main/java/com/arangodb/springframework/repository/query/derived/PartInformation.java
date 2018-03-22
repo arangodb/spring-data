@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
+import java.util.Collection;
+
 /**
  * Created by F625633 on 24/07/2017.
  */
@@ -27,10 +29,12 @@ public class PartInformation {
 
 	private final boolean isArray;
 	private final String clause;
+	private final Collection<Class<?>> with;
 
-	public PartInformation(final boolean isArray, final String clause) {
+	public PartInformation(final boolean isArray, final String clause, final Collection<Class<?>> with) {
 		this.isArray = isArray;
 		this.clause = clause;
+		this.with = with;
 	}
 
 	public boolean isArray() {
@@ -40,4 +44,9 @@ public class PartInformation {
 	public String getClause() {
 		return clause;
 	}
+
+	public Collection<Class<?>> getWith() {
+		return with;
+	}
+
 }

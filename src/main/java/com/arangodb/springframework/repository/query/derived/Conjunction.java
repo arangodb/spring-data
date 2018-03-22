@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
+import java.util.Collection;
+
 /**
  * Created by F625633 on 24/07/2017.
  */
@@ -27,10 +29,12 @@ public class Conjunction {
 
 	private final String array;
 	private final String predicate;
+	private final Collection<Class<?>> with;
 
-	public Conjunction(final String array, final String predicate) {
+	public Conjunction(final String array, final String predicate, final Collection<Class<?>> with) {
 		this.array = array;
 		this.predicate = predicate;
+		this.with = with;
 	}
 
 	public String getArray() {
@@ -52,4 +56,9 @@ public class Conjunction {
 	public boolean isComposite() {
 		return isArray() && hasPredicate();
 	}
+
+	public Collection<Class<?>> getWith() {
+		return with;
+	}
+
 }

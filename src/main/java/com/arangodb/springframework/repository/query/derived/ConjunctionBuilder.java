@@ -20,6 +20,9 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * Created by F625633 on 24/07/2017.
  */
@@ -28,10 +31,19 @@ public class ConjunctionBuilder {
 	private static final String ARRAY_DELIMITER = ", ";
 	private static final String PREDICATE_DELIMITER = " AND ";
 
-	private final StringBuilder arrayStringBuilder = new StringBuilder();
-	private final StringBuilder predicateStringBuilder = new StringBuilder();
+	private final StringBuilder arrayStringBuilder;
+	private final StringBuilder predicateStringBuilder;
+	private final Collection<Class<?>> with;
 
 	private int arrays = 0;
+
+	public ConjunctionBuilder() {
+		super();
+		arrayStringBuilder = new StringBuilder();
+		predicateStringBuilder = new StringBuilder();
+		with = new ArrayList<>();
+		arrays = 0;
+	}
 
 	public void add(final PartInformation partInformation) {
 		if (partInformation.isArray()) {
@@ -41,6 +53,9 @@ public class ConjunctionBuilder {
 		} else {
 			predicateStringBuilder.append(
 				(predicateStringBuilder.length() == 0 ? "" : PREDICATE_DELIMITER) + partInformation.getClause());
+		}
+		if (partInformation.getWith() != null) {
+			with.addAll(partInformation.getWith());
 		}
 	}
 
@@ -52,6 +67,6 @@ public class ConjunctionBuilder {
 	}
 
 	public Conjunction build() {
-		return new Conjunction(buildArrayString(), predicateStringBuilder.toString());
+		return new Conjunction(buildArrayString(), predicateStringBuilder.toString(), with);
 	}
 }

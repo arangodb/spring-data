@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 
 /**
@@ -33,15 +35,22 @@ public class DisjunctionBuilder {
 
 	private final DerivedQueryCreator queryCreator;
 
-	private final LinkedList<Conjunction> conjunctions = new LinkedList<>();
+	private final LinkedList<Conjunction> conjunctions;
 
-	private final StringBuilder arrayStringBuilder = new StringBuilder();
-	private final StringBuilder predicateStringBuilder = new StringBuilder();
+	private final StringBuilder arrayStringBuilder;
+	private final StringBuilder predicateStringBuilder;
+	private final Collection<Class<?>> with;
 
-	private int arrays = 0;
+	private int arrays;
 
 	public DisjunctionBuilder(final DerivedQueryCreator queryCreator) {
+		super();
 		this.queryCreator = queryCreator;
+		conjunctions = new LinkedList<>();
+		arrayStringBuilder = new StringBuilder();
+		predicateStringBuilder = new StringBuilder();
+		with = new ArrayList<>();
+		arrays = 0;
 	}
 
 	public void add(final Conjunction conjunction) {
@@ -56,6 +65,7 @@ public class DisjunctionBuilder {
 			predicateStringBuilder.append(
 				(predicateStringBuilder.length() == 0 ? "" : PREDICATE_DELIMITER) + conjunction.getPredicate());
 		}
+		with.addAll(conjunction.getWith());
 	}
 
 	private String buildArrayString() {
@@ -90,6 +100,6 @@ public class DisjunctionBuilder {
 	public Disjunction build() {
 		final String arrayString = String.format(buildArrayString(), queryCreator.getUniquePoint()[0],
 			queryCreator.getUniquePoint()[1]);
-		return new Disjunction(arrayString, buildPredicateSring());
+		return new Disjunction(arrayString, buildPredicateSring(), with);
 	}
 }
