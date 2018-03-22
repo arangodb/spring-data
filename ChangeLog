@@ -1,3 +1,7 @@
+v2.0.3 (2018-03-xx)
+---------------------------
+* fixed missing WITH information in derived query
+
 v2.0.2 (2018-01-26)
 ---------------------------
 * fixed missing WITH information in AQL when resolving annotation @Relations (Issue #9)

@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
+import java.util.Collection;
+
 /**
  * Created by F625633 on 24/07/2017.
  */
@@ -27,10 +29,12 @@ public class Disjunction {
 
 	private final String array;
 	private final String predicate;
+	private final Collection<Class<?>> with;
 
-	public Disjunction(final String array, final String predicate) {
+	public Disjunction(final String array, final String predicate, final Collection<Class<?>> with) {
 		this.array = array;
 		this.predicate = predicate;
+		this.with = with;
 	}
 
 	public String getArray() {
@@ -40,4 +44,9 @@ public class Disjunction {
 	public String getPredicate() {
 		return predicate;
 	}
+
+	public Collection<Class<?>> getWith() {
+		return with;
+	}
+
 }
