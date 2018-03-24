@@ -46,6 +46,7 @@ import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.Pair;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
@@ -54,6 +55,7 @@ import com.arangodb.entity.BaseEdgeDocument;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.core.util.InheritanceUtils;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
@@ -257,6 +259,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 					throw new MappingException(
 							"Collection of Type String expected for references but found type " + source.getClass());
 				}
+				
+				// TODO: consider whether inheritance should be supported for collections also, & if so how
+				// (as well as whether a collection could be allowed to contain more than 1 type (with the same super-type))...
 				return Optional.ofNullable(resolver.resolveMultiple(ids,
 					getComponentType(property.getTypeInformation()).getType(), annotation));
 			} else {
@@ -264,10 +269,28 @@ public class DefaultArangoConverter implements ArangoConverter {
 					throw new MappingException(
 							"Type String expected for reference but found type " + source.getClass());
 				}
-				return Optional.ofNullable(
-					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
+				
+				Pair<Class<?>, Boolean> typeData = InheritanceUtils.determineInheritanceAwareReferenceType(source, property, getMappingContext());
+				addToContextIfNeeded(typeData, property);
+
+				return Optional.ofNullable(resolver.resolveOne(source.toString(), typeData.getFirst(), annotation));
 			}
 		});
+	}
+
+	/**
+	 * If first property of {@code typeData} is different from {@code property} type, then add to context if it's not already there 
+	 * (i.e., if second property of {@code typeData} is false.
+	 * 
+	 * @param typeData	type data.
+	 * @param property	related property.
+	 */
+	private void addToContextIfNeeded(
+			final Pair<Class<?>, Boolean> typeData,
+			final ArangoPersistentProperty property) {
+		if (!typeData.getFirst().equals(property.getType()) && !typeData.getSecond())
+			// This caches it for better performance going forward:
+			getMappingContext().getPersistentEntity(typeData.getFirst());
 	}
 
 	private <A extends Annotation> Optional<Object> readRelation(
