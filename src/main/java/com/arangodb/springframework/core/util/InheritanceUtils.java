@@ -21,7 +21,7 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
  */
 public class InheritanceUtils {
 	// (Something like) this could even be made configurable (via arangodb.properties):
-	private static final boolean QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTİON_4_INHERITANCE_SUPPORT = true;
+	private static final boolean QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTION_4_INHERITANCE_SUPPORT = true;
 	private static final PackageHelper packageHelper = PackageHelper.getInstance();
 	
 	private InheritanceUtils() {}
@@ -70,7 +70,7 @@ public class InheritanceUtils {
 				type = findAssignablesReflectively(parentPackage, entityName, property);
 				if (type == null) {
 					// 3. Quasi-brute-force:
-					if (QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTİON_4_INHERITANCE_SUPPORT) {
+					if (QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTION_4_INHERITANCE_SUPPORT) {
 						Set<String> tldSet = packageHelper.getAllPackagesWorthScanning();
 						for (String tld : tldSet) {
 							type = findAssignablesReflectively(tld, entityName, property);
