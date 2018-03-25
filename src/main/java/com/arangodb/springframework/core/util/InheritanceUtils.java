@@ -3,9 +3,7 @@
  */
 package com.arangodb.springframework.core.util;
 
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
@@ -22,6 +20,10 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
  * @author Reşat SABIQ
  */
 public class InheritanceUtils {
+	// (Something like) this could even be made configurable (via arangodb.properties):
+	private static final boolean QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTİON_4_INHERITANCE_SUPPORT = true;
+	private static final PackageHelper packageHelper = PackageHelper.getInstance();
+	
 	private InheritanceUtils() {}
 	
 	/**
@@ -64,41 +66,26 @@ public class InheritanceUtils {
 			type = findAssignablesReflectively(samePackage.getName(), entityName, property);
 			if (type == null) {
 				String parentPackage = samePackage.getName().substring(0, samePackage.getName().lastIndexOf('.'));
-				// 2. Check parent & sibling packages
+				// 2. Check parent & sibling packages (& sub-packages)
 				type = findAssignablesReflectively(parentPackage, entityName, property);
 				if (type == null) {
-					// CHECKME: Consider whether to throw an exception like the one below instead of brute-force scanning (which could take a couple of minutes)
-					// throw new IllegalStateException("Please add the package for \"" +entityName+ "\" to the list of base packages to be scanned when configuring ArangoDB spring-data");
-					// 3. Brute-force
-					Set<String> tldSet = getAllTopLevelPackages();
-					for (String tld : tldSet) {
-						type = findAssignablesReflectively(tld, entityName, property);
-						if (type != null)
-							break;
-					}
+					// 3. Quasi-brute-force:
+					if (QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTİON_4_INHERITANCE_SUPPORT) {
+						Set<String> tldSet = packageHelper.getAllPackagesWorthScanning();
+						for (String tld : tldSet) {
+							type = findAssignablesReflectively(tld, entityName, property);
+							if (type != null)
+								break;
+						}
+					} else // CHECKME: Consider whether to throw an exception like the one below instead of quasi-brute-force scanning (which could take .3 seconds or so)
+						throw new IllegalStateException("Please add the package for \"" +entityName+ "\" to the list of base packages to be scanned when configuring ArangoDB spring-data");
+
 				}
 			}
 		}
 		if (type == null) // no subclass involved
 			type = property.getTypeInformation().getType();
 		return Pair.of(type, inContext ? Boolean.TRUE : Boolean.FALSE);
-	}
-	
-	/**
-	 * Example of top-level package: "com".
-	 * 
-	 * @return	A set of all top-level packages (except "java").
-	 */
-	public static Set<String> getAllTopLevelPackages() {
-		Package[] paquet = Package.getPackages();
-		Map<String,String> tldMap = new TreeMap<String,String>();
-		for (Package p : paquet) {
-			String name = p.getName();
-			String tld = name.substring(0, name.indexOf('.'));
-			if (!tldMap.containsKey(tld) && !tld.equals("java"))
-				tldMap.put(tld, tld);
-		}
-		return tldMap.keySet();
 	}
 
 	/**
