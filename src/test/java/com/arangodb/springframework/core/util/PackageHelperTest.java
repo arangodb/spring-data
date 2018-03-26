@@ -3,6 +3,8 @@
  */
 package com.arangodb.springframework.core.util;
 
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -43,5 +45,14 @@ public class PackageHelperTest {
 	@Test
 	public void scanningUnneccessaryForTopLevelPackage() {
 		Assert.assertFalse(packageHelper.isScanningPotentiallyNeccessaryForTopLevelPackage("javax"));
+	}
+
+	/**
+	 * Test method for {@link com.arangodb.springframework.core.util.PackageHelper#getAllPackagesWorthScanning()}.
+	 */
+	@Test
+	public void getAllPackagesWorthScanning() {
+		List<String> packages = packageHelper.getAllPackagesWorthScanning();
+		Assert.assertFalse(packages.contains("java.util"));
 	}
 }

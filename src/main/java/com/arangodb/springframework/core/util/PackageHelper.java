@@ -3,10 +3,10 @@
  */
 package com.arangodb.springframework.core.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Useful to be able to do a quasi-brute-force scan: i.e., a scan that includes everything but the packages that are known ahead of time to not need to be scanned.
@@ -16,9 +16,11 @@ import java.util.TreeMap;
  * @author Reşat SABIQ
  */
 public class PackageHelper {
+	private static final int PACKAGES_WORTH_SCANNING_ESTIMATED_COLLECTION_SIZE = 5;
+	
 	private static PackageHelper singleton;
 	
-	// Additional entries could of course be added going forward.
+	// Additional entries could of course be added going forward (entries only applicable at testing time probably don't need to be included).
 	// Have to be alphabetically sorted (improves performance):
 	private String[] topLevelPackageArray = {"antlr", "java", "javax", "jdk", "oracle", "sun"};
 	private String[] frameworksArray =		{"org.apache", "org.codehaus", "org.eclipse", "org.hibernate", "org.junit", "org.omg", "org.springframework"};
@@ -72,11 +74,12 @@ public class PackageHelper {
 	 * Provides all packages that it might be worth scanning for entities.
 	 * 
 	 * @return	All packages except those that this class has been set up to treat as those that scanning is unnecessary for (e.g., 
-	 * 				"java", & "org.apache".
+	 * 				"java", & "org.apache").
 	 */
-	public Set<String> getAllPackagesWorthScanning() {
+	public List<String> getAllPackagesWorthScanning() {
 		Package[] packages = Package.getPackages();
-		Map<String,String> packagesMap = new TreeMap<String,String>();
+		// Perhaps this could be further micro-optimized to have a smaller memory foot-print than TreeMap in most cases:
+		List<String> packagesList = new ArrayList<String>(PACKAGES_WORTH_SCANNING_ESTIMATED_COLLECTION_SIZE);
 		for (Package paquet : packages) {
 			String name = paquet.getName();
 			int topLevelIndex = name.indexOf('.');
@@ -84,10 +87,11 @@ public class PackageHelper {
 			if (isScanningPotentiallyNeccessaryForTopLevelPackage(topLevel)) {
 				int index = name.indexOf('.', topLevelIndex+1);
 				String packageStartsWith = index > -1 ? name.substring(0, index) : name;
-				if (isScanningNecessary(packageStartsWith) && !packagesMap.containsKey(packageStartsWith))
-					packagesMap.put(packageStartsWith, null);
+				int insertionPoint;
+				if (isScanningNecessary(packageStartsWith) && (insertionPoint = Collections.binarySearch(packagesList, packageStartsWith)) < 0)
+					packagesList.add((insertionPoint+1)*-1, packageStartsWith);
 			}
 		}
-		return packagesMap.keySet();
+		return packagesList;
 	}
 }

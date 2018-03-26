@@ -3,6 +3,7 @@
  */
 package com.arangodb.springframework.core.util;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.mapping.PersistentEntity;
@@ -71,8 +72,8 @@ public class InheritanceUtils {
 				if (type == null) {
 					// 3. Quasi-brute-force:
 					if (QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTION_4_INHERITANCE_SUPPORT) {
-						Set<String> tldSet = packageHelper.getAllPackagesWorthScanning();
-						for (String tld : tldSet) {
+						List<String> packagesWorthScanning = packageHelper.getAllPackagesWorthScanning();
+						for (String tld : packagesWorthScanning) {
 							type = findAssignablesReflectively(tld, entityName, property);
 							if (type != null)
 								break;
