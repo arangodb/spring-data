@@ -43,12 +43,13 @@ public class PackageHelper {
 	/**
 	 * Checks if scanning is necessary for {@code packageStartsWith}.
 	 * 
-	 * @param packageStartsWith	(Sub)string that a package starts with. This class at present expects {@code packageStartsWith} to have 2 levels.
+	 * @param packageStartsWith	(Sub)string that a package starts with. Precondition: this method at present expects {@code packageStartsWith} to have 2 levels.
 	 * 
 	 * @return	false if {@code packageStartsWith} is among packages that this class has been set up to treat as those that scanning is unnecessary for (e.g., 
 	 * 				"org.apache"), true otherwise.
 	 */
-	public boolean isScanningNecessary(String packageStartsWith) {
+	// Add input pre-processing/validation before making this method public, if that's ever needed
+	protected boolean isScanningNecessary(String packageStartsWith) {
 		for (String[] array : scanningUnnecessaryArrays) {
 			if (Arrays.binarySearch(array, packageStartsWith) >= 0)
 				return false;
@@ -59,12 +60,13 @@ public class PackageHelper {
 	/**
 	 * Checks if scanning is potentially necessary for {@code topLevelPackage}.
 	 * 
-	 * @param topLevelPackage	Top level package name.
+	 * @param topLevelPackage	Top level package name. Precondition: {@code topLevelPackage} is indeed a top-level package.
 	 * 
 	 * @return	false if {@code topLevelPackage} is among packages that this class has been set up to treat as those that scanning is unnecessary for (e.g., 
 	 * 				"java"), true otherwise.
 	 */
-	public boolean isScanningPotentiallyNeccessaryForTopLevelPackage(String topLevelPackage) {
+	// Add input pre-processing/validation before making this method public, if that's ever needed
+	protected boolean isScanningPotentiallyNeccessaryForTopLevelPackage(String topLevelPackage) {
 		if (Arrays.binarySearch(topLevelPackageArray, topLevelPackage) >= 0)
 			return false;
 		return true;
