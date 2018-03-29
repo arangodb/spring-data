@@ -479,6 +479,7 @@ annotation | level | description
 @Key | field | stores the field as the system field _key
 @Rev | field | stores the field as the system field _rev
 @Field("alt-name") | field | stores the field with an alternative name
+@Transient | field | does not store the field
 @Ref | field | stores the _id of the referenced document and not the nested document
 @From | field | stores the _id of the referenced document as the system field _from
 @To | field | stores the _id of the referenced document as the system field _to
