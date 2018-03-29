@@ -55,11 +55,13 @@ import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
 import com.arangodb.springframework.annotation.To;
+import com.arangodb.springframework.annotation.Transient;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -148,6 +150,22 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(slice, is(notNullValue()));
 		assertThat(slice.get("alt-test").isString(), is(true));
 		assertThat(slice.get("alt-test").getAsString(), is(entity.test));
+	}
+
+	public static class TransientFieldTestEntity extends BasicTestEntity {
+		@Transient
+		private String test;
+	}
+
+	@Test
+	public void transientAnnotation() {
+		final TransientFieldTestEntity entity = new TransientFieldTestEntity();
+		entity.test = "1234";
+		final DocumentEntity res = template.insert(entity);
+		final VPackSlice slice = template.driver().db(ArangoTestConfiguration.DB).getDocument(res.getId(),
+			VPackSlice.class);
+		assertThat(slice, is(notNullValue()));
+		assertThat(slice.get("test").isNone(), is(true));
 	}
 
 	public static class SingleNestedDocumentTestEntity extends BasicTestEntity {

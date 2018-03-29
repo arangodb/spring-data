@@ -43,9 +43,11 @@ import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
 import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.To;
+import com.arangodb.springframework.annotation.Transient;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentProperty<ArangoPersistentProperty>
@@ -74,6 +76,11 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	public boolean isRevProperty() {
 		return findAnnotation(Rev.class) != null;
+	}
+
+	@Override
+	public boolean isTransient() {
+		return findAnnotation(Transient.class) != null;
 	}
 
 	@Override

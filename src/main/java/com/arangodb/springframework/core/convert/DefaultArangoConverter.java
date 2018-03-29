@@ -58,6 +58,7 @@ import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class DefaultArangoConverter implements ArangoConverter {
@@ -358,7 +359,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 	@SuppressWarnings("unchecked")
 	private void writeProperty(final Object source, final DBEntity sink, final ArangoPersistentProperty property) {
-		if (source == null) {
+		if (source == null || property.isTransient()) {
 			return;
 		}
 		final String fieldName = property.getFieldName();
