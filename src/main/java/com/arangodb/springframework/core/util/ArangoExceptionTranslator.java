@@ -22,6 +22,7 @@ package com.arangodb.springframework.core.util;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
@@ -32,6 +33,7 @@ import com.arangodb.springframework.ArangoUncategorizedException;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class ArangoExceptionTranslator implements PersistenceExceptionTranslator {
@@ -56,6 +58,9 @@ public class ArangoExceptionTranslator implements PersistenceExceptionTranslator
 					break;
 				case ArangoErrors.ERROR_HTTP_NOT_FOUND:
 					dae = new InvalidDataAccessResourceUsageException(exception.getMessage(), exception);
+					break;
+				case ArangoErrors.ERROR_HTTP_CONFLICT:
+					dae = new DataIntegrityViolationException(exception.getMessage(), exception);
 					break;
 				case ArangoErrors.ERROR_HTTP_PRECONDITION_FAILED:
 				case ArangoErrors.ERROR_HTTP_SERVICE_UNAVAILABLE:
