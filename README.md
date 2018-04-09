@@ -441,7 +441,13 @@ In this section we will describe the features and conventions for mapping Java o
 * The non-static fields of a Java object are used as fields in the stored document
 * The Java field name is mapped to the stored document field name
 * All nested Java object are stored as nested objects in the stored document
-* The Java class needs a non parameterized constructor
+* The Java class needs a constructor which meets the following criteria:
+  * in case of a single constructor:
+    * a non-parameterized constructor or
+    * a parameterized constructor
+  * in case of multiple constructors:
+    * a non-parameterized constructor or
+    * a parameterized constructor annotated with `@PersistenceConstructor`
 
 ## Type conventions
 
