@@ -67,7 +67,7 @@ public interface ArangoOperations {
 	 * @param query
 	 *            contains the query string to be executed
 	 * @param bindVars
-	 *            key/value pairs representing the bind parameters
+	 *            key/value pairs representing the bind parameters, can be null
 	 * @param options
 	 *            Additional options, can be null
 	 * @param entityClass
@@ -75,8 +75,21 @@ public interface ArangoOperations {
 	 * @return cursor of the results
 	 * @throws DataAccessException
 	 */
-	<T> ArangoCursor<T> query(String query, Map<String, Object> bindVars, AqlQueryOptions options, Class<T> entityClass)
-			throws DataAccessException;
+	<T> ArangoCursor<T> query(String query, Map<String, Object> bindVars, AqlQueryOptions options, Class<T> entityClass) throws DataAccessException;
+
+	/**
+	 * Create a cursor and return the first results. For queries without bind parameters.
+	 * 
+	 * @param query
+	 *            contains the query string to be executed
+	 * @param options
+	 *            Additional options, can be null
+	 * @param entityClass
+	 *            The entity type of the result
+	 * @return cursor of the results
+	 * @throws DataAccessException
+	 */
+	<T> ArangoCursor<T> query(String query, AqlQueryOptions options, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Removes multiple document
@@ -90,10 +103,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<? extends DocumentEntity> delete(
-		Iterable<Object> values,
-		Class<?> entityClass,
-		DocumentDeleteOptions options) throws DataAccessException;
+	MultiDocumentEntity<? extends DocumentEntity> delete(Iterable<Object> values, Class<?> entityClass, DocumentDeleteOptions options) throws DataAccessException;
 
 	/**
 	 * Removes multiple document
@@ -105,8 +115,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<? extends DocumentEntity> delete(Iterable<Object> values, Class<?> entityClass)
-			throws DataAccessException;
+	MultiDocumentEntity<? extends DocumentEntity> delete(Iterable<Object> values, Class<?> entityClass) throws DataAccessException;
 
 	/**
 	 * Removes a document
@@ -151,10 +160,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> update(
-		Iterable<T> values,
-		Class<T> entityClass,
-		DocumentUpdateOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> update(Iterable<T> values, Class<T> entityClass, DocumentUpdateOptions options) throws DataAccessException;
 
 	/**
 	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
@@ -171,8 +177,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> update(Iterable<T> values, Class<T> entityClass)
-			throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> update(Iterable<T> values, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Partially updates the document identified by document id or key. The value must contain a document with the
@@ -219,10 +224,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> replace(
-		Iterable<T> values,
-		Class<T> entityClass,
-		DocumentReplaceOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> replace(Iterable<T> values, Class<T> entityClass, DocumentReplaceOptions options) throws DataAccessException;
 
 	/**
 	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
@@ -239,8 +241,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> replace(Iterable<T> values, Class<T> entityClass)
-			throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> replace(Iterable<T> values, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Replaces the document with key with the one in the body, provided there is such a document and no precondition is
@@ -311,10 +312,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> insert(
-		Iterable<T> values,
-		Class<T> entityClass,
-		DocumentCreateOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> insert(Iterable<T> values, Class<T> entityClass, DocumentCreateOptions options) throws DataAccessException;
 
 	/**
 	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
@@ -329,8 +327,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> insert(Iterable<T> values, Class<T> entityClass)
-			throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> insert(Iterable<T> values, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
@@ -353,6 +350,35 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 */
 	<T> DocumentEntity insert(T value) throws DataAccessException;
+
+	/**
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param collectionName
+	 *            Name of the collection in which the new document should be inserted
+	 * @param value
+	 *            A representation of a single document
+	 * @param options
+	 *            Additional options, can be null 
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	DocumentEntity insert(String collectionName, Object value, DocumentCreateOptions options) throws DataAccessException;
+
+	/**
+	
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param collectionName
+	 *            Name of the collection in which the new document should be inserted 
+	 * @param value
+	 *            A representation of a single document 
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	DocumentEntity insert(String collectionName, Object value) throws DataAccessException;
 
 	public enum UpsertStrategy {
 		REPLACE, UPDATE

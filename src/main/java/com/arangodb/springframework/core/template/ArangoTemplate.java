@@ -306,12 +306,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
+	public <T> ArangoCursor<T> query(final String query, final AqlQueryOptions options, final Class<T> entityClass)
+			throws DataAccessException {
+		return db().query(query, null, options, entityClass);
+	}
+
+	@Override
 	public <T> ArangoCursor<T> query(
 		final String query,
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options,
 		final Class<T> entityClass) throws DataAccessException {
-		return db().query(query, DBDocumentEntity.class.cast(toDBEntity(prepareBindVars(bindVars))), options,
+		return db().query(query,
+			bindVars == null ? null : DBDocumentEntity.class.cast(toDBEntity(prepareBindVars(bindVars))), options,
 			entityClass);
 	}
 
@@ -515,6 +522,23 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public DocumentEntity insert(final Object value) throws DataAccessException {
 		return insert(value, new DocumentCreateOptions());
+	}
+
+	@Override
+	public DocumentEntity insert(final String collectionName, final Object value, final DocumentCreateOptions options)
+			throws DataAccessException {
+		try {
+			final DocumentEntity res = _collection(collectionName).insertDocument(toDBEntity(value));
+			updateDBFields(value, res);
+			return res;
+		} catch (final ArangoDBException e) {
+			throw exceptionTranslator.translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
+	public DocumentEntity insert(final String collectionName, final Object value) throws DataAccessException {
+		return insert(collectionName, value, new DocumentCreateOptions());
 	}
 
 	@Override
