@@ -1,33 +1,5 @@
 # Spring Data ArangoDB - Reference
 
-## Table of Contents
-
-* [Template](#template)
-* [Repositories](#repositories)
-  * [Introduction](#introduction)
-  * [Instantiating](#instantiating)
-  * [Return types](#return-types)
-  * [Query methods](#query-methods)
-  * [Derived queries](#derived-queries)
-    * [Geospatial queries](#geospatial-queries)
-  * [Property expression](#property-expression)
-  * [Special parameter handling](#special-parameter-handling)
-    * [Bind parameters](#bind-parameters)
-    * [AQL query options](#aql-query-options)
-* [Mapping](#mapping)
-  * [Introduction](#introduction)
-  * [Conventions](#conventions)
-  * [Type conventions](#type-conventions)
-  * [Annotations](#annotations)
-    * [Annotation overview](#annotation-overview)
-    * [Document](#document)
-    * [Edge](#edge)
-    * [Reference](#reference)
-    * [Relations](#relations)
-    * [Document with From and To](#document-with-from-and-to)
-    * [Edge with From and To](#edge-with-from-and-to)
-    * [Index and Indexed annotations](#index-and-indexed-annotations)
-
 # Template
 
 With `ArangoTemplate` Spring Data ArangoDB offers a central support for interactions with the database over a rich feature set. It mostly offers the features from the ArangoDB Java driver with additional exception translation from the drivers exceptions to the Spring Data access exceptions inheriting the `DataAccessException` class.
