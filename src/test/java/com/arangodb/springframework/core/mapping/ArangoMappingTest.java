@@ -60,6 +60,7 @@ import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -843,9 +844,9 @@ public class ArangoMappingTest extends AbstractArangoTest {
 
 	public static class ConstructorWithFromParamsTestEntity extends BasicTestEntity {
 		@From
-		private final Collection<BasicEdgeTestEntity> value;
+		private final Collection<BasicEdgeLazyTestEntity> value;
 
-		public ConstructorWithFromParamsTestEntity(final Collection<BasicEdgeTestEntity> value) {
+		public ConstructorWithFromParamsTestEntity(final Collection<BasicEdgeLazyTestEntity> value) {
 			super();
 			this.value = value;
 		}
@@ -857,8 +858,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		template.insert(entity);
 		final BasicTestEntity to = new BasicTestEntity();
 		template.insert(to);
-		final BasicEdgeTestEntity edge1 = new BasicEdgeTestEntity(entity, to);
-		final BasicEdgeTestEntity edge2 = new BasicEdgeTestEntity(entity, to);
+		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(entity, to);
+		final BasicEdgeLazyTestEntity edge2 = new BasicEdgeLazyTestEntity(entity, to);
 		template.insert(edge1);
 		template.insert(edge2);
 		final ConstructorWithFromParamsTestEntity document = template
@@ -896,9 +897,9 @@ public class ArangoMappingTest extends AbstractArangoTest {
 
 	public static class ConstructorWithToParamsTestEntity extends BasicTestEntity {
 		@To
-		private final Collection<BasicEdgeTestEntity> value;
+		private final Collection<BasicEdgeLazyTestEntity> value;
 
-		public ConstructorWithToParamsTestEntity(final Collection<BasicEdgeTestEntity> value) {
+		public ConstructorWithToParamsTestEntity(final Collection<BasicEdgeLazyTestEntity> value) {
 			super();
 			this.value = value;
 		}
@@ -910,8 +911,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		template.insert(entity);
 		final BasicTestEntity from = new BasicTestEntity();
 		template.insert(from);
-		final BasicEdgeTestEntity edge1 = new BasicEdgeTestEntity(from, entity);
-		final BasicEdgeTestEntity edge2 = new BasicEdgeTestEntity(from, entity);
+		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(from, entity);
+		final BasicEdgeLazyTestEntity edge2 = new BasicEdgeLazyTestEntity(from, entity);
 		template.insert(edge1);
 		template.insert(edge2);
 		final ConstructorWithToParamsTestEntity document = template
@@ -1045,6 +1046,253 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document.value1, is(entity.value1));
 		assertThat(document.value2, is(entity.value2));
 		assertThat(document.value3, is(entity.value3));
+	}
+
+	public static class SimpleBasicChildTestEntity extends BasicTestEntity {
+		private String field;
+	}
+
+	public static class ComplexBasicChildTestEntity extends BasicTestEntity {
+		private BasicTestEntity nestedEntity;
+	}
+
+	public static class PropertyInheritanceTestEntity extends BasicTestEntity {
+		private BasicTestEntity value;
+	}
+
+	@Test
+	public void propertyInheritanceMapping() {
+		final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
+		innerChild.field = "value";
+		final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
+		child.nestedEntity = innerChild;
+		final PropertyInheritanceTestEntity entity = new PropertyInheritanceTestEntity();
+		entity.value = child;
+		template.insert(entity);
+		final PropertyInheritanceTestEntity document = template
+				.find(entity.getId(), PropertyInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(ComplexBasicChildTestEntity.class)));
+		ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
+		assertThat(complexDocument.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
+		SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
+		assertThat(simpleDocument.field, is(innerChild.field));
+	}
+
+	public static class ListInheritanceTestEntity extends BasicTestEntity {
+		private List<BasicTestEntity> value;
+	}
+
+	@Test
+	public void listInheritanceMapping() {
+		final List<BasicTestEntity> list = new ArrayList<>();
+		final String value = "value";
+		for (int i = 0; i < 3; ++i) {
+			final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
+			innerChild.field = value;
+			final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
+			child.nestedEntity = innerChild;
+			list.add(child);
+		}
+		final ListInheritanceTestEntity entity = new ListInheritanceTestEntity();
+		entity.value = list;
+		template.insert(entity);
+		final ListInheritanceTestEntity document = template.find(entity.getId(), ListInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(List.class)));
+		for (BasicTestEntity elem : document.value) {
+			assertThat(elem, is(instanceOf(ComplexBasicChildTestEntity.class)));
+			ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
+			assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
+			SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+			assertThat(simpleElem.field, is(value));
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	public static class UntypedListInheritanceTestEntity extends BasicTestEntity {
+		private List value;
+	}
+
+	@Test
+	public void untypedListInheritanceMapping() {
+		final List<BasicTestEntity> list = new ArrayList<>();
+		final String value = "value";
+		for (int i = 0; i < 3; ++i) {
+			final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
+			innerChild.field = value;
+			final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
+			child.nestedEntity = innerChild;
+			list.add(child);
+		}
+		final UntypedListInheritanceTestEntity entity = new UntypedListInheritanceTestEntity();
+		entity.value = list;
+		template.insert(entity);
+		final UntypedListInheritanceTestEntity document = template
+				.find(entity.getId(), UntypedListInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(List.class)));
+		for (Object elem : document.value) {
+			assertThat(elem, is(instanceOf(ComplexBasicChildTestEntity.class)));
+			ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
+			assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
+			SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+			assertThat(simpleElem.field, is(value));
+		}
+	}
+
+	public static class MapInheritanceTestEntity extends BasicTestEntity {
+		private Map<String, BasicTestEntity> value;
+	}
+
+	@Test
+	public void mapInheritanceMapping() {
+		final Map<String, BasicTestEntity> map = new HashMap<>();
+		final String value = "value";
+		for (int i = 0; i < 3; ++i) {
+			final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
+			innerChild.field = value;
+			final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
+			child.nestedEntity = innerChild;
+			map.put(String.valueOf(i), child);
+		}
+		final MapInheritanceTestEntity entity = new MapInheritanceTestEntity();
+		entity.value = map;
+		template.insert(entity);
+		final MapInheritanceTestEntity document = template.find(entity.getId(), MapInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(Map.class)));
+		for (Map.Entry<String, BasicTestEntity> entry : document.value.entrySet()) {
+			assertThat(entry.getValue(), is(instanceOf(ComplexBasicChildTestEntity.class)));
+			ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) entry.getValue();
+			assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
+			SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+			assertThat(simpleElem.field, is(value));
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	public static class UntypedMapInheritanceTestEntity extends BasicTestEntity {
+		private Map value;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Test
+	public void untypedMapInheritanceMapping() {
+		final Map<String, BasicTestEntity> map = new HashMap<>();
+		final String value = "value";
+		for (int i = 0; i < 3; ++i) {
+			final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
+			innerChild.field = value;
+			final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
+			child.nestedEntity = innerChild;
+			map.put(String.valueOf(i), child);
+		}
+		final UntypedMapInheritanceTestEntity entity = new UntypedMapInheritanceTestEntity();
+		entity.value = map;
+		template.insert(entity);
+		final UntypedMapInheritanceTestEntity document = template
+				.find(entity.getId(), UntypedMapInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(Map.class)));
+		for (Object entry : document.value.entrySet()) {
+			final Object val = ((Map.Entry) entry).getValue();
+			assertThat(val, is(instanceOf(ComplexBasicChildTestEntity.class)));
+			ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) val;
+			assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
+			SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+			assertThat(simpleElem.field, is(value));
+		}
+	}
+
+	public static class ConstructorWithPropertyInheritanceTestEntity extends BasicTestEntity {
+		private final BasicTestEntity value;
+
+		public ConstructorWithPropertyInheritanceTestEntity(final BasicTestEntity value) {
+			this.value = value;
+		}
+	}
+
+	@Test
+	public void constructorPropertyInheritanceMapping() {
+		final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
+		innerChild.field = "value";
+		final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
+		child.nestedEntity = innerChild;
+		final ConstructorWithPropertyInheritanceTestEntity entity = new ConstructorWithPropertyInheritanceTestEntity(
+				child);
+		template.insert(entity);
+		final ConstructorWithPropertyInheritanceTestEntity document = template
+				.find(entity.getId(), ConstructorWithPropertyInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(ComplexBasicChildTestEntity.class)));
+		ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
+		assertThat(complexDocument.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
+		SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
+		assertThat(simpleDocument.field, is(innerChild.field));
+	}
+
+	public static class ListInMapInheritanceTestEntity extends BasicTestEntity {
+		private Map<String, List<BasicTestEntity>> value;
+	}
+
+	@Test
+	public void listInMapInheritanceMapping() {
+		final Map<String, List<BasicTestEntity>> map = new HashMap<>();
+		final String value = "value";
+		for (int i = 0; i < 3; ++i) {
+			List<BasicTestEntity> list = new ArrayList<>();
+			map.put(String.valueOf(i), list);
+			for (int j = 0; j < 3; ++j) {
+				final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
+				innerChild.field = value;
+				final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
+				child.nestedEntity = innerChild;
+				list.add(child);
+			}
+		}
+		final ListInMapInheritanceTestEntity entity = new ListInMapInheritanceTestEntity();
+		entity.value = map;
+		template.insert(entity);
+		final ListInMapInheritanceTestEntity document = template
+				.find(entity.getId(), ListInMapInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(Map.class)));
+		for (Map.Entry<String, List<BasicTestEntity>> entry : document.value.entrySet()) {
+			assertThat(entry.getValue(), is(instanceOf(List.class)));
+			for (BasicTestEntity elem : entry.getValue()) {
+				assertThat(elem, is(instanceOf(ComplexBasicChildTestEntity.class)));
+				ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
+				assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
+				SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+				assertThat(simpleElem.field, is(value));
+			}
+		}
+	}
+
+	public static class PropertyRefInheritanceTestEntity extends BasicTestEntity {
+		@Ref
+		private BasicTestEntity value;
+	}
+
+	@Test
+	public void propertyRefInheritanceMapping() {
+		final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
+		innerChild.field = "value";
+		final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
+		child.nestedEntity = innerChild;
+		final PropertyRefInheritanceTestEntity entity = new PropertyRefInheritanceTestEntity();
+		entity.value = child;
+		template.insert(child);
+		template.insert(entity);
+		final PropertyRefInheritanceTestEntity document = template
+				.find(entity.getId(), PropertyRefInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(ComplexBasicChildTestEntity.class)));
+		ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
+		assertThat(complexDocument.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
+		SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
+		assertThat(simpleDocument.field, is(innerChild.field));
 	}
 
 }

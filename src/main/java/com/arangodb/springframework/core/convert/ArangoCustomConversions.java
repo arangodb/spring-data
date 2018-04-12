@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.convert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -33,10 +34,12 @@ import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.JodaTimeConverters;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.data.mapping.model.SimpleTypeHolder;
+
+import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class ArangoCustomConversions extends CustomConversions {
@@ -44,11 +47,13 @@ public class ArangoCustomConversions extends CustomConversions {
 	private static final StoreConversions STORE_CONVERSIONS;
 
 	static {
-		final Collection<Converter<?, ?>> converters = new ArrayList<>();
-		converters.addAll(JodaTimeConverters.getConvertersToRegister());
-		converters.addAll(TimeStringConverters.getConvertersToRegister());
-		converters.addAll(JodaTimeStringConverters.getConvertersToRegister());
-		STORE_CONVERSIONS = StoreConversions.of(SimpleTypeHolder.DEFAULT, converters);
+		final Collection<Converter<?, ?>> storeConverters = new ArrayList<>();
+		storeConverters.addAll(JodaTimeConverters.getConvertersToRegister());
+		storeConverters.addAll(TimeStringConverters.getConvertersToRegister());
+		storeConverters.addAll(JodaTimeStringConverters.getConvertersToRegister());
+		
+		STORE_CONVERSIONS = StoreConversions.of(ArangoSimpleTypes.HOLDER,
+			Collections.unmodifiableCollection(storeConverters));
 	}
 
 	public ArangoCustomConversions(final Collection<?> converters) {
