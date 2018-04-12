@@ -1,7 +1,4 @@
-
 # Spring Data ArangoDB
-
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data)
 
 - [Getting Started](GettingStarted/README.md)
 - [Reference](Reference/README.md)

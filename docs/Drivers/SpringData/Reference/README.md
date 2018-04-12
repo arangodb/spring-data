@@ -1,33 +1,5 @@
 # Spring Data ArangoDB - Reference
 
-## Table of Contents
-
-* [Template](#template)
-* [Repositories](#repositories)
-  * [Introduction](#introduction)
-  * [Instantiating](#instantiating)
-  * [Return types](#return-types)
-  * [Query methods](#query-methods)
-  * [Derived queries](#derived-queries)
-    * [Geospatial queries](#geospatial-queries)
-  * [Property expression](#property-expression)
-  * [Special parameter handling](#special-parameter-handling)
-    * [Bind parameters](#bind-parameters)
-    * [AQL query options](#aql-query-options)
-* [Mapping](#mapping)
-  * [Introduction](#introduction)
-  * [Conventions](#conventions)
-  * [Type conventions](#type-conventions)
-  * [Annotations](#annotations)
-    * [Annotation overview](#annotation-overview)
-    * [Document](#document)
-    * [Edge](#edge)
-    * [Reference](#reference)
-    * [Relations](#relations)
-    * [Document with From and To](#document-with-from-and-to)
-    * [Edge with From and To](#edge-with-from-and-to)
-    * [Index and Indexed annotations](#index-and-indexed-annotations)
-
 # Template
 
 With `ArangoTemplate` Spring Data ArangoDB offers a central support for interactions with the database over a rich feature set. It mostly offers the features from the ArangoDB Java driver with additional exception translation from the drivers exceptions to the Spring Data access exceptions inheriting the `DataAccessException` class.
@@ -43,7 +15,7 @@ Spring Data Commons provides a composable repository infrastructure which Spring
 
 Instances of a Repository are created in Spring beans through the auto-wired mechanism of Spring.
 
-``` java
+```java
 public class MySpringBean {
 
   @Autowired
@@ -65,7 +37,7 @@ There are three ways of passing bind parameters to the query in the query annota
 
 Using number matching, arguments will be substituted into the query in the order they are passed to the query method.
 
-``` java
+```java
 public interface MyRepository extends Repository<Customer, String>{
 
   @Query("FOR c IN customers FILTER c.name == @0 AND c.surname == @2 RETURN c")
@@ -76,7 +48,7 @@ public interface MyRepository extends Repository<Customer, String>{
 
 With the `@Param` annotation, the argument will be placed in the query at the place corresponding to the value passed to the `@Param` annotation.
 
-``` java
+```java
 public interface MyRepository extends Repository<Customer, String>{
 
   @Query("FOR c IN customers FILTER c.name == @name AND c.surname == @surname RETURN c")
@@ -87,7 +59,7 @@ public interface MyRepository extends Repository<Customer, String>{
 
  In addition you can use a parameter of type `Map<String, Object>` annotated with `@BindVars` as your bind parameters. You can then fill the map with any parameter used in the query. (see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information about Bind Parameters).
 
-``` java
+```java
 public interface MyRepository extends Repository<Customer, String>{
 
   @Query("FOR c IN customers FILTER c.name == @name AND c.surname = @surname RETURN c")
@@ -98,7 +70,7 @@ public interface MyRepository extends Repository<Customer, String>{
 
 A mixture of any of these methods can be used. Parameters with the same name from an `@Param` annotation will override those in the `bindVars`.
 
-``` java
+```java
 public interface MyRepository extends Repository<Customer, String>{
 
   @Query("FOR c IN customers FILTER c.name == @name AND c.surname = @surname RETURN c")
@@ -139,7 +111,7 @@ IsNotContaining, NotContaining, NotContains | findByFriendsNotContains(String na
 Exists | findByFriendNameExists() | HAS(doc.friend, name)
 
 
-``` java
+```java
 public interface MyRepository extends Repository<Customer, String> {
 
   // FOR c IN customers FILTER c.name == @0 RETURN c
@@ -160,7 +132,7 @@ public interface MyRepository extends Repository<Customer, String> {
 
 You can apply sorting for one or multiple sort criteria by appending `OrderBy` to the method and `Asc` or `Desc` for the directions.
 
-``` java
+```java
 public interface MyRepository extends Repository<Customer, String> {
 
   // FOR c IN customers
@@ -184,7 +156,7 @@ As a subsection of derived queries, geospatial queries support all the same retu
 
 There are two kinds of geospatial query, Near and Within. Near sorts  documents by distance from the given point, while within both sorts and filters documents, returning those within the given distance range or shape.
 
-``` java
+```java
 public interface MyRepository extends Repository<City, String> {
 
     GeoResult<City> getByLocationNear(Point point);
@@ -203,7 +175,7 @@ public interface MyRepository extends Repository<City, String> {
 
 Property expressions can refer only to direct and nested properties of the managed domain class. The algorithm checks the domain class for the entire expression as the property. If the check fails, the algorithm splits up the expression at the camel case parts from the right and tries to find the corresponding property.
 
-``` java
+```java
 @Document("customers")
 public class Customer {
   private Address address;
@@ -224,7 +196,7 @@ public interface MyRepository extends Repository<Customer, String> {
 
 It is possible for the algorithm to select the wrong property if the domain class also has a property which matches the first split of the expression. To resolve this ambiguity you can use _ as a separator inside your method-name to define traversal points.
 
-``` java
+```java
 @Document("customers")
 public class Customer {
   private Address address;
@@ -261,7 +233,7 @@ public interface MyRepository extends Repository<Customer, String> {
 
 AQL supports the usage of [bind parameters](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html) which you can define with a method parameter named `bindVars` of type `Map<String, Object>`.
 
-``` java
+```java
 public interface MyRepository extends Repository<Customer, String> {
 
   @Query("FOR c IN customers FILTER c[@field] == @value RETURN c")
@@ -283,7 +255,7 @@ You can set additional options for the query and the created cursor over the cla
 
 The `AqlQueryOptions` allows you to set the cursor time-to-life, batch-size, caching flag and several other settings. This special parameter works with both query-methods and finder-methods. Keep in mind that some options, like time-to-life, are only effective if the method return type is`ArangoCursor<T>` or `Iterable<T>`.
 
-``` java
+```java
 public interface MyRepository extends Repository<Customer, String> {
 
 
@@ -379,7 +351,7 @@ annotation | level | description
 
 The annotations `@Document` applied to a class marks this class as a candidate for mapping to the database. The most relevant parameter is `value` to specify the collection name in the database. The annotation `@Document` specifies the collection type to `DOCUMENT`.
 
-``` java
+```java
 @Document(value="persons")
 public class Person {
   ...
@@ -390,7 +362,7 @@ public class Person {
 
 The annotations `@Edge` applied to a class marks this class as a candidate for mapping to the database. The most relevant parameter is `value` to specify the collection name in the database. The annotation `@Edge` specifies the collection type to `EDGE`.
 
-``` java
+```java
 @Edge("relations")
 public class Relation {
   ...
@@ -401,7 +373,7 @@ public class Relation {
 
 With the annotation `@Ref` applied on a field the nested object isn’t stored as a nested object in the document. The `_id` field of the nested object is stored in the document and the nested object has to be stored as a separate document in another collection described in the `@Document` annotation of the nested object class. To successfully persist an instance of your object the referencing field has to be null or it's instance has to provide a field with the annotation `@Id` including a valid id.
 
-``` java
+```java
 @Document(value="persons")
 public class Person {
   @Ref
@@ -453,7 +425,7 @@ Without the annotation `@Ref` at the field `address`, the stored document would 
 
 With the annotation `@Relations` applied on a collection or array field in a class annotated with `@Document` the nested objects are fetched from the database over a graph traversal with your current object as the starting point. The most relevant parameter is `edge`. With `edge` you define the edge collection - which should be used in the traversal - using the class type. With the parameter `depth` you can define the maximal depth for the traversal (default 1) and the parameter `direction` defines whether the traversal should follow outgoing or incoming edges (default Direction.ANY).
 
-``` java
+```java
 @Document(value="persons")
 public class Person {
   @Relations(edge=Relation.class, depth=1, direction=Direction.ANY)
@@ -470,7 +442,7 @@ public class Relation {
 
 With the annotations `@From` and `@To` applied on a collection or array field in a class annotated with `@Document` the nested edge objects are fetched from the database. Each of the nested edge objects has to be stored as separate edge document in the edge collection described in the `@Edge` annotation of the nested object class with the *_id* of the parent document as field *_from* or *_to*.
 
-``` java
+```java
 @Document("persons")
 public class Person {
   @From
@@ -513,7 +485,7 @@ and the representation of `Relation` in collection *relations*:
 
 With the annotations `@From` and `@To` applied on a field in a class annotated with `@Edge` the nested object is fetched from the database. The nested object has to be stored as a separate document in the collection described in the `@Document` annotation of the nested object class. The *_id* field of this nested object is stored in the fields `_from` or `_to` within the edge document.
 
-``` java
+```java
 @Edge("relations")
 public class Relation {
   @From
@@ -565,7 +537,7 @@ Possible `@<IndexType>Indexed` annotations are:
 * `@FulltextIndexed`
 
 The following example creates a hash index on the field `name` and a separate hash index on the field `age`:
-``` java
+```java
 public class Person {
   @HashIndexed
   private String name;
@@ -578,7 +550,7 @@ public class Person {
 With the `@<IndexType>Indexed` annotations different indexes can be created on the same field.
 
 The following example creates a hash index and also a skiplist index on the field `name`:
-``` java
+```java
 public class Person {
   @HashIndexed
   @SkiplistIndexed
@@ -596,7 +568,7 @@ Possible `@<IndexType>Index` annotations are:
 * `@FulltextIndex`
 
 The following example creates a single hash index on the fields `name` and `age`, note that if a field is renamed in the database with @Field, the new field name must be used in the index declaration:
-``` java
+```java
 @HashIndex(fields = {"fullname", "age"})
 public class Person {
   @Field("fullname")
@@ -609,7 +581,7 @@ public class Person {
 The `@<IndexType>Index` annotations can also be used to create an index on a nested field.
 
 The following example creates a single hash index on the fields `name` and `address.country`:
-``` java
+```java
 @HashIndex(fields = {"name", "address.country"})
 public class Person {
   private String name;
@@ -621,7 +593,7 @@ public class Person {
 The `@<IndexType>Index` annotations and the `@<IndexType>Indexed` annotations can be used at the same time in one class.
 
 The following example creates a hash index on the fields `name` and `age` and a separate hash index on the field `age`:
-``` java
+```java
 @HashIndex(fields = {"name", "age"})
 public class Person {
   private String name;
@@ -634,7 +606,7 @@ public class Person {
 The `@<IndexType>Index` annotations can be used multiple times to create more than one index in this way.
 
 The following example creates a hash index on the fields `name` and `age` and a separate hash index on the fields `name` and `gender`:
-``` java
+```java
 @HashIndex(fields = {"name", "age"})
 @HashIndex(fields = {"name", "gender"})
 public class Person {
