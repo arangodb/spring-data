@@ -1061,7 +1061,21 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	public void propertyInheritanceMapping() {
+	public void simplePropertyInheritanceMapping() {
+		final SimpleBasicChildTestEntity child = new SimpleBasicChildTestEntity();
+		child.field = "value";
+		final PropertyInheritanceTestEntity entity = new PropertyInheritanceTestEntity();
+		entity.value = child;
+		template.insert(entity);
+		final PropertyInheritanceTestEntity document = template
+				.find(entity.getId(), PropertyInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(SimpleBasicChildTestEntity.class)));
+		assertThat(((SimpleBasicChildTestEntity) document.value).field, is(child.field));
+	}
+
+	@Test
+	public void complexPropertyInheritanceMapping() {
 		final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
 		innerChild.field = "value";
 		final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
@@ -1084,7 +1098,28 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	public void listInheritanceMapping() {
+	public void simpleListInheritanceMapping() {
+		final List<BasicTestEntity> list = new ArrayList<>();
+		final String value = "value";
+		for (int i = 0; i < 3; ++i) {
+			final SimpleBasicChildTestEntity child = new SimpleBasicChildTestEntity();
+			child.field = value;
+			list.add(child);
+		}
+		final ListInheritanceTestEntity entity = new ListInheritanceTestEntity();
+		entity.value = list;
+		template.insert(entity);
+		final ListInheritanceTestEntity document = template.find(entity.getId(), ListInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(List.class)));
+		for (BasicTestEntity elem : document.value) {
+			assertThat(elem, is(instanceOf(SimpleBasicChildTestEntity.class)));
+			assertThat(((SimpleBasicChildTestEntity) elem).field, is(value));
+		}
+	}
+
+	@Test
+	public void complexListInheritanceMapping() {
 		final List<BasicTestEntity> list = new ArrayList<>();
 		final String value = "value";
 		for (int i = 0; i < 3; ++i) {
@@ -1146,7 +1181,28 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	public void mapInheritanceMapping() {
+	public void simpleMapInheritanceMapping() {
+		final Map<String, BasicTestEntity> map = new HashMap<>();
+		final String value = "value";
+		for (int i = 0; i < 3; ++i) {
+			final SimpleBasicChildTestEntity child = new SimpleBasicChildTestEntity();
+			child.field = value;
+			map.put(String.valueOf(i), child);
+		}
+		final MapInheritanceTestEntity entity = new MapInheritanceTestEntity();
+		entity.value = map;
+		template.insert(entity);
+		final MapInheritanceTestEntity document = template.find(entity.getId(), MapInheritanceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value, is(instanceOf(Map.class)));
+		for (Map.Entry<String, BasicTestEntity> entry : document.value.entrySet()) {
+			assertThat(entry.getValue(), is(instanceOf(SimpleBasicChildTestEntity.class)));
+			assertThat(((SimpleBasicChildTestEntity) entry.getValue()).field, is(value));
+		}
+	}
+
+	@Test
+	public void complexMapInheritanceMapping() {
 		final Map<String, BasicTestEntity> map = new HashMap<>();
 		final String value = "value";
 		for (int i = 0; i < 3; ++i) {
