@@ -67,7 +67,7 @@ public interface ArangoOperations {
 	 * @param query
 	 *            contains the query string to be executed
 	 * @param bindVars
-	 *            key/value pairs representing the bind parameters
+	 *            key/value pairs representing the bind parameters, can be null
 	 * @param options
 	 *            Additional options, can be null
 	 * @param entityClass
@@ -77,6 +77,20 @@ public interface ArangoOperations {
 	 */
 	<T> ArangoCursor<T> query(String query, Map<String, Object> bindVars, AqlQueryOptions options, Class<T> entityClass)
 			throws DataAccessException;
+
+	/**
+	 * Create a cursor and return the first results. For queries without bind parameters.
+	 * 
+	 * @param query
+	 *            contains the query string to be executed
+	 * @param options
+	 *            Additional options, can be null
+	 * @param entityClass
+	 *            The entity type of the result
+	 * @return cursor of the results
+	 * @throws DataAccessException
+	 */
+	<T> ArangoCursor<T> query(String query, AqlQueryOptions options, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Removes multiple document
@@ -353,6 +367,36 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 */
 	<T> DocumentEntity insert(T value) throws DataAccessException;
+
+	/**
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param collectionName
+	 *            Name of the collection in which the new document should be inserted
+	 * @param value
+	 *            A representation of a single document
+	 * @param options
+	 *            Additional options, can be null 
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	DocumentEntity insert(String collectionName, Object value, DocumentCreateOptions options)
+			throws DataAccessException;
+
+	/**
+	
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 * 
+	 * @param collectionName
+	 *            Name of the collection in which the new document should be inserted 
+	 * @param value
+	 *            A representation of a single document 
+	 * @return information about the document
+	 * @throws DataAccessException
+	 */
+	DocumentEntity insert(String collectionName, Object value) throws DataAccessException;
 
 	public enum UpsertStrategy {
 		REPLACE, UPDATE

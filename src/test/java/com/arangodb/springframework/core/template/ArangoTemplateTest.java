@@ -95,6 +95,13 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	}
 
 	@Test
+	public void insertDocumentWithCollName() {
+		final DocumentEntity res = template.insert("customer", new Customer("John", "Doe", 30));
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getId(), is(notNullValue()));
+	}
+
+	@Test
 	public void upsertReplace() {
 		final Customer customer = new Customer("John", "Doe", 30);
 		template.upsert(customer, UpsertStrategy.REPLACE);
@@ -279,6 +286,19 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		template.insert(new Customer("John", "Doe", 30));
 		final ArangoCursor<Customer> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
 			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(), Customer.class);
+		assertThat(cursor, is(notNullValue()));
+		final List<Customer> customers = cursor.asListRemaining();
+		assertThat(customers.size(), is(1));
+		assertThat(customers.get(0).getName(), is("John"));
+		assertThat(customers.get(0).getSurname(), is("Doe"));
+		assertThat(customers.get(0).getAge(), is(30));
+	}
+
+	@Test
+	public void queryWithoutBindParams() {
+		template.insert(new Customer("John", "Doe", 30));
+		final ArangoCursor<Customer> cursor = template.query("FOR c IN customer FILTER c.name == 'John' RETURN c", null,
+			new AqlQueryOptions(), Customer.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<Customer> customers = cursor.asListRemaining();
 		assertThat(customers.size(), is(1));
