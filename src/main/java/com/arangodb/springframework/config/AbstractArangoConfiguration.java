@@ -63,12 +63,12 @@ import com.arangodb.velocypack.module.joda.VPackJodaModule;
 @Configuration
 public abstract class AbstractArangoConfiguration {
 
-	public abstract ArangoDB.Builder arango();
+	protected abstract ArangoDB.Builder arango();
 
-	public abstract String database();
+	protected abstract String database();
 
 	private ArangoDB.Builder configure(final ArangoDB.Builder arango) {
-		return arango.registerModules(new VPackJdk8Module(), new VPackJodaModule());
+		return arango.registerModules(new VPackJdk8Module(), new VPackJodaModule(), new DBEntityModule());
 	}
 
 	@Bean
@@ -91,7 +91,7 @@ public abstract class AbstractArangoConfiguration {
 				arangoTypeMapper());
 	}
 
-	public CustomConversions customConversions() {
+	protected CustomConversions customConversions() {
 		return new ArangoCustomConversions(Collections.emptyList());
 	}
 
@@ -107,8 +107,12 @@ public abstract class AbstractArangoConfiguration {
 		return PropertyNameFieldNamingStrategy.INSTANCE;
 	}
 
+	protected String typeKey() {
+		return DefaultArangoTypeMapper.DEFAULT_TYPE_KEY;
+	}
+
 	protected ArangoTypeMapper arangoTypeMapper() throws Exception {
-		return new DefaultArangoTypeMapper(DefaultArangoTypeMapper.DEFAULT_TYPE_KEY, arangoMappingContext());
+		return new DefaultArangoTypeMapper(typeKey(), arangoMappingContext());
 	}
 
 	protected ResolverFactory resolverFactory() {
