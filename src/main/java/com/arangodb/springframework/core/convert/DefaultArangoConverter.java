@@ -161,7 +161,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 				final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType.getType());
 				map.put(key, conversionService.convert(value, targetType));
 			} else {
-				map.put(key, value);
+				map.put(key, convertIfNecessary(value, valueType.getType()));
 			}
 		}
 		return map;
@@ -185,7 +185,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 				final Class<?> targetType = customWriteTarget.orElseGet(() -> componentType.getType());
 				entries.add(conversionService.convert(entry, targetType));
 			} else {
-				entries.add(entry);
+				entries.add(convertIfNecessary(entry, componentType.getType()));
 			}
 		}
 		return entries;
@@ -469,7 +469,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 		for (final Entry<Object, Object> entry : source.entrySet()) {
 			final Object key = entry.getKey();
 			if (!conversions.isSimpleType(key.getClass())) {
-				throw new MappingException("Complex type " + key.getClass().getName() + " is not allowed as a map key!");
+				throw new MappingException(
+						"Complex type " + key.getClass().getName() + " is not allowed as a map key!");
 			}
 			final Object value = entry.getValue();
 			final Class<? extends Object> valueType = value.getClass();
