@@ -135,8 +135,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 				}
 			}
 			this.database = db;
-			return db;
 		}
+		return this.database;
 	}
 
 	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
