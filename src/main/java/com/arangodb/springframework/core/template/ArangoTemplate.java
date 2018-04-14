@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataAccessException;
@@ -77,6 +78,7 @@ import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class ArangoTemplate implements ArangoOperations, CollectionCallback {
@@ -106,15 +108,21 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		this.databaseName = database;
 		this.converter = converter;
 		this.exceptionTranslator = exceptionTranslator;
-		collectionCache = new HashMap<>();
+		collectionCache = new ConcurrentHashMap<>(16, 0.75f, 4);
 		version = null;
 	}
 
 	private ArangoDatabase db() {
-		if (database == null) {
-			database = arango.db(databaseName);
+		if (this.database != null) {
+			return this.database;
+		}
+		synchronized (this) {
+			if (this.database != null) {
+				return this.database;
+			}
+			ArangoDatabase db = arango.db(databaseName);
 			try {
-				database.getInfo();
+				db.getInfo();
 			} catch (final ArangoDBException e) {
 				if (new Integer(404).equals(e.getResponseCode())) {
 					try {
@@ -126,8 +134,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 					throw translateExceptionIfPossible(e);
 				}
 			}
+			this.database = db;
+			return db;
 		}
-		return database;
 	}
 
 	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
@@ -153,15 +162,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final String name,
 		final ArangoPersistentEntity<?> persistentEntity,
 		final CollectionCreateOptions options) {
-		ArangoCollection collection = collectionCache.get(name);
-		if (collection == null) {
-			collection = db().collection(name);
+
+		return collectionCache.computeIfAbsent(name, collName -> {
+			ArangoCollection collection = db().collection(collName);
 			try {
 				collection.getInfo();
 			} catch (final ArangoDBException e) {
 				if (new Integer(404).equals(e.getResponseCode())) {
 					try {
-						db().createCollection(name, options);
+						db().createCollection(collName, options);
 					} catch (final ArangoDBException e1) {
 						throw translateExceptionIfPossible(e1);
 					}
@@ -169,12 +178,11 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 					throw translateExceptionIfPossible(e);
 				}
 			}
-			collectionCache.put(name, collection);
 			if (persistentEntity != null) {
 				ensureCollectionIndexes(collection(collection), persistentEntity);
 			}
-		}
-		return collection;
+			return collection;
+		});
 	}
 
 	private static void ensureCollectionIndexes(
