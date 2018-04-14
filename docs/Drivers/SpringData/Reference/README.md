@@ -320,6 +320,77 @@ java.sql.Timestamp | string (date-format ISO 8601)
 java.util.UUID | string
 java.lang.byte[] | string (Base64)
 
+## Type mapping
+As collections in ArangoDB can contain documents of various types, a mechanism to retrieve the correct Java class is required. The type information of properties declared in a class may not be enough to restore the original class (due to inheritance). In order to still read the correct type from the DB, information about the actual type is stored together with the document. Consider the following example:
+
+```java
+public interface Person {
+    String getName();
+}
+
+public class Employee implements Person {
+
+    private String name;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+}
+
+public class Company {
+    @Key 
+    private String key;
+
+    private Person manager;
+
+    public String getKey() {
+        return key;
+    }
+
+    public Person getManager() {
+        return manager;
+    }
+
+    public void setManager(Person manager) {
+        this.manager = manager;
+    }
+}
+
+Employee manager = new Employee();
+manager.setName("Jon Doe");
+Company comp = new Company();
+comp.setManager(manager);
+
+```
+
+The serialized document for the DB looks like this:
+
+```
+{
+  "_type": "com.arangodb.Company"
+  "manager": {
+    "_type": "com.arangodb.Employee"
+    "name": "Jon Doe"
+  }
+}
+```
+
+Type hints are written for top-level documents (as a collection can contain different document types) as well as for every value if it's a complex type and a sub-type of the property type declared. `Map`s and `Collection`s are excluded from type mapping. Without the additional information about the concrete classes used, the document couldn't be restored in Java. The type information of the `private Person manager` property is not enough to determine the `Employee` type.
+
+### Customizing type mapping
+Per default the fully qualified class name is stored as type hint in the documents. A custom type hint can be set with the `@TypeAlias("my-alias")` annotation on an entity. Make sure that it is a unique identifier across all entities. If we would add a `TypeAlias("employee")` annotation to the `Employee` class above, it would be persisted as `"_type": "employee"`.
+
+The default type key is `_type` and can be changed by overriding the `typeKey()` method of the `AbstractArangoConfiguration` class.
+
+If you need to further customize the type mapping process, the `arangoTypeMapper()` method of the configuration class can be overridden. The included `DefaultArangoTypeMapper` can be customized by providing a list of [`TypeInformationMapper`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/convert/TypeInformationMapper.html)s that create aliases from types and vice versa.
+
+In order to fully customize the type mapping process you can provide a custom type mapper implementation by extending the `DefaultArangoTypeMapper` class.
+
 ## Annotations
 
 ### Annotation overview
@@ -336,6 +407,9 @@ annotation | level | description
 @From | field | stores the _id of the referenced document as the system field _from
 @To | field | stores the _id of the referenced document as the system field _to
 @Relations | field | vertices which are connected over edges
+@Transient | field, method, annotation | marks a field to be transient for the mapping framework, thus the property will not be persisted and not further inspected by the mapping framework
+@PersistenceConstructor | constructor | marks a given constructor - even a package protected one - to use when instantiating the object from the database
+@TypeAlias("alias") | class | set a type alias for the class when persisted to the DB
 @HashIndex | class | describes a hash index
 @HashIndexed | field | describes how to index the field
 @SkiplistIndex | class | describes a skiplist index
