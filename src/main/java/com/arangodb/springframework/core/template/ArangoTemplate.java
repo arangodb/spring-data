@@ -108,7 +108,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		this.databaseName = database;
 		this.converter = converter;
 		this.exceptionTranslator = exceptionTranslator;
-		collectionCache = new ConcurrentHashMap<>(16, 0.75f, 4);
+		// set concurrency level to 1 as writes are very rare compared to reads
+		collectionCache = new ConcurrentHashMap<>(8, 0.9f, 1);
 		version = null;
 	}
 
