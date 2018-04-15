@@ -293,7 +293,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 							"Collection of Type String expected for references but found type " + source.getClass());
 				}
 				return Optional.ofNullable(resolver.resolveMultiple(ids,
-					getComponentType(property.getTypeInformation()).getType(), annotation));
+					getNonNullComponentType(property.getTypeInformation()).getType(), annotation));
 			} else {
 				if (!(source instanceof String)) {
 					throw new MappingException(
@@ -313,7 +313,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return resolverFactory.getRelationResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike() && parentId != null) {
 				return Optional.of(resolver.resolveMultiple(parentId.toString(),
-					getComponentType(property.getTypeInformation()).getType(), annotation));
+					getNonNullComponentType(property.getTypeInformation()).getType(), annotation));
 			} else if (source != null) {
 				return Optional.of(
 					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
@@ -511,13 +511,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 	private Collection<?> createCollection(final Collection<?> source, final ArangoPersistentProperty property) {
 		return source.stream()
-				.map(s -> conversionService.convert(s, getComponentType(property.getTypeInformation()).getType()))
+				.map(
+					s -> conversionService.convert(s, getNonNullComponentType(property.getTypeInformation()).getType()))
 				.collect(Collectors.toList());
-	}
-
-	private TypeInformation<?> getComponentType(final TypeInformation<?> type) {
-		return Optional.ofNullable(type.getComponentType())
-				.orElseThrow(() -> new MappingException("Can not determine collection component type"));
 	}
 
 	private static Collection<?> asCollection(final Object source) {
