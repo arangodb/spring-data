@@ -383,7 +383,7 @@ The serialized document for the DB looks like this:
 Type hints are written for top-level documents (as a collection can contain different document types) as well as for every value if it's a complex type and a sub-type of the property type declared. `Map`s and `Collection`s are excluded from type mapping. Without the additional information about the concrete classes used, the document couldn't be restored in Java. The type information of the `private Person manager` property is not enough to determine the `Employee` type.
 
 ### Customizing type mapping
-Per default the fully qualified class name is stored as type hint in the documents. A custom type hint can be set with the `@TypeAlias("my-alias")` annotation on an entity. Make sure that it is a unique identifier across all entities. If we would add a `TypeAlias("employee")` annotation to the `Employee` class above, it would be persisted as `"_type": "employee"`.
+By default, the fully qualified class name is stored in the documents as a type hint. A custom type hint can be set with the `@TypeAlias("my-alias")` annotation on an entity. Make sure that it is a unique identifier across all entities. If we would add a `TypeAlias("employee")` annotation to the `Employee` class above, it would be persisted as `"_type": "employee"`.
 
 The default type key is `_type` and can be changed by overriding the `typeKey()` method of the `AbstractArangoConfiguration` class.
 
