@@ -114,14 +114,18 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	private ArangoDatabase db() {
-		if (this.database != null) {
-			return this.database;
+		// guard against NPE because database can be set to null by dropDatabase() by another thread
+		ArangoDatabase db = database;
+		if (db != null) {
+			return db;
 		}
+		// make sure the database is only created once
 		synchronized (this) {
-			if (this.database != null) {
-				return this.database;
+			db = database;
+			if (db != null) {
+				return db;
 			}
-			ArangoDatabase db = arango.db(databaseName);
+			db = arango.db(databaseName);
 			try {
 				db.getInfo();
 			} catch (final ArangoDBException e) {
@@ -135,9 +139,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 					throw translateExceptionIfPossible(e);
 				}
 			}
-			this.database = db;
+			database = db;
+			return db;
 		}
-		return this.database;
 	}
 
 	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
@@ -661,8 +665,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	@Override
 	public void dropDatabase() throws DataAccessException {
+		// guard against NPE because another thread could also call dropDatabase()
+		ArangoDatabase db = database;
+		if (db == null) {
+			db = arango.db(databaseName);
+		}
 		try {
-			db().drop();
+			db.drop();
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
