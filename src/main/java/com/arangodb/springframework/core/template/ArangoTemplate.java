@@ -87,7 +87,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final ArangoConverter converter;
 	private final ArangoDB arango;
-	private ArangoDatabase database;
+	private volatile ArangoDatabase database;
 	private final String databaseName;
 	private final Map<String, ArangoCollection> collectionCache;
 
