@@ -37,7 +37,7 @@ import org.springframework.data.mapping.context.MappingContext;
  */
 public class DefaultArangoTypeMapper extends DefaultTypeMapper<DBEntity> implements ArangoTypeMapper {
 
-	public static final String DEFAULT_TYPE_KEY = "_type";
+	public static final String DEFAULT_TYPE_KEY = "_class";
 	
 	private final String typeKey;
 
