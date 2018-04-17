@@ -139,7 +139,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return read(typeToUse, source, entity);
 	}
 
-	@SuppressWarnings("unchecked")
 	private Object readMap(final TypeInformation<?> type, final DBDocumentEntity source) {
 		final Class<?> keyType = getNonNullComponentType(type).getType();
 		final TypeInformation<?> valueType = getNonNullMapValueType(type);
@@ -148,18 +147,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 			if (typeMapper.isTypeKey(entry.getKey())) {
 				continue;
 			}
-			final Object key = conversionService.convert(entry.getKey(), keyType);
+			final Object key = convertIfNecessary(entry.getKey(), keyType);
 			final Object value = entry.getValue();
 			if (value instanceof DBEntity) {
 				map.put(key, read(valueType, (DBEntity) value));
-			} else if (value instanceof Map) {
-				map.put(key, read(valueType, new DBDocumentEntity((Map<? extends String, ? extends Object>) value)));
-			} else if (value instanceof Collection) {
-				map.put(key, read(valueType, new DBCollectionEntity((Collection<? extends Object>) value)));
-			} else if (isSimpleType(valueType.getType())) {
-				final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(valueType.getType());
-				final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType.getType());
-				map.put(key, conversionService.convert(value, targetType));
 			} else {
 				map.put(key, convertIfNecessary(value, valueType.getType()));
 			}
@@ -167,7 +158,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return map;
 	}
 
-	@SuppressWarnings("unchecked")
 	private Object readCollection(final TypeInformation<?> type, final DBCollectionEntity source) {
 		final Class<?> collectionType = Collection.class.isAssignableFrom(type.getType()) ? type.getType() : List.class;
 		final TypeInformation<?> componentType = getNonNullComponentType(type);
@@ -176,14 +166,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 		for (final Object entry : source) {
 			if (entry instanceof DBEntity) {
 				entries.add(read(componentType, (DBEntity) entry));
-			} else if (entry instanceof Map) {
-				entries.add(read(componentType, new DBDocumentEntity((Map<? extends String, ? extends Object>) entry)));
-			} else if (entry instanceof Collection) {
-				entries.add(read(componentType, new DBCollectionEntity((Collection<? extends Object>) entry)));
-			} else if (isSimpleType(componentType.getType())) {
-				final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(componentType.getType());
-				final Class<?> targetType = customWriteTarget.orElseGet(() -> componentType.getType());
-				entries.add(conversionService.convert(entry, targetType));
 			} else {
 				entries.add(convertIfNecessary(entry, componentType.getType()));
 			}
@@ -345,13 +327,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return;
 		}
 
-		if (sink instanceof DBDocumentEntity) {
-			final boolean hasCustomTarget = conversions.hasCustomWriteTarget(source.getClass(), DBDocumentEntity.class);
-			if (hasCustomTarget) {
-				final DBDocumentEntity result = conversionService.convert(source, DBDocumentEntity.class);
-				((DBDocumentEntity) sink).putAll(result);
-				return;
-			}
+		if (sink instanceof DBDocumentEntity
+				&& conversions.hasCustomWriteTarget(source.getClass(), DBDocumentEntity.class)) {
+			final DBDocumentEntity result = conversionService.convert(source, DBDocumentEntity.class);
+			((DBDocumentEntity) sink).putAll(result);
 		}
 
 		final TypeInformation<?> type = ClassTypeInformation.from(ClassUtils.getUserClass(source.getClass()));
@@ -375,16 +354,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 			writeCollection(source, sink, definedType);
 			return;
 		}
-		write(source, sink, Optional.ofNullable(context.getPersistentEntity(type)));
+		write(source, sink, context.getRequiredPersistentEntity(type));
 		addTypeKeyIfNecessary(definedType, source, sink);
 	}
 
-	private void write(
-		final Object source,
-		final DBEntity sink,
-		final Optional<? extends ArangoPersistentEntity<?>> entityC) {
-		final ArangoPersistentEntity<?> entity = entityC.orElseThrow(
-			() -> new MappingException("No mapping metadata found for type " + source.getClass().getName()));
+	private void write(final Object source, final DBEntity sink, final ArangoPersistentEntity<?> entity) {
 
 		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
 
@@ -438,6 +412,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 			}
 			return;
 		}
+		if (conversions.isSimpleType(valueType.getType())) {
+			final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass());
+			final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType.getType());
+			sink.put(fieldName, conversionService.convert(source, targetType));
+			return;
+		}
 		if (valueType.isCollectionLike()) {
 			final DBEntity collection = new DBCollectionEntity();
 			writeCollection(source, collection, property.getTypeInformation());
@@ -450,25 +430,18 @@ public class DefaultArangoConverter implements ArangoConverter {
 			sink.put(fieldName, map);
 			return;
 		}
-		final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(source.getClass());
-		final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType.getType());
+		final ArangoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(valueType);
 		final DBEntity document = new DBDocumentEntity();
-		final Optional<? extends ArangoPersistentEntity<?>> persistentEntity = Optional
-				.ofNullable(context.getPersistentEntity(targetType));
-		if (persistentEntity.isPresent()) {
-			write(source, document, persistentEntity);
-			addTypeKeyIfNecessary(property.getTypeInformation(), source, document);
-			sink.put(fieldName, document);
-		} else {
-			sink.put(fieldName, conversionService.convert(source, targetType));
-		}
+		write(source, document, persistentEntity);
+		addTypeKeyIfNecessary(property.getTypeInformation(), source, document);
+		sink.put(fieldName, document);
 		return;
 	}
 
 	private void writeMap(final Map<Object, Object> source, final DBEntity sink, final TypeInformation<?> definedType) {
 		for (final Entry<Object, Object> entry : source.entrySet()) {
 			final Object key = entry.getKey();
-			if (!conversions.isSimpleType(key.getClass())) {
+			if (!conversions.isSimpleType(key.getClass()) || key instanceof DBEntity) {
 				throw new MappingException(
 						"Complex type " + key.getClass().getName() + " is not allowed as a map key!");
 			}
