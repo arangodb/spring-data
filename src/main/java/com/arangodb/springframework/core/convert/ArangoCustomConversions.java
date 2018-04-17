@@ -24,6 +24,7 @@ import java.util.Collection;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class ArangoCustomConversions extends CustomConversions {
