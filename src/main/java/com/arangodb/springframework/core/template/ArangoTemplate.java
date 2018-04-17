@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataAccessException;
@@ -77,6 +78,7 @@ import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class ArangoTemplate implements ArangoOperations, CollectionCallback {
@@ -85,7 +87,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final ArangoConverter converter;
 	private final ArangoDB arango;
-	private ArangoDatabase database;
+	private volatile ArangoDatabase database;
 	private final String databaseName;
 	private final Map<String, ArangoCollection> collectionCache;
 
@@ -106,15 +108,26 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		this.databaseName = database;
 		this.converter = converter;
 		this.exceptionTranslator = exceptionTranslator;
-		collectionCache = new HashMap<>();
+		// set concurrency level to 1 as writes are very rare compared to reads
+		collectionCache = new ConcurrentHashMap<>(8, 0.9f, 1);
 		version = null;
 	}
 
 	private ArangoDatabase db() {
-		if (database == null) {
-			database = arango.db(databaseName);
+		// guard against NPE because database can be set to null by dropDatabase() by another thread
+		ArangoDatabase db = database;
+		if (db != null) {
+			return db;
+		}
+		// make sure the database is only created once
+		synchronized (this) {
+			db = database;
+			if (db != null) {
+				return db;
+			}
+			db = arango.db(databaseName);
 			try {
-				database.getInfo();
+				db.getInfo();
 			} catch (final ArangoDBException e) {
 				if (new Integer(404).equals(e.getResponseCode())) {
 					try {
@@ -126,8 +139,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 					throw translateExceptionIfPossible(e);
 				}
 			}
+			database = db;
+			return db;
 		}
-		return database;
 	}
 
 	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
@@ -153,15 +167,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final String name,
 		final ArangoPersistentEntity<?> persistentEntity,
 		final CollectionCreateOptions options) {
-		ArangoCollection collection = collectionCache.get(name);
-		if (collection == null) {
-			collection = db().collection(name);
+
+		return collectionCache.computeIfAbsent(name, collName -> {
+			ArangoCollection collection = db().collection(collName);
 			try {
 				collection.getInfo();
 			} catch (final ArangoDBException e) {
 				if (new Integer(404).equals(e.getResponseCode())) {
 					try {
-						db().createCollection(name, options);
+						db().createCollection(collName, options);
 					} catch (final ArangoDBException e1) {
 						throw translateExceptionIfPossible(e1);
 					}
@@ -169,12 +183,11 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 					throw translateExceptionIfPossible(e);
 				}
 			}
-			collectionCache.put(name, collection);
 			if (persistentEntity != null) {
 				ensureCollectionIndexes(collection(collection), persistentEntity);
 			}
-		}
-		return collection;
+			return collection;
+		});
 	}
 
 	private static void ensureCollectionIndexes(
@@ -652,8 +665,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	@Override
 	public void dropDatabase() throws DataAccessException {
+		// guard against NPE because another thread could also call dropDatabase()
+		ArangoDatabase db = database;
+		if (db == null) {
+			db = arango.db(databaseName);
+		}
 		try {
-			db().drop();
+			db.drop();
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
