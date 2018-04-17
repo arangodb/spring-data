@@ -38,34 +38,35 @@ import org.springframework.data.mapping.context.MappingContext;
 public class DefaultArangoTypeMapper extends DefaultTypeMapper<DBEntity> implements ArangoTypeMapper {
 
 	public static final String DEFAULT_TYPE_KEY = "_class";
-	
+
 	private final String typeKey;
 
 	public DefaultArangoTypeMapper() {
 		this(DEFAULT_TYPE_KEY);
 	}
 
-	public DefaultArangoTypeMapper(String typeKey) {
+	public DefaultArangoTypeMapper(final String typeKey) {
 		this(typeKey, Arrays.asList(new SimpleTypeInformationMapper()));
 	}
 
-	public DefaultArangoTypeMapper(String typeKey, MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
+	public DefaultArangoTypeMapper(final String typeKey,
+		final MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), mappingContext,
 				Arrays.asList(new SimpleTypeInformationMapper()));
 	}
 
-	public DefaultArangoTypeMapper(String typeKey, List<? extends TypeInformationMapper> mappers) {
+	public DefaultArangoTypeMapper(final String typeKey, final List<? extends TypeInformationMapper> mappers) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), null, mappers);
 	}
 
-	private DefaultArangoTypeMapper(String typeKey, TypeAliasAccessor<DBEntity> accessor,
-		MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext,
-		List<? extends TypeInformationMapper> mappers) {
+	private DefaultArangoTypeMapper(final String typeKey, final TypeAliasAccessor<DBEntity> accessor,
+		final MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext,
+		final List<? extends TypeInformationMapper> mappers) {
 
 		super(accessor, mappingContext, mappers);
 		this.typeKey = typeKey;
 	}
-	
+
 	@Override
 	public boolean isTypeKey(final String key) {
 		return typeKey == null ? false : typeKey.equals(key);
@@ -75,12 +76,12 @@ public class DefaultArangoTypeMapper extends DefaultTypeMapper<DBEntity> impleme
 
 		private final String typeKey;
 
-		public DocumentTypeAliasAccessor(String typeKey) {
+		public DocumentTypeAliasAccessor(final String typeKey) {
 			this.typeKey = typeKey;
 		}
 
 		@Override
-		public Alias readAliasFrom(DBEntity source) {
+		public Alias readAliasFrom(final DBEntity source) {
 			if (source instanceof DBCollectionEntity) {
 				return Alias.NONE;
 			}
@@ -93,7 +94,7 @@ public class DefaultArangoTypeMapper extends DefaultTypeMapper<DBEntity> impleme
 		}
 
 		@Override
-		public void writeTypeTo(DBEntity sink, Object alias) {
+		public void writeTypeTo(final DBEntity sink, final Object alias) {
 			if (this.typeKey != null && sink instanceof DBDocumentEntity) {
 				sink.put(this.typeKey, alias);
 			}
