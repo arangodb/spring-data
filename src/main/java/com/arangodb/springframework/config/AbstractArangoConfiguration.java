@@ -41,6 +41,7 @@ import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
 import com.arangodb.springframework.core.convert.ArangoTypeMapper;
+import com.arangodb.springframework.core.convert.DBEntityModule;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
 import com.arangodb.springframework.core.convert.DefaultArangoTypeMapper;
 import com.arangodb.springframework.core.convert.resolver.FromResolver;
@@ -68,7 +69,7 @@ public abstract class AbstractArangoConfiguration {
 	protected abstract String database();
 
 	private ArangoDB.Builder configure(final ArangoDB.Builder arango) {
-		return arango.registerModules(new VPackJdk8Module(), new VPackJodaModule());
+		return arango.registerModules(new VPackJdk8Module(), new VPackJodaModule(), new DBEntityModule());
 	}
 
 	@Bean
