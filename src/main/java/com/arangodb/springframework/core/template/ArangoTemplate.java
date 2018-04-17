@@ -68,7 +68,6 @@ import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.DBCollectionEntity;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.core.convert.DBEntity;
-import com.arangodb.springframework.core.convert.DBEntityDeserializer;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
@@ -100,9 +99,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	public ArangoTemplate(final ArangoDB.Builder arango, final String database, final ArangoConverter converter,
 		final PersistenceExceptionTranslator exceptionTranslator) {
 		super();
-		this.arango = arango.registerDeserializer(DBEntity.class, new DBEntityDeserializer()).build()
-				._setCursorInitializer(
-					new com.arangodb.springframework.core.template.ArangoCursorInitializer(converter));
+		this.arango = arango.build()._setCursorInitializer(
+			new com.arangodb.springframework.core.template.ArangoCursorInitializer(converter));
 		this.databaseName = database;
 		this.converter = converter;
 		this.exceptionTranslator = exceptionTranslator;
