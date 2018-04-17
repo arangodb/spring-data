@@ -28,12 +28,17 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
@@ -1349,6 +1354,64 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(complexDocument.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
 		SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
 		assertThat(simpleDocument.field, is(innerChild.field));
+	}
+
+	public class SimpleTypesTestEntity extends BasicTestEntity {
+		private String stringValue;
+		private Boolean boolValue;
+		private int intValue;
+		private Long longValue;
+		private Short shortValue;
+		private Float floatValue;
+		private Double doubleValue;
+		private Character charValue;
+		private Byte byteValue;
+		private BigInteger bigIntValue;
+		private BigDecimal bigDecValue;
+		private UUID uuidValue;
+		private Date dateValue;
+		private java.sql.Date sqlDateValue;
+		private Timestamp timestampValue;
+		private byte[] byteArray;
+	}
+	
+	@Test
+	public void simpleTypesMapping() {
+		SimpleTypesTestEntity entity = new SimpleTypesTestEntity();
+		entity.stringValue = "hello world";
+		entity.boolValue = true;
+		entity.intValue = 123456;
+		entity.longValue = 1234567890123456789l;
+		entity.shortValue = 1234;
+		entity.floatValue = 1.234567890f;
+		entity.doubleValue = 1.2345678901234567890;
+		entity.charValue = 'a';
+		entity.byteValue = 'z';
+		entity.bigIntValue = new BigInteger("123456789");
+		entity.bigDecValue = new BigDecimal("1.23456789");
+		entity.uuidValue = UUID.randomUUID();
+		entity.dateValue = new Date();
+		entity.sqlDateValue = new java.sql.Date(new Date().getTime());
+		entity.timestampValue = new Timestamp(new Date().getTime());
+		entity.byteArray = new byte[] { 'a', 'b', 'c', 'x', 'y', 'z' };
+		template.insert(entity);
+		SimpleTypesTestEntity document = template.find(entity.getId(), SimpleTypesTestEntity.class).get();
+		assertThat(entity.stringValue, is(document.stringValue));
+		assertThat(entity.boolValue, is(document.boolValue));
+		assertThat(entity.intValue, is(document.intValue));
+		assertThat(entity.longValue, is(document.longValue));
+		assertThat(entity.shortValue, is(document.shortValue));
+		assertThat(entity.floatValue, is(document.floatValue));
+		assertThat(entity.doubleValue, is(document.doubleValue));
+		assertThat(entity.charValue, is(document.charValue));
+		assertThat(entity.byteValue, is(document.byteValue));
+		assertThat(entity.bigIntValue, is(document.bigIntValue));
+		assertThat(entity.bigDecValue, is(document.bigDecValue));
+		assertThat(entity.uuidValue, is(document.uuidValue));
+		assertThat(entity.dateValue, is(document.dateValue));
+		assertThat(entity.sqlDateValue, is(document.sqlDateValue));
+		assertThat(entity.timestampValue, is(document.timestampValue));
+		assertThat(entity.byteArray, is(document.byteArray));
 	}
 
 }
