@@ -27,28 +27,22 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.util.ClassUtils;
 
 import com.arangodb.ArangoDBException;
 import com.arangodb.velocypack.internal.util.DateUtil;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class TimeStringConverters {
 
-	private static final boolean JODA_TIME_IS_PRESENT = ClassUtils.isPresent("org.joda.time.LocalDate", null);
-
 	public static Collection<Converter<?, ?>> getConvertersToRegister() {
-		if (!JODA_TIME_IS_PRESENT) {
-			return Collections.emptySet();
-		}
 		final List<Converter<?, ?>> converters = new ArrayList<>();
 		converters.add(InstantToStringConverter.INSTANCE);
 		converters.add(LocalDateToStringConverter.INSTANCE);
