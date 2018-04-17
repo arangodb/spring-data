@@ -27,6 +27,7 @@ import java.util.Set;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -35,12 +36,16 @@ import com.arangodb.springframework.annotation.Edge;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class ArangoEntityClassScanner {
 
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Annotation>[] ENTITY_ANNOTATIONS = new Class[] { Document.class, Edge.class };
+	
+	@SuppressWarnings("unchecked")
+	private static final Class<? extends Annotation>[] ADDITIONAL_ANNOTATIONS = new Class[] { TypeAlias.class };
 
 	public static Set<Class<?>> scanForEntities(final String... basePackages) throws ClassNotFoundException {
 		final Set<Class<?>> entities = new HashSet<>();
@@ -56,6 +61,9 @@ public class ArangoEntityClassScanner {
 			final ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
 					false);
 			for (final Class<? extends Annotation> annotationType : ENTITY_ANNOTATIONS) {
+				componentProvider.addIncludeFilter(new AnnotationTypeFilter(annotationType));
+			}
+			for (final Class<? extends Annotation> annotationType : ADDITIONAL_ANNOTATIONS) {
 				componentProvider.addIncludeFilter(new AnnotationTypeFilter(annotationType));
 			}
 			for (final BeanDefinition definition : componentProvider.findCandidateComponents(basePackage)) {

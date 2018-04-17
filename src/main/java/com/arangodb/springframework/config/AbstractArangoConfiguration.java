@@ -40,7 +40,10 @@ import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
+import com.arangodb.springframework.core.convert.ArangoTypeMapper;
+import com.arangodb.springframework.core.convert.DBEntityModule;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
+import com.arangodb.springframework.core.convert.DefaultArangoTypeMapper;
 import com.arangodb.springframework.core.convert.resolver.FromResolver;
 import com.arangodb.springframework.core.convert.resolver.RefResolver;
 import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
@@ -55,19 +58,18 @@ import com.arangodb.velocypack.module.joda.VPackJodaModule;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 @Configuration
 public abstract class AbstractArangoConfiguration {
 
-	@Bean
-	public abstract ArangoDB.Builder arango();
+	protected abstract ArangoDB.Builder arango();
 
-	@Bean
-	public abstract String database();
+	protected abstract String database();
 
 	private ArangoDB.Builder configure(final ArangoDB.Builder arango) {
-		return arango.registerModules(new VPackJdk8Module(), new VPackJodaModule());
+		return arango.registerModules(new VPackJdk8Module(), new VPackJodaModule(), new DBEntityModule());
 	}
 
 	@Bean
@@ -85,7 +87,12 @@ public abstract class AbstractArangoConfiguration {
 	}
 
 	@Bean
-	public CustomConversions customConversions() {
+	public ArangoConverter arangoConverter() throws Exception {
+		return new DefaultArangoConverter(arangoMappingContext(), customConversions(), resolverFactory(),
+				arangoTypeMapper());
+	}
+
+	protected CustomConversions customConversions() {
 		return new ArangoCustomConversions(Collections.emptyList());
 	}
 
@@ -101,9 +108,16 @@ public abstract class AbstractArangoConfiguration {
 		return PropertyNameFieldNamingStrategy.INSTANCE;
 	}
 
-	@Bean
-	public ArangoConverter arangoConverter() throws Exception {
-		return new DefaultArangoConverter(arangoMappingContext(), customConversions(), new ResolverFactory() {
+	protected String typeKey() {
+		return DefaultArangoTypeMapper.DEFAULT_TYPE_KEY;
+	}
+
+	protected ArangoTypeMapper arangoTypeMapper() throws Exception {
+		return new DefaultArangoTypeMapper(typeKey(), arangoMappingContext());
+	}
+
+	protected ResolverFactory resolverFactory() {
+		return new ResolverFactory() {
 			@SuppressWarnings("unchecked")
 			@Override
 			public <A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(final A annotation) {
@@ -135,7 +149,7 @@ public abstract class AbstractArangoConfiguration {
 				}
 				return Optional.ofNullable(resolver);
 			}
-		});
+		};
 	}
 
 }

@@ -1,7 +1,7 @@
 /*
  * DISCLAIMER
  *
- * Copyright 2017 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2018 ArangoDB GmbH, Cologne, Germany
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,27 +20,14 @@
 
 package com.arangodb.springframework.core.convert;
 
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.mapping.context.MappingContext;
-
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import org.springframework.data.convert.TypeMapper;
 
 /**
- * @author Mark Vollmary
  * @author Christian Lechner
  *
  */
-public interface ArangoConverter extends ArangoEntityReader, ArangoEntityWriter {
+public interface ArangoTypeMapper extends TypeMapper<DBEntity> {
 
-	MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> getMappingContext();
-
-	boolean isCollectionType(Class<?> type);
-
-	boolean isEntityType(Class<?> type);
-
-	GenericConversionService getConversionService();
-
-	ArangoTypeMapper getTypeMapper();
+	boolean isTypeKey(String key);
 
 }
