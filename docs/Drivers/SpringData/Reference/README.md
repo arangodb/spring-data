@@ -321,75 +321,87 @@ java.util.UUID | string
 java.lang.byte[] | string (Base64)
 
 ## Type mapping
-As collections in ArangoDB can contain documents of various types, a mechanism to retrieve the correct Java class is required. The type information of properties declared in a class may not be enough to restore the original class (due to inheritance). In order to still read the correct type from the DB, information about the actual type is stored together with the document. Consider the following example:
+As collections in ArangoDB can contain documents of various types, a mechanism to retrieve the correct Java class is required. The type information of properties declared in a class may not be enough to restore the original class (due to inheritance). If the declared complex type and the actual type do not match, information about the actual type is stored together with the document. This is necessary to restore the correct type when reading from the DB. Consider the following example:
 
 ```java
-public interface Person {
-    String getName();
+public class Person {
+	private String name;
+	private Address homeAddress;
+	// ...
+	
+    // getters and setters omitted
 }
 
-public class Employee implements Person {
+public class Employee extends Person {
+    private Address workAddress;
+    // ...
 
-    private String name;
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
+    // getters and setters omitted
 }
 
+public class Address {
+    private final String street;
+    private final String number;
+    // ...
+
+    public Address(String street, String number) {
+        this.street = street;
+        this.number = number;
+    }
+
+    // getters omitted
+}
+
+@Document
 public class Company {
     @Key 
     private String key;
-
     private Person manager;
 
-    public String getKey() {
-        return key;
-    }
-
-    public Person getManager() {
-        return manager;
-    }
-
-    public void setManager(Person manager) {
-        this.manager = manager;
-    }
+    // getters and setters omitted
 }
 
 Employee manager = new Employee();
-manager.setName("Jon Doe");
+manager.setName("Jane Roberts");
+manager.setHomeAddress(new Address("Park Avenue", "432/64"));
+manager.setWorkAddress(new Address("Main Street",  "223"));
 Company comp = new Company();
 comp.setManager(manager);
-
 ```
 
 The serialized document for the DB looks like this:
 
-```
+```json
 {
-  "_type": "com.arangodb.Company"
   "manager": {
-    "_type": "com.arangodb.Employee"
-    "name": "Jon Doe"
-  }
+    "name": "Jane Roberts",
+    "homeAddress": {
+        "street": "Park Avenue",
+        "number": "432/64"
+    },
+    "workAddress": {
+        "street": "Main Street",
+        "number": "223"
+    }
+    "_class": "com.arangodb.Employee"
+  },
+  "_class": "com.arangodb.Company"
 }
 ```
 
-Type hints are written for top-level documents (as a collection can contain different document types) as well as for every value if it's a complex type and a sub-type of the property type declared. `Map`s and `Collection`s are excluded from type mapping. Without the additional information about the concrete classes used, the document couldn't be restored in Java. The type information of the `private Person manager` property is not enough to determine the `Employee` type.
+Type hints are written for top-level documents (as a collection can contain different document types) as well as for every value if it's a complex type and a sub-type of the property type declared. `Map`s and `Collection`s are excluded from type mapping. Without the additional information about the concrete classes used, the document couldn't be restored in Java. The type information of the `manager` property is not enough to determine the `Employee` type. The `homeAddress` and `workAddress` properties have the same actual and defined type, thus no type hint is needed.
 
 ### Customizing type mapping
-By default, the fully qualified class name is stored in the documents as a type hint. A custom type hint can be set with the `@TypeAlias("my-alias")` annotation on an entity. Make sure that it is a unique identifier across all entities. If we would add a `TypeAlias("employee")` annotation to the `Employee` class above, it would be persisted as `"_type": "employee"`.
+By default, the fully qualified class name is stored in the documents as a type hint. A custom type hint can be set with the `@TypeAlias("my-alias")` annotation on an entity. Make sure that it is an unique identifier across all entities. If we would add a `TypeAlias("employee")` annotation to the `Employee` class above, it would be persisted as `"_class": "employee"`.
 
-The default type key is `_type` and can be changed by overriding the `typeKey()` method of the `AbstractArangoConfiguration` class.
+The default type key is `_class` and can be changed by overriding the `typeKey()` method of the `AbstractArangoConfiguration` class.
 
 If you need to further customize the type mapping process, the `arangoTypeMapper()` method of the configuration class can be overridden. The included `DefaultArangoTypeMapper` can be customized by providing a list of [`TypeInformationMapper`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/convert/TypeInformationMapper.html)s that create aliases from types and vice versa.
 
 In order to fully customize the type mapping process you can provide a custom type mapper implementation by extending the `DefaultArangoTypeMapper` class.
+
+### Deactivating type mapping
+To deactivate the type mapping process, you can return `null` from the `typeKey()` method of the `AbstractArangoConfiguration` class. No type hints are stored in the documents with this setting. If you make sure that each defined type corresponds to the actual type, you can disable the type mapping, otherwise it can lead to exceptions when reading the entities from the DB.
 
 ## Annotations
 
