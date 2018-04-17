@@ -325,9 +325,9 @@ As collections in ArangoDB can contain documents of various types, a mechanism t
 
 ```java
 public class Person {
-	private String name;
-	private Address homeAddress;
-	// ...
+    private String name;
+    private Address homeAddress;
+    // ...
 	
     // getters and setters omitted
 }
@@ -382,7 +382,7 @@ The serialized document for the DB looks like this:
     "workAddress": {
         "street": "Main Street",
         "number": "223"
-    }
+    },
     "_class": "com.arangodb.Employee"
   },
   "_class": "com.arangodb.Company"
