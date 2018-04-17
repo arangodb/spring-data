@@ -21,19 +21,12 @@
 package com.arangodb.springframework.core.convert;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
 
-import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.JodaTimeConverters;
-import org.springframework.data.convert.WritingConverter;
 
 import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
 
@@ -51,7 +44,8 @@ public class ArangoCustomConversions extends CustomConversions {
 		storeConverters.addAll(JodaTimeConverters.getConvertersToRegister());
 		storeConverters.addAll(TimeStringConverters.getConvertersToRegister());
 		storeConverters.addAll(JodaTimeStringConverters.getConvertersToRegister());
-		
+		storeConverters.addAll(ArangoSimpleTypeConverters.getConvertersToRegister());
+
 		STORE_CONVERSIONS = StoreConversions.of(ArangoSimpleTypes.HOLDER,
 			Collections.unmodifiableCollection(storeConverters));
 	}
@@ -60,34 +54,4 @@ public class ArangoCustomConversions extends CustomConversions {
 		super(STORE_CONVERSIONS, converters);
 	}
 
-	@WritingConverter
-	private enum CustomToStringConverter implements GenericConverter {
-
-		INSTANCE;
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.springframework.core.convert.converter.GenericConverter#getConvertibleTypes()
-		 */
-		@Override
-		public Set<ConvertiblePair> getConvertibleTypes() {
-
-			final ConvertiblePair localeToString = new ConvertiblePair(Locale.class, String.class);
-			final ConvertiblePair booleanToString = new ConvertiblePair(Character.class, String.class);
-
-			return new HashSet<>(Arrays.asList(localeToString, booleanToString));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.springframework.core.convert.converter.GenericConverter#convert(java.lang.Object,
-		 * org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
-		 */
-		@Override
-		public Object convert(final Object source, final TypeDescriptor sourceType, final TypeDescriptor targetType) {
-			return source.toString();
-		}
-	}
 }
