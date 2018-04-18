@@ -134,8 +134,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return source;
 		}
 
-		final Optional<? extends ArangoPersistentEntity<?>> entity = Optional
-				.ofNullable(context.getPersistentEntity(typeToUse.getType()));
+		final ArangoPersistentEntity<?> entity = context.getRequiredPersistentEntity(typeToUse.getType());
 		return read(typeToUse, source, entity);
 	}
 
@@ -173,12 +172,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return entries;
 	}
 
-	private Object read(
-		final TypeInformation<?> type,
-		final DBEntity source,
-		final Optional<? extends ArangoPersistentEntity<?>> persistentEntity) {
-		final ArangoPersistentEntity<?> entity = persistentEntity.orElseThrow(
-			() -> new MappingException("No mapping metadata found for type " + type.getType().getName()));
+	private Object read(final TypeInformation<?> type, final DBEntity source, final ArangoPersistentEntity<?> entity) {
 		final EntityInstantiator instantiatorFor = instantiators.getInstantiatorFor(entity);
 		final ParameterValueProvider<ArangoPersistentProperty> provider = getParameterProvider(entity, source);
 		final Object instance = instantiatorFor.createInstance(entity, provider);
@@ -312,11 +306,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 		if (conversions.hasCustomReadTarget(source.getClass(), type.getType())) {
 			return (T) conversionService.convert(source, type.getType());
 		}
-		if (isMapType(source.getClass())) {
-			return (T) read(type, new DBDocumentEntity((Map<? extends String, ? extends Object>) source));
-		}
-		if (isCollectionType(source.getClass())) {
-			return (T) readCollection(type, new DBCollectionEntity((Collection<? extends Object>) source));
+		if (source instanceof DBEntity) {
+			return (T) read(type, DBEntity.class.cast(source));
 		}
 		return (T) source;
 	}
