@@ -176,4 +176,9 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
 
 	}
+
+	@Test
+	public void queryCount() {
+		assertEquals(repository.queryCount(Customer.class), 0L);
+	}
 }
