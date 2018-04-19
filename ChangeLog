@@ -1,4 +1,12 @@
-v1.0.2 (2018-03-23)
+v1.1.0 (2018-04-20)
+---------------------------
+* added DataIntegrityViolationException to ExceptionTranslator
+* fixed race conditions in ArangoTemplate when creating database and collections (issue #35)
+* added type mapper implementation & custom conversions extension (issue #33)
+* fixed missing deserialization of return types of @Query methods(issue #21)
+* fixed handling of java.time in converters
+
+v2.0.3 (2018-03-23)
 ---------------------------
 * fixed missing WITH information in derived query
 
