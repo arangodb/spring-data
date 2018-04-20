@@ -133,7 +133,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return source;
 		}
 
-		final ArangoPersistentEntity<?> entity = context.getRequiredPersistentEntity(typeToUse.getType());
+		final ArangoPersistentEntity<?> entity = context.getPersistentEntity(typeToUse.getType());
 		return read(typeToUse, source, entity);
 	}
 

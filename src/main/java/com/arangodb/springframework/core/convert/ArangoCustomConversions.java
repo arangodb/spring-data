@@ -20,7 +20,11 @@
 
 package com.arangodb.springframework.core.convert;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+
+import org.springframework.core.convert.converter.Converter;
 
 /**
  * @author Mark Vollmary
@@ -29,15 +33,25 @@ import java.util.Collection;
  */
 public class ArangoCustomConversions extends CustomConversions {
 
-	// private static final StoreConversions STORE_CONVERSIONS;
+	private static final Collection<?> STORE_CONVERSIONS;
 
-	// static {
-	// final Collection<?> converters = new ArrayList<>();
-	// STORE_CONVERSIONS = StoreConversions.of(SimpleTypeHolder.DEFAULT, converters);
-	// }
+	static {
+		final Collection<Converter<?, ?>> storeConverters = new ArrayList<>();
+		storeConverters.addAll(TimeStringConverters.getConvertersToRegister());
+		storeConverters.addAll(JodaTimeStringConverters.getConvertersToRegister());
+		storeConverters.addAll(ArangoSimpleTypeConverters.getConvertersToRegister());
+		STORE_CONVERSIONS = Collections.unmodifiableCollection(storeConverters);
+	}
 
 	public ArangoCustomConversions(final Collection<?> converters) {
-		super(converters);
+		super(merge(converters));
+	}
+
+	private static Collection<?> merge(final Collection<?> converters) {
+		final Collection<Object> mergedList = new ArrayList<>();
+		mergedList.addAll(STORE_CONVERSIONS);
+		mergedList.addAll(converters);
+		return mergedList;
 	}
 
 }
