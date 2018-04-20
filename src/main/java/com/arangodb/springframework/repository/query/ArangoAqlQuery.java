@@ -24,6 +24,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -106,6 +111,11 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		DESERIALIZABLE_TYPES.add(new byte[] {}.getClass());
 		DESERIALIZABLE_TYPES.add(Byte.class);
 		DESERIALIZABLE_TYPES.add(byte.class);
+		DESERIALIZABLE_TYPES.add(Instant.class);
+		DESERIALIZABLE_TYPES.add(LocalDate.class);
+		DESERIALIZABLE_TYPES.add(LocalDateTime.class);
+		DESERIALIZABLE_TYPES.add(OffsetDateTime.class);
+		DESERIALIZABLE_TYPES.add(ZonedDateTime.class);
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ArangoAqlQuery.class);
