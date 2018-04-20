@@ -41,7 +41,6 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.convert.JodaTimeConverters;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -83,9 +82,9 @@ public class CustomConversions {
 		// Add user provided converters to make sure they can override the defaults
 		toRegister.addAll(converters);
 		toRegister.add(CustomToStringConverter.INSTANCE);
-		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
 		toRegister.addAll(TimeStringConverters.getConvertersToRegister());
 		toRegister.addAll(JodaTimeStringConverters.getConvertersToRegister());
+		toRegister.addAll(ArangoSimpleTypeConverters.getConvertersToRegister());
 
 		for (final Object c : toRegister) {
 			registerConversion(c);

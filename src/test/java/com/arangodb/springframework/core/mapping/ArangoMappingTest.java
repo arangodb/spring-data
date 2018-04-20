@@ -28,8 +28,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,9 +36,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.data.annotation.Id;
@@ -1020,7 +1018,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	@Test
 	public void jodaMapping() {
 		final JodaTestEntity entity = new JodaTestEntity();
-		entity.value1 = org.joda.time.DateTime.now();
+		entity.value1 = org.joda.time.DateTime.now(DateTimeZone.forOffsetHours(1));
 		entity.value2 = org.joda.time.Instant.now();
 		entity.value3 = org.joda.time.LocalDate.now();
 		entity.value4 = org.joda.time.LocalDateTime.now();
@@ -1092,9 +1090,9 @@ public class ArangoMappingTest extends AbstractArangoTest {
 				.find(entity.getId(), PropertyInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(ComplexBasicChildTestEntity.class)));
-		ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
+		final ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
 		assertThat(complexDocument.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
-		SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
+		final SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
 		assertThat(simpleDocument.field, is(innerChild.field));
 	}
 
@@ -1117,7 +1115,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final ListInheritanceTestEntity document = template.find(entity.getId(), ListInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(List.class)));
-		for (BasicTestEntity elem : document.value) {
+		for (final BasicTestEntity elem : document.value) {
 			assertThat(elem, is(instanceOf(SimpleBasicChildTestEntity.class)));
 			assertThat(((SimpleBasicChildTestEntity) elem).field, is(value));
 		}
@@ -1140,11 +1138,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final ListInheritanceTestEntity document = template.find(entity.getId(), ListInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(List.class)));
-		for (BasicTestEntity elem : document.value) {
+		for (final BasicTestEntity elem : document.value) {
 			assertThat(elem, is(instanceOf(ComplexBasicChildTestEntity.class)));
-			ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
+			final ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
 			assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
-			SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+			final SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
 			assertThat(simpleElem.field, is(value));
 		}
 	}
@@ -1172,11 +1170,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 				.find(entity.getId(), UntypedListInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(List.class)));
-		for (Object elem : document.value) {
+		for (final Object elem : document.value) {
 			assertThat(elem, is(instanceOf(ComplexBasicChildTestEntity.class)));
-			ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
+			final ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
 			assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
-			SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+			final SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
 			assertThat(simpleElem.field, is(value));
 		}
 	}
@@ -1200,7 +1198,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final MapInheritanceTestEntity document = template.find(entity.getId(), MapInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(Map.class)));
-		for (Map.Entry<String, BasicTestEntity> entry : document.value.entrySet()) {
+		for (final Map.Entry<String, BasicTestEntity> entry : document.value.entrySet()) {
 			assertThat(entry.getValue(), is(instanceOf(SimpleBasicChildTestEntity.class)));
 			assertThat(((SimpleBasicChildTestEntity) entry.getValue()).field, is(value));
 		}
@@ -1223,11 +1221,11 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final MapInheritanceTestEntity document = template.find(entity.getId(), MapInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(Map.class)));
-		for (Map.Entry<String, BasicTestEntity> entry : document.value.entrySet()) {
+		for (final Map.Entry<String, BasicTestEntity> entry : document.value.entrySet()) {
 			assertThat(entry.getValue(), is(instanceOf(ComplexBasicChildTestEntity.class)));
-			ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) entry.getValue();
+			final ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) entry.getValue();
 			assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
-			SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+			final SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
 			assertThat(simpleElem.field, is(value));
 		}
 	}
@@ -1256,12 +1254,12 @@ public class ArangoMappingTest extends AbstractArangoTest {
 				.find(entity.getId(), UntypedMapInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(Map.class)));
-		for (Object entry : document.value.entrySet()) {
+		for (final Object entry : document.value.entrySet()) {
 			final Object val = ((Map.Entry) entry).getValue();
 			assertThat(val, is(instanceOf(ComplexBasicChildTestEntity.class)));
-			ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) val;
+			final ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) val;
 			assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
-			SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+			final SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
 			assertThat(simpleElem.field, is(value));
 		}
 	}
@@ -1287,9 +1285,9 @@ public class ArangoMappingTest extends AbstractArangoTest {
 				.find(entity.getId(), ConstructorWithPropertyInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(ComplexBasicChildTestEntity.class)));
-		ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
+		final ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
 		assertThat(complexDocument.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
-		SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
+		final SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
 		assertThat(simpleDocument.field, is(innerChild.field));
 	}
 
@@ -1302,7 +1300,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final Map<String, List<BasicTestEntity>> map = new HashMap<>();
 		final String value = "value";
 		for (int i = 0; i < 3; ++i) {
-			List<BasicTestEntity> list = new ArrayList<>();
+			final List<BasicTestEntity> list = new ArrayList<>();
 			map.put(String.valueOf(i), list);
 			for (int j = 0; j < 3; ++j) {
 				final SimpleBasicChildTestEntity innerChild = new SimpleBasicChildTestEntity();
@@ -1319,13 +1317,13 @@ public class ArangoMappingTest extends AbstractArangoTest {
 				.find(entity.getId(), ListInMapInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(Map.class)));
-		for (Map.Entry<String, List<BasicTestEntity>> entry : document.value.entrySet()) {
+		for (final Map.Entry<String, List<BasicTestEntity>> entry : document.value.entrySet()) {
 			assertThat(entry.getValue(), is(instanceOf(List.class)));
-			for (BasicTestEntity elem : entry.getValue()) {
+			for (final BasicTestEntity elem : entry.getValue()) {
 				assertThat(elem, is(instanceOf(ComplexBasicChildTestEntity.class)));
-				ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
+				final ComplexBasicChildTestEntity complexElem = (ComplexBasicChildTestEntity) elem;
 				assertThat(complexElem.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
-				SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
+				final SimpleBasicChildTestEntity simpleElem = (SimpleBasicChildTestEntity) complexElem.nestedEntity;
 				assertThat(simpleElem.field, is(value));
 			}
 		}
@@ -1350,9 +1348,9 @@ public class ArangoMappingTest extends AbstractArangoTest {
 				.find(entity.getId(), PropertyRefInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(ComplexBasicChildTestEntity.class)));
-		ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
+		final ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
 		assertThat(complexDocument.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
-		SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
+		final SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
 		assertThat(simpleDocument.field, is(innerChild.field));
 	}
 
@@ -1366,18 +1364,15 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		private Double doubleValue;
 		private Character charValue;
 		private Byte byteValue;
-		private BigInteger bigIntValue;
-		private BigDecimal bigDecValue;
-		private UUID uuidValue;
 		private Date dateValue;
 		private java.sql.Date sqlDateValue;
 		private Timestamp timestampValue;
 		private byte[] byteArray;
 	}
-	
+
 	@Test
 	public void simpleTypesMapping() {
-		SimpleTypesTestEntity entity = new SimpleTypesTestEntity();
+		final SimpleTypesTestEntity entity = new SimpleTypesTestEntity();
 		entity.stringValue = "hello world";
 		entity.boolValue = true;
 		entity.intValue = 123456;
@@ -1387,15 +1382,12 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		entity.doubleValue = 1.2345678901234567890;
 		entity.charValue = 'a';
 		entity.byteValue = 'z';
-		entity.bigIntValue = new BigInteger("123456789");
-		entity.bigDecValue = new BigDecimal("1.23456789");
-		entity.uuidValue = UUID.randomUUID();
 		entity.dateValue = new Date();
 		entity.sqlDateValue = new java.sql.Date(new Date().getTime());
 		entity.timestampValue = new Timestamp(new Date().getTime());
 		entity.byteArray = new byte[] { 'a', 'b', 'c', 'x', 'y', 'z' };
 		template.insert(entity);
-		SimpleTypesTestEntity document = template.find(entity.getId(), SimpleTypesTestEntity.class).get();
+		final SimpleTypesTestEntity document = template.find(entity.getId(), SimpleTypesTestEntity.class).get();
 		assertThat(entity.stringValue, is(document.stringValue));
 		assertThat(entity.boolValue, is(document.boolValue));
 		assertThat(entity.intValue, is(document.intValue));
@@ -1405,9 +1397,6 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(entity.doubleValue, is(document.doubleValue));
 		assertThat(entity.charValue, is(document.charValue));
 		assertThat(entity.byteValue, is(document.byteValue));
-		assertThat(entity.bigIntValue, is(document.bigIntValue));
-		assertThat(entity.bigDecValue, is(document.bigDecValue));
-		assertThat(entity.uuidValue, is(document.uuidValue));
 		assertThat(entity.dateValue, is(document.dateValue));
 		assertThat(entity.sqlDateValue, is(document.sqlDateValue));
 		assertThat(entity.timestampValue, is(document.timestampValue));
