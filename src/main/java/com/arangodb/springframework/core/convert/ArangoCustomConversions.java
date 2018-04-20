@@ -26,7 +26,6 @@ import java.util.Collections;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.convert.JodaTimeConverters;
 
 import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
 
@@ -41,7 +40,6 @@ public class ArangoCustomConversions extends CustomConversions {
 
 	static {
 		final Collection<Converter<?, ?>> storeConverters = new ArrayList<>();
-		storeConverters.addAll(JodaTimeConverters.getConvertersToRegister());
 		storeConverters.addAll(TimeStringConverters.getConvertersToRegister());
 		storeConverters.addAll(JodaTimeStringConverters.getConvertersToRegister());
 		storeConverters.addAll(ArangoSimpleTypeConverters.getConvertersToRegister());
