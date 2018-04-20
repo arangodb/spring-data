@@ -1,5 +1,6 @@
 package com.arangodb.springframework.repository;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -200,4 +201,7 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 
 	@Query("RETURN COUNT(@@collection)")
 	long queryCount(@Param("@collection") Class<Customer> collection);
+
+	@Query("RETURN DATE_ISO8601(1474988621)")
+	Instant queryDate();
 }
