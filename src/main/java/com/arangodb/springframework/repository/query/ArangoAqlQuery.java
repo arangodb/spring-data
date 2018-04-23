@@ -108,9 +108,10 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		DESERIALIZABLE_TYPES.add(java.sql.Timestamp.class);
 		DESERIALIZABLE_TYPES.add(VPackSlice.class);
 		DESERIALIZABLE_TYPES.add(UUID.class);
-		DESERIALIZABLE_TYPES.add(new byte[] {}.getClass());
+		DESERIALIZABLE_TYPES.add(byte[].class);
 		DESERIALIZABLE_TYPES.add(Byte.class);
 		DESERIALIZABLE_TYPES.add(byte.class);
+		DESERIALIZABLE_TYPES.add(Enum.class);
 		DESERIALIZABLE_TYPES.add(Instant.class);
 		DESERIALIZABLE_TYPES.add(LocalDate.class);
 		DESERIALIZABLE_TYPES.add(LocalDateTime.class);

@@ -1415,4 +1415,20 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(entity.byteArray, is(document.byteArray));
 	}
 
+	public enum TestEnum {
+		A, B;
+	}
+
+	public class EnumTestEntity extends BasicTestEntity {
+		private TestEnum value;
+	}
+
+	@Test
+	public void enumMapping() {
+		final EnumTestEntity entity = new EnumTestEntity();
+		entity.value = TestEnum.A;
+		template.insert(entity);
+		final EnumTestEntity document = template.find(entity.getId(), EnumTestEntity.class).get();
+		assertThat(entity.value, is(document.value));
+	}
 }
