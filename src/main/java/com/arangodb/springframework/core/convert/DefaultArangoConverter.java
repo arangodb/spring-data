@@ -59,6 +59,7 @@ import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
+ * @author Reşat SABIQ
  *
  */
 public class DefaultArangoConverter implements ArangoConverter {
