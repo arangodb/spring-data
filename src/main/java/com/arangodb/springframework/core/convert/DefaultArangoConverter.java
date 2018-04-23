@@ -272,7 +272,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 				}
 
 				// Inheritance should be supported for collections also, & a collection is allowed to contain more than 1 type:
-				Class<?> type = getComponentType(property.getTypeInformation()).getType();
+				Class<?> type = getNonNullComponentType(property.getTypeInformation()).getType();
 				return Optional.ofNullable(resolver.resolveMultiple(ids, type, annotation, id -> {
 						Class<?> inheritanceAwareType = InheritanceUtils.determineInheritanceAwareReferenceType(id, type, getMappingContext());
 						addToContextIfNeeded(inheritanceAwareType, property);
