@@ -213,7 +213,7 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 	}
 
 	/**
-	 * This tests that unnecessary data is persisted for TABLE/COLLECTION_PER_CLASS type inheritance (as has been recently introduced by a merge).
+	 * This tests that unnecessary data is not persisted for TABLE/COLLECTION_PER_CLASS type inheritance (as has been recently introduced by a merge).
 	 */
 	@Test
 	public void coreCollectionPerClassTypeMainstreamInheritanceShouldBeOptimized() {
