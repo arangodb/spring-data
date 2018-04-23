@@ -28,6 +28,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -36,16 +37,21 @@ import com.arangodb.springframework.annotation.Edge;
 
 /**
  * @author Mark Vollmary
+ * @author Reşat SABIQ
  *
  */
 public class ArangoEntityClassScanner {
 
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Annotation>[] ENTITY_ANNOTATIONS = new Class[] { Document.class, Edge.class };
-	private static final AnnotationTypeFilter[] ANNOTATION_TYPE_FILTERS = new AnnotationTypeFilter[ENTITY_ANNOTATIONS.length];
+	@SuppressWarnings("unchecked")
+	private static final Class<? extends Annotation>[] ADDITIONAL_ANNOTATIONS = new Class[] { TypeAlias.class };
+	private static final AnnotationTypeFilter[] ANNOTATION_TYPE_FILTERS = new AnnotationTypeFilter[ENTITY_ANNOTATIONS.length+ADDITIONAL_ANNOTATIONS.length];
 	static {
 		for (byte i = 0; i < ENTITY_ANNOTATIONS.length; i++)
 			ANNOTATION_TYPE_FILTERS[i] = new AnnotationTypeFilter(ENTITY_ANNOTATIONS[i]);
+		for (byte i = 0; i < ADDITIONAL_ANNOTATIONS.length; i++)
+			ANNOTATION_TYPE_FILTERS[ENTITY_ANNOTATIONS.length+i] = new AnnotationTypeFilter(ADDITIONAL_ANNOTATIONS[i]);
 	}
 
 	public static Set<Class<?>> scanForEntities(final String... basePackages) throws ClassNotFoundException {
