@@ -39,7 +39,6 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 	@Autowired
 	InheritanceSupportTestRepository inheritanceSupportRepository;
 	
-	@Document
 	public static abstract class Base {
 		@Id
 		private String id;
