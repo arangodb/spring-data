@@ -44,7 +44,7 @@ public abstract class ArangoSimpleTypes {
 	private static final Set<Class<?>> ARANGO_SIMPLE_TYPES;
 
 	static {
-		final Set<Class<?>> simpleTypes = new HashSet<Class<?>>();
+		final Set<Class<?>> simpleTypes = new HashSet<>();
 
 		// com.arangodb.springframework.*
 		simpleTypes.add(DBEntity.class);
@@ -70,6 +70,7 @@ public abstract class ArangoSimpleTypes {
 		simpleTypes.add(Double.class);
 		simpleTypes.add(Number.class);
 		simpleTypes.add(String.class);
+		simpleTypes.add(Enum.class);
 
 		// arrays
 		simpleTypes.add(byte[].class);
