@@ -20,11 +20,9 @@
 
 package com.arangodb.springframework.core.convert;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -34,8 +32,7 @@ import org.joda.time.LocalDateTime;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.util.ClassUtils;
 
-import com.arangodb.ArangoDBException;
-import com.arangodb.velocypack.internal.util.DateUtil;
+import com.arangodb.velocypack.module.joda.internal.util.JodaTimeUtil;
 
 /**
  * @author Mark Vollmary
@@ -62,20 +59,12 @@ public class JodaTimeStringConverters {
 		return converters;
 	}
 
-	private static Date parse(final String source) {
-		try {
-			return DateUtil.parse(source);
-		} catch (final ParseException e) {
-			throw new ArangoDBException(e);
-		}
-	}
-
 	public static enum InstantToStringConverter implements Converter<Instant, String> {
 		INSTANCE;
 
 		@Override
 		public String convert(final Instant source) {
-			return source == null ? null : DateUtil.format(source.toDate());
+			return source == null ? null : JodaTimeUtil.format(source);
 		}
 	}
 
@@ -84,7 +73,7 @@ public class JodaTimeStringConverters {
 
 		@Override
 		public String convert(final DateTime source) {
-			return source == null ? null : DateUtil.format(source.toDate());
+			return source == null ? null : JodaTimeUtil.format(source);
 		}
 	}
 
@@ -93,7 +82,7 @@ public class JodaTimeStringConverters {
 
 		@Override
 		public String convert(final LocalDate source) {
-			return source == null ? null : DateUtil.format(source.toDate());
+			return source == null ? null : JodaTimeUtil.format(source);
 		}
 	}
 
@@ -102,7 +91,7 @@ public class JodaTimeStringConverters {
 
 		@Override
 		public String convert(final LocalDateTime source) {
-			return source == null ? null : DateUtil.format(source.toDate());
+			return source == null ? null : JodaTimeUtil.format(source);
 		}
 	}
 
@@ -111,7 +100,7 @@ public class JodaTimeStringConverters {
 
 		@Override
 		public Instant convert(final String source) {
-			return source == null ? null : new Instant(parse(source).getTime());
+			return source == null ? null : JodaTimeUtil.parseInstant(source);
 		}
 	}
 
@@ -120,7 +109,7 @@ public class JodaTimeStringConverters {
 
 		@Override
 		public DateTime convert(final String source) {
-			return source == null ? null : new DateTime(parse(source).getTime());
+			return source == null ? null : JodaTimeUtil.parseDateTime(source);
 		}
 	}
 
@@ -129,7 +118,7 @@ public class JodaTimeStringConverters {
 
 		@Override
 		public LocalDate convert(final String source) {
-			return source == null ? null : new LocalDate(parse(source).getTime());
+			return source == null ? null : JodaTimeUtil.parseLocalDate(source);
 		}
 	}
 
@@ -138,7 +127,7 @@ public class JodaTimeStringConverters {
 
 		@Override
 		public LocalDateTime convert(final String source) {
-			return source == null ? null : new LocalDateTime(parse(source).getTime());
+			return source == null ? null : JodaTimeUtil.parseLocalDateTime(source);
 		}
 	}
 

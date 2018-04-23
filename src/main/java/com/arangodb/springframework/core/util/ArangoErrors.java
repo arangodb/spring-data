@@ -22,6 +22,7 @@ package com.arangodb.springframework.core.util;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class ArangoErrors {
@@ -50,6 +51,11 @@ public class ArangoErrors {
 	 * method not supported. Will be raised when an unsupported HTTP method is used for an operation.
 	 */
 	public static final int ERROR_HTTP_METHOD_NOT_ALLOWED = 405;
+
+	/**
+	 * conflict. Will be raised when a conflict is encountered.
+	 */
+	public static final int ERROR_HTTP_CONFLICT = 409;
 
 	/**
 	 * precondition failed. Will be raised when a precondition for an HTTP request is not met.

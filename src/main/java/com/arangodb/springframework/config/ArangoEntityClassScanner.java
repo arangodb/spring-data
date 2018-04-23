@@ -38,6 +38,7 @@ import com.arangodb.springframework.annotation.Edge;
 /**
  * @author Mark Vollmary
  * @author Reşat SABIQ
+ * @author Christian Lechner
  *
  */
 public class ArangoEntityClassScanner {

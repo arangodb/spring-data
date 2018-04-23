@@ -22,14 +22,23 @@ package com.arangodb.springframework.repository.query;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,6 +67,7 @@ import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * Implements execute(Object[]) method which is called every time a user-defined AQL or derived method is called
@@ -75,6 +85,38 @@ public class ArangoAqlQuery implements RepositoryQuery {
 		DESERIALIZABLE_TYPES.add(Map.class);
 		DESERIALIZABLE_TYPES.add(BaseDocument.class);
 		DESERIALIZABLE_TYPES.add(BaseEdgeDocument.class);
+		DESERIALIZABLE_TYPES.add(String.class);
+		DESERIALIZABLE_TYPES.add(Boolean.class);
+		DESERIALIZABLE_TYPES.add(boolean.class);
+		DESERIALIZABLE_TYPES.add(Integer.class);
+		DESERIALIZABLE_TYPES.add(int.class);
+		DESERIALIZABLE_TYPES.add(Long.class);
+		DESERIALIZABLE_TYPES.add(long.class);
+		DESERIALIZABLE_TYPES.add(Short.class);
+		DESERIALIZABLE_TYPES.add(short.class);
+		DESERIALIZABLE_TYPES.add(Double.class);
+		DESERIALIZABLE_TYPES.add(double.class);
+		DESERIALIZABLE_TYPES.add(Float.class);
+		DESERIALIZABLE_TYPES.add(float.class);
+		DESERIALIZABLE_TYPES.add(BigInteger.class);
+		DESERIALIZABLE_TYPES.add(BigDecimal.class);
+		DESERIALIZABLE_TYPES.add(Number.class);
+		DESERIALIZABLE_TYPES.add(Character.class);
+		DESERIALIZABLE_TYPES.add(char.class);
+		DESERIALIZABLE_TYPES.add(Date.class);
+		DESERIALIZABLE_TYPES.add(java.sql.Date.class);
+		DESERIALIZABLE_TYPES.add(java.sql.Timestamp.class);
+		DESERIALIZABLE_TYPES.add(VPackSlice.class);
+		DESERIALIZABLE_TYPES.add(UUID.class);
+		DESERIALIZABLE_TYPES.add(byte[].class);
+		DESERIALIZABLE_TYPES.add(Byte.class);
+		DESERIALIZABLE_TYPES.add(byte.class);
+		DESERIALIZABLE_TYPES.add(Enum.class);
+		DESERIALIZABLE_TYPES.add(Instant.class);
+		DESERIALIZABLE_TYPES.add(LocalDate.class);
+		DESERIALIZABLE_TYPES.add(LocalDateTime.class);
+		DESERIALIZABLE_TYPES.add(OffsetDateTime.class);
+		DESERIALIZABLE_TYPES.add(ZonedDateTime.class);
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ArangoAqlQuery.class);

@@ -3,6 +3,7 @@ package com.arangodb.springframework.repository.query;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -175,5 +176,15 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final List<Customer> retrieved = repository.findManyBySurname("Smith");
 		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
 
+	}
+
+	@Test
+	public void queryCount() {
+		assertEquals(repository.queryCount(Customer.class), 0L);
+	}
+
+	@Test
+	public void queryDate() {
+		assertEquals(repository.queryDate(), Instant.ofEpochMilli(1474988621));
 	}
 }

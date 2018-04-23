@@ -20,52 +20,40 @@
 
 package com.arangodb.springframework.core.convert;
 
-import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.util.ClassUtils;
 
-import com.arangodb.ArangoDBException;
-import com.arangodb.velocypack.internal.util.DateUtil;
+import com.arangodb.velocypack.module.jdk8.internal.util.JavaTimeUtil;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class TimeStringConverters {
 
-	private static final boolean JODA_TIME_IS_PRESENT = ClassUtils.isPresent("org.joda.time.LocalDate", null);
-
 	public static Collection<Converter<?, ?>> getConvertersToRegister() {
-		if (!JODA_TIME_IS_PRESENT) {
-			return Collections.emptySet();
-		}
 		final List<Converter<?, ?>> converters = new ArrayList<>();
 		converters.add(InstantToStringConverter.INSTANCE);
 		converters.add(LocalDateToStringConverter.INSTANCE);
 		converters.add(LocalDateTimeToStringConverter.INSTANCE);
+		converters.add(OffsetDateTimeToStringConverter.INSTANCE);
+		converters.add(ZonedDateTimeToStringConverter.INSTANCE);
 
 		converters.add(StringToInstantConverter.INSTANCE);
 		converters.add(StringToLocalDateConverter.INSTANCE);
 		converters.add(StringToLocalDateTimeConverter.INSTANCE);
+		converters.add(StringToOffsetDateTimeConverter.INSTANCE);
+		converters.add(StringToZonedDateTimeConverter.INSTANCE);
 		return converters;
-	}
-
-	private static Date parse(final String source) {
-		try {
-			return DateUtil.parse(source);
-		} catch (final ParseException e) {
-			throw new ArangoDBException(e);
-		}
 	}
 
 	public static enum InstantToStringConverter implements Converter<Instant, String> {
@@ -73,7 +61,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final Instant source) {
-			return source == null ? null : DateUtil.format(Date.from(source));
+			return source == null ? null : JavaTimeUtil.format(source);
 		}
 	}
 
@@ -82,8 +70,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final LocalDate source) {
-			return source == null ? null
-					: DateUtil.format(Date.from(source.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+			return source == null ? null : JavaTimeUtil.format(source);
 		}
 	}
 
@@ -92,8 +79,25 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final LocalDateTime source) {
-			return source == null ? null
-					: DateUtil.format(Date.from(source.atZone(ZoneId.systemDefault()).toInstant()));
+			return source == null ? null : JavaTimeUtil.format(source);
+		}
+	}
+
+	public static enum OffsetDateTimeToStringConverter implements Converter<OffsetDateTime, String> {
+		INSTANCE;
+
+		@Override
+		public String convert(final OffsetDateTime source) {
+			return source == null ? null : JavaTimeUtil.format(source);
+		}
+	}
+
+	public static enum ZonedDateTimeToStringConverter implements Converter<ZonedDateTime, String> {
+		INSTANCE;
+
+		@Override
+		public String convert(final ZonedDateTime source) {
+			return source == null ? null : JavaTimeUtil.format(source);
 		}
 	}
 
@@ -102,7 +106,7 @@ public class TimeStringConverters {
 
 		@Override
 		public Instant convert(final String source) {
-			return source == null ? null : parse(source).toInstant();
+			return source == null ? null : JavaTimeUtil.parseInstant(source);
 		}
 	}
 
@@ -111,7 +115,7 @@ public class TimeStringConverters {
 
 		@Override
 		public LocalDate convert(final String source) {
-			return source == null ? null : parse(source).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			return source == null ? null : JavaTimeUtil.parseLocalDate(source);
 		}
 	}
 
@@ -120,7 +124,25 @@ public class TimeStringConverters {
 
 		@Override
 		public LocalDateTime convert(final String source) {
-			return source == null ? null : parse(source).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+			return source == null ? null : JavaTimeUtil.parseLocalDateTime(source);
+		}
+	}
+
+	public static enum StringToOffsetDateTimeConverter implements Converter<String, OffsetDateTime> {
+		INSTANCE;
+
+		@Override
+		public OffsetDateTime convert(final String source) {
+			return source == null ? null : JavaTimeUtil.parseOffsetDateTime(source);
+		}
+	}
+
+	public static enum StringToZonedDateTimeConverter implements Converter<String, ZonedDateTime> {
+		INSTANCE;
+
+		@Override
+		public ZonedDateTime convert(final String source) {
+			return source == null ? null : JavaTimeUtil.parseZonedDateTime(source);
 		}
 	}
 

@@ -1,5 +1,6 @@
 package com.arangodb.springframework.repository;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,6 @@ import com.arangodb.springframework.annotation.BindVars;
 import com.arangodb.springframework.annotation.Param;
 import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.annotation.QueryOptions;
-import com.arangodb.springframework.repository.ArangoRepository;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
 
@@ -198,4 +198,10 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 	List<Customer> getByOwnsName(String name);
 
 	List<Customer> getByOwnsContainsName(String name);
+
+	@Query("RETURN COUNT(@@collection)")
+	long queryCount(@Param("@collection") Class<Customer> collection);
+
+	@Query("RETURN DATE_ISO8601(1474988621)")
+	Instant queryDate();
 }
