@@ -44,10 +44,8 @@ public class ArangoEntityClassScanner {
 	private static final Class<? extends Annotation>[] ENTITY_ANNOTATIONS = new Class[] { Document.class, Edge.class };
 	private static final AnnotationTypeFilter[] ANNOTATION_TYPE_FILTERS = new AnnotationTypeFilter[ENTITY_ANNOTATIONS.length];
 	static {
-		synchronized(ArangoEntityClassScanner.class) {
-			for (byte i = 0; i < ENTITY_ANNOTATIONS.length; i++)
-				ANNOTATION_TYPE_FILTERS[i] = new AnnotationTypeFilter(ENTITY_ANNOTATIONS[i]);
-		}
+		for (byte i = 0; i < ENTITY_ANNOTATIONS.length; i++)
+			ANNOTATION_TYPE_FILTERS[i] = new AnnotationTypeFilter(ENTITY_ANNOTATIONS[i]);
 	}
 
 	public static Set<Class<?>> scanForEntities(final String... basePackages) throws ClassNotFoundException {

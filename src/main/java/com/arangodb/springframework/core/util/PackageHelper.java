@@ -23,7 +23,8 @@ public class PackageHelper {
 	// Additional entries could of course be added going forward (entries only applicable at testing time probably don't need to be included).
 	// Have to be alphabetically sorted (improves performance):
 	private String[] topLevelPackageArray = {"antlr", "java", "javax", "jdk", "oracle", "sun"};
-	private String[] frameworksArray =		{"org.apache", "org.codehaus", "org.eclipse", "org.hibernate", "org.junit", "org.omg", "org.springframework"};
+	private String[] frameworksArray =		{"ch.qos", "org.aopalliance", "org.apache", "org.codehaus", "org.eclipse", "org.hibernate", "org.joda", "org.json", "org.junit", 
+			"org.omg", "org.slf4j", "org.springframework", "org.xml"};
 	private String[] companiesArray =		{"com.google", "com.ibm", "com.sun"};
 	private String[] appServersArray =		{"fish.payara", "org.glassfish", "org.jboss"};
 	private String[] dbArray =				{"com.arangodb" };
