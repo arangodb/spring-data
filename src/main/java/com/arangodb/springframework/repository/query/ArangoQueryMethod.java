@@ -21,28 +21,124 @@
 package com.arangodb.springframework.repository.query;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.util.StringUtils;
+
+import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.springframework.annotation.Query;
+import com.arangodb.springframework.annotation.QueryOptions;
 
 /**
- * Created by F625633 on 12/07/2017.
+ * 
+ * @author Andrew Fleming
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 public class ArangoQueryMethod extends QueryMethod {
 
+	private static final List<Class<?>> GEO_TYPES = Arrays.asList(GeoResult.class, GeoResults.class, GeoPage.class);
+
+	private final Method method;
+
 	public ArangoQueryMethod(final Method method, final RepositoryMetadata metadata, final ProjectionFactory factory) {
 		super(method, metadata, factory);
+		this.method = method;
 	}
 
 	@Override
-	public Parameters<?, ?> getParameters() {
-		return super.getParameters();
+	public ArangoParameters getParameters() {
+		return (ArangoParameters) super.getParameters();
 	}
 
 	@Override
-	public Parameters<?, ?> createParameters(final Method method) {
+	public ArangoParameters createParameters(final Method method) {
 		return new ArangoParameters(method);
 	}
+
+	public boolean hasAnnotatedQuery() {
+		return getQueryAnnotationValue().isPresent();
+	}
+
+	public String getAnnotatedQuery() {
+		return getQueryAnnotationValue().orElse(null);
+	}
+
+	public Query getQueryAnnotation() {
+		return AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
+	}
+
+	private Optional<String> getQueryAnnotationValue() {
+		return Optional.ofNullable(getQueryAnnotation()) //
+				.map(q -> q.value()) //
+				.filter(StringUtils::hasText);
+	}
+
+	public boolean hasAnnotatedQueryOptions() {
+		return getQueryOptionsAnnotation() != null;
+	}
+
+	public AqlQueryOptions getAnnotatedQueryOptions() {
+		final QueryOptions queryOptions = getQueryOptionsAnnotation();
+		if (queryOptions == null) {
+			return null;
+		}
+		final AqlQueryOptions options = new AqlQueryOptions();
+		final int batchSize = queryOptions.batchSize();
+		if (batchSize != -1) {
+			options.batchSize(batchSize);
+		}
+		final int maxPlans = queryOptions.maxPlans();
+		if (maxPlans != -1) {
+			options.maxPlans(maxPlans);
+		}
+		final int ttl = queryOptions.ttl();
+		if (ttl != -1) {
+			options.ttl(ttl);
+		}
+		options.cache(queryOptions.cache());
+		options.count(queryOptions.count());
+		options.fullCount(queryOptions.fullCount());
+		options.profile(queryOptions.profile());
+		options.rules(Arrays.asList(queryOptions.rules()));
+		return options;
+	}
+
+	public QueryOptions getQueryOptionsAnnotation() {
+		return AnnotatedElementUtils.findMergedAnnotation(method, QueryOptions.class);
+	}
+	
+	public Class<?> getReturnType() {
+		return method.getReturnType();
+	}
+
+	public boolean isGeoQuery() {
+		// maybe we should also unwrap the return type (e.g. Optional<Entity> => Entity) like parent class
+		Class<?> returnType = method.getReturnType();
+
+		for (Class<?> type : GEO_TYPES) {
+			if (type.isAssignableFrom(returnType)) {
+				return true;
+			}
+		}
+
+		if (Iterable.class.isAssignableFrom(returnType)) {
+			TypeInformation<?> returnTypeInfo = ClassTypeInformation.fromReturnTypeOf(method);
+			return GeoResult.class.equals(returnTypeInfo.getRequiredComponentType().getType());
+		}
+
+		return false;
+	}
+
 }

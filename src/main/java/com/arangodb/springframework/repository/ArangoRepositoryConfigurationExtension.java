@@ -20,19 +20,47 @@
 
 package com.arangodb.springframework.repository;
 
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
 
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
+
 /**
- * Created by F625633 on 07/07/2017.
+ * 
+ * @author Andrew Fleming
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 public class ArangoRepositoryConfigurationExtension extends RepositoryConfigurationExtensionSupport {
+
+	@Override
+	public String getModuleName() {
+		return "ArangoDB";
+	}
+
 	@Override
 	protected String getModulePrefix() {
-		return null;
+		return "arango";
 	}
 
 	@Override
 	public String getRepositoryFactoryBeanClassName() {
 		return ArangoRepositoryFactoryBean.class.getName();
 	}
+
+	@Override
+	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
+		return Arrays.asList(Document.class, Edge.class);
+	}
+
+	@Override
+	protected Collection<Class<?>> getIdentifyingTypes() {
+		return Collections.singleton(ArangoRepository.class);
+	}
+
 }

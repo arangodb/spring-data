@@ -21,23 +21,52 @@
 package com.arangodb.springframework.repository.query;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.util.Assert;
+
+import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.springframework.annotation.BindVars;
 
 /**
- * Created by F625633 on 12/07/2017.
+ * 
+ * @author Andrew Fleming
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 public class ArangoParameters extends Parameters<ArangoParameters, ArangoParameters.ArangoParameter> {
 
+	private final int queryOptionsIndex;
+	private final int bindVarsIndex;
+
 	public ArangoParameters(final Method method) {
 		super(method);
+		assertSingleSpecialParameter(ArangoParameter::isQueryOptions,
+			"Multiple AqlQueryOptions parameters are not allowed!");
+		assertSingleSpecialParameter(ArangoParameter::isBindVars, "Multiple @BindVars parameters are not allowed!");
+		assertNonDuplicateParamNames();
+		this.queryOptionsIndex = getIndexOfSpecialParameter(ArangoParameter::isQueryOptions);
+		this.bindVarsIndex = getIndexOfSpecialParameter(ArangoParameter::isBindVars);
+		assertCorrectTypeOfBindVars();
 	}
 
-	public ArangoParameters(final List<ArangoParameter> parameters) {
+	private ArangoParameters(final List<ArangoParameter> parameters, final int queryOptionsIndex,
+		final int bindVarsIndex) {
 		super(parameters);
+		this.queryOptionsIndex = queryOptionsIndex;
+		this.bindVarsIndex = bindVarsIndex;
 	}
 
 	@Override
@@ -47,12 +76,153 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 
 	@Override
 	protected ArangoParameters createFrom(final List<ArangoParameter> parameters) {
-		return new ArangoParameters(parameters);
+		return new ArangoParameters(parameters, this.queryOptionsIndex, this.bindVarsIndex);
 	}
 
-	protected static class ArangoParameter extends Parameter {
+	public boolean hasQueryOptions() {
+		return this.queryOptionsIndex != -1;
+	}
+
+	public int getQueryOptionsIndex() {
+		return this.queryOptionsIndex;
+	}
+
+	public boolean hasBindVars() {
+		return this.bindVarsIndex != -1;
+	}
+
+	public int getBindVarsIndex() {
+		return this.bindVarsIndex;
+	}
+
+	private int getIndexOfSpecialParameter(final Predicate<ArangoParameter> condition) {
+		for (int index = 0; index < getNumberOfParameters(); ++index) {
+			final ArangoParameter param = getParameter(index);
+			if (condition.test(param)) {
+				return index;
+			}
+		}
+		return -1;
+	}
+
+	private void assertSingleSpecialParameter(final Predicate<ArangoParameter> condition, final String message) {
+		boolean found = false;
+		for (int index = 0; index < getNumberOfParameters(); ++index) {
+			final ArangoParameter param = getParameter(index);
+			if (condition.test(param)) {
+				Assert.isTrue(!found, message);
+				found = true;
+			}
+		}
+	}
+
+	private void assertCorrectTypeOfBindVars() {
+		if (bindVarsIndex == -1) {
+			return;
+		}
+		final ArangoParameter bindVarParam = getParameter(bindVarsIndex);
+		Assert.isTrue(Map.class.equals(bindVarParam.getType()), "@BindVars parameter must be of type Map!");
+	}
+
+	private void assertNonDuplicateParamNames() {
+		final ArangoParameters bindableParams = getBindableParameters();
+		final int bindableParamsSize = bindableParams.getNumberOfParameters();
+		final Set<String> paramNames = new HashSet<>(bindableParamsSize);
+		for (int i = 0; i < bindableParamsSize; ++i) {
+			final ArangoParameter param = bindableParams.getParameter(i);
+			final Optional<String> name = param.getName();
+			if (name.isPresent()) {
+				Assert.isTrue(!paramNames.contains(name.get()), "Duplicate parameter name!");
+				paramNames.add(name.get());
+			}
+		}
+	}
+
+	static class ArangoParameter extends Parameter {
+
+		private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("^@?[A-Za-z0-9][A-Za-z0-9_]*$");
+		private static final String NAMED_PARAMETER_TEMPLATE = "@%s";
+		private static final String POSITION_PARAMETER_TEMPLATE = "@%d";
+
+		private static final String INCORRECT_BIND_PARAM_TYPE = "@BindVars parameter must be of type Map<String,Object>!";
+
+		private final MethodParameter parameter;
+
 		public ArangoParameter(final MethodParameter parameter) {
 			super(parameter);
+			this.parameter = parameter;
+			assertCorrectBindParamPattern();
+			assertCorrectBindVarsType();
 		}
+
+		@Override
+		public boolean isSpecialParameter() {
+			return super.isSpecialParameter() || isQueryOptions() || isBindVars();
+		}
+
+		public boolean isQueryOptions() {
+			return AqlQueryOptions.class.isAssignableFrom(parameter.getParameterType());
+		}
+
+		public boolean isBindVars() {
+			return parameter.hasParameterAnnotation(BindVars.class);
+		}
+
+		@SuppressWarnings("deprecation")
+		@Override
+		public Optional<String> getName() {
+			Param annotation = parameter.getParameterAnnotation(Param.class);
+			// we need to support the old @Param annotation
+			com.arangodb.springframework.annotation.Param oldAnnotation = parameter
+					.getParameterAnnotation(com.arangodb.springframework.annotation.Param.class);
+			return Optional.ofNullable(
+				annotation == null ? (oldAnnotation == null ? null : oldAnnotation.value()) : annotation.value());
+		}
+
+		@SuppressWarnings("deprecation")
+		@Override
+		public boolean isExplicitlyNamed() {
+			// we need to support the old @Param annotation
+			return super.isExplicitlyNamed()
+					|| parameter.hasMethodAnnotation(com.arangodb.springframework.annotation.Param.class);
+		}
+
+		@Override
+		public String getPlaceholder() {
+			if (isNamedParameter()) {
+				return String.format(NAMED_PARAMETER_TEMPLATE, getName().get());
+			} else {
+				return String.format(POSITION_PARAMETER_TEMPLATE, getIndex());
+			}
+		}
+
+		private void assertCorrectBindParamPattern() {
+			if (isExplicitlyNamed()) {
+				final String name = getName().get();
+				final boolean matches = BIND_PARAM_PATTERN.matcher(name).matches();
+				Assert.isTrue(matches, "@Param has invalid format!");
+			}
+		}
+
+		private void assertCorrectBindVarsType() {
+			if (isBindVars()) {
+				Assert.isTrue(Map.class.equals(parameter.getParameterType()), INCORRECT_BIND_PARAM_TYPE);
+
+				final Type type = parameter.getGenericParameterType();
+				Assert.isTrue(ParameterizedType.class.isInstance(type), INCORRECT_BIND_PARAM_TYPE);
+
+				final Type[] genericTypes = ((ParameterizedType) type).getActualTypeArguments();
+				Assert.isTrue(genericTypes.length == 2, INCORRECT_BIND_PARAM_TYPE);
+
+				final Type keyType = genericTypes[0];
+				final Type valueType = genericTypes[1];
+
+				Assert.isTrue(Class.class.isInstance(keyType), INCORRECT_BIND_PARAM_TYPE);
+				Assert.isTrue(Class.class.isInstance(valueType), INCORRECT_BIND_PARAM_TYPE);
+				Assert.isTrue(String.class.equals(keyType), INCORRECT_BIND_PARAM_TYPE);
+				Assert.isTrue(Object.class.equals(valueType), INCORRECT_BIND_PARAM_TYPE);
+			}
+		}
+
 	}
 }

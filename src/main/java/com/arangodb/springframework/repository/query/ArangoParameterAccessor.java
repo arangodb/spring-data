@@ -1,7 +1,7 @@
 /*
  * DISCLAIMER
  *
- * Copyright 2017 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2018 ArangoDB GmbH, Cologne, Germany
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,78 +20,24 @@
 
 package com.arangodb.springframework.repository.query;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.util.Assert;
 
 import com.arangodb.model.AqlQueryOptions;
 
 /**
- * The main class used to access parameters of a user-defined method. It wraps ParametersParameterAccessor which catches
- * special parameters Sort and Pageable, and catches Arango-specific parameters e.g. AqlQueryOptions
+ * 
+ * @author Audrius Malele
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
-public class ArangoParameterAccessor implements ParameterAccessor {
-	private final ParametersParameterAccessor accessor;
-	private final List<Object> bindableArguments;
-	private AqlQueryOptions options = null;
+public interface ArangoParameterAccessor extends ParameterAccessor {
 
-	public ArangoParameterAccessor(final ArangoParameters parameters, final Object[] arguments) {
-		accessor = new ParametersParameterAccessor(parameters, arguments);
-		this.bindableArguments = createBindableArguments(arguments);
-	}
+	ArangoParameters getParameters();
+	
+	AqlQueryOptions getQueryOptions();
 
-	AqlQueryOptions getAqlQueryOptions() {
-		return options;
-	}
+	Map<String, Object> getBindVars();
 
-	@Override
-	public Pageable getPageable() {
-		return accessor.getPageable();
-	}
-
-	@Override
-	public Sort getSort() {
-		return accessor.getSort();
-	}
-
-	@Override
-	public Optional<Class<?>> getDynamicProjection() {
-		return accessor.getDynamicProjection();
-	}
-
-	@Override
-	public Object getBindableValue(final int index) {
-		return accessor.getBindableValue(index);
-	}
-
-	@Override
-	public boolean hasBindableNullValue() {
-		return accessor.hasBindableNullValue();
-	}
-
-	@Override
-	public Iterator<Object> iterator() {
-		return bindableArguments.iterator();
-	}
-
-	private List<Object> createBindableArguments(final Object[] arguments) {
-		final List<Object> bindableArguments = new LinkedList<>();
-		for (final Parameter parameter : accessor.getParameters().getBindableParameters()) {
-			if (parameter.getType() == AqlQueryOptions.class) {
-				Assert.isTrue(options == null, "AqlQueryOptions duplicated");
-				options = (AqlQueryOptions) arguments[parameter.getIndex()];
-			} else {
-				bindableArguments.add(arguments[parameter.getIndex()]);
-			}
-		}
-		return bindableArguments;
-	}
 }
