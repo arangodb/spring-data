@@ -26,8 +26,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by F625633 on 13/07/2017.
+ * Deprecated. Please use {@link org.springframework.data.repository.query.Param} instead.
+ * 
+ * @author Andrew Fleming
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
+@Deprecated
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Param {
