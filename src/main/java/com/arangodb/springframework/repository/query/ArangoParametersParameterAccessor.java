@@ -27,8 +27,12 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
 import com.arangodb.model.AqlQueryOptions;
 
 /**
- * The main class used to access parameters of a user-defined method. It wraps ParametersParameterAccessor which catches
- * special parameters Sort and Pageable, and catches Arango-specific parameters e.g. AqlQueryOptions
+ * This class provides access to parameters of a user-defined method. It wraps ParametersParameterAccessor which catches
+ * special parameters Sort and Pageable, and catches Arango-specific parameters e.g. AqlQueryOptions.
+ * 
+ * @author Audrius Malele
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 public class ArangoParametersParameterAccessor extends ParametersParameterAccessor implements ArangoParameterAccessor {
 

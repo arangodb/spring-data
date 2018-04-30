@@ -28,8 +28,6 @@ import com.arangodb.model.AqlQueryOptions;
 
 /**
  * 
- * @author Audrius Malele
- * @author Mark Vollmary
  * @author Christian Lechner
  */
 public interface ArangoParameterAccessor extends ParameterAccessor {
