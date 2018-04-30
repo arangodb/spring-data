@@ -59,7 +59,6 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		assertNonDuplicateParamNames();
 		this.queryOptionsIndex = getIndexOfSpecialParameter(ArangoParameter::isQueryOptions);
 		this.bindVarsIndex = getIndexOfSpecialParameter(ArangoParameter::isBindVars);
-		assertCorrectTypeOfBindVars();
 	}
 
 	private ArangoParameters(final List<ArangoParameter> parameters, final int queryOptionsIndex,
@@ -114,14 +113,6 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 				found = true;
 			}
 		}
-	}
-
-	private void assertCorrectTypeOfBindVars() {
-		if (bindVarsIndex == -1) {
-			return;
-		}
-		final ArangoParameter bindVarParam = getParameter(bindVarsIndex);
-		Assert.isTrue(Map.class.equals(bindVarParam.getType()), "@BindVars parameter must be of type Map!");
 	}
 
 	private void assertNonDuplicateParamNames() {
