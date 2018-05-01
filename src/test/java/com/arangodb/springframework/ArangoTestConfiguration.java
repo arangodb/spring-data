@@ -21,17 +21,18 @@
 package com.arangodb.springframework;
 
 import org.springframework.context.annotation.Configuration;
-
 import com.arangodb.ArangoDB;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.AbstractArangoConfiguration;
 
 /**
+ * 
  * @author Mark Vollmary
- *
+ * @author Christian Lechner
  */
 @Configuration
-@EnableArangoRepositories(basePackages = { "com.arangodb.springframework.repository" })
+@EnableArangoRepositories(basePackages = {
+		"com.arangodb.springframework.repository" }, namedQueriesLocation = "classpath*:arango-named-queries.properties")
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
 	public static final String DB = "spring-test-db";
