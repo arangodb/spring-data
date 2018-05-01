@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.util.Lazy;
 
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.IndexType;
@@ -45,12 +44,13 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 
 	private final PartTree tree;
 	private final ArangoMappingContext context;
-	private final Lazy<List<String>> geoFields = Lazy.of(this::getGeoFields);
+	private final List<String> geoFields;
 
 	public DerivedArangoQuery(ArangoQueryMethod method, ArangoOperations operations) {
 		super(method, operations);
 		this.tree = new PartTree(method.getName(), this.domainClass);
 		this.context = (ArangoMappingContext) operations.getConverter().getMappingContext();
+		this.geoFields = getGeoFields();
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 			options.fullCount(true);
 		}
 
-		return new DerivedQueryCreator(context, domainClass, tree, accessor, bindVars, geoFields.get(),
+		return new DerivedQueryCreator(context, domainClass, tree, accessor, bindVars, geoFields,
 				operations.getVersion().getVersion().compareTo("3.2.0") < 0).createQuery();
 	}
 
