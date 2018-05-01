@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 
 import com.arangodb.springframework.repository.ArangoRepositoriesRegistrar;
 import com.arangodb.springframework.repository.ArangoRepositoryFactoryBean;
@@ -74,6 +75,6 @@ public @interface EnableArangoRepositories {
 	 * Returns the key of the {@link QueryLookupStrategy} that should be used to lookup queries for query methods.
 	 * Currently only the default {@link Key#CREATE_IF_NOT_FOUND} is supported.
 	 */
-	org.springframework.data.repository.query.QueryLookupStrategy.Key queryLookupStrategy() default org.springframework.data.repository.query.QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND;
+	Key queryLookupStrategy() default Key.CREATE_IF_NOT_FOUND;
 
 }
