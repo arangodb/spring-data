@@ -36,8 +36,8 @@ import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.repository.query.ArangoQueryMethod;
-import com.arangodb.springframework.repository.query.DerivedAqlQuery;
-import com.arangodb.springframework.repository.query.StringBasedAqlQuery;
+import com.arangodb.springframework.repository.query.DerivedArangoQuery;
+import com.arangodb.springframework.repository.query.StringBasedArangoQuery;
 
 /**
  * 
@@ -111,11 +111,11 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				final String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedAqlQuery(namedQuery, queryMethod, operations);
+				return new StringBasedArangoQuery(namedQuery, queryMethod, operations);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedAqlQuery(queryMethod, operations);
+				return new StringBasedArangoQuery(queryMethod, operations);
 			} else {
-				return new DerivedAqlQuery(queryMethod, operations);
+				return new DerivedArangoQuery(queryMethod, operations);
 			}
 		}
 
