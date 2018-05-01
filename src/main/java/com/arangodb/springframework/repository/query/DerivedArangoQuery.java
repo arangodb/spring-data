@@ -41,13 +41,13 @@ import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator
  * @author Mark Vollmary
  * @author Christian Lechner
  */
-public class DerivedAqlQuery extends AbstractArangoQuery {
+public class DerivedArangoQuery extends AbstractArangoQuery {
 
 	private final PartTree tree;
 	private final ArangoMappingContext context;
 	private final Lazy<List<String>> geoFields = Lazy.of(this::getGeoFields);
 
-	public DerivedAqlQuery(ArangoQueryMethod method, ArangoOperations operations) {
+	public DerivedArangoQuery(ArangoQueryMethod method, ArangoOperations operations) {
 		super(method, operations);
 		this.tree = new PartTree(method.getName(), this.domainClass);
 		this.context = (ArangoMappingContext) operations.getConverter().getMappingContext();

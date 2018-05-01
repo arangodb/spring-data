@@ -39,18 +39,18 @@ import com.arangodb.springframework.repository.query.ArangoParameters.ArangoPara
  * @author Mark Vollmary
  * @author Christian Lechner
  */
-public class StringBasedAqlQuery extends AbstractArangoQuery {
+public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 	private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("@(@?[A-Za-z0-9][A-Za-z0-9_]*)");
 
 	private final String query;
 	private final Set<String> queryBindParams;
 
-	public StringBasedAqlQuery(ArangoQueryMethod method, ArangoOperations operations) {
+	public StringBasedArangoQuery(ArangoQueryMethod method, ArangoOperations operations) {
 		this(method.getAnnotatedQuery(), method, operations);
 	}
 
-	public StringBasedAqlQuery(String query, ArangoQueryMethod method, ArangoOperations operations) {
+	public StringBasedArangoQuery(String query, ArangoQueryMethod method, ArangoOperations operations) {
 		super(method, operations);
 		Assert.notNull(query, "Query must not be null!");
 
