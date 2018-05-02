@@ -23,6 +23,7 @@ package com.arangodb.springframework.repository;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -33,8 +34,8 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.RepositoryQuery;
 
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.repository.query.ArangoQueryMethod;
 import com.arangodb.springframework.repository.query.DerivedArangoQuery;
 import com.arangodb.springframework.repository.query.StringBasedArangoQuery;
@@ -49,11 +50,11 @@ import com.arangodb.springframework.repository.query.StringBasedArangoQuery;
 public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final ArangoOperations arangoOperations;
-	private final ArangoMappingContext context;
+	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
 	public ArangoRepositoryFactory(final ArangoOperations arangoOperations) {
 		this.arangoOperations = arangoOperations;
-		this.context = (ArangoMappingContext) arangoOperations.getConverter().getMappingContext();
+		this.context = arangoOperations.getConverter().getMappingContext();
 	}
 
 	@SuppressWarnings("unchecked")

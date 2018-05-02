@@ -43,6 +43,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
@@ -50,7 +51,6 @@ import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
 
 import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
@@ -75,7 +75,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	private final DisjunctionBuilder disjunctionBuilder = new DisjunctionBuilder(this);
-	private final ArangoMappingContext context;
+	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final String collectionName;
 	private final PartTree tree;
 	private final Map<String, Object> bindVars;
@@ -89,7 +89,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	private int varsUsed = 0;
 	private boolean checkUnique = false;
 
-	public DerivedQueryCreator(final ArangoMappingContext context, final Class<?> domainClass, final PartTree tree,
+	public DerivedQueryCreator(final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context, final Class<?> domainClass, final PartTree tree,
 		final ArangoParameterAccessor accessor, final Map<String, Object> bindVars, final List<String> geoFields,
 		final boolean useFunctions) {
 		super(tree, accessor);

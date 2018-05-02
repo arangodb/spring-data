@@ -24,13 +24,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.parser.PartTree;
 
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.IndexType;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.mapping.ArangoMappingContext;
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 
 /**
@@ -43,13 +45,13 @@ import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator
 public class DerivedArangoQuery extends AbstractArangoQuery {
 
 	private final PartTree tree;
-	private final ArangoMappingContext context;
+	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final List<String> geoFields;
 
 	public DerivedArangoQuery(ArangoQueryMethod method, ArangoOperations operations) {
 		super(method, operations);
 		this.tree = new PartTree(method.getName(), this.domainClass);
-		this.context = (ArangoMappingContext) operations.getConverter().getMappingContext();
+		this.context = operations.getConverter().getMappingContext();
 		this.geoFields = getGeoFields();
 	}
 
