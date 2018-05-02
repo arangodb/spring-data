@@ -59,10 +59,6 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options) {
 
-		if (method.isPageQuery()) {
-			options.fullCount(true);
-		}
-
 		return new DerivedQueryCreator(context, domainClass, tree, accessor, bindVars, geoFields,
 				operations.getVersion().getVersion().compareTo("3.2.0") < 0).createQuery();
 	}

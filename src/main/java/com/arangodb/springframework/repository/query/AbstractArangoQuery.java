@@ -110,12 +110,19 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	public Object execute(Object[] parameters) {
 		final ArangoParameterAccessor accessor = new ArangoParametersParameterAccessor(method, parameters);
 		final Map<String, Object> bindVars = new HashMap<>();
+		
 		AqlQueryOptions options = mergeQueryOptions(method.getAnnotatedQueryOptions(), accessor.getQueryOptions());
 		if (options == null) {
 			options = new AqlQueryOptions();
 		}
+		
+		if (method.isPageQuery()) {
+			options.fullCount(true);
+		}
+		
 		final String query = createQuery(accessor, bindVars, options);
-		return convertResult(operations.query(query, bindVars, options, getResultClass()), accessor);
+		final ArangoCursor<?> result = operations.query(query, bindVars, options, getResultClass());
+		return convertResult(result, accessor);
 	}
 
 	@Override
@@ -182,16 +189,19 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	}
 
 	private Class<?> getResultClass() {
-		if (isCountQuery() || isExistsQuery()) {
+		if (isExistsQuery()) {
 			return Integer.class;
 		}
 		if (method.isGeoQuery()) {
 			return Object.class;
 		}
-		if (DESERIALIZABLE_TYPES.contains(method.getReturnType())) {
-			return method.getReturnType();
-		}
-		return domainClass;
+//		if (DESERIALIZABLE_TYPES.contains(method.getReturnType())) {
+//			return method.getReturnType();
+//		}
+//		return domainClass;
+		System.out.println(method.getReturnedObjectType());
+		System.out.println(method.getReturnType());
+		return method.getReturnedObjectType();
 	}
 
 	private Object convertResult(final ArangoCursor<?> result, ArangoParameterAccessor accessor) {
