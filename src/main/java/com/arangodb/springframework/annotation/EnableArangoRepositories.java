@@ -67,7 +67,7 @@ public @interface EnableArangoRepositories {
 
 	/**
 	 * Configures the location of the Spring Data named queries properties file. Defaults to
-	 * {@code META-INFO/arango-named-queries.properties}.
+	 * {@code META-INF/arango-named-queries.properties}.
 	 */
 	String namedQueriesLocation() default "";
 
