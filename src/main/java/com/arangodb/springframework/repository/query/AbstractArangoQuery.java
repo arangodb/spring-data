@@ -47,8 +47,8 @@ import com.arangodb.velocypack.VPackSlice;
 
 /**
  * 
- * @author Andrew Fleming
  * @author Audrius Malele
+ * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
  */

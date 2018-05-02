@@ -36,8 +36,8 @@ import com.arangodb.springframework.repository.ArangoRepositoriesRegistrar;
 import com.arangodb.springframework.repository.ArangoRepositoryFactoryBean;
 
 /**
- * 
- * @author Andrew Fleming
+ * @author Audrius Malele
+ * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
  */

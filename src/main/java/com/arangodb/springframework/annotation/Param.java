@@ -28,7 +28,8 @@ import java.lang.annotation.Target;
 /**
  * Deprecated. Please use {@link org.springframework.data.repository.query.Param} instead.
  * 
- * @author Andrew Fleming
+ * @author Audrius Malele
+ * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
  */

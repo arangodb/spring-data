@@ -32,7 +32,8 @@ import com.arangodb.springframework.annotation.Edge;
 
 /**
  * 
- * @author Andrew Fleming
+ * @author Audrius Malele
+ * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
  */

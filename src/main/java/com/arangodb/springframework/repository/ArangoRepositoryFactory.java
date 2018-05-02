@@ -41,7 +41,8 @@ import com.arangodb.springframework.repository.query.StringBasedArangoQuery;
 
 /**
  * 
- * @author Andrew Fleming
+ * @author Audrius Malele
+ * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
  */
