@@ -20,30 +20,16 @@
 
 package com.arangodb.springframework.repository.query;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.entity.BaseDocument;
-import com.arangodb.entity.BaseEdgeDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * 
@@ -53,46 +39,6 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Christian Lechner
  */
 public abstract class AbstractArangoQuery implements RepositoryQuery {
-
-	private static final Set<Class<?>> DESERIALIZABLE_TYPES = new HashSet<>();
-
-	static {
-		DESERIALIZABLE_TYPES.add(Map.class);
-		DESERIALIZABLE_TYPES.add(BaseDocument.class);
-		DESERIALIZABLE_TYPES.add(BaseEdgeDocument.class);
-		DESERIALIZABLE_TYPES.add(String.class);
-		DESERIALIZABLE_TYPES.add(Boolean.class);
-		DESERIALIZABLE_TYPES.add(boolean.class);
-		DESERIALIZABLE_TYPES.add(Integer.class);
-		DESERIALIZABLE_TYPES.add(int.class);
-		DESERIALIZABLE_TYPES.add(Long.class);
-		DESERIALIZABLE_TYPES.add(long.class);
-		DESERIALIZABLE_TYPES.add(Short.class);
-		DESERIALIZABLE_TYPES.add(short.class);
-		DESERIALIZABLE_TYPES.add(Double.class);
-		DESERIALIZABLE_TYPES.add(double.class);
-		DESERIALIZABLE_TYPES.add(Float.class);
-		DESERIALIZABLE_TYPES.add(float.class);
-		DESERIALIZABLE_TYPES.add(BigInteger.class);
-		DESERIALIZABLE_TYPES.add(BigDecimal.class);
-		DESERIALIZABLE_TYPES.add(Number.class);
-		DESERIALIZABLE_TYPES.add(Character.class);
-		DESERIALIZABLE_TYPES.add(char.class);
-		DESERIALIZABLE_TYPES.add(Date.class);
-		DESERIALIZABLE_TYPES.add(java.sql.Date.class);
-		DESERIALIZABLE_TYPES.add(java.sql.Timestamp.class);
-		DESERIALIZABLE_TYPES.add(VPackSlice.class);
-		DESERIALIZABLE_TYPES.add(UUID.class);
-		DESERIALIZABLE_TYPES.add(byte[].class);
-		DESERIALIZABLE_TYPES.add(Byte.class);
-		DESERIALIZABLE_TYPES.add(byte.class);
-		DESERIALIZABLE_TYPES.add(Enum.class);
-		DESERIALIZABLE_TYPES.add(Instant.class);
-		DESERIALIZABLE_TYPES.add(LocalDate.class);
-		DESERIALIZABLE_TYPES.add(LocalDateTime.class);
-		DESERIALIZABLE_TYPES.add(OffsetDateTime.class);
-		DESERIALIZABLE_TYPES.add(ZonedDateTime.class);
-	}
 
 	protected final ArangoQueryMethod method;
 	protected final ArangoOperations operations;
@@ -110,16 +56,16 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	public Object execute(Object[] parameters) {
 		final ArangoParameterAccessor accessor = new ArangoParametersParameterAccessor(method, parameters);
 		final Map<String, Object> bindVars = new HashMap<>();
-		
+
 		AqlQueryOptions options = mergeQueryOptions(method.getAnnotatedQueryOptions(), accessor.getQueryOptions());
 		if (options == null) {
 			options = new AqlQueryOptions();
 		}
-		
+
 		if (method.isPageQuery()) {
 			options.fullCount(true);
 		}
-		
+
 		final String query = createQuery(accessor, bindVars, options);
 		final ArangoCursor<?> result = operations.query(query, bindVars, options, getResultClass());
 		return convertResult(result, accessor);
@@ -130,6 +76,19 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		return method;
 	}
 
+	/**
+	 * Implementations should create an AQL query with the given
+	 * {@link com.arangodb.springframework.repository.query.ArangoParameterAccessor} and set necessary binding
+	 * parameters and query options.
+	 * 
+	 * @param accessor
+	 *            provides access to the actual arguments
+	 * @param bindVars
+	 *            the binding parameter map
+	 * @param options
+	 *            contains the merged {@link com.arangodb.model.AqlQueryOptions}
+	 * @return the created AQL query
+	 */
 	protected abstract String createQuery(
 		ArangoParameterAccessor accessor,
 		Map<String, Object> bindVars,
@@ -195,12 +154,6 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		if (method.isGeoQuery()) {
 			return Object.class;
 		}
-//		if (DESERIALIZABLE_TYPES.contains(method.getReturnType())) {
-//			return method.getReturnType();
-//		}
-//		return domainClass;
-		System.out.println(method.getReturnedObjectType());
-		System.out.println(method.getReturnType());
 		return method.getReturnedObjectType();
 	}
 
