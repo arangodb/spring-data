@@ -32,8 +32,6 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.StringUtils;
 
 import com.arangodb.model.AqlQueryOptions;
@@ -125,20 +123,12 @@ public class ArangoQueryMethod extends QueryMethod {
 	}
 
 	public boolean isGeoQuery() {
-		// maybe we should also unwrap the return type (e.g. Optional<Entity> => Entity) like parent class
 		Class<?> returnType = method.getReturnType();
-
 		for (Class<?> type : GEO_TYPES) {
 			if (type.isAssignableFrom(returnType)) {
 				return true;
 			}
 		}
-
-		if (Iterable.class.isAssignableFrom(returnType)) {
-			TypeInformation<?> returnTypeInfo = ClassTypeInformation.fromReturnTypeOf(method);
-			return GeoResult.class.equals(returnTypeInfo.getRequiredComponentType().getType());
-		}
-
 		return false;
 	}
 
