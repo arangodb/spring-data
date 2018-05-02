@@ -31,7 +31,6 @@ import com.arangodb.springframework.testdata.Customer;
 
 /**
  * 
- * @author Andrew Fleming
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
