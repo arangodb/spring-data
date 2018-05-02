@@ -123,8 +123,8 @@ public class ArangoQueryMethod extends QueryMethod {
 	}
 
 	public boolean isGeoQuery() {
-		Class<?> returnType = method.getReturnType();
-		for (Class<?> type : GEO_TYPES) {
+		final Class<?> returnType = method.getReturnType();
+		for (final Class<?> type : GEO_TYPES) {
 			if (type.isAssignableFrom(returnType)) {
 				return true;
 			}
