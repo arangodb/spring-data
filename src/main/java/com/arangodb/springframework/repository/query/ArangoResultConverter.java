@@ -232,6 +232,7 @@ public class ArangoResultConverter {
 	}
 
 	public GeoPage<?> convertGeoPage() {
+		Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
 		return new GeoPage<>(buildGeoResults(result), accessor.getPageable(), result.getStats().getFullCount());
 	}
 
