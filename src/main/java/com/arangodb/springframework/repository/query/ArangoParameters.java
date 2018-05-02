@@ -55,9 +55,10 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 	public ArangoParameters(final Method method) {
 		super(method);
 		assertSingleSpecialParameter(ArangoParameter::isQueryOptions,
-			"Multiple AqlQueryOptions parameters are not allowed!");
-		assertSingleSpecialParameter(ArangoParameter::isBindVars, "Multiple @BindVars parameters are not allowed!");
-		assertNonDuplicateParamNames();
+			"Multiple AqlQueryOptions parameters are not allowed! Offending method: " + method);
+		assertSingleSpecialParameter(ArangoParameter::isBindVars,
+			"Multiple @BindVars parameters are not allowed! Offending method: " + method);
+		assertNonDuplicateParamNames(method);
 		this.queryOptionsIndex = getIndexOfSpecialParameter(ArangoParameter::isQueryOptions);
 		this.bindVarsIndex = getIndexOfSpecialParameter(ArangoParameter::isBindVars);
 	}
@@ -116,7 +117,7 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		}
 	}
 
-	private void assertNonDuplicateParamNames() {
+	private void assertNonDuplicateParamNames(final Method method) {
 		final ArangoParameters bindableParams = getBindableParameters();
 		final int bindableParamsSize = bindableParams.getNumberOfParameters();
 		final Set<String> paramNames = new HashSet<>(bindableParamsSize);
@@ -124,7 +125,8 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 			final ArangoParameter param = bindableParams.getParameter(i);
 			final Optional<String> name = param.getName();
 			if (name.isPresent()) {
-				Assert.isTrue(!paramNames.contains(name.get()), "Duplicate parameter name!");
+				Assert.isTrue(!paramNames.contains(name.get()),
+					"Duplicate parameter name! Offending method: " + method);
 				paramNames.add(name.get());
 			}
 		}
@@ -135,8 +137,6 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("^@?[A-Za-z0-9][A-Za-z0-9_]*$");
 		private static final String NAMED_PARAMETER_TEMPLATE = "@%s";
 		private static final String POSITION_PARAMETER_TEMPLATE = "@%d";
-
-		private static final String INCORRECT_BIND_PARAM_TYPE = "@BindVars parameter must be of type Map<String,Object>!";
 
 		private final MethodParameter parameter;
 
@@ -192,27 +192,31 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 			if (isExplicitlyNamed()) {
 				final String name = getName().get();
 				final boolean matches = BIND_PARAM_PATTERN.matcher(name).matches();
-				Assert.isTrue(matches, "@Param has invalid format!");
+				Assert.isTrue(matches, "@Param has invalid format! Offending parameter: parameter "
+						+ parameter.getParameterIndex() + " on method " + parameter.getMethod());
 			}
 		}
 
 		private void assertCorrectBindVarsType() {
+			final String errorMsg = "@BindVars parameter must be of type Map<String, Object>! Offending parameter: parameter "
+					+ parameter.getParameterIndex() + " on method " + parameter.getMethod();
+
 			if (isBindVars()) {
-				Assert.isTrue(Map.class.equals(parameter.getParameterType()), INCORRECT_BIND_PARAM_TYPE);
+				Assert.isTrue(Map.class.equals(parameter.getParameterType()), errorMsg);
 
 				final Type type = parameter.getGenericParameterType();
-				Assert.isTrue(ParameterizedType.class.isInstance(type), INCORRECT_BIND_PARAM_TYPE);
+				Assert.isTrue(ParameterizedType.class.isInstance(type), errorMsg);
 
 				final Type[] genericTypes = ((ParameterizedType) type).getActualTypeArguments();
-				Assert.isTrue(genericTypes.length == 2, INCORRECT_BIND_PARAM_TYPE);
+				Assert.isTrue(genericTypes.length == 2, errorMsg);
 
 				final Type keyType = genericTypes[0];
 				final Type valueType = genericTypes[1];
 
-				Assert.isTrue(Class.class.isInstance(keyType), INCORRECT_BIND_PARAM_TYPE);
-				Assert.isTrue(Class.class.isInstance(valueType), INCORRECT_BIND_PARAM_TYPE);
-				Assert.isTrue(String.class.equals(keyType), INCORRECT_BIND_PARAM_TYPE);
-				Assert.isTrue(Object.class.equals(valueType), INCORRECT_BIND_PARAM_TYPE);
+				Assert.isTrue(Class.class.isInstance(keyType), errorMsg);
+				Assert.isTrue(Class.class.isInstance(valueType), errorMsg);
+				Assert.isTrue(String.class.equals(keyType), errorMsg);
+				Assert.isTrue(Object.class.equals(valueType), errorMsg);
 			}
 		}
 
