@@ -79,6 +79,25 @@ public interface MyRepository extends Repository<Customer, String>{
 }
 ```
 
+## Named queries
+An alternative to using the `@Query` annotation on methods is specifying them in a separate `.properties` file. The default path for the file is `META-INF/arango-named-queries.properties` and can be changed with the `EnableArangoRepositories#namedQueriesLocation()` setting. The entries in the properties file must adhere to the following convention: `{simple entity name}.{method name} = {query}`. Let's assume we have the following repository interface:
+
+```java
+package com.arangodb.repository;
+
+public interface CustomerRepository extends ArangoRepository<Customer> {
+    Customer findByUsername(@Param("username") String username);
+}
+```
+
+The corresponding `arango-named-queries.properties` file:
+
+```properties
+Customer.findByUsername = FOR c IN customers FILTER c.username == @username RETURN c
+```
+
+The queries specified in the properties file are no different than the queries that can be defined with the @ Query annotation. The only difference is that they are all in one place.
+
 ## Derived queries
 
 Spring Data ArangoDB supports queries derived from methods names by splitting it into its semantic parts and converting into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `stream..By`, `count..By`, `exists..By`, `delete..By`, `remove..By` from the method and parses the rest. The By acts as a separator to indicate the start of the criteria for the query to be built. You can define conditions on entity properties and concatenate them with `And` and `Or`.
@@ -136,7 +155,7 @@ You can apply sorting for one or multiple sort criteria by appending `OrderBy` t
 public interface MyRepository extends Repository<Customer, String> {
 
   // FOR c IN customers
-  // FITLER c.name == @0
+  // FILTER c.name == @0
   // SORT c.age DESC RETURN c
   ArangoCursor<Customer> getByNameOrderByAgeDesc(String name);
 
@@ -231,7 +250,7 @@ public interface MyRepository extends Repository<Customer, String> {
 
 ### Bind parameters
 
-AQL supports the usage of [bind parameters](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html) which you can define with a method parameter named `bindVars` of type `Map<String, Object>`.
+AQL supports the usage of [bind parameters](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html) which you can define with a method parameter annotated with `@BindVars` of type `Map<String, Object>`.
 
 ```java
 public interface MyRepository extends Repository<Customer, String> {
