@@ -32,7 +32,7 @@ import com.arangodb.springframework.config.AbstractArangoConfiguration;
  */
 @Configuration
 @EnableArangoRepositories(basePackages = {
-		"com.arangodb.springframework.repository" }, namedQueriesLocation = "classpath*:arango-named-queries.properties")
+		"com.arangodb.springframework.repository" }, namedQueriesLocation = "classpath*:arango-named-queries-test.properties")
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
 	public static final String DB = "spring-test-db";
