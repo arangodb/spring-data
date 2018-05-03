@@ -1,7 +1,7 @@
 /*
  * DISCLAIMER
  *
- * Copyright 2017 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2018 ArangoDB GmbH, Cologne, Germany
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,26 +18,18 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework.repository;
 
-import org.springframework.data.convert.EntityConverter;
+import java.io.Serializable;
 
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import org.springframework.data.repository.core.EntityInformation;
 
 /**
- * @author Mark Vollmary
- * @author Christian Lechner
  *
+ * @author Christian Lechner
  */
-public interface ArangoConverter
-		extends EntityConverter<ArangoPersistentEntity<?>, ArangoPersistentProperty, Object, DBEntity>,
-		ArangoEntityReader, ArangoEntityWriter {
+public interface ArangoEntityInformation<T, ID extends Serializable> extends EntityInformation<T, ID> {
 
-	boolean isCollectionType(Class<?> type);
-
-	boolean isEntityType(Class<?> type);
-
-	ArangoTypeMapper getTypeMapper();
+	String getCollection();
 
 }

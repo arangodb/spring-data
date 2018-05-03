@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -42,6 +43,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
@@ -49,7 +51,6 @@ import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
 
 import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
@@ -74,7 +75,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	private final DisjunctionBuilder disjunctionBuilder = new DisjunctionBuilder(this);
-	private final ArangoMappingContext context;
+	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final String collectionName;
 	private final PartTree tree;
 	private final Map<String, Object> bindVars;
@@ -88,9 +89,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	private int varsUsed = 0;
 	private boolean checkUnique = false;
 
-	public DerivedQueryCreator(final ArangoMappingContext context, final Class<?> domainClass, final PartTree tree,
-		final ArangoParameterAccessor accessor, final Map<String, Object> bindVars, final List<String> geoFields,
-		final boolean useFunctions) {
+	public DerivedQueryCreator(
+			final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
+			final Class<?> domainClass, final PartTree tree, final ArangoParameterAccessor accessor,
+			final Map<String, Object> bindVars, final List<String> geoFields, final boolean useFunctions) {
 		super(tree, accessor);
 		this.context = context;
 		this.collectionName = collectionName(context.getPersistentEntity(domainClass).getCollection());
@@ -141,9 +143,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Builds a full AQL query from a built Disjunction, additional information from PartTree and special parameters
-	 * caught by ArangoParameterAccessor
-	 * 
+	 * Builds a full AQL query from a built Disjunction, additional information from
+	 * PartTree and special parameters caught by ArangoParameterAccessor
+	 *
 	 * @param criteria
 	 * @param sort
 	 * @return
@@ -158,28 +160,27 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		}
 		final Disjunction disjunction = disjunctionBuilder.build();
 		final String array = disjunction.getArray().length() == 0 ? collectionName : disjunction.getArray();
-		final String predicate = disjunction.getPredicate().length() == 0 ? ""
-				: " FILTER " + disjunction.getPredicate();
+		final String predicate = disjunction.getPredicate().length() == 0 ? "" : " FILTER " + disjunction.getPredicate();
 		final String queryTemplate = "%sFOR e IN %s%s%s%s%s%s%s"; // collection predicate count sort limit pageable
-																	// queryType
+		// queryType
 		final String count = (tree.isCountProjection() || tree.isExistsProjection())
-				? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length") : "";
-		final String limit = tree.isLimiting() ? String.format(" LIMIT %d", tree.getMaxResults()) : "";
+				? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length")
+				: "";
+		final String limit = tree.isLimiting() ? format(" LIMIT %d", tree.getMaxResults()) : "";
 		final String pageable = accessor.getPageable() == null ? ""
-				: String.format(" LIMIT %d, %d", accessor.getPageable().getOffset(),
-					accessor.getPageable().getPageSize());
-		final String geoFields = String.format("%s[0], %s[1]", uniqueLocation, uniqueLocation);
+				: format(" LIMIT %d, %d", accessor.getPageable().getOffset(), accessor.getPageable().getPageSize());
+		final String geoFields = format("%s[0], %s[1]", uniqueLocation, uniqueLocation);
 		final String distanceAdjusted = getGeoFields().isEmpty() ? "e"
-				: String.format("MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields, getUniquePoint()[0],
-					getUniquePoint()[1]);
+				: format("MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields, getUniquePoint()[0],
+						getUniquePoint()[1]);
 		final String type = tree.isDelete() ? (" REMOVE e IN " + collectionName)
 				: ((tree.isCountProjection() || tree.isExistsProjection()) ? " RETURN length"
-						: String.format(" RETURN %s", distanceAdjusted));
+						: format(" RETURN %s", distanceAdjusted));
 		String sortString = buildSortString(sort);
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
-			final String distanceSortKey = String.format(" SORT distance(%s, %f, %f)", geoFields, getUniquePoint()[0],
-				getUniquePoint()[1]);
+			final String distanceSortKey = format(" SORT distance(%s, %f, %f)", geoFields, getUniquePoint()[0],
+					getUniquePoint()[1]);
 			if (sortString.length() == 0) {
 				sortString = distanceSortKey;
 			} else {
@@ -189,13 +190,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		final String withCollections = disjunction.getWith().stream()
 				.map(c -> collectionName(context.getPersistentEntity(c).getCollection())).distinct()
 				.collect(Collectors.joining(", "));
-		final String with = withCollections.isEmpty() ? "" : String.format("WITH %s ", withCollections);
-		return String.format(queryTemplate, with, array, predicate, count, sortString, limit, pageable, type);
+		final String with = withCollections.isEmpty() ? "" : format("WITH %s ", withCollections);
+		return format(queryTemplate, with, array, predicate, count, sortString, limit, pageable, type);
 	}
 
 	/**
 	 * Builds a String representing SORT statement from a given Sort object
-	 * 
+	 *
 	 * @param sort
 	 * @return
 	 */
@@ -206,8 +207,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		final StringBuilder sortBuilder = new StringBuilder(sort == null ? "" : " SORT");
 		if (sort != null) {
 			for (final Sort.Order order : sort) {
-				sortBuilder.append(
-					(sortBuilder.length() == 5 ? " " : ", ") + "e." + order.getProperty() + " " + order.getDirection());
+				sortBuilder
+						.append((sortBuilder.length() == 5 ? " " : ", ") + "e." + order.getProperty() + " " + order.getDirection());
 			}
 		}
 		return sortBuilder.toString();
@@ -215,7 +216,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 
 	/**
 	 * Escapes special characters which could be used in an operand of LIKE operator
-	 * 
+	 *
 	 * @param string
 	 * @return
 	 */
@@ -236,8 +237,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Wrapps property expression in order to lower case. Only properties of type String or Iterable<String> are lowered
-	 * 
+	 * Wrapps property expression in order to lower case. Only properties of type
+	 * String or Iterable<String> are lowered
+	 *
 	 * @param part
 	 * @param property
 	 * @return
@@ -249,25 +251,26 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		if (!part.getProperty().getLeafProperty().isCollection()) {
 			return "LOWER(" + property + ")";
 		}
-		return String.format("(FOR i IN TO_ARRAY(%s) RETURN LOWER(i))", property);
+		return format("(FOR i IN TO_ARRAY(%s) RETURN LOWER(i))", property);
 	}
 
 	/**
 	 * Returns a String representing a full propertyPath e.g. "e.product.name"
-	 * 
+	 *
 	 * @param part
 	 * @return
 	 */
 	private String getProperty(final Part part) {
-		return "e." + context.getPersistentPropertyPath(part.getProperty()).toPath(null,
-			ArangoPersistentProperty::getFieldName);
+		return "e."
+				+ context.getPersistentPropertyPath(part.getProperty()).toPath(null, ArangoPersistentProperty::getFieldName);
 	}
 
 	/**
-	 * Creates a predicate template with one String placeholder for a Part-specific predicate expression from properties
-	 * in PropertyPath which represent references or collections, and, also, returns a 2nd String representing property
-	 * to be used in a Part-specific predicate expression
-	 * 
+	 * Creates a predicate template with one String placeholder for a Part-specific
+	 * predicate expression from properties in PropertyPath which represent
+	 * references or collections, and, also, returns a 2nd String representing
+	 * property to be used in a Part-specific predicate expression
+	 *
 	 * @param part
 	 * @return
 	 */
@@ -290,7 +293,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				final String nested = simpleProperties.toString();
 				final Relations relations = property.getRelations().get();
 				final String direction = relations.direction().name();
-				final String depths = String.format("%s..%d", relations.minDepth(), relations.maxDepth());
+				final String depths = format("%s..%d", relations.minDepth(), relations.maxDepth());
 				final Class<?>[] edgeClasses = relations.edges();
 				final StringBuilder edgesBuilder = new StringBuilder();
 				for (final Class<?> edge : edgeClasses) {
@@ -304,10 +307,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				final String entity = "e" + Integer.toString(++varsUsed);
 				final String edges = edgesBuilder.toString();
 				simpleProperties = new StringBuilder();
-				final String iteration = String.format(TEMPLATE, entity, depths, direction, prevEntity, nested, edges);
-				final String predicate = String.format(PREDICATE_TEMPLATE, iteration);
-				predicateTemplate = predicateTemplate.length() == 0 ? predicate
-						: String.format(predicateTemplate, predicate);
+				final String iteration = format(TEMPLATE, entity, depths, direction, prevEntity, nested, edges);
+				final String predicate = format(PREDICATE_TEMPLATE, iteration);
+				predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
 			} else if (property.isCollectionLike()) {
 				if (property.getRef().isPresent()) {
 					// collection of references
@@ -320,10 +322,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 					}
 					final String name = simpleProperties.toString() + "." + property.getFieldName();
 					simpleProperties = new StringBuilder();
-					final String iteration = String.format(TEMPLATE, entity, collection, entity, prevEntity, name);
-					final String predicate = String.format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate
-							: String.format(predicateTemplate, predicate);
+					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
+					final String predicate = format(PREDICATE_TEMPLATE, iteration);
+					predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
 				} else {
 					// collection
 					final String TEMPLATE = "FOR %s IN TO_ARRAY(%s%s)";
@@ -331,10 +332,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 					final String entity = "e" + Integer.toString(++varsUsed);
 					final String name = simpleProperties.toString() + "." + property.getFieldName();
 					simpleProperties = new StringBuilder();
-					final String iteration = String.format(TEMPLATE, entity, prevEntity, name);
-					final String predicate = String.format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate
-							: String.format(predicateTemplate, predicate);
+					final String iteration = format(TEMPLATE, entity, prevEntity, name);
+					final String predicate = format(PREDICATE_TEMPLATE, iteration);
+					predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
 				}
 			} else {
 				if (property.getRef().isPresent() || property.getFrom().isPresent() || property.getTo().isPresent()) {
@@ -348,10 +348,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 					}
 					final String name = simpleProperties.toString() + "." + property.getFieldName();
 					simpleProperties = new StringBuilder();
-					final String iteration = String.format(TEMPLATE, entity, collection, entity, prevEntity, name);
-					final String predicate = String.format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate
-							: String.format(predicateTemplate, predicate);
+					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
+					final String predicate = format(PREDICATE_TEMPLATE, iteration);
+					predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
 				} else {
 					// simple property
 					simpleProperties.append("." + property.getFieldName());
@@ -363,8 +362,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Lowers case of a given argument if its type is String, Iterable<String> or String[] if shouldIgnoreCase is true
-	 * 
+	 * Lowers case of a given argument if its type is String, Iterable<String> or
+	 * String[] if shouldIgnoreCase is true
+	 *
 	 * @param argument
 	 * @param shouldIgnoreCase
 	 * @return
@@ -393,9 +393,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Determines whether the case for a Part should be ignored based on property type and IgnoreCase keywords in the
-	 * method name
-	 * 
+	 * Determines whether the case for a Part should be ignored based on property
+	 * type and IgnoreCase keywords in the method name
+	 *
 	 * @param part
 	 * @return
 	 */
@@ -412,8 +412,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Puts actual arguments in bindVars Map based on Part-specific information and types of arguments.
-	 * 
+	 * Puts actual arguments in bindVars Map based on Part-specific information and
+	 * types of arguments.
+	 *
 	 * @param iterator
 	 * @param shouldIgnoreCase
 	 * @param arguments
@@ -421,12 +422,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	 * @param ignoreBindVars
 	 * @return
 	 */
-	private ArgumentProcessingResult bindArguments(
-		final Iterator<Object> iterator,
-		final boolean shouldIgnoreCase,
-		final int arguments,
-		final Boolean borderStatus,
-		final boolean ignoreBindVars) {
+	private ArgumentProcessingResult bindArguments(final Iterator<Object> iterator, final boolean shouldIgnoreCase,
+			final int arguments, final Boolean borderStatus, final boolean ignoreBindVars) {
 		int bindings = 0;
 		ArgumentProcessingResult.Type type = ArgumentProcessingResult.Type.DEFAULT;
 		for (int i = 0; i < arguments; ++i) {
@@ -472,8 +469,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				checkUniquePoint(circle.getCenter());
 				bindVars.put(Integer.toString(bindingCounter + bindings++), circle.getCenter().getY());
 				bindVars.put(Integer.toString(bindingCounter + bindings++), circle.getCenter().getX());
-				bindVars.put(Integer.toString(bindingCounter + bindings++),
-					convertDistanceToMeters(circle.getRadius()));
+				bindVars.put(Integer.toString(bindingCounter + bindings++), convertDistanceToMeters(circle.getRadius()));
 				break;
 			} else if (caseAdjusted.getClass() == Point.class) {
 				final Point point = (Point) caseAdjusted;
@@ -504,9 +500,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Ensures that Points used in geospatial parts of non-nested properties are the same in case geospatial return type
-	 * is expected
-	 * 
+	 * Ensures that Points used in geospatial parts of non-nested properties are the
+	 * same in case geospatial return type is expected
+	 *
 	 * @param point
 	 */
 	private void checkUniquePoint(final Point point) {
@@ -519,7 +515,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		}
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(uniquePoint == null || uniquePoint.equals(point),
-				"Different Points are used - Distance is ambiguous");
+					"Different Points are used - Distance is ambiguous");
 			uniquePoint = point;
 		}
 	}
@@ -541,9 +537,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Ensures that the same geo fields are used in geospatial parts of non-nested properties are the same in case
-	 * geospatial return type is expected
-	 * 
+	 * Ensures that the same geo fields are used in geospatial parts of non-nested
+	 * properties are the same in case geospatial return type is expected
+	 *
 	 * @param part
 	 */
 	private void checkUniqueLocation(final Part part) {
@@ -559,9 +555,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Creates a PartInformation containing a String representing either a predicate or array expression, and binds
-	 * arguments from Iterator for a given Part
-	 * 
+	 * Creates a PartInformation containing a String representing either a predicate
+	 * or array expression, and binds arguments from Iterator for a given Part
+	 *
 	 * @param part
 	 * @param iterator
 	 * @return
@@ -582,121 +578,122 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		if (collectionName.split("-").length > 1) {
 			collectionName = "`" + collectionName + "`";
 		}
-		// TODO possibly refactor in the future if the complexity of this block does not increase
+		// TODO possibly refactor in the future if the complexity of this block does not
+		// increase
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:
 			isArray = false;
-			clause = String.format("%s == @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s == @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case NEGATING_SIMPLE_PROPERTY:
 			isArray = false;
-			clause = String.format("%s != @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s != @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case TRUE:
 			isArray = false;
-			clause = String.format("%s == true", ignorePropertyCase(part, property));
+			clause = format("%s == true", ignorePropertyCase(part, property));
 			break;
 		case FALSE:
 			isArray = false;
-			clause = String.format("%s == false", ignorePropertyCase(part, property));
+			clause = format("%s == false", ignorePropertyCase(part, property));
 			break;
 		case IS_NULL:
 			isArray = false;
-			clause = String.format("%s == null", ignorePropertyCase(part, property));
+			clause = format("%s == null", ignorePropertyCase(part, property));
 			break;
 		case IS_NOT_NULL:
 			isArray = false;
-			clause = String.format("%s != null", ignorePropertyCase(part, property));
+			clause = format("%s != null", ignorePropertyCase(part, property));
 			break;
 		case EXISTS:
 			isArray = false;
-			clause = String.format("HAS(%s, '%s')", property.substring(0, property.lastIndexOf(".")),
-				property.substring(property.lastIndexOf(".") + 1, property.length()));
+			clause = format("HAS(%s, '%s')", property.substring(0, property.lastIndexOf(".")),
+					property.substring(property.lastIndexOf(".") + 1, property.length()));
 			break;
 		case BEFORE:
 		case LESS_THAN:
 			isArray = false;
-			clause = String.format("%s < @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s < @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case AFTER:
 		case GREATER_THAN:
 			isArray = false;
-			clause = String.format("%s > @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s > @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case LESS_THAN_EQUAL:
 			isArray = false;
-			clause = String.format("%s <= @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s <= @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case GREATER_THAN_EQUAL:
 			isArray = false;
-			clause = String.format("%s >= @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s >= @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case BETWEEN:
 			isArray = false;
-			clause = String.format("@%d <= %s AND %s <= @%d", bindingCounter, ignorePropertyCase(part, property),
-				ignorePropertyCase(part, property), bindingCounter + 1);
+			clause = format("@%d <= %s AND %s <= @%d", bindingCounter, ignorePropertyCase(part, property),
+					ignorePropertyCase(part, property), bindingCounter + 1);
 			arguments = 2;
 			break;
 		case LIKE:
 			isArray = false;
-			clause = String.format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case NOT_LIKE:
 			isArray = false;
-			clause = String.format("NOT(%s LIKE @%d)", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("NOT(%s LIKE @%d)", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case STARTING_WITH:
 			isArray = false;
-			clause = String.format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			borderStatus = true;
 			break;
 		case ENDING_WITH:
 			isArray = false;
-			clause = String.format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			borderStatus = false;
 			break;
 		case REGEX:
 			isArray = false;
-			clause = String.format("REGEX_TEST(%s, @%d, %b)", ignorePropertyCase(part, property), bindingCounter,
-				shouldIgnoreCase(part));
+			clause = format("REGEX_TEST(%s, @%d, %b)", ignorePropertyCase(part, property), bindingCounter,
+					shouldIgnoreCase(part));
 			arguments = 1;
 			break;
 		case IN:
 			isArray = false;
-			clause = String.format("%s IN @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s IN @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case NOT_IN:
 			isArray = false;
-			clause = String.format("%s NOT IN @%d", ignorePropertyCase(part, property), bindingCounter);
+			clause = format("%s NOT IN @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
 		case CONTAINING:
 			isArray = false;
-			clause = String.format("@%d IN %s", bindingCounter, ignorePropertyCase(part, property));
+			clause = format("@%d IN %s", bindingCounter, ignorePropertyCase(part, property));
 			arguments = 1;
 			break;
 		case NOT_CONTAINING:
 			isArray = false;
-			clause = String.format("@%d NOT IN %s", bindingCounter, ignorePropertyCase(part, property));
+			clause = format("@%d NOT IN %s", bindingCounter, ignorePropertyCase(part, property));
 			arguments = 1;
 			break;
 		case NEAR:
 			checkUniqueLocation(part);
 			if (useFunctions) {
 				isArray = true;
-				clause = String.format("NEAR(%s, @%d, @%d, COUNT(%s), '_distance')", collectionName, bindingCounter,
-					bindingCounter + 1, collectionName);
+				clause = format("NEAR(%s, @%d, @%d, COUNT(%s), '_distance')", collectionName, bindingCounter,
+						bindingCounter + 1, collectionName);
 				if (geoFields.isEmpty()) {
 					clause = unsetDistance(clause);
 				}
@@ -709,60 +706,58 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			checkUniqueLocation(part);
 			if (useFunctions) {
 				isArray = true;
-				clause = String.format("WITHIN(%s, @%d, @%d, @%d, '_distance')", collectionName, bindingCounter,
-					bindingCounter + 1, bindingCounter + 2);
+				clause = format("WITHIN(%s, @%d, @%d, @%d, '_distance')", collectionName, bindingCounter, bindingCounter + 1,
+						bindingCounter + 2);
 				if (geoFields.isEmpty()) {
 					clause = unsetDistance(clause);
 				}
 			} else {
 				isArray = false;
-				clause = String.format("distance(%s[0], %s[1], @%d, @%d) <= @%d", ignorePropertyCase(part, property),
-					ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1, bindingCounter + 2);
+				clause = format("distance(%s[0], %s[1], @%d, @%d) <= @%d", ignorePropertyCase(part, property),
+						ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1, bindingCounter + 2);
 			}
 			arguments = 2;
 			break;
 		default:
-			Assert.isTrue(false, String.format("Part.Type \"%s\" not supported", part.getType().toString()));
+			Assert.isTrue(false, format("Part.Type \"%s\" not supported", part.getType().toString()));
 			break;
 		}
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(isUnique == null || isUnique, "Distance is ambiguous for multiple locations");
 		}
 		final ArgumentProcessingResult result = bindArguments(iterator, shouldIgnoreCase(part), arguments, borderStatus,
-			ignoreBindVars);
+				ignoreBindVars);
 		final int bindings = result.bindings;
 		switch (result.type) {
 		case RANGE:
 			checkUniqueLocation(part);
 			if (useFunctions) {
 				isArray = true;
-				clause = String.format(
-					"MINUS(WITHIN(%s, @%d, @%d, @%d, '_distance'), WITHIN(%s, @%d, @%d, @%d, '_distance'))",
-					collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3, collectionName,
-					bindingCounter, bindingCounter + 1, bindingCounter + 2);
+				clause = format("MINUS(WITHIN(%s, @%d, @%d, @%d, '_distance'), WITHIN(%s, @%d, @%d, @%d, '_distance'))",
+						collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3, collectionName, bindingCounter,
+						bindingCounter + 1, bindingCounter + 2);
 				if (geoFields.isEmpty()) {
 					clause = unsetDistance(clause);
 				}
 			} else {
 				isArray = false;
-				clause = String.format(
-					"@%d <= distance(%s[0], %s[1], @%d, @%d) AND distance(%s[0], %s[1], @%d, @%d) <= @%d",
-					bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property),
-					bindingCounter, bindingCounter + 1, ignorePropertyCase(part, property),
-					ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1, bindingCounter + 3);
+				clause = format("@%d <= distance(%s[0], %s[1], @%d, @%d) AND distance(%s[0], %s[1], @%d, @%d) <= @%d",
+						bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter,
+						bindingCounter + 1, ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter,
+						bindingCounter + 1, bindingCounter + 3);
 			}
 			break;
 		case BOX:
 			isArray = false;
-			clause = String.format("@%d <= %s[0] AND %s[0] <= @%d AND @%d <= %s[1] AND %s[1] <= @%d", bindingCounter,
-				ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter + 1,
-				bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property),
-				bindingCounter + 3);
+			clause = format("@%d <= %s[0] AND %s[0] <= @%d AND @%d <= %s[1] AND %s[1] <= @%d", bindingCounter,
+					ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter + 1,
+					bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property),
+					bindingCounter + 3);
 			break;
 		case POLYGON:
 			isArray = false;
-			clause = String.format("IS_IN_POLYGON(@%d, %s[0], %s[1])", bindingCounter,
-				ignorePropertyCase(part, property), ignorePropertyCase(part, property));
+			clause = format("IS_IN_POLYGON(@%d, %s[0], %s[1])", bindingCounter, ignorePropertyCase(part, property),
+					ignorePropertyCase(part, property));
 			break;
 		case DEFAULT:
 		default:
@@ -773,27 +768,31 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			if (isArray) {
 				isArray = false;
 				final String subscript = Integer.toString(++varsUsed);
-				clause = String.format("(FOR e%s IN %s FILTER e%s._id == %s._id RETURN 1)[0] == 1", subscript, clause,
-					subscript, property.substring(0, property.indexOf(".")));
+				clause = format("(FOR e%s IN %s FILTER e%s._id == %s._id RETURN 1)[0] == 1", subscript, clause, subscript,
+						property.substring(0, property.indexOf(".")));
 			}
-			clause = String.format(template, clause);
+			clause = format(template, clause);
 		}
 		final Collection<Class<?>> with = new ArrayList<>();
 		PropertyPath pp = part.getProperty();
 		do {
 			Optional.ofNullable(pp.isCollection() ? pp.getOwningType().getComponentType() : pp.getOwningType())
-					.filter(t -> context.getPersistentEntity(t) != null).map(t -> t.getType())
-					.ifPresent(t -> with.add(t));
+					.filter(t -> context.getPersistentEntity(t) != null).map(t -> t.getType()).ifPresent(t -> with.add(t));
 		} while ((pp = pp.next()) != null);
 		return clause == null ? null : new PartInformation(isArray, clause, with);
 	}
 
 	private String unsetDistance(final String clause) {
-		return String.format("(FOR u IN %s RETURN UNSET(u, '_distance'))", clause);
+		return format("(FOR u IN %s RETURN UNSET(u, '_distance'))", clause);
+	}
+
+	private String format(final String format, final Object... args) {
+		return String.format(Locale.ENGLISH, format, args);
 	}
 
 	/**
-	 * Stores how many bindings where used in a Part and if or what kind of special type clause should be created
+	 * Stores how many bindings where used in a Part and if or what kind of special
+	 * type clause should be created
 	 */
 	private static class ArgumentProcessingResult {
 

@@ -21,31 +21,48 @@
 package com.arangodb.springframework.repository;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.EntityInformation;
+import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.RepositoryQuery;
 
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.repository.query.ArangoQueryLookupStrategy;
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.repository.query.ArangoQueryMethod;
+import com.arangodb.springframework.repository.query.DerivedArangoQuery;
+import com.arangodb.springframework.repository.query.StringBasedArangoQuery;
 
 /**
- * Created by F625633 on 06/07/2017.
+ *
+ * @author Audrius Malele
+ * @author Mark McCormick
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final ArangoOperations arangoOperations;
+	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
 	public ArangoRepositoryFactory(final ArangoOperations arangoOperations) {
 		this.arangoOperations = arangoOperations;
+		this.context = arangoOperations.getConverter().getMappingContext();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T, ID extends Serializable> EntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
-		return null;
+		return new ArangoPersistentEntityInformation<T, ID>(
+				(ArangoPersistentEntity<T>) context.getPersistentEntity(domainClass));
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -60,10 +77,47 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	@Override
-	protected QueryLookupStrategy getQueryLookupStrategy(
-		final QueryLookupStrategy.Key key,
-		final EvaluationContextProvider evaluationContextProvider) {
-		return new ArangoQueryLookupStrategy(arangoOperations);
+	protected QueryLookupStrategy getQueryLookupStrategy(final QueryLookupStrategy.Key key,
+			final EvaluationContextProvider evaluationContextProvider) {
+
+		QueryLookupStrategy strategy = null;
+		switch (key) {
+		case CREATE_IF_NOT_FOUND:
+			strategy = new DefaultArangoQueryLookupStrategy(arangoOperations);
+			break;
+		case CREATE:
+			break;
+		case USE_DECLARED_QUERY:
+			break;
+		}
+		return strategy;
+	}
+
+	static class DefaultArangoQueryLookupStrategy implements QueryLookupStrategy {
+
+		private final ArangoOperations operations;
+
+		public DefaultArangoQueryLookupStrategy(final ArangoOperations operations) {
+			this.operations = operations;
+		}
+
+		@Override
+		public RepositoryQuery resolveQuery(final Method method, final RepositoryMetadata metadata,
+				final ProjectionFactory factory, final NamedQueries namedQueries) {
+
+			final ArangoQueryMethod queryMethod = new ArangoQueryMethod(method, metadata, factory);
+			final String namedQueryName = queryMethod.getNamedQueryName();
+
+			if (namedQueries.hasQuery(namedQueryName)) {
+				final String namedQuery = namedQueries.getQuery(namedQueryName);
+				return new StringBasedArangoQuery(namedQuery, queryMethod, operations);
+			} else if (queryMethod.hasAnnotatedQuery()) {
+				return new StringBasedArangoQuery(queryMethod, operations);
+			} else {
+				return new DerivedArangoQuery(queryMethod, operations);
+			}
+		}
+
 	}
 
 }

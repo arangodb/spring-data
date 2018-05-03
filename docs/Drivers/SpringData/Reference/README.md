@@ -57,7 +57,7 @@ public interface MyRepository extends Repository<Customer, String>{
 }
 ```
 
- In addition you can use a parameter of type `Map<String, Object>` annotated with `@BindVars` as your bind parameters. You can then fill the map with any parameter used in the query. (see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information about Bind Parameters).
+In addition you can use a parameter of type `Map<String, Object>` annotated with `@BindVars` as your bind parameters. You can then fill the map with any parameter used in the query. (see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information about Bind Parameters).
 
 ```java
 public interface MyRepository extends Repository<Customer, String>{
@@ -79,37 +79,56 @@ public interface MyRepository extends Repository<Customer, String>{
 }
 ```
 
+## Named queries
+
+An alternative to using the `@Query` annotation on methods is specifying them in a separate `.properties` file. The default path for the file is `META-INF/arango-named-queries.properties` and can be changed with the `EnableArangoRepositories#namedQueriesLocation()` setting. The entries in the properties file must adhere to the following convention: `{simple entity name}.{method name} = {query}`. Let's assume we have the following repository interface:
+
+```java
+package com.arangodb.repository;
+
+public interface CustomerRepository extends ArangoRepository<Customer> {
+    Customer findByUsername(@Param("username") String username);
+}
+```
+
+The corresponding `arango-named-queries.properties` file looks like this:
+
+```properties
+Customer.findByUsername = FOR c IN customers FILTER c.username == @username RETURN c
+```
+
+The queries specified in the properties file are no different than the queries that can be defined with the `@Query` annotation. The only difference is that the queries are in one place. If there is a `@Query` annotation present and a named query defined, the query in the `@Query` annotation takes precedence.
+
 ## Derived queries
 
 Spring Data ArangoDB supports queries derived from methods names by splitting it into its semantic parts and converting into AQL. The mechanism strips the prefixes `find..By`, `get..By`, `query..By`, `read..By`, `stream..By`, `count..By`, `exists..By`, `delete..By`, `remove..By` from the method and parses the rest. The By acts as a separator to indicate the start of the criteria for the query to be built. You can define conditions on entity properties and concatenate them with `And` and `Or`.
 
 The complete list of part types for derived methods is below, where doc is a document in the database
 
-Keyword | Sample | Predicate
-----------|----------------|--------
-IsGreaterThan, GreaterThan, After | findByAgeGreaterThan(int age) | doc.age > age
-IsGreaterThanEqual, GreaterThanEqual | findByAgeIsGreaterThanEqual(int age) | doc.age >= age
-IsLessThan, LessThan, Before | findByAgeIsLessThan(int age) | doc.age < age
-IsLessThanEqualLessThanEqual | findByAgeLessThanEqual(int age) | doc.age <= age
-IsBetween, Between | findByAgeBetween(int lower, int upper) | lower < doc.age < upper
-IsNotNull, NotNull | findByNameNotNull() | doc.name != null
-IsNull, Null | findByNameNull() | doc.name == null
-IsLike, Like | findByNameLike(String name) | doc.name LIKE name
-IsNotLike, NotLike | findByNameNotLike(String name) | NOT(doc.name LIKE name)
-IsStartingWith, StartingWith, StartsWith | findByNameStartsWith(String prefix) | doc.name LIKE prefix
-IsEndingWith, EndingWith, EndsWith | findByNameEndingWith(String suffix) | doc.name LIKE suffix
-Regex, MatchesRegex, Matches | findByNameRegex(String pattern) | REGEX_TEST(doc.name, name, ignoreCase)
-(No Keyword) | findByFirstName(String name) | doc.name == name
-IsTrue, True | findByActiveTrue() | doc.active == true
-IsFalse, False | findByActiveFalse() | doc.active == false
-Is, Equals | findByAgeEquals(int age) | doc.age == age
-IsNot, Not | findByAgeNot(int age) | doc.age != age
-IsIn, In | findByNameIn(String[] names) | doc.name IN names
-IsNotIn, NotIn | findByNameIsNotIn(String[] names) | doc.name NOT IN names
-IsContaining, Containing, Contains | findByFriendsContaining(String name) | name IN doc.friends
-IsNotContaining, NotContaining, NotContains | findByFriendsNotContains(String name) | name NOT IN doc.friends
-Exists | findByFriendNameExists() | HAS(doc.friend, name)
-
+| Keyword                                     | Sample                                 | Predicate                              |
+| ------------------------------------------- | -------------------------------------- | -------------------------------------- |
+| IsGreaterThan, GreaterThan, After           | findByAgeGreaterThan(int age)          | doc.age > age                          |
+| IsGreaterThanEqual, GreaterThanEqual        | findByAgeIsGreaterThanEqual(int age)   | doc.age >= age                         |
+| IsLessThan, LessThan, Before                | findByAgeIsLessThan(int age)           | doc.age < age                          |
+| IsLessThanEqualLessThanEqual                | findByAgeLessThanEqual(int age)        | doc.age <= age                         |
+| IsBetween, Between                          | findByAgeBetween(int lower, int upper) | lower < doc.age < upper                |
+| IsNotNull, NotNull                          | findByNameNotNull()                    | doc.name != null                       |
+| IsNull, Null                                | findByNameNull()                       | doc.name == null                       |
+| IsLike, Like                                | findByNameLike(String name)            | doc.name LIKE name                     |
+| IsNotLike, NotLike                          | findByNameNotLike(String name)         | NOT(doc.name LIKE name)                |
+| IsStartingWith, StartingWith, StartsWith    | findByNameStartsWith(String prefix)    | doc.name LIKE prefix                   |
+| IsEndingWith, EndingWith, EndsWith          | findByNameEndingWith(String suffix)    | doc.name LIKE suffix                   |
+| Regex, MatchesRegex, Matches                | findByNameRegex(String pattern)        | REGEX_TEST(doc.name, name, ignoreCase) |
+| (No Keyword)                                | findByFirstName(String name)           | doc.name == name                       |
+| IsTrue, True                                | findByActiveTrue()                     | doc.active == true                     |
+| IsFalse, False                              | findByActiveFalse()                    | doc.active == false                    |
+| Is, Equals                                  | findByAgeEquals(int age)               | doc.age == age                         |
+| IsNot, Not                                  | findByAgeNot(int age)                  | doc.age != age                         |
+| IsIn, In                                    | findByNameIn(String[] names)           | doc.name IN names                      |
+| IsNotIn, NotIn                              | findByNameIsNotIn(String[] names)      | doc.name NOT IN names                  |
+| IsContaining, Containing, Contains          | findByFriendsContaining(String name)   | name IN doc.friends                    |
+| IsNotContaining, NotContaining, NotContains | findByFriendsNotContains(String name)  | name NOT IN doc.friends                |
+| Exists                                      | findByFriendNameExists()               | HAS(doc.friend, name)                  |
 
 ```java
 public interface MyRepository extends Repository<Customer, String> {
@@ -136,7 +155,7 @@ You can apply sorting for one or multiple sort criteria by appending `OrderBy` t
 public interface MyRepository extends Repository<Customer, String> {
 
   // FOR c IN customers
-  // FITLER c.name == @0
+  // FILTER c.name == @0
   // SORT c.age DESC RETURN c
   ArangoCursor<Customer> getByNameOrderByAgeDesc(String name);
 
@@ -154,7 +173,7 @@ Geospatial queries are a subsection of derived queries. To use a geospatial quer
 
 As a subsection of derived queries, geospatial queries support all the same return types, but also support the three return types `GeoPage, GeoResult and Georesults`. These types must be used in order to get the distance of each document as generated by the query.
 
-There are two kinds of geospatial query, Near and Within. Near sorts  documents by distance from the given point, while within both sorts and filters documents, returning those within the given distance range or shape.
+There are two kinds of geospatial query, Near and Within. Near sorts documents by distance from the given point, while within both sorts and filters documents, returning those within the given distance range or shape.
 
 ```java
 public interface MyRepository extends Repository<City, String> {
@@ -194,7 +213,7 @@ public interface MyRepository extends Repository<Customer, String> {
 }
 ```
 
-It is possible for the algorithm to select the wrong property if the domain class also has a property which matches the first split of the expression. To resolve this ambiguity you can use _ as a separator inside your method-name to define traversal points.
+It is possible for the algorithm to select the wrong property if the domain class also has a property which matches the first split of the expression. To resolve this ambiguity you can use \_ as a separator inside your method-name to define traversal points.
 
 ```java
 @Document("customers")
@@ -231,7 +250,7 @@ public interface MyRepository extends Repository<Customer, String> {
 
 ### Bind parameters
 
-AQL supports the usage of [bind parameters](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html) which you can define with a method parameter named `bindVars` of type `Map<String, Object>`.
+AQL supports the usage of [bind parameters](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html) which you can define with a method parameter annotated with `@BindVars` of type `Map<String, Object>`.
 
 ```java
 public interface MyRepository extends Repository<Customer, String> {
@@ -301,26 +320,27 @@ In this section we will describe the features and conventions for mapping Java o
 
 ArangoDB uses [VelocyPack](https://github.com/arangodb/velocypack) as it's internal storage format which supports a large number of data types. In addition Spring Data ArangoDB offers - with the underlying Java driver - built-in converters to add additional types to the mapping.
 
-Java type | VelocyPack type
-----------|----------------
-java.lang.String | string
-java.lang.Boolean | bool
-java.lang.Integer | signed int 4 bytes, smallint
-java.lang.Long | signed int 8 bytes, smallint
-java.lang.Short | signed int 2 bytes, smallint
-java.lang.Double | double
-java.lang.Float | double
-java.math.BigInteger | signed int 8 bytes, unsigned int 8 bytes
-java.math.BigDecimal | double
-java.lang.Number | double
-java.lang.Character | string
-java.util.Date | string (date-format ISO 8601)
-java.sql.Date | string (date-format ISO 8601)
-java.sql.Timestamp | string (date-format ISO 8601)
-java.util.UUID | string
-java.lang.byte[] | string (Base64)
+| Java type            | VelocyPack type                          |
+| -------------------- | ---------------------------------------- |
+| java.lang.String     | string                                   |
+| java.lang.Boolean    | bool                                     |
+| java.lang.Integer    | signed int 4 bytes, smallint             |
+| java.lang.Long       | signed int 8 bytes, smallint             |
+| java.lang.Short      | signed int 2 bytes, smallint             |
+| java.lang.Double     | double                                   |
+| java.lang.Float      | double                                   |
+| java.math.BigInteger | signed int 8 bytes, unsigned int 8 bytes |
+| java.math.BigDecimal | double                                   |
+| java.lang.Number     | double                                   |
+| java.lang.Character  | string                                   |
+| java.util.Date       | string (date-format ISO 8601)            |
+| java.sql.Date        | string (date-format ISO 8601)            |
+| java.sql.Timestamp   | string (date-format ISO 8601)            |
+| java.util.UUID       | string                                   |
+| java.lang.byte[]     | string (Base64)                          |
 
 ## Type mapping
+
 As collections in ArangoDB can contain documents of various types, a mechanism to retrieve the correct Java class is required. The type information of properties declared in a class may not be enough to restore the original class (due to inheritance). If the declared complex type and the actual type do not match, information about the actual type is stored together with the document. This is necessary to restore the correct type when reading from the DB. Consider the following example:
 
 ```java
@@ -328,7 +348,7 @@ public class Person {
     private String name;
     private Address homeAddress;
     // ...
-	
+
     // getters and setters omitted
 }
 
@@ -354,7 +374,7 @@ public class Address {
 
 @Document
 public class Company {
-    @Key 
+    @Key
     private String key;
     private Person manager;
 
@@ -376,12 +396,12 @@ The serialized document for the DB looks like this:
   "manager": {
     "name": "Jane Roberts",
     "homeAddress": {
-        "street": "Park Avenue",
-        "number": "432/64"
+      "street": "Park Avenue",
+      "number": "432/64"
     },
     "workAddress": {
-        "street": "Main Street",
-        "number": "223"
+      "street": "Main Street",
+      "number": "223"
     },
     "_class": "com.arangodb.Employee"
   },
@@ -392,6 +412,7 @@ The serialized document for the DB looks like this:
 Type hints are written for top-level documents (as a collection can contain different document types) as well as for every value if it's a complex type and a sub-type of the property type declared. `Map`s and `Collection`s are excluded from type mapping. Without the additional information about the concrete classes used, the document couldn't be restored in Java. The type information of the `manager` property is not enough to determine the `Employee` type. The `homeAddress` and `workAddress` properties have the same actual and defined type, thus no type hint is needed.
 
 ### Customizing type mapping
+
 By default, the fully qualified class name is stored in the documents as a type hint. A custom type hint can be set with the `@TypeAlias("my-alias")` annotation on an entity. Make sure that it is an unique identifier across all entities. If we would add a `TypeAlias("employee")` annotation to the `Employee` class above, it would be persisted as `"_class": "employee"`.
 
 The default type key is `_class` and can be changed by overriding the `typeKey()` method of the `AbstractArangoConfiguration` class.
@@ -401,37 +422,38 @@ If you need to further customize the type mapping process, the `arangoTypeMapper
 In order to fully customize the type mapping process you can provide a custom type mapper implementation by extending the `DefaultArangoTypeMapper` class.
 
 ### Deactivating type mapping
+
 To deactivate the type mapping process, you can return `null` from the `typeKey()` method of the `AbstractArangoConfiguration` class. No type hints are stored in the documents with this setting. If you make sure that each defined type corresponds to the actual type, you can disable the type mapping, otherwise it can lead to exceptions when reading the entities from the DB.
 
 ## Annotations
 
 ### Annotation overview
 
-annotation | level | description
------------|-------|------------
-@Document | class | marks this class as a candidate for mapping
-@Edge | class | marks this class as a candidate for mapping
-@Id | field | stores the field as the system field _id
-@Key | field | stores the field as the system field _key
-@Rev | field | stores the field as the system field _rev
-@Field("alt-name") | field | stores the field with an alternative name
-@Ref | field | stores the _id of the referenced document and not the nested document
-@From | field | stores the _id of the referenced document as the system field _from
-@To | field | stores the _id of the referenced document as the system field _to
-@Relations | field | vertices which are connected over edges
-@Transient | field, method, annotation | marks a field to be transient for the mapping framework, thus the property will not be persisted and not further inspected by the mapping framework
-@PersistenceConstructor | constructor | marks a given constructor - even a package protected one - to use when instantiating the object from the database
-@TypeAlias("alias") | class | set a type alias for the class when persisted to the DB
-@HashIndex | class | describes a hash index
-@HashIndexed | field | describes how to index the field
-@SkiplistIndex | class | describes a skiplist index
-@SkiplistIndexed | field | describes how to index the field
-@PersistentIndex | class | describes a persistent index
-@PersistentIndexed | field | describes how to index the field
-@GeoIndex | class | describes a geo index
-@GeoIndexed | field | describes how to index the field
-@FulltextIndex | class | describes a fulltext index
-@FulltextIndexed | field | describes how to index the field
+| annotation              | level                     | description                                                                                                                                         |
+| ----------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| @Document               | class                     | marks this class as a candidate for mapping                                                                                                         |
+| @Edge                   | class                     | marks this class as a candidate for mapping                                                                                                         |
+| @Id                     | field                     | stores the field as the system field \_id                                                                                                           |
+| @Key                    | field                     | stores the field as the system field \_key                                                                                                          |
+| @Rev                    | field                     | stores the field as the system field \_rev                                                                                                          |
+| @Field("alt-name")      | field                     | stores the field with an alternative name                                                                                                           |
+| @Ref                    | field                     | stores the \_id of the referenced document and not the nested document                                                                              |
+| @From                   | field                     | stores the \_id of the referenced document as the system field \_from                                                                               |
+| @To                     | field                     | stores the \_id of the referenced document as the system field \_to                                                                                 |
+| @Relations              | field                     | vertices which are connected over edges                                                                                                             |
+| @Transient              | field, method, annotation | marks a field to be transient for the mapping framework, thus the property will not be persisted and not further inspected by the mapping framework |
+| @PersistenceConstructor | constructor               | marks a given constructor - even a package protected one - to use when instantiating the object from the database                                   |
+| @TypeAlias("alias")     | class                     | set a type alias for the class when persisted to the DB                                                                                             |
+| @HashIndex              | class                     | describes a hash index                                                                                                                              |
+| @HashIndexed            | field                     | describes how to index the field                                                                                                                    |
+| @SkiplistIndex          | class                     | describes a skiplist index                                                                                                                          |
+| @SkiplistIndexed        | field                     | describes how to index the field                                                                                                                    |
+| @PersistentIndex        | class                     | describes a persistent index                                                                                                                        |
+| @PersistentIndexed      | field                     | describes how to index the field                                                                                                                    |
+| @GeoIndex               | class                     | describes a geo index                                                                                                                               |
+| @GeoIndexed             | field                     | describes how to index the field                                                                                                                    |
+| @FulltextIndex          | class                     | describes a fulltext index                                                                                                                          |
+| @FulltextIndexed        | field                     | describes how to index the field                                                                                                                    |
 
 ### Document
 
@@ -475,7 +497,7 @@ public class Address {
 }
 ```
 
-The database representation of `Person` in collection *persons* looks as follow:
+The database representation of `Person` in collection _persons_ looks as follow:
 
 ```
 {
@@ -484,7 +506,9 @@ The database representation of `Person` in collection *persons* looks as follow:
   "address" : "addresses/456"
 }
 ```
-and the representation of `Address` in collection *addresses*:
+
+and the representation of `Address` in collection _addresses_:
+
 ```
 {
   "_key" : "456",
@@ -526,7 +550,7 @@ public class Relation {
 
 ### Document with From and To
 
-With the annotations `@From` and `@To` applied on a collection or array field in a class annotated with `@Document` the nested edge objects are fetched from the database. Each of the nested edge objects has to be stored as separate edge document in the edge collection described in the `@Edge` annotation of the nested object class with the *_id* of the parent document as field *_from* or *_to*.
+With the annotations `@From` and `@To` applied on a collection or array field in a class annotated with `@Document` the nested edge objects are fetched from the database. Each of the nested edge objects has to be stored as separate edge document in the edge collection described in the `@Edge` annotation of the nested object class with the _\_id_ of the parent document as field _\_from_ or _\_to_.
 
 ```java
 @Document("persons")
@@ -541,7 +565,8 @@ public class Relation {
 }
 ```
 
-The database representation of `Person` in collection *persons* looks as follow:
+The database representation of `Person` in collection _persons_ looks as follow:
+
 ```
 {
   "_key" : "123",
@@ -549,7 +574,8 @@ The database representation of `Person` in collection *persons* looks as follow:
 }
 ```
 
-and the representation of `Relation` in collection *relations*:
+and the representation of `Relation` in collection _relations_:
+
 ```
 {
   "_key" : "456",
@@ -564,12 +590,11 @@ and the representation of `Relation` in collection *relations*:
   "_to" : ".../..."
 }
 ...
-
 ```
 
 ### Edge with From and To
 
-With the annotations `@From` and `@To` applied on a field in a class annotated with `@Edge` the nested object is fetched from the database. The nested object has to be stored as a separate document in the collection described in the `@Document` annotation of the nested object class. The *_id* field of this nested object is stored in the fields `_from` or `_to` within the edge document.
+With the annotations `@From` and `@To` applied on a field in a class annotated with `@Edge` the nested object is fetched from the database. The nested object has to be stored as a separate document in the collection described in the `@Document` annotation of the nested object class. The _\_id_ field of this nested object is stored in the fields `_from` or `_to` within the edge document.
 
 ```java
 @Edge("relations")
@@ -587,7 +612,8 @@ public class Person {
 }
 ```
 
-The database representation of `Relation` in collection *relations* looks as follow:
+The database representation of `Relation` in collection _relations_ looks as follow:
+
 ```
 {
   "_key" : "123",
@@ -597,7 +623,8 @@ The database representation of `Relation` in collection *relations* looks as fol
 }
 ```
 
-and the representation of `Person` in collection *persons*:
+and the representation of `Person` in collection _persons_:
+
 ```
 {
   "_key" : "456",
@@ -616,6 +643,7 @@ and the representation of `Person` in collection *persons*:
 With the `@<IndexType>Indexed` annotations user defined indexes can be created at a collection level by annotating single fields of a class.
 
 Possible `@<IndexType>Indexed` annotations are:
+
 * `@HashIndexed`
 * `@SkiplistIndexed`
 * `@PersistentIndexed`
@@ -623,6 +651,7 @@ Possible `@<IndexType>Indexed` annotations are:
 * `@FulltextIndexed`
 
 The following example creates a hash index on the field `name` and a separate hash index on the field `age`:
+
 ```java
 public class Person {
   @HashIndexed
@@ -636,6 +665,7 @@ public class Person {
 With the `@<IndexType>Indexed` annotations different indexes can be created on the same field.
 
 The following example creates a hash index and also a skiplist index on the field `name`:
+
 ```java
 public class Person {
   @HashIndexed
@@ -647,6 +677,7 @@ public class Person {
 If the index should include multiple fields the `@<IndexType>Index` annotations can be used on the type instead.
 
 Possible `@<IndexType>Index` annotations are:
+
 * `@HashIndex`
 * `@SkiplistIndex`
 * `@PersistentIndex`
@@ -654,6 +685,7 @@ Possible `@<IndexType>Index` annotations are:
 * `@FulltextIndex`
 
 The following example creates a single hash index on the fields `name` and `age`, note that if a field is renamed in the database with @Field, the new field name must be used in the index declaration:
+
 ```java
 @HashIndex(fields = {"fullname", "age"})
 public class Person {
@@ -667,6 +699,7 @@ public class Person {
 The `@<IndexType>Index` annotations can also be used to create an index on a nested field.
 
 The following example creates a single hash index on the fields `name` and `address.country`:
+
 ```java
 @HashIndex(fields = {"name", "address.country"})
 public class Person {
@@ -679,6 +712,7 @@ public class Person {
 The `@<IndexType>Index` annotations and the `@<IndexType>Indexed` annotations can be used at the same time in one class.
 
 The following example creates a hash index on the fields `name` and `age` and a separate hash index on the field `age`:
+
 ```java
 @HashIndex(fields = {"name", "age"})
 public class Person {
@@ -692,6 +726,7 @@ public class Person {
 The `@<IndexType>Index` annotations can be used multiple times to create more than one index in this way.
 
 The following example creates a hash index on the fields `name` and `age` and a separate hash index on the fields `name` and `gender`:
+
 ```java
 @HashIndex(fields = {"name", "age"})
 @HashIndex(fields = {"name", "gender"})
