@@ -90,13 +90,13 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 }
 ```
 
-The corresponding `arango-named-queries.properties` file:
+The corresponding `arango-named-queries.properties` file looks like this:
 
 ```properties
 Customer.findByUsername = FOR c IN customers FILTER c.username == @username RETURN c
 ```
 
-The queries specified in the properties file are no different than the queries that can be defined with the @ Query annotation. The only difference is that they are all in one place.
+The queries specified in the properties file are no different than the queries that can be defined with the `@Query` annotation. The only difference is that the queries are in one place. If there is a `@Query` annotation present and a named query defined, the query in the `@Query` annotation takes precedence.
 
 ## Derived queries
 
