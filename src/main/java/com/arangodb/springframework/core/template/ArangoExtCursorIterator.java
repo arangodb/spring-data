@@ -20,6 +20,16 @@
 
 package com.arangodb.springframework.core.template;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.data.mapping.model.SimpleTypeHolder;
+
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
@@ -31,10 +41,28 @@ import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
+ * 
  * @param <T>
  *
  */
 class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
+
+	private static final SimpleTypeHolder ADDITIONAL_DESERIALIZABLE_TYPES;
+
+	static {
+		final Set<Class<?>> simpleTypes = new HashSet<>();
+
+		// the following types apply only if the VPackJdk8Module is present on the ArangoDB Java driver,
+		// but there is no possibility to check
+		simpleTypes.add(Instant.class);
+		simpleTypes.add(LocalDate.class);
+		simpleTypes.add(LocalDateTime.class);
+		simpleTypes.add(OffsetDateTime.class);
+		simpleTypes.add(ZonedDateTime.class);
+
+		ADDITIONAL_DESERIALIZABLE_TYPES = new SimpleTypeHolder(simpleTypes, false);
+	}
 
 	private ArangoConverter converter;
 
@@ -49,8 +77,12 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 
 	@Override
 	protected <R> R deserialize(final VPackSlice result, final Class<R> type) {
-		return !converter.isEntityType(type) ? super.deserialize(result, type)
+		return canDeserializeDirectly(type) ? super.deserialize(result, type)
 				: converter.read(type, super.deserialize(result, DBEntity.class));
+	}
+
+	private boolean canDeserializeDirectly(final Class<?> type) {
+		return !converter.isEntityType(type) || ADDITIONAL_DESERIALIZABLE_TYPES.isSimpleType(type);
 	}
 
 }

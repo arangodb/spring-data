@@ -18,24 +18,29 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.repository.query;
+package com.arangodb.springframework.repository;
 
-import java.util.Map;
+import org.springframework.data.repository.core.support.PersistentEntityInformation;
 
-import org.springframework.data.repository.query.ParameterAccessor;
-
-import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 
 /**
  * 
  * @author Christian Lechner
  */
-public interface ArangoParameterAccessor extends ParameterAccessor {
+public class ArangoPersistentEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
+		implements ArangoEntityInformation<T, ID> {
 
-	ArangoParameters getParameters();
-	
-	AqlQueryOptions getQueryOptions();
+	private final ArangoPersistentEntity<T> persistentEntity;
 
-	Map<String, Object> getBindVars();
+	public ArangoPersistentEntityInformation(final ArangoPersistentEntity<T> entity) {
+		super(entity);
+		this.persistentEntity = entity;
+	}
+
+	@Override
+	public String getCollection() {
+		return persistentEntity.getCollection();
+	}
 
 }

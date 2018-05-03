@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -19,19 +18,23 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.data.repository.query.Param;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
-import com.arangodb.springframework.annotation.Param;
 import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
 
 /**
- * Created by F625633 on 07/07/2017.
+ * 
+ * @author Audrius Malele
+ * @author Mark McCormick
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 public interface CustomerRepository extends ArangoRepository<Customer> {
 
@@ -42,48 +45,33 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 	@QueryOptions(cache = true, ttl = 128)
 	BaseDocument findOneByIdAndNameAql(String id, String name);
 
-	@Query("FOR c IN customer FILTER c._id == @0 RETURN c")
-	Optional<Customer> findOneByIdAqlPotentialNameClash(@Param("0") String id);
-
-	@Query("FOR c IN customer FILTER c._id == @0 AND c.name == @0 RETURN c")
-	ArangoCursor<Customer> findOneByIdAqlParamNameClash(String id, @Param("0") String name);
-
 	@QueryOptions(maxPlans = 1000, ttl = 128)
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
-	ArangoCursor<Customer> findOneByBindVarsAql(
-		AqlQueryOptions options,
-		@SuppressWarnings("rawtypes") @BindVars Map bindVars);
+	ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map<String, Object> bindVars);
 
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
 	Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
-
-	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
-	Customer findOneByBindVarsAndClashingParametersAql(
-		@BindVars Map<String, Object> bindVars,
-		@Param("name") String name,
-		AqlQueryOptions options,
-		@Param("name") String name2);
-
-	@Query("FOR c IN customer FILTER c.name == @name RETURN c")
-	Customer findOneByNameWithDuplicateOptionsAql(
-		@Param("name") String name,
-		AqlQueryOptions options,
-		AqlQueryOptions options2);
 
 	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @0 RETURN c")
 	Customer findOneByIdAndNameWithBindVarsAql(String name, @BindVars Map<String, Object> bindVars);
 
 	@Query("FOR c IN @@0 FILTER \"@1\" != '@2' AND c._id == @1 RETURN c")
-	Customer findOneByIdInCollectionAql(String collection, String id, String id2);
+	Customer findOneByIdInCollectionAqlWithUnusedParam(String collection, String id, String id2);
 
-	@Query("FOR c IN @@collection FILTER \"\\\"@1\\\"\" != '\"@2\"' AND c._id == @1 RETURN c")
-	Customer findOneByIdInNamedCollectionAql(@Param("@collection") String collection, String id, String id2);
+	@Query("FOR c IN @@collection FILTER \"\\\"@id\\\"\" != '\"@id2\"' AND c._id == @id RETURN c")
+	Customer findOneByIdInNamedCollectionAqlWithUnusedParam(
+		@Param("@collection") String collection,
+		@Param("id") String id,
+		@Param("id2") String id2);
 
-	@Query("FOR c IN @@collection FILTER \"'@1'\" != '\\'@2\\'' AND c._id == @1 RETURN c")
-	Customer findOneByIdInIncorrectNamedCollectionAql(@Param("collection") String collection, String id, String id2);
+	@Query("FOR c IN @@collection FILTER \"'@id'\" != '\\'@id2\\'' AND c._id == @id RETURN c")
+	Customer findOneByIdInIncorrectNamedCollectionAql(
+		@Param("collection") String collection,
+		@Param("id") String id,
+		@Param("id2") String id2);
 
-	@Query("FOR c IN @collection FILTER c._id == @1 RETURN c")
-	Customer findOneByIdInNamedCollectionAqlRejected(@Param("collection") String collection, String id);
+	@Query("FOR c IN @collection FILTER c._id == @id RETURN c")
+	Customer findOneByIdInNamedCollectionAqlRejected(@Param("collection") String collection, @Param("id") String id);
 
 	@Query("FOR c in customer FILTER c.surname == @0 RETURN c")
 	List<Customer> findManyBySurname(String surname);
@@ -199,9 +187,17 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 
 	List<Customer> getByOwnsContainsName(String name);
 
+	// Count query
+	
 	@Query("RETURN COUNT(@@collection)")
 	long queryCount(@Param("@collection") Class<Customer> collection);
+	
+	// Date query
 
 	@Query("RETURN DATE_ISO8601(1474988621)")
 	Instant queryDate();
+
+	// Named query
+
+	Customer findOneByIdNamedQuery(@Param("id") String id);
 }

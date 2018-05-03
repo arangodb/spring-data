@@ -31,7 +31,10 @@ import java.util.UUID;
 
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
+import com.arangodb.entity.BaseDocument;
+import com.arangodb.entity.BaseEdgeDocument;
 import com.arangodb.springframework.core.convert.DBEntity;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * This class contains all types that are directly supported by the Java driver (through java-velocypack).
@@ -46,23 +49,36 @@ public abstract class ArangoSimpleTypes {
 	static {
 		final Set<Class<?>> simpleTypes = new HashSet<>();
 
-		// com.arangodb.springframework.*
+		// com.arangodb.*
 		simpleTypes.add(DBEntity.class);
+		simpleTypes.add(BaseDocument.class);
+		simpleTypes.add(BaseEdgeDocument.class);
+		simpleTypes.add(VPackSlice.class);
 
 		// primitives
+		simpleTypes.add(boolean.class);
 		simpleTypes.add(byte.class);
 		simpleTypes.add(char.class);
-		simpleTypes.add(boolean.class);
 		simpleTypes.add(short.class);
 		simpleTypes.add(int.class);
 		simpleTypes.add(long.class);
 		simpleTypes.add(float.class);
 		simpleTypes.add(double.class);
+		
+		// primitive arrays
+		simpleTypes.add(boolean[].class);
+		simpleTypes.add(byte[].class);
+		simpleTypes.add(char[].class);
+		simpleTypes.add(short[].class);
+		simpleTypes.add(int[].class);
+		simpleTypes.add(long[].class);
+		simpleTypes.add(float[].class);
+		simpleTypes.add(double[].class);
 
 		// java.lang.*
+		simpleTypes.add(Boolean.class);
 		simpleTypes.add(Byte.class);
 		simpleTypes.add(Character.class);
-		simpleTypes.add(Boolean.class);
 		simpleTypes.add(Short.class);
 		simpleTypes.add(Integer.class);
 		simpleTypes.add(Long.class);
@@ -71,9 +87,6 @@ public abstract class ArangoSimpleTypes {
 		simpleTypes.add(Number.class);
 		simpleTypes.add(String.class);
 		simpleTypes.add(Enum.class);
-
-		// arrays
-		simpleTypes.add(byte[].class);
 
 		// java.math.*
 		simpleTypes.add(BigInteger.class);
