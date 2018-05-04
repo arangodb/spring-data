@@ -48,7 +48,7 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final List<String> geoFields;
 
-	public DerivedArangoQuery(ArangoQueryMethod method, ArangoOperations operations) {
+	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
 		super(method, operations);
 		this.tree = new PartTree(method.getName(), this.domainClass);
 		this.context = operations.getConverter().getMappingContext();
@@ -78,8 +78,9 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 	private List<String> getGeoFields() {
 		final List<String> geoFields = new LinkedList<>();
 		if (method.isGeoQuery()) {
-			for (IndexEntity index : operations.collection(domainClass).getIndexes()) {
-				if ((index.getType() == IndexType.geo1)) {
+			for (final IndexEntity index : operations.collection(domainClass).getIndexes()) {
+				final IndexType type = index.getType();
+				if (type == IndexType.geo || type == IndexType.geo1 || type == IndexType.geo2) {
 					geoFields.addAll(index.getFields());
 				}
 			}
