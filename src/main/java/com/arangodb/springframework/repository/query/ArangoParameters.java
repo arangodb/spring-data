@@ -26,7 +26,6 @@ import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -55,16 +54,16 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 	public ArangoParameters(final Method method) {
 		super(method);
 		assertSingleSpecialParameter(ArangoParameter::isQueryOptions,
-				"Multiple AqlQueryOptions parameters are not allowed! Offending method: " + method);
+			"Multiple AqlQueryOptions parameters are not allowed! Offending method: " + method);
 		assertSingleSpecialParameter(ArangoParameter::isBindVars,
-				"Multiple @BindVars parameters are not allowed! Offending method: " + method);
+			"Multiple @BindVars parameters are not allowed! Offending method: " + method);
 		assertNonDuplicateParamNames(method);
 		this.queryOptionsIndex = getIndexOfSpecialParameter(ArangoParameter::isQueryOptions);
 		this.bindVarsIndex = getIndexOfSpecialParameter(ArangoParameter::isBindVars);
 	}
 
 	private ArangoParameters(final List<ArangoParameter> parameters, final int queryOptionsIndex,
-			final int bindVarsIndex) {
+		final int bindVarsIndex) {
 		super(parameters);
 		this.queryOptionsIndex = queryOptionsIndex;
 		this.bindVarsIndex = bindVarsIndex;
@@ -162,9 +161,9 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		@SuppressWarnings("deprecation")
 		@Override
 		public String getName() {
-			Param annotation = parameter.getParameterAnnotation(Param.class);
+			final Param annotation = parameter.getParameterAnnotation(Param.class);
 			// we need to support the old @Param annotation
-			com.arangodb.springframework.annotation.Param oldAnnotation = parameter
+			final com.arangodb.springframework.annotation.Param oldAnnotation = parameter
 					.getParameterAnnotation(com.arangodb.springframework.annotation.Param.class);
 			return annotation == null ? (oldAnnotation == null ? null : oldAnnotation.value()) : annotation.value();
 		}
