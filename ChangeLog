@@ -1,4 +1,4 @@
-v1.1.2 (2018-xx-xx)
+v1.1.2 (2018-05-04)
 ---------------------------
 * deprecated @Param annotation, there is already such an annotation from Spring Data
 * fixed floating point numbers in derived queries
