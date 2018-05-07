@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.junit.Test;
@@ -745,8 +746,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	private double getDistanceBetweenPoints(final Point point1, final Point point2) {
-		final String query = String.format("RETURN DISTANCE(%f, %f, %f, %f)", point1.getY(), point1.getX(),
-			point2.getY(), point2.getX());
+		final String query = String.format(Locale.ENGLISH, "RETURN DISTANCE(%f, %f, %f, %f)", point1.getY(),
+			point1.getX(), point2.getY(), point2.getX());
 		return template.query(query, new HashMap<>(), null, Double.class).next();
 	}
 }

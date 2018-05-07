@@ -50,14 +50,12 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
-import com.arangodb.entity.BaseDocument;
-import com.arangodb.entity.BaseEdgeDocument;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
 import com.arangodb.springframework.core.util.InheritanceUtils;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
@@ -517,8 +515,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return isCollectionType(type) ? new DBCollectionEntity() : new DBDocumentEntity();
 	}
 
-	private boolean isSimpleType(final Class<?> type) {
-		return conversions.isSimpleType(type);
+	private boolean isArangoSimpleType(final Class<?> type) {
+		return ArangoSimpleTypes.HOLDER.isSimpleType(type);
 	}
 
 	@Override
@@ -537,9 +535,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 	@Override
 	public boolean isEntityType(final Class<?> type) {
-		return !isSimpleType(type) && !isMapType(type) && !isCollectionType(type)
-				&& !BaseDocument.class.isAssignableFrom(type) && !BaseEdgeDocument.class.isAssignableFrom(type)
-				&& !VPackSlice.class.isAssignableFrom(type);
+		return !isArangoSimpleType(type) && !isMapType(type) && !isCollectionType(type);
 	}
 
 	@SuppressWarnings("unchecked")
