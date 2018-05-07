@@ -29,12 +29,17 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 
 import com.arangodb.springframework.repository.ArangoRepositoriesRegistrar;
 import com.arangodb.springframework.repository.ArangoRepositoryFactoryBean;
 
 /**
- * Created by F625633 on 07/07/2017.
+ * @author Audrius Malele
+ * @author Mark McCormick
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -53,10 +58,23 @@ public @interface EnableArangoRepositories {
 
 	ComponentScan.Filter[] excludeFilters() default {};
 
-	String repositoryImplementationPostfix() default "";
+	/**
+	 * Returns the postfix to be used for custom repository implementations. Defaults to {@literal Impl}.
+	 */
+	String repositoryImplementationPostfix() default "Impl";
 
 	Class<?> repositoryFactoryBeanClass() default ArangoRepositoryFactoryBean.class;
 
+	/**
+	 * Configures the location of the Spring Data named queries properties file. Defaults to
+	 * {@code META-INF/arango-named-queries.properties}.
+	 */
 	String namedQueriesLocation() default "";
+
+	/**
+	 * Returns the key of the {@link QueryLookupStrategy} that should be used to lookup queries for query methods.
+	 * Currently only the default {@link Key#CREATE_IF_NOT_FOUND} is supported.
+	 */
+	Key queryLookupStrategy() default Key.CREATE_IF_NOT_FOUND;
 
 }

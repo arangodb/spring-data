@@ -18,24 +18,16 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.repository.query;
+package com.arangodb.springframework.repository;
 
-import java.util.Map;
-
-import org.springframework.data.repository.query.ParameterAccessor;
-
-import com.arangodb.model.AqlQueryOptions;
+import org.springframework.data.repository.core.EntityInformation;
 
 /**
  * 
  * @author Christian Lechner
  */
-public interface ArangoParameterAccessor extends ParameterAccessor {
+public interface ArangoEntityInformation<T, ID> extends EntityInformation<T, ID> {
 
-	ArangoParameters getParameters();
-	
-	AqlQueryOptions getQueryOptions();
-
-	Map<String, Object> getBindVars();
+	String getCollection();
 
 }

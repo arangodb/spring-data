@@ -82,7 +82,7 @@ import com.arangodb.util.MapBuilder;
  */
 public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
-	private ArangoDBVersion version;
+	private volatile ArangoDBVersion version;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final ArangoConverter converter;
 	private final ArangoDB arango;

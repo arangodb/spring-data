@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +22,11 @@ import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.testdata.Customer;
 
 /**
- * Created by F625633 on 12/07/2017.
+ * 
+ * @author Audrius Malele
+ * @author Mark McCormick
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
@@ -54,20 +57,6 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
-	public void findOneByIdAqlPotentialNameClashTest() {
-		repository.saveAll(customers);
-		final Optional<Customer> retrieved = repository.findOneByIdAqlPotentialNameClash(john.getId());
-		assertEquals(john, retrieved.get());
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void findOneByIdAqlParamNameClashTest() {
-		repository.saveAll(customers);
-		final ArangoCursor<Customer> retrieved = repository.findOneByIdAqlParamNameClash(john.getId(), john.getName());
-		assertEquals(john, retrieved.next());
-	}
-
-	@Test
 	public void findOneByBindVarsAqlTest() {
 		repository.saveAll(customers);
 		final Map<String, Object> bindVars = new HashMap<>();
@@ -75,16 +64,6 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		bindVars.put("name", john.getName());
 		final ArangoCursor<Customer> retrieved = repository.findOneByBindVarsAql(OPTIONS.ttl(127).cache(true),
 			bindVars);
-		assertEquals(john, retrieved.next());
-	}
-
-	@Test(expected = ClassCastException.class)
-	public void findOneByBindVarsOfIllegalTypeAqlTest() {
-		repository.saveAll(customers);
-		final Map<Integer, Object> bindVars = new HashMap<>();
-		bindVars.put(1, john.getId());
-		bindVars.put(2, john.getName());
-		final ArangoCursor<Customer> retrieved = repository.findOneByBindVarsAql(OPTIONS, bindVars);
 		assertEquals(john, retrieved.next());
 	}
 
@@ -107,24 +86,6 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		assertEquals(john, retrieved);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void findOneByBindVarsAndClashingParametersAqlTest() {
-		repository.saveAll(customers);
-		final Map<String, Object> bindVars = new HashMap<>();
-		bindVars.put("id", john.getId());
-		bindVars.put("name", john.getName());
-		final Customer retrieved = repository.findOneByBindVarsAndClashingParametersAql(bindVars, john.getName(),
-			OPTIONS, john.getName());
-		assertEquals(john, retrieved);
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void findOneByNameWithDuplicateOptionsAqlTest() {
-		repository.saveAll(customers);
-		final Customer retrieved = repository.findOneByNameWithDuplicateOptionsAql(john.getName(), OPTIONS, OPTIONS);
-		assertEquals(john, retrieved);
-	}
-
 	@Test
 	public void findOneByIdAndNameWithBindVarsAqlTest() {
 		repository.saveAll(customers);
@@ -135,19 +96,19 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		assertEquals(john, retrieved);
 	}
 
-	@Test
-	public void findOneByIdInCollectionAqlTest() {
+	@Test(expected = ArangoDBException.class)
+	public void findOneByIdInCollectionAqlWithUnusedParamTest() {
 		repository.saveAll(customers);
-		final Customer retrieved = repository.findOneByIdInCollectionAql(john.getId().split("/")[0], john.getId(),
-			john.getId());
+		final Customer retrieved = repository.findOneByIdInCollectionAqlWithUnusedParam(john.getId().split("/")[0],
+			john.getId(), john.getId());
 		assertEquals(john, retrieved);
 	}
 
-	@Test
-	public void findOneByIdInNamedCollectionAqlTest() {
+	@Test(expected = ArangoDBException.class)
+	public void findOneByIdInNamedCollectionAqlWithUnusedParamTest() {
 		repository.saveAll(customers);
-		final Customer retrieved = repository.findOneByIdInNamedCollectionAql(john.getId().split("/")[0], john.getId(),
-			john.getId());
+		final Customer retrieved = repository.findOneByIdInNamedCollectionAqlWithUnusedParam(john.getId().split("/")[0],
+			john.getId(), john.getId());
 		assertEquals(john, retrieved);
 	}
 
@@ -186,5 +147,12 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Test
 	public void queryDate() {
 		assertEquals(repository.queryDate(), Instant.ofEpochMilli(1474988621));
+	}
+
+	@Test
+	public void findOneByIdNamedQueryTest() {
+		repository.saveAll(customers);
+		final Customer retrieved = repository.findOneByIdNamedQuery(john.getId());
+		assertEquals(john, retrieved);
 	}
 }
