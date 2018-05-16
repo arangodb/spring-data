@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 
@@ -155,9 +154,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	private ArangoCollection _collection(final Class<?> entityClass, final String id) {
-		final String name = determineCollectionFromId(Optional.ofNullable(id))
-				.orElse(getPersistentEntity(entityClass).getCollection());
-		final ArangoPersistentEntity<?> persistentEntity = getPersistentEntity(entityClass);
+		final ArangoPersistentEntity<?> persistentEntity = converter.getMappingContext()
+				.getRequiredPersistentEntity(entityClass);
+		final String name = determineCollectionFromId(Optional.ofNullable(id)).orElse(persistentEntity.getCollection());
 		return _collection(name, persistentEntity, persistentEntity.getCollectionOptions());
 	}
 
@@ -264,16 +263,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final FulltextIndexOptions options = new FulltextIndexOptions();
 		value.getFulltextIndexed().ifPresent(i -> options.minLength(i.minLength() > -1 ? i.minLength() : null));
 		collection.ensureFulltextIndex(Collections.singleton(value.getFieldName()), options);
-	}
-
-	private ArangoPersistentEntity<?> getPersistentEntity(final Class<?> entityClass) {
-		final ArangoPersistentEntity<?> persistentEntity = converter.getMappingContext()
-				.getPersistentEntity(entityClass);
-		if (persistentEntity == null) {
-			new InvalidDataAccessApiUsageException(
-					"No persistent entity information found for the type " + entityClass.getName());
-		}
-		return persistentEntity;
 	}
 
 	private Optional<String> determineCollectionFromId(final Optional<String> id) {
@@ -385,7 +374,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		try {
 			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
 					.updateDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			updateDBFields(values, entityClass, res);
+			updateDBFields(values, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -404,7 +393,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 			throws DataAccessException {
 		try {
 			final DocumentEntity res = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id),
-				toDBEntity(value));
+				toDBEntity(value), options);
 			updateDBFields(value, res);
 			return res;
 		} catch (final ArangoDBException e) {
@@ -425,7 +414,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		try {
 			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
 					.replaceDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			updateDBFields(values, entityClass, res);
+			updateDBFields(values, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -505,7 +494,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		try {
 			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
 					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			updateDBFields(values, entityClass, res);
+			updateDBFields(values, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -522,7 +511,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public DocumentEntity insert(final Object value, final DocumentCreateOptions options) throws DataAccessException {
 		try {
-			final DocumentEntity res = _collection(value.getClass()).insertDocument(toDBEntity(value));
+			final DocumentEntity res = _collection(value.getClass()).insertDocument(toDBEntity(value), options);
 			updateDBFields(value, res);
 			return res;
 		} catch (final ArangoDBException e) {
@@ -539,7 +528,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	public DocumentEntity insert(final String collectionName, final Object value, final DocumentCreateOptions options)
 			throws DataAccessException {
 		try {
-			final DocumentEntity res = _collection(collectionName).insertDocument(toDBEntity(value));
+			final DocumentEntity res = _collection(collectionName).insertDocument(toDBEntity(value), options);
 			updateDBFields(value, res);
 			return res;
 		} catch (final ArangoDBException e) {
@@ -618,10 +607,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		}
 	}
 
-	private <T> void updateDBFields(
-		final Iterable<T> values,
-		final Class<?> entityClass,
-		final MultiDocumentEntity<? extends DocumentEntity> res) {
+	private <T> void updateDBFields(final Iterable<T> values, final MultiDocumentEntity<? extends DocumentEntity> res) {
 		final Iterator<T> valueIterator = values.iterator();
 		if (res.getErrors().isEmpty()) {
 			final Iterator<? extends DocumentEntity> documentIterator = res.getDocuments().iterator();
