@@ -155,9 +155,6 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		if (method.isGeoQuery()) {
 			return Object.class;
 		}
-		if (ArangoCursor.class.isAssignableFrom(method.getReturnType().getType())) {
-			return method.getReturnType().getRequiredComponentType().getType();
-		}
 		return method.getReturnedObjectType();
 	}
 
