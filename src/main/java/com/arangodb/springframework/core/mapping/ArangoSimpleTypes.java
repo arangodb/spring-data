@@ -23,6 +23,11 @@ package com.arangodb.springframework.core.mapping;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -64,7 +69,7 @@ public abstract class ArangoSimpleTypes {
 		simpleTypes.add(long.class);
 		simpleTypes.add(float.class);
 		simpleTypes.add(double.class);
-		
+
 		// primitive arrays
 		simpleTypes.add(boolean[].class);
 		simpleTypes.add(byte[].class);
@@ -99,6 +104,13 @@ public abstract class ArangoSimpleTypes {
 		// java.sql.*
 		simpleTypes.add(java.sql.Date.class);
 		simpleTypes.add(Timestamp.class);
+
+		// java.time.*
+		simpleTypes.add(Instant.class);
+		simpleTypes.add(LocalDate.class);
+		simpleTypes.add(LocalDateTime.class);
+		simpleTypes.add(OffsetDateTime.class);
+		simpleTypes.add(ZonedDateTime.class);
 
 		ARANGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
