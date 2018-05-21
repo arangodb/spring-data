@@ -27,6 +27,7 @@ import java.util.Set;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -36,6 +37,7 @@ import com.arangodb.springframework.annotation.Edge;
 
 /**
  * @author Mark Vollmary
+ * @author Reşat SABIQ
  * @author Christian Lechner
  *
  */
@@ -43,34 +45,46 @@ public class ArangoEntityClassScanner {
 
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Annotation>[] ENTITY_ANNOTATIONS = new Class[] { Document.class, Edge.class };
-	
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Annotation>[] ADDITIONAL_ANNOTATIONS = new Class[] { TypeAlias.class };
+	private static final AnnotationTypeFilter[] ANNOTATION_TYPE_FILTERS = new AnnotationTypeFilter[ENTITY_ANNOTATIONS.length+ADDITIONAL_ANNOTATIONS.length];
+	static {
+		for (byte i = 0; i < ENTITY_ANNOTATIONS.length; i++)
+			ANNOTATION_TYPE_FILTERS[i] = new AnnotationTypeFilter(ENTITY_ANNOTATIONS[i]);
+		for (byte i = 0; i < ADDITIONAL_ANNOTATIONS.length; i++)
+			ANNOTATION_TYPE_FILTERS[ENTITY_ANNOTATIONS.length+i] = new AnnotationTypeFilter(ADDITIONAL_ANNOTATIONS[i]);
+	}
 
 	public static Set<Class<?>> scanForEntities(final String... basePackages) throws ClassNotFoundException {
+		return scanForEntities(null, basePackages);
+	}
+	
+	public static Set<Class<?>> scanForEntities(final Class<?> assignableTo, final String... basePackages) throws ClassNotFoundException {
 		final Set<Class<?>> entities = new HashSet<>();
 		for (final String basePackage : basePackages) {
-			entities.addAll(scanForEntities(basePackage));
+			entities.addAll(scanForEntities(assignableTo, basePackage));
 		}
 		return entities;
 	}
 
 	public static Set<Class<?>> scanForEntities(final String basePackage) throws ClassNotFoundException {
+		return scanForEntities(null, basePackage);
+	}
+
+	public static Set<Class<?>> scanForEntities(final Class<?> assignableTo, final String basePackage) throws ClassNotFoundException {
 		final Set<Class<?>> entities = new HashSet<>();
 		if (StringUtils.hasText(basePackage)) {
 			final ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
 					false);
-			for (final Class<? extends Annotation> annotationType : ENTITY_ANNOTATIONS) {
-				componentProvider.addIncludeFilter(new AnnotationTypeFilter(annotationType));
+			for (final AnnotationTypeFilter annotationTypeFilter : ANNOTATION_TYPE_FILTERS) {
+				componentProvider.addIncludeFilter(annotationTypeFilter);
 			}
-			for (final Class<? extends Annotation> annotationType : ADDITIONAL_ANNOTATIONS) {
-				componentProvider.addIncludeFilter(new AnnotationTypeFilter(annotationType));
-			}
+			if (assignableTo != null)
+				componentProvider.addIncludeFilter(new AssignableTypeFilter(assignableTo));
 			for (final BeanDefinition definition : componentProvider.findCandidateComponents(basePackage)) {
 				entities.add(ClassUtils.forName(definition.getBeanClassName(), null));
 			}
 		}
 		return entities;
 	}
-
 }

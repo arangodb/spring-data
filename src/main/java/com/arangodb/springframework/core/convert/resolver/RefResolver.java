@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core.convert.resolver;
 
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.arangodb.springframework.annotation.Ref;
@@ -28,6 +29,7 @@ import com.arangodb.springframework.core.ArangoOperations;
 
 /**
  * @author Mark Vollmary
+ * @author Reşat SABIQ
  *
  */
 public class RefResolver extends AbstractResolver<Ref>
@@ -46,8 +48,8 @@ public class RefResolver extends AbstractResolver<Ref>
 	}
 
 	@Override
-	public Object resolveMultiple(final Collection<String> ids, final Class<?> type, final Ref annotation) {
-		return ids.stream().map(id -> resolveOne(id, type, annotation)).collect(Collectors.toList());
+	public Object resolveMultiple(final Collection<String> ids, final Class<?> type, final Ref annotation, Function<String, Class<?>> inheritanceHelper) {
+		return ids.stream().map(id -> resolveOne(id, inheritanceHelper.apply(id), annotation)).collect(Collectors.toList());
 	}
 
 	@Override
