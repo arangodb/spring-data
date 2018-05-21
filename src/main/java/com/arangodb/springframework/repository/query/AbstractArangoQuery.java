@@ -45,7 +45,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	protected final ArangoOperations operations;
 	protected final Class<?> domainClass;
 
-	public AbstractArangoQuery(ArangoQueryMethod method, ArangoOperations operations) {
+	public AbstractArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
 		Assert.notNull(method, "ArangoQueryMethod must not be null!");
 		Assert.notNull(operations, "ArangoOperations must not be null!");
 		this.method = method;
@@ -54,7 +54,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	}
 
 	@Override
-	public Object execute(Object[] parameters) {
+	public Object execute(final Object[] parameters) {
 		final ArangoParameterAccessor accessor = new ArangoParametersParameterAccessor(method, parameters);
 		final Map<String, Object> bindVars = new HashMap<>();
 
@@ -155,10 +155,13 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		if (method.isGeoQuery()) {
 			return Object.class;
 		}
+		if (ArangoCursor.class.isAssignableFrom(method.getReturnType().getType())) {
+			return method.getReturnType().getRequiredComponentType().getType();
+		}
 		return method.getReturnedObjectType();
 	}
 
-	private Object convertResult(final ArangoCursor<?> result, ArangoParameterAccessor accessor) {
+	private Object convertResult(final ArangoCursor<?> result, final ArangoParameterAccessor accessor) {
 		if (isExistsQuery()) {
 			if (!result.hasNext()) {
 				return false;
@@ -167,7 +170,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		}
 		final ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations,
 				domainClass);
-		return resultConverter.convertResult(method.getReturnType());
+		return resultConverter.convertResult(method.getReturnType().getType());
 	}
 
 }

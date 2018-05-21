@@ -31,12 +31,11 @@ import com.arangodb.springframework.testdata.Customer;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
-	private final AqlQueryOptions OPTIONS = new AqlQueryOptions();
-
 	@Test
 	public void findOneByIdAqlWithNamedParameterTest() {
 		repository.saveAll(customers);
-		final Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(), OPTIONS);
+		final Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(),
+			new AqlQueryOptions());
 		final Customer retrievedCustomer = template.getConverter().read(Customer.class,
 			new DBDocumentEntity(retrieved));
 		assertEquals(john, retrievedCustomer);
@@ -62,8 +61,8 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		bindVars.put("name", john.getName());
-		final ArangoCursor<Customer> retrieved = repository.findOneByBindVarsAql(OPTIONS.ttl(127).cache(true),
-			bindVars);
+		final ArangoCursor<Customer> retrieved = repository
+				.findOneByBindVarsAql(new AqlQueryOptions().ttl(127).cache(true), bindVars);
 		assertEquals(john, retrieved.next());
 	}
 
