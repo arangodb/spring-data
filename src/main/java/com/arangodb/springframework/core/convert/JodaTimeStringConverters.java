@@ -30,6 +30,8 @@ import org.joda.time.Instant;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.util.ClassUtils;
 
 import com.arangodb.velocypack.module.joda.internal.util.JodaTimeUtil;
@@ -59,6 +61,7 @@ public class JodaTimeStringConverters {
 		return converters;
 	}
 
+	@WritingConverter
 	public static enum InstantToStringConverter implements Converter<Instant, String> {
 		INSTANCE;
 
@@ -68,6 +71,7 @@ public class JodaTimeStringConverters {
 		}
 	}
 
+	@WritingConverter
 	public static enum DateTimeToStringConverter implements Converter<DateTime, String> {
 		INSTANCE;
 
@@ -77,6 +81,7 @@ public class JodaTimeStringConverters {
 		}
 	}
 
+	@WritingConverter
 	public static enum LocalDateToStringConverter implements Converter<LocalDate, String> {
 		INSTANCE;
 
@@ -86,6 +91,7 @@ public class JodaTimeStringConverters {
 		}
 	}
 
+	@WritingConverter
 	public static enum LocalDateTimeToStringConverter implements Converter<LocalDateTime, String> {
 		INSTANCE;
 
@@ -95,6 +101,7 @@ public class JodaTimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToInstantConverter implements Converter<String, Instant> {
 		INSTANCE;
 
@@ -104,6 +111,7 @@ public class JodaTimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToDateTimeConverter implements Converter<String, DateTime> {
 		INSTANCE;
 
@@ -113,6 +121,7 @@ public class JodaTimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToLocalDateConverter implements Converter<String, LocalDate> {
 		INSTANCE;
 
@@ -122,6 +131,7 @@ public class JodaTimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToLocalDateTimeConverter implements Converter<String, LocalDateTime> {
 		INSTANCE;
 

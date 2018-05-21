@@ -30,6 +30,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
 
 import com.arangodb.velocypack.module.jdk8.internal.util.JavaTimeUtil;
 
@@ -56,6 +58,7 @@ public class TimeStringConverters {
 		return converters;
 	}
 
+	@WritingConverter
 	public static enum InstantToStringConverter implements Converter<Instant, String> {
 		INSTANCE;
 
@@ -65,6 +68,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@WritingConverter
 	public static enum LocalDateToStringConverter implements Converter<LocalDate, String> {
 		INSTANCE;
 
@@ -74,6 +78,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@WritingConverter
 	public static enum LocalDateTimeToStringConverter implements Converter<LocalDateTime, String> {
 		INSTANCE;
 
@@ -83,6 +88,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@WritingConverter
 	public static enum OffsetDateTimeToStringConverter implements Converter<OffsetDateTime, String> {
 		INSTANCE;
 
@@ -92,6 +98,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@WritingConverter
 	public static enum ZonedDateTimeToStringConverter implements Converter<ZonedDateTime, String> {
 		INSTANCE;
 
@@ -101,6 +108,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToInstantConverter implements Converter<String, Instant> {
 		INSTANCE;
 
@@ -110,6 +118,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToLocalDateConverter implements Converter<String, LocalDate> {
 		INSTANCE;
 
@@ -119,6 +128,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToLocalDateTimeConverter implements Converter<String, LocalDateTime> {
 		INSTANCE;
 
@@ -128,6 +138,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToOffsetDateTimeConverter implements Converter<String, OffsetDateTime> {
 		INSTANCE;
 
@@ -137,6 +148,7 @@ public class TimeStringConverters {
 		}
 	}
 
+	@ReadingConverter
 	public static enum StringToZonedDateTimeConverter implements Converter<String, ZonedDateTime> {
 		INSTANCE;
 
