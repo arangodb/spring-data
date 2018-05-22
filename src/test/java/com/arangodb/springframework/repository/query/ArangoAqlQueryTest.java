@@ -1,5 +1,7 @@
 package com.arangodb.springframework.repository.query;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIn.isOneOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -20,6 +22,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.CustomerNameProjection;
 
 /**
  * 
@@ -154,4 +157,39 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final Customer retrieved = repository.findOneByIdNamedQuery(john.getId());
 		assertEquals(john, retrieved);
 	}
+
+	@Test
+	public void findOneByIdWithStaticProjectionTest() {
+		repository.saveAll(customers);
+		final CustomerNameProjection retrieved = repository.findOneByIdWithStaticProjection(john.getId());
+		assertEquals(retrieved.getName(), john.getName());
+	}
+
+	@Test
+	public void findManyLegalAgeWithStaticProjectionTest() {
+		repository.saveAll(customers);
+		final List<CustomerNameProjection> retrieved = repository.findManyLegalAgeWithStaticProjection();
+		for (CustomerNameProjection proj : retrieved) {
+			assertThat(proj.getName(), isOneOf(john.getName(), bob.getName()));
+		}
+	}
+
+	@Test
+	public void findOneByIdWithDynamicProjectionTest() {
+		repository.saveAll(customers);
+		final CustomerNameProjection retrieved = repository.findOneByIdWithDynamicProjection(john.getId(),
+			CustomerNameProjection.class);
+		assertEquals(retrieved.getName(), john.getName());
+	}
+
+	@Test
+	public void findManyLegalAgeWithDynamicProjectionTest() {
+		repository.saveAll(customers);
+		final List<CustomerNameProjection> retrieved = repository
+				.findManyLegalAgeWithDynamicProjection(CustomerNameProjection.class);
+		for (CustomerNameProjection proj : retrieved) {
+			assertThat(proj.getName(), isOneOf(john.getName(), bob.getName()));
+		}
+	}
+
 }
