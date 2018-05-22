@@ -28,6 +28,7 @@ import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.annotation.QueryOptions;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.CustomerNameProjection;
 
 /**
  * 
@@ -188,10 +189,10 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 	List<Customer> getByOwnsContainsName(String name);
 
 	// Count query
-	
+
 	@Query("RETURN COUNT(@@collection)")
 	long queryCount(@Param("@collection") Class<Customer> collection);
-	
+
 	// Date query
 
 	@Query("RETURN DATE_ISO8601(1474988621)")
@@ -200,4 +201,21 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 	// Named query
 
 	Customer findOneByIdNamedQuery(@Param("id") String id);
+
+	// Static projection
+
+	@Query("FOR c IN customer FILTER c._id == @id RETURN c")
+	CustomerNameProjection findOneByIdWithStaticProjection(@Param("id") String id);
+
+	@Query("FOR c IN customer FILTER c.age >= 18 RETURN c")
+	List<CustomerNameProjection> findManyLegalAgeWithStaticProjection();
+
+	// Dynamic projection
+
+	@Query("FOR c IN customer FILTER c._id == @id RETURN c")
+	<T> T findOneByIdWithDynamicProjection(@Param("id") String id, Class<T> projection);
+
+	@Query("FOR c IN customer FILTER c.age >= 18 RETURN c")
+	<T> List<T> findManyLegalAgeWithDynamicProjection(Class<T> projection);
+
 }
