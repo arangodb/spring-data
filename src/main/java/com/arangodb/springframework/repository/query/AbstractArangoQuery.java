@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.springframework.data.geo.GeoPage;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
@@ -68,8 +69,12 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		}
 
 		final String query = createQuery(accessor, bindVars, options);
-		final ArangoCursor<?> result = operations.query(query, bindVars, options, getResultClass());
-		return convertResult(result, accessor);
+		
+		final ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
+		final Class<?> typeToRead = getTypeToRead(processor);
+		
+		final ArangoCursor<?> result = operations.query(query, bindVars, options, typeToRead);
+		return processor.processResult(convertResult(result, accessor));
 	}
 
 	@Override
@@ -148,17 +153,17 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		return oldStatic;
 	}
 
-	private Class<?> getResultClass() {
+	private Class<?> getTypeToRead(final ResultProcessor processor) {
 		if (isExistsQuery()) {
 			return Integer.class;
 		}
+		
 		if (method.isGeoQuery()) {
-			return Object.class;
+			return Map.class;
 		}
-		if (ArangoCursor.class.isAssignableFrom(method.getReturnType().getType())) {
-			return method.getReturnType().getRequiredComponentType().getType();
-		}
-		return method.getReturnedObjectType();
+		
+		final Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+		return typeToRead != null ? typeToRead : Map.class;
 	}
 
 	private Object convertResult(final ArangoCursor<?> result, final ArangoParameterAccessor accessor) {
@@ -166,7 +171,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			if (!result.hasNext()) {
 				return false;
 			}
-			return Integer.valueOf(result.next().toString()) > 0;
+			return (int) result.next() > 0;
 		}
 		final ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations,
 				domainClass);
