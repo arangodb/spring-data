@@ -69,10 +69,10 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		}
 
 		final String query = createQuery(accessor, bindVars, options);
-		
+
 		final ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		final Class<?> typeToRead = getTypeToRead(processor);
-		
+
 		final ArangoCursor<?> result = operations.query(query, bindVars, options, typeToRead);
 		return processor.processResult(convertResult(result, accessor));
 	}
@@ -157,11 +157,11 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		if (isExistsQuery()) {
 			return Integer.class;
 		}
-		
+
 		if (method.isGeoQuery()) {
 			return Map.class;
 		}
-		
+
 		final Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
 		return typeToRead != null ? typeToRead : Map.class;
 	}
@@ -171,7 +171,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			if (!result.hasNext()) {
 				return false;
 			}
-			return (int) result.next() > 0;
+			return (int) (Integer) result.next() > 0;
 		}
 		final ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations,
 				domainClass);
