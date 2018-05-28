@@ -17,7 +17,7 @@ provides rational & efficient implementation for main-stream persistence-related
 * [Brief history](#history)
 
 ## <a name="inefficiencies_optimized"></a>Inefficiencies & other issues in Spring Data ArangoDB OPTIMIZED/RESOLVED by this implementation
-1. Data pollution & disk space waste (E.g.: a) the size of a single record is up to [3.69](#single) times smaller; b) the amount of data returned from a @Document involving JOINS into 2 other COLLECTIONS is up to [11 times](#calc) smaller; c) if one also adds an eager retrieval of a List of 4 @Documents to the example in the previous item the amount of data returned is up to [26 times](#calc) smaller).
+1. Data pollution & disk space waste: amount of data persisted/processed, etc. when using this implementation is between [3 and 26+ times smaller](#calc).
 2. This data pollution & disk space waste in turn entail more memory utilization at run-time.
 3. This also entails unnecessary band-width utilization.
 4. All of the above also entail usage of more CPU cycles at run-time (considering storage of the unnecessary data, its retrieval, & processing).
@@ -52,7 +52,7 @@ Normal record in provided with this implementation (with (automatic) join, the a
 
 ### <a id="calc"></a>Examples of optimized inefficiencies related to JOINS (with simple sample calculations)
 Taking the example of a [single record](#single) & estimating that the size of single record is 3.69 times smaller (35/129 bytes),
-in each of the following also quite simple 2 examples the amount of data returned (transferred, processed, etc.) could be estimated to be 3.69x3=11 times smaller:
+in each of the following also quite simple 2 examples (involving JOINS into 2 other COLLECTIONS) the amount of data returned (transferred, processed, etc.) could be estimated to be 3.69x3=11 times smaller:
 
 1. @Document
 class A {
@@ -79,8 +79,7 @@ class E {
 }
 
 A.
-If one adds to that a simple List of instances of class F of size 4, an additional estimated waste of 3.69*4=15 times is involved in upstream Spring Data ArangoDB:
-
+If one adds to example 2. an eager retrieval of a simple List of instances of some class F of size 4, an additional estimated waste of space of 3.69*4=15 times is involved in upstream Spring Data ArangoDB:
 @Document
 class D {
 C c;
@@ -91,7 +90,7 @@ List&lt;F&gt; f;
 class F {
 }
 
-So in this example, the implementation provided here produces an amount of data that would be about 11+15=26 times smaller!
+So in this example, the implementation provided here produces an amount of data that would be about 11+15=26 times smaller (with propagating efficiencies in terms of memory, bandwidth, CPU, operational expenses, visual benefits (simpler, less ambiguous), etc.)!
 
 ## <a name="history"></a>Brief history
 ArangoDB Spring Data had no support for inheritance in @Documents, so an [issue](https://github.com/arangodb/spring-data/issues/17#issue-304481714) was logged on 
