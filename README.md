@@ -10,6 +10,9 @@ provides rational & efficient implementation for main-stream persistence-related
 
 * [Inefficiencies & other issues in Spring Data ArangoDB optimized by this implementation](#inefficiencies)
     * [Visual examples of optimized inefficiencies](#visuals)
+       * [Single record](#single)
+       * [A record for a class that doesn't extend another entity/document, & is not extended](#noinheritance)
+       * [A record for a class that has a property of type List with 2 entities/documents in it](#list)
     * [Examples of optimized inefficiencies related to JOINS (with simple sample calculations)](#calc)
 * [Brief history](#history)
 
