@@ -8,7 +8,7 @@ Spring Data ArangoDB upstream project has become tainted by extremely severe ine
 contributions implemented here, believes that what is now in the upstream is so irrational that it cannot be used as is, & therefore has to use a fork that 
 provides rational & efficient implementation for main-stream persistence-related inheritance types like COLLECTION-PER-CLASS (TABLE-PER-CLASS in SQL jargon). 
 
-* [Inefficiencies & other issues in Spring Data ArangoDB optimized by this implementation](#inefficiencies)
+* [Inefficiencies & other issues in Spring Data ArangoDB optimized by this implementation](#inefficiencies_optimized)
     * [Visual examples of optimized inefficiencies](#visuals)
        * [Single record](#single)
        * [A record for a class that doesn't extend another entity/document, & is not extended](#noinheritance)
@@ -16,7 +16,7 @@ provides rational & efficient implementation for main-stream persistence-related
     * [Examples of optimized inefficiencies related to JOINS (with simple sample calculations)](#calc)
 * [Brief history](#history)
 
-## <a name="inefficiencies"></a>Inefficiencies & other issues in Spring Data ArangoDB OPTIMIZED/RESOLVED by this implementation
+## <a name="inefficiencies_optimized"></a>Inefficiencies & other issues in Spring Data ArangoDB OPTIMIZED/RESOLVED by this implementation
 1. Data pollution & disk space waste (E.g.: a. the size of a single record is up to [3.6](#single) times smaller; b) the amount of data returned from a @Document involving JOINS into 2 other COLLECTIONS is up to [11 times](#calc) smaller; c) if one also adds an eager retrieval of a List of 4 @Documents to b) the amount of data returned is up to [26 times](#calc) smaller).
 2. This data pollution & disk space waste in turn entail more memory utilization at run-time.
 3. This also entails unnecessary band-width utilization.
