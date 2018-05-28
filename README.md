@@ -80,6 +80,7 @@ class E {
 
 A.
 If one adds to example 2. an eager retrieval of a simple List of instances of some class F of size 4, an additional estimated waste of space of 3.69*4=15 times is involved in upstream Spring Data ArangoDB:
+
 @Document
 class D {
 C c;
