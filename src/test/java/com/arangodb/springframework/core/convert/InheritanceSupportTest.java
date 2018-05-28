@@ -5,15 +5,18 @@ package com.arangodb.springframework.core.convert;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -22,7 +25,9 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.repository.InheritanceSupportTestRepository;
 
 /**
  * @author Reşat SABIQ
@@ -31,7 +36,9 @@ import com.arangodb.springframework.annotation.Ref;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class InheritanceSupportTest extends AbstractArangoTest {
-	@Document
+	@Autowired
+	InheritanceSupportTestRepository inheritanceSupportRepository;
+	
 	public static abstract class Base {
 		@Id
 		private String id;
@@ -40,11 +47,12 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 			return id;
 		}
 	}
-	@Document
-	public static class PersonParent extends Base {
+
+	@Document("person")
+	public static class PersonSuperClass extends Base {
 		private String name;
 		
-		public PersonParent(String name) {
+		public PersonSuperClass(String name) {
 			super();
 			this.name = name;
 		}
@@ -61,7 +69,8 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 				return false;
 			if (getClass() != obj.getClass())
 				return false;
-			PersonParent other = (PersonParent) obj;
+
+			PersonSuperClass other = (PersonSuperClass) obj;
 			if (name == null) {
 				if (other.name != null)
 					return false;
@@ -70,11 +79,13 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 			return true;
 		}
 	}
-	@Document
-	public static class DeveloperChild extends PersonParent {
+
+	@Document("developer")
+	public static class DeveloperSubclass extends PersonSuperClass {
+		@Field("mainSkill")
 		private String mainDevelopmentSkill;
 
-		public DeveloperChild(String name, String mainDevelopmentSkill) {
+		public DeveloperSubclass(String name, String mainDevelopmentSkill) {
 			super(name);
 			this.mainDevelopmentSkill = mainDevelopmentSkill;
 		}
@@ -91,7 +102,8 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 				return false;
 			if (getClass() != obj.getClass())
 				return false;
-			DeveloperChild other = (DeveloperChild) obj;
+
+			DeveloperSubclass other = (DeveloperSubclass) obj;
 			if (mainDevelopmentSkill == null) {
 				if (other.mainDevelopmentSkill != null)
 					return false;
@@ -104,15 +116,18 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 	@Document
 	public static class Aggregate extends Base {
 		@Ref(lazy=false)
-		private PersonParent developerChild;
+		private PersonSuperClass developerSubclassInstance;
 
-		public Aggregate(PersonParent developerChild) {
+		public Aggregate() {
+		}
+		
+		public Aggregate(PersonSuperClass developerSubclassInstance) {
 			super();
-			this.developerChild = developerChild;
+			this.developerSubclassInstance = developerSubclassInstance;
 		}
 
-		public PersonParent getPersonParent() {
-			return developerChild;
+		public PersonSuperClass getPerson() {
+			return developerSubclassInstance;
 		}
 
 		@Override
@@ -124,25 +139,29 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 			if (getClass() != obj.getClass())
 				return false;
 			Aggregate other = (Aggregate) obj;
-			if (developerChild == null) {
-				if (other.developerChild != null)
+			
+			if (developerSubclassInstance == null) {
+				if (other.developerSubclassInstance != null)
 					return false;
-			} else if (!developerChild.equals(other.developerChild))
+			} else if (!developerSubclassInstance.equals(other.developerSubclassInstance))
 				return false;
 			return true;
 		}
 	}
+	
 	@Document
 	public static class AggregateWithCollection extends Base {
 		@Ref(lazy=false)
-		private Collection<PersonParent> personsAndDevelopers;
+		private Collection<PersonSuperClass> personsIncludingDevelopers;
 
-		public AggregateWithCollection(Collection<PersonParent> personsAndDevelopers) {
-			this.personsAndDevelopers = personsAndDevelopers;
+		public AggregateWithCollection() {
+		}
+		public AggregateWithCollection(Collection<PersonSuperClass> personsAndDevelopers) {
+			this.personsIncludingDevelopers = personsAndDevelopers;
 		}
 
-		public Collection<PersonParent> getPersonsAndDevelopers() {
-			return personsAndDevelopers;
+		public Collection<PersonSuperClass> getPersonsIncludingDevelopers() {
+			return personsIncludingDevelopers;
 		}
 
 		@Override
@@ -154,45 +173,47 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 			if (getClass() != obj.getClass())
 				return false;
 			AggregateWithCollection other = (AggregateWithCollection) obj;
-			if (personsAndDevelopers == null) {
-				if (other.personsAndDevelopers != null)
+
+			if (personsIncludingDevelopers == null) {
+				if (other.personsIncludingDevelopers != null)
 					return false;
-			} else if (!personsAndDevelopers.equals(other.personsAndDevelopers))
+			} else if (!personsIncludingDevelopers.equals(other.personsIncludingDevelopers))
 				return false;
 			return true;
 		}
 	}
-
+	
 	@Test
-	public void coreTablePerClassTypeInheritanceSupport() {
-		PersonParent child = new DeveloperChild("Reşat", "Java");
-		Aggregate orig = new Aggregate(child);
-		template.insert(child);
+	public void coreCollectionPerClassTypeInheritanceSupport() {
+		PersonSuperClass subclassInstance = new DeveloperSubclass("Reşat", "Java");
+		Aggregate orig = new Aggregate(subclassInstance);
+		template.insert(subclassInstance);
 		final DocumentEntity ref = template.insert(orig);
 		final Aggregate entity = template.find(ref.getId(), Aggregate.class).get();
+		
 		assertThat(entity, is(notNullValue()));
-		assertTrue("Subclass should be auto-retrieved after it had been persisted", entity.getPersonParent().getClass().equals(orig.getPersonParent().getClass()));
+		assertTrue("Subclass should be auto-retrieved after it had been persisted", entity.getPerson().getClass().equals(orig.getPerson().getClass()));
 		assertThat(entity.getId(), is(ref.getId()));
 		assertTrue(entity.equals(orig));
 	}
 	
 	@Test
-	public void coreTablePerClassTypeInheritanceSupportForCollections() {
-		PersonParent child = new DeveloperChild("Reşat", "Java");
-		PersonParent child2 = new PersonParent("İsxaq");
-		List<PersonParent> children = new ArrayList<PersonParent>();
-		children.add(child);
-		children.add(child2);
-		AggregateWithCollection orig = new AggregateWithCollection(children);
-		template.insert(child);
-		template.insert(child2);
+	public void collectionPerClassTypeInheritanceSupportForCollections() {
+		PersonSuperClass subclassInstance = new DeveloperSubclass("Reşat", "Java");
+		PersonSuperClass superClassInstance = new PersonSuperClass("İsxaq");
+		List<PersonSuperClass> instances = new ArrayList<PersonSuperClass>();
+		instances.add(subclassInstance);
+		instances.add(superClassInstance);
+		AggregateWithCollection orig = new AggregateWithCollection(instances);
+		template.insert(subclassInstance);
+		template.insert(superClassInstance);
 		final DocumentEntity ref = template.insert(orig);
 		final AggregateWithCollection entity = template.find(ref.getId(), AggregateWithCollection.class).get();
 		assertThat(entity, is(notNullValue()));
-		Collection<PersonParent> retrievedChildren = entity.getPersonsAndDevelopers();
+		Collection<PersonSuperClass> retrievedChildren = entity.getPersonsIncludingDevelopers();
 		int subclassCount = 0, parentClassCount = 0;
-		for (PersonParent c : retrievedChildren) {
-			if (c instanceof DeveloperChild)
+		for (PersonSuperClass c : retrievedChildren) {
+			if (c instanceof DeveloperSubclass)
 				subclassCount++;
 			else
 				parentClassCount++;
@@ -201,5 +222,18 @@ public class InheritanceSupportTest extends AbstractArangoTest {
 		assertTrue(parentClassCount == 1);
 		assertThat(entity.getId(), is(ref.getId()));
 		assertTrue(entity.equals(orig));
+	}
+
+	/**
+	 * This tests that unnecessary data is not persisted for TABLE/COLLECTION_PER_CLASS type inheritance (as has been recently introduced by a merge).
+	 */
+	@Test
+	public void ensureThatCollectionPerClassTypeMainstreamInheritanceImplementationIsOptimal() {
+		PersonSuperClass person = new PersonSuperClass("Reşat");
+		template.insert(person);
+		final Map<String, Object> retrieved = inheritanceSupportRepository.findOne(person.getId());
+		
+		assertFalse("There is no need for storing type data as a property/column for TABLE/COLLECTION_PER_CLASS type of inheritance", 
+				retrieved.containsKey(DefaultArangoTypeMapper.DEFAULT_TYPE_KEY));
 	}
 }

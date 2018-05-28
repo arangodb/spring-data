@@ -3,6 +3,7 @@
  */
 package com.arangodb.springframework.core.util;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -15,15 +16,20 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 
 /**
- * Utilities to facilitate support for inheritance in persisted entities.
+ * Utilities to facilitate support for inheritance in persisted entities (following DRY principles, & other best practices). At present it is used for optimal 
+ * support for TABLE/COLLECTION_PER_CLASS type of inheritance in associations (including those of a {@link Collection} type).
+ * E.g., this helps having clean records of entities with inheritance: <br/>
+ *  {"mainSkill":"Java","name":"Reşat"} <br/>
+ * as opposed to <br/>
+ *  {"_class":"com.arangodb.springframework.core.convert.InheritanceSupportTest$DeveloperSubclass","mainSkill":"Perl","name":"Kevin"}
  * 
  * @author Reşat SABIQ
  */
-// Originally written as part of fix for TABLE/COLLECTION_PER_CLASS type inheritance support:
 // This approach is superior to was merged after this push request (18) was submitted as part of pull request 33, because that pull request stores fully-qualified 
-// class name for each record with inheritance which is completely unnecessary for TABLE/COLLECTION_PER_CLASS type inheritance because there is already an entire 
+// class name for each record with inheritance which is completely unnecessary for TABLE/COLLECTION_PER_CLASS type of inheritance because there is already an entire 
 // TABLE/COLLECTION dedicated for the class involved (thus, this approach optimizes disk space, memory, bandwidth & CPU usage by avoiding the unnecessary overhead 
 // entailed by dealing with unnecessary data).
+// Down the road, this class could also facilitate optimal implementations for other main-stream inheritance types in associations.
 public class InheritanceUtils {
 	// (Something like) this could even be made configurable (via arangodb.properties):
 	private static final boolean QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTION_4_INHERITANCE_SUPPORT = true;
@@ -33,7 +39,7 @@ public class InheritanceUtils {
 	
 	/**
 	 * Finds the (sub)type best matching the reference Id containing the actual type name. 
-	 * The (sub-)type found has the same class name as that contained in {@code source},
+	 * The (sub)type found has the same class name as that contained in {@code source},
 	 * & is of the same type as or extends the type of {@code property}.
 	 * 
 	 * @param source		Type-containing reference id.

@@ -50,6 +50,7 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
+import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
@@ -552,7 +553,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Class<?> referenceType = definedType != null ? definedType.getType() : Object.class;
 		final Class<?> valueType = ClassUtils.getUserClass(value.getClass());
 		if (!valueType.equals(referenceType)) {
-			typeMapper.writeType(valueType, sink);
+			// For TABLE/COLLECTION_PER_CLASS type inheritance there is already an entire 
+			// TABLE/COLLECTION dedicated to the class involved, so there is no need to store any type-related properties/columns:
+			if (valueType.getDeclaredAnnotation(Document.class) == null)
+				typeMapper.writeType(valueType, sink);
 		}
 	}
 
