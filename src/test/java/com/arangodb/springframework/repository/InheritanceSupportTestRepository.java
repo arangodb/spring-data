@@ -2,7 +2,8 @@ package com.arangodb.springframework.repository;
 
 import java.util.Map;
 
-import com.arangodb.springframework.annotation.Param;
+import org.springframework.data.repository.query.Param;
+
 import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.core.convert.InheritanceSupportTest;
 
