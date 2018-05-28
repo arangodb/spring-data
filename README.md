@@ -79,7 +79,7 @@ class E {
 }
 
 A.
-If one adds to that a simple List of instances of class F of size 4, an additional estimated waste of 3,69*4=15 times is involved in upstream Spring Data ArangoDB:
+If one adds to that a simple List of instances of class F of size 4, an additional estimated waste of 3.69*4=15 times is involved in upstream Spring Data ArangoDB:
 
 @Document
 class D {
