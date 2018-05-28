@@ -47,7 +47,7 @@ Normal record provided with this implementation:
 Absurd in upstream Spring Data ArangoDB:
 ![Alt text](docs/img/aggregate_with_collection_absurd.png?raw=true "Absurd")
 
-Normal record in provided with this implementation (with (automatic) join, the amount of data would be up to 11 times (3.69x3) smaller):
+Normal record provided with this implementation (with (automatic) join, the amount of data would be up to [11 times](#calc) (3.69x3) smaller):
 ![Alt text](docs/img/aggregate_with_collection.png?raw=true "Normal")
 
 ### <a id="calc"></a>Examples of optimized inefficiencies related to JOINS (with simple sample calculations)
