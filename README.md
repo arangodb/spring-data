@@ -17,7 +17,7 @@ provides rational & efficient implementation for main-stream persistence-related
 * [Brief history](#history)
 
 ## <a name="inefficiencies_optimized"></a>Inefficiencies & other issues in Spring Data ArangoDB OPTIMIZED/RESOLVED by this implementation
-1. Data pollution & disk space waste (E.g.: a) the size of a single record is up to [3.6](#single) times smaller; b) the amount of data returned from a @Document involving JOINS into 2 other COLLECTIONS is up to [11 times](#calc) smaller; c) if one also adds an eager retrieval of a List of 4 @Documents to the example in the previous item the amount of data returned is up to [26 times](#calc) smaller).
+1. Data pollution & disk space waste (E.g.: a) the size of a single record is up to [3.69](#single) times smaller; b) the amount of data returned from a @Document involving JOINS into 2 other COLLECTIONS is up to [11 times](#calc) smaller; c) if one also adds an eager retrieval of a List of 4 @Documents to the example in the previous item the amount of data returned is up to [26 times](#calc) smaller).
 2. This data pollution & disk space waste in turn entail more memory utilization at run-time.
 3. This also entails unnecessary band-width utilization.
 4. All of the above also entail usage of more CPU cycles at run-time (considering storage of the unnecessary data, its retrieval, & processing).
@@ -31,7 +31,7 @@ provides rational & efficient implementation for main-stream persistence-related
 Absurd in upstream Spring Data ArangoDB:
 ![Alt text](docs/img/unreasonable.png?raw=true "Absurd")
 
-Normal record provided with this implementation (the size of is up to 3.6 times smaller (35/129 bytes)):
+Normal record provided with this implementation (the size of is up to 3.69 times smaller (35/129 bytes)):
 ![Alt text](docs/img/reasonable.png?raw=true "Normal")
 
 #### <a id="noinheritance"></a>A record for a class that doesn't extend another entity/document, & is not extended
