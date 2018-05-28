@@ -51,8 +51,7 @@ Normal record in provided with this implementation (with (automatic) join, the a
 Taking the example of a [single record](#single) & estimating that the size of single record is 3.69 times smaller (35/129 bytes),
 in each of the following also quite simple 2 examples the amount of data returned (transferred, processed, etc.) could be estimated to be 3.69x3=11 times smaller:
 
-1.
-@Document
+1. @Document
 class A {
 B b;
 }
@@ -64,8 +63,7 @@ C c;
 class C {
 }
 
-2.
-@Document
+2. @Document
 class D {
 C c;
 E e;
