@@ -113,7 +113,7 @@ followed by request to not merge the pull request for main-stream inheritance su
 that same contributor that focuses on
 inheritance in non-@Documents by persisting the fully-qualified class name. On April 17th, despite it having been stated that for COLLECTION-PER-CLASS type of inheritance
 storing the fully-qualified class name is 100% unnecessary, that alternative PR got merged into upstream Spring Data ArangoDB. Despite the fact that the inefficiencies introduced by the 
-alternative PR had been clearly shown, the maintainer of ArangoDB Spring Data refused to merge the original pull request (which had been updated to avoid persistence of the fully-qualified
+alternative PR have been clearly shown, the maintainer of ArangoDB Spring Data refused to merge the original pull request (which had been updated to avoid persistence of the fully-qualified
 class name for @Documents (because it's unnecessary & causes inefficiencies)), & closed it on May 22nd. Thus, to have rational
 support for COLLECTION-PER-CLASS type of inheritance, there is a need for a customized implementation.
 
