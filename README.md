@@ -13,7 +13,7 @@ provides rational & efficient implementation for main-stream persistence-related
        * [Single record](#single)
        * [A record for a class that DOESN'T extend another entity/document, & is not extended](#noinheritance)
        * [A record for a class that has a property of type List with 2 entities/documents in it](#list)
-    * [Cumulative effect of optimizations (when JOINs or multiple records matching a query are involved)](#multiples)
+    * [Cumulative effect of optimizations (for JOINs, multiple records matching a query, etc.)](#multiples)
     * [Cumulative efficiencies: simple sample calculations for various numbers of persisted entities](#calc)
 * [Brief history](#history)
 
@@ -53,7 +53,7 @@ Absurd in upstream Spring Data ArangoDB (with (automatic) join, in this case red
 Normal record provided with this implementation:
 ![Alt text](docs/img/aggregate_with_collection.png?raw=true "Normal")
 
-### <a id="multiples"></a>Cumulative effect of optimizations (when JOINs or multiple records matching a query are involved)
+### <a id="multiples"></a>Cumulative effect of optimizations (for JOINs, multiple records matching a query, etc.)
 Taking the example of a [single record](#single) & estimating that the size of single record is 3.69 times smaller (35/129 bytes),
 in each of the following also quite simple 2 examples (involving JOINS into 2 other COLLECTIONS) the effect would be cumulative 
 (i.e., absolute size of data (stored, transferred, processed, etc.) would be multiplied by a factor of 3 (i.e., 1 + 1 + 1 or 1 + 2):
@@ -97,8 +97,8 @@ class F {
 }
 
 So in this example, absolute size of data (stored, transferred, processed, etc.) would be multiplied by a factor of 8 
-(i.e., 3 documents as in example 2. + 5 more for the list). Thus smaller size per record provides a cumulative effect for operations involving JOINs 
-(with propagating efficiencies & benefits in terms of memory, bandwidth, CPU, latency, operational expenses, productivity, as well as visual & perceptional aspects (simpler due to less clutter, less ambiguous), etc.).
+(i.e., 3 documents as in example 2. + 5 more for the list). Thus smaller size per record provides a cumulative effect for operations involving JOINs or multiple records matching a query, etc. (with propagating efficiencies & benefits in terms of memory, bandwidth, CPU, latency, operational expenses, productivity, 
+as well as visual & perceptional aspects (simpler due to less clutter, less ambiguous), etc.).
 
 ### <a id="calc"></a>Cumulative efficiencies: simple sample calculations for various numbers of persisted entities
 ![Alt text](docs/img/efficiencies.png?raw=true "Efficiencies")
