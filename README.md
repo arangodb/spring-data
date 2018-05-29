@@ -13,7 +13,7 @@ provides rational & efficient implementation for main-stream persistence-related
        * [Single record](#single)
        * [A record for a class that DOESN'T extend another entity/document, & is not extended](#noinheritance)
        * [A record for a class that has a property of type List with 2 entities/documents in it](#list)
-    * [Cumulative effect of optimizations when JOINs are involved](#joins)
+    * [Cumulative effect of optimizations (when JOINs or multiple records matching a query are involved)](#multiples)
     * [Cumulative efficiencies: simple sample calculations for various numbers of persisted entities](#calc)
 * [Brief history](#history)
 
@@ -47,13 +47,13 @@ Normal record provided with this implementation:
 
 #### <a id="list"></a>A record for a class that has a property of type List with 2 entities/documents in it
 
-Absurd in upstream Spring Data ArangoDB (with (automatic) join, in this case redundant data would be present in all [3 entities/documents](#joins) that get retrieved):
+Absurd in upstream Spring Data ArangoDB (with (automatic) join, in this case redundant data would be present in all [3 entities/documents](#multiples) that get retrieved):
 ![Alt text](docs/img/aggregate_with_collection_absurd.png?raw=true "Absurd")
 
 Normal record provided with this implementation:
 ![Alt text](docs/img/aggregate_with_collection.png?raw=true "Normal")
 
-### <a id="joins"></a>Cumulative effect of optimizations when JOINs are involved
+### <a id="multiples"></a>Cumulative effect of optimizations (when JOINs or multiple records matching a query are involved)
 Taking the example of a [single record](#single) & estimating that the size of single record is 3.69 times smaller (35/129 bytes),
 in each of the following also quite simple 2 examples (involving JOINS into 2 other COLLECTIONS) the effect would be cumulative 
 (i.e., absolute size of data (stored, transferred, processed, etc.) would be multiplied by a factor of 3 (i.e., 1 + 1 + 1 or 1 + 2):
