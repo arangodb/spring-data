@@ -11,19 +11,22 @@ provides rational & efficient implementation for main-stream persistence-related
 * [Inefficiencies & other issues in Spring Data ArangoDB optimized by this implementation](#inefficiencies_optimized)
     * [Visual examples of optimized inefficiencies](#visuals)
        * [Single record](#single)
-       * [A record for a class that doesn't extend another entity/document, & is not extended](#noinheritance)
+       * [A record for a class that DOESN'T extend another entity/document, & is not extended](#noinheritance)
        * [A record for a class that has a property of type List with 2 entities/documents in it](#list)
-    * [Examples of optimized inefficiencies related to JOINS (with simple sample calculations)](#calc)
+    * [Cumulative effect of optimizations when JOINs are involved](#joins)
+    * [Cumulative efficiencies: simple sample calculations for various numbers of persisted entities](#calc)
 * [Brief history](#history)
 
 ## <a name="inefficiencies_optimized"></a>Inefficiencies & other issues in Spring Data ArangoDB OPTIMIZED/RESOLVED by this implementation
-1. Data pollution & disk space waste: amount of data persisted/processed, etc. when using this implementation is between [3 and 26+ times smaller](#calc).
+1. Data pollution & disk space waste: amount of data persisted/processed, etc. when using this implementation is [up to 4 times smaller](#calc).
 2. This data pollution & disk space waste in turn entail more memory utilization at run-time.
 3. This also entails unnecessary band-width utilization.
 4. All of the above also entail usage of more CPU cycles at run-time (considering storage of the unnecessary data, its retrieval, & processing).
-5. Issues 1 -through- 4, (especially when using a Platform as a service) eventually (for a PaaS, quite quickly) translate to additional expenses (yes, there is also a cash aspect involved).
-6. Extremely absurd clutter when looking at the data (even for [classes that have nothing to do with inheritance](#noinheritance): namely, that don't extend another entity/document, & are not extended) (which is actually also a big factor, once one takes a look at it): as can be seen [below](#list).
-7. Unnecessary tight-coupling of DB records to Java classes: a re-factoring of any @Document Java class to a different package (or changing the name of any Document class which already! has a customized! collection name) as of now would require running a query to update all relevant DB records (this is a major code smell & reveals that now there is a conflict (& bizarre duplication) between the inheritance-support implementation focusing on non-Documents & the semantics of @Document value attribute (the former prevents the latter from freely decoupling DB records from the name of Java class): the upstream project now forces updating all relevant DB records if the name of the class is changed).
+5. Issues 1-through-4, can lead to considerable & even noticeable increase in latency (responsiveness). 
+6. Issues 1-through-4, (especially when using a Platform as a service) eventually (for a PaaS, quite quickly) translate to additional expenses (yes, there is also a cash aspect involved).
+7. Extremely absurd clutter when looking at the data (even for [classes that have nothing to do with inheritance](#noinheritance): namely, that don't extend another entity/document, & are not extended) (which is actually also a big factor, once one takes a look at it): as can also be seen [below](#list).
+8. Issue 7 will most likely have a negative effect on developer & DB admin productivity: by inhibiting concentration on useful data due to presence of a lot of useless data.
+9. Unnecessary tight-coupling of DB records to Java classes: a re-factoring of any @Document Java class to a different package (or changing the name of any Document class which already! has a customized! collection name) as of now would require running a query to update all relevant DB records (this is a major code smell & reveals that now there is a conflict (& bizarre duplication) between the inheritance-support implementation focusing on non-Documents & the semantics of @Document value attribute (the former prevents the latter from freely decoupling DB records from the name of Java class): the upstream project now forces updating all relevant DB records if the name of the class is changed).
 
 ### <a id="visuals"></a>Visual examples of optimized inefficiencies
 #### <a id="single"></a>Single record
@@ -34,7 +37,7 @@ Absurd in upstream Spring Data ArangoDB:
 Normal record provided with this implementation (the size of is up to 3.69 times smaller (35/129 bytes)):
 ![Alt text](docs/img/reasonable.png?raw=true "Normal")
 
-#### <a id="noinheritance"></a>A record for a class that doesn't extend another entity/document, & is not extended
+#### <a id="noinheritance"></a>A record for a class that DOESN'T extend another entity/document, & is not extended
 
 Absurd in upstream Spring Data ArangoDB:
 ![Alt text](docs/img/aggregate_absurd.png?raw=true "Absurd")
@@ -44,15 +47,16 @@ Normal record provided with this implementation:
 
 #### <a id="list"></a>A record for a class that has a property of type List with 2 entities/documents in it
 
-Absurd in upstream Spring Data ArangoDB:
+Absurd in upstream Spring Data ArangoDB (with (automatic) join, in this case redundant data would be present in all [3 entities/documents](#joins) that get retrieved):
 ![Alt text](docs/img/aggregate_with_collection_absurd.png?raw=true "Absurd")
 
-Normal record provided with this implementation (with (automatic) join, the amount of data would be up to [11 times](#calc) (3.69x3) smaller):
+Normal record provided with this implementation:
 ![Alt text](docs/img/aggregate_with_collection.png?raw=true "Normal")
 
-### <a id="calc"></a>Examples of optimized inefficiencies related to JOINS (with simple sample calculations)
+### <a id="joins"></a>Cumulative effect of optimizations when JOINs are involved
 Taking the example of a [single record](#single) & estimating that the size of single record is 3.69 times smaller (35/129 bytes),
-in each of the following also quite simple 2 examples (involving JOINS into 2 other COLLECTIONS) the amount of data returned (transferred, processed, etc.) could be estimated to be 3.69x3=11 times smaller:
+in each of the following also quite simple 2 examples (involving JOINS into 2 other COLLECTIONS) the effect would be cumulative 
+(i.e., absolute size of data (stored, transferred, processed, etc.) would be multiplied by a factor of 3 (i.e., 1 + 1 + 1 or 1 + 2):
 
 1. @Document
 class A {
@@ -79,7 +83,8 @@ class E {
 }
 
 A.
-If one adds to example 2. an eager retrieval of a simple List of instances of some class F of size 4, an additional estimated waste of space of 3.69*4=15 times is involved in upstream Spring Data ArangoDB:
+If one adds to example 2. an eager retrieval of a simple List of instances of some class F of size 5, the cumulative effect would be
+even more noticeable:
 
 @Document
 class D {
@@ -91,7 +96,12 @@ List&lt;F&gt; f;
 class F {
 }
 
-So in this example, the implementation provided here produces an amount of data that would be about 11+15=26 times smaller (with propagating efficiencies in terms of memory, bandwidth, CPU, operational expenses, visual benefits (simpler, less ambiguous), etc.)!
+So in this example, absolute size of data (stored, transferred, processed, etc.) would be multiplied by a factor of 8 
+(i.e., 3 documents as in example 2. + 5 more for the list). Thus smaller size per record provides a cumulative effect for operations involving JOINs 
+(with propagating efficiencies & benefits in terms of memory, bandwidth, CPU, latency, operational expenses, productivity, as well as visual & perceptional aspects (simpler due to less clutter, less ambiguous), etc.).
+
+### <a id="calc"></a>Cumulative efficiencies: simple sample calculations for various numbers of persisted entities
+![Alt text](docs/img/efficiencies.png?raw=true "Efficiencies")
 
 ## <a name="history"></a>Brief history
 ArangoDB Spring Data had no support for inheritance in @Documents, so an [issue](https://github.com/arangodb/spring-data/issues/17#issue-304481714) was logged on 
