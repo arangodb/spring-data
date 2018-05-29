@@ -150,9 +150,15 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 
 	Customer[] findByNameOrderBySurnameAsc(Sort sort, String name);
 
+	@Query("FOR c IN customer FILTER c.name == @1 #sort RETURN c")
+	List<Customer> findByNameWithSort(Sort sort, String name);
+
 	// PAGEABLE
 
 	Page<Customer> readByNameAndSurname(Pageable pageable, String name, AqlQueryOptions options, String surname);
+
+	@Query("FOR c IN customer FILTER c.name == @1 AND c.surname == @2 #pageable RETURN c")
+	Page<Customer> findByNameAndSurnameWithPageable(Pageable pageable, String name, String surname);
 
 	// GEO_RESULT, GEO_RESULTS, GEO_PAGE
 

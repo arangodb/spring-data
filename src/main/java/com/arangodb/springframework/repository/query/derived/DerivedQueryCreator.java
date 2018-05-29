@@ -53,6 +53,7 @@ import org.springframework.util.Assert;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
 
@@ -176,12 +177,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		final String type = tree.isDelete() ? (" REMOVE e IN " + collectionName)
 				: ((tree.isCountProjection() || tree.isExistsProjection()) ? " RETURN length"
 						: format(" RETURN %s", distanceAdjusted));
-		String sortString = buildSortString(sort);
+		String sortString = " " + AqlUtils.buildSortClause(sort, "e");
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
 			final String distanceSortKey = format(" SORT distance(%s, %f, %f)", geoFields,
 				getUniquePoint()[0], getUniquePoint()[1]);
-			if (sortString.length() == 0) {
+			if (sort.isUnsorted()) {
 				sortString = distanceSortKey;
 			} else {
 				sortString = distanceSortKey + ", " + sortString.substring(5, sortString.length());
@@ -192,27 +193,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				.collect(Collectors.joining(", "));
 		final String with = withCollections.isEmpty() ? "" : format("WITH %s ", withCollections);
 		return format(queryTemplate, with, array, predicate, count, sortString, limit, pageable, type);
-	}
-
-	/**
-	 * Builds a String representing SORT statement from a given Sort object
-	 * 
-	 * @param sort
-	 * @return
-	 */
-	public static String buildSortString(final Sort sort) {
-		if (sort == null) {
-			LOGGER.debug("Sort in findAll(Sort) is null");
-		}
-		final StringBuilder sortBuilder = new StringBuilder();
-		if (sort != null && sort.isSorted()) {
-			sortBuilder.append(" SORT");
-			for (final Sort.Order order : sort) {
-				sortBuilder.append(
-					(sortBuilder.length() == 5 ? " " : ", ") + "e." + order.getProperty() + " " + order.getDirection());
-			}
-		}
-		return sortBuilder.toString();
 	}
 
 	/**
