@@ -103,6 +103,9 @@ as well as visual & perceptional aspects (simpler due to less clutter, less ambi
 ### <a id="calc"></a>Cumulative efficiencies: simple sample calculations for various numbers of persisted entities
 ![Alt text](docs/img/efficiencies.png?raw=true "Efficiencies")
 
+Conclusion: this implementation is significantly more efficient in terms of disk space, memory, bandwidth, & CPU usage, as well as in terms of latency, operational expenses, & productivity; & is better in terms of visual & perceptional aspects (simpler due to less clutter, less ambiguous), & in terms of 
+DB records not being tightly-coupled with Java classes.
+
 ## <a name="history"></a>Brief history
 ArangoDB Spring Data had no support for inheritance in @Documents, so an [issue](https://github.com/arangodb/spring-data/issues/17#issue-304481714) was logged on 
 March 13, 2018 focusing on a main-stream inheritance support: COLLECTION-PER-CLASS. On March 24th, a pull request was provided for it. 
