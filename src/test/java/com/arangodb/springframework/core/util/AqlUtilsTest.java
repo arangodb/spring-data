@@ -26,7 +26,6 @@ import static org.hamcrest.core.Is.is;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 
@@ -38,157 +37,157 @@ public class AqlUtilsTest {
 
 	@Test
 	public void buildLimitClauseTest() {
-		assertThat(AqlUtils.buildLimitClause(Pageable.unpaged()), is(""));
-		assertThat(AqlUtils.buildLimitClause(PageRequest.of(0, 1)), is("LIMIT 0, 1"));
-		assertThat(AqlUtils.buildLimitClause(PageRequest.of(10, 20)), is("LIMIT 200, 20"));
+		assertThat(AqlUtils.buildLimitClause(null), is(""));
+		assertThat(AqlUtils.buildLimitClause(new PageRequest(0, 1)), is("LIMIT 0, 1"));
+		assertThat(AqlUtils.buildLimitClause(new PageRequest(10, 20)), is("LIMIT 200, 20"));
 	}
 
 	@Test
 	public void buildPageableClauseTest() {
 		// Special cases
-		assertThat(AqlUtils.buildPageableClause(Pageable.unpaged()), is(""));
+		assertThat(AqlUtils.buildPageableClause(null), is(""));
 
 		// Paging without sort
-		assertThat(AqlUtils.buildPageableClause(PageRequest.of(0, 1)), is("LIMIT 0, 1"));
-		assertThat(AqlUtils.buildPageableClause(PageRequest.of(5, 10)), is("LIMIT 50, 10"));
+		assertThat(AqlUtils.buildPageableClause(new PageRequest(0, 1)), is("LIMIT 0, 1"));
+		assertThat(AqlUtils.buildPageableClause(new PageRequest(5, 10)), is("LIMIT 50, 10"));
 
 		// Paging with sort
-		assertThat(AqlUtils.buildPageableClause(PageRequest.of(2, 10, Direction.ASC, "property")),
+		assertThat(AqlUtils.buildPageableClause(new PageRequest(2, 10, Direction.ASC, "property")),
 			is("SORT `property` ASC LIMIT 20, 10"));
-		assertThat(AqlUtils.buildPageableClause(PageRequest.of(2, 10, Direction.ASC, "property"), "var"),
+		assertThat(AqlUtils.buildPageableClause(new PageRequest(2, 10, Direction.ASC, "property"), "var"),
 			is("SORT `var`.`property` ASC LIMIT 20, 10"));
 
-		assertThat(AqlUtils.buildPageableClause(PageRequest.of(2, 10, Direction.DESC, "property", "property2")),
+		assertThat(AqlUtils.buildPageableClause(new PageRequest(2, 10, Direction.DESC, "property", "property2")),
 			is("SORT `property` DESC, `property2` DESC LIMIT 20, 10"));
-		assertThat(AqlUtils.buildPageableClause(PageRequest.of(2, 10, Direction.DESC, "property", "property2"), "var"),
+		assertThat(AqlUtils.buildPageableClause(new PageRequest(2, 10, Direction.DESC, "property", "property2"), "var"),
 			is("SORT `var`.`property` DESC, `var`.`property2` DESC LIMIT 20, 10"));
 
 		assertThat(
 			AqlUtils.buildPageableClause(
-				PageRequest.of(2, 10, Sort.by("ascProp").and(Sort.by(Direction.DESC, "descProp")))),
+				new PageRequest(2, 10, new Sort("ascProp").and(new Sort(Direction.DESC, "descProp")))),
 			is("SORT `ascProp` ASC, `descProp` DESC LIMIT 20, 10"));
 		assertThat(
 			AqlUtils.buildPageableClause(
-				PageRequest.of(2, 10, Sort.by("ascProp").and(Sort.by(Direction.DESC, "descProp"))), "var"),
+				new PageRequest(2, 10, new Sort("ascProp").and(new Sort(Direction.DESC, "descProp"))), "var"),
 			is("SORT `var`.`ascProp` ASC, `var`.`descProp` DESC LIMIT 20, 10"));
 	}
 
 	@Test
 	public void buildSortClauseTest() {
 		// Special cases
-		assertThat(AqlUtils.buildSortClause(Sort.unsorted()), is(""));
+		assertThat(AqlUtils.buildSortClause(null), is(""));
 
 		// Others
-		assertThat(AqlUtils.buildSortClause(Sort.by("property")), is("SORT `property` ASC"));
-		assertThat(AqlUtils.buildSortClause(Sort.by("property"), "var"), is("SORT `var`.`property` ASC"));
+		assertThat(AqlUtils.buildSortClause(new Sort("property")), is("SORT `property` ASC"));
+		assertThat(AqlUtils.buildSortClause(new Sort("property"), "var"), is("SORT `var`.`property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by(Direction.DESC, "property")), is("SORT `property` DESC"));
-		assertThat(AqlUtils.buildSortClause(Sort.by(Direction.DESC, "property"), "var"),
+		assertThat(AqlUtils.buildSortClause(new Sort(Direction.DESC, "property")), is("SORT `property` DESC"));
+		assertThat(AqlUtils.buildSortClause(new Sort(Direction.DESC, "property"), "var"),
 			is("SORT `var`.`property` DESC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by(Direction.DESC, "property", "property2")),
+		assertThat(AqlUtils.buildSortClause(new Sort(Direction.DESC, "property", "property2")),
 			is("SORT `property` DESC, `property2` DESC"));
-		assertThat(AqlUtils.buildSortClause(Sort.by(Direction.DESC, "property", "property2"), "var"),
+		assertThat(AqlUtils.buildSortClause(new Sort(Direction.DESC, "property", "property2"), "var"),
 			is("SORT `var`.`property` DESC, `var`.`property2` DESC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by(Direction.DESC, "property").and(Sort.by("property2"))),
+		assertThat(AqlUtils.buildSortClause(new Sort(Direction.DESC, "property").and(new Sort("property2"))),
 			is("SORT `property` DESC, `property2` ASC"));
-		assertThat(AqlUtils.buildSortClause(Sort.by(Direction.DESC, "property").and(Sort.by("property2")), "var"),
+		assertThat(AqlUtils.buildSortClause(new Sort(Direction.DESC, "property").and(new Sort("property2")), "var"),
 			is("SORT `var`.`property` DESC, `var`.`property2` ASC"));
 	}
 
 	@Test
 	public void sortClauseEscapingTest() {
-		assertThat(AqlUtils.buildSortClause(Sort.by("property")), is("SORT `property` ASC"));
+		assertThat(AqlUtils.buildSortClause(new Sort("property")), is("SORT `property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("`property`")), is("SORT `property` ASC"));
+		assertThat(AqlUtils.buildSortClause(new Sort("`property`")), is("SORT `property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("`pro\\`perty\\``")), is("SORT `pro\\`perty\\`` ASC"));
+		assertThat(AqlUtils.buildSortClause(new Sort("`pro\\`perty\\``")), is("SORT `pro\\`perty\\`` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("`dont.split.property`")), is("SORT `dont.split.property` ASC"));
+		assertThat(AqlUtils.buildSortClause(new Sort("`dont.split.property`")), is("SORT `dont.split.property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("property.`property`")), is("SORT `property`.`property` ASC"));
+		assertThat(AqlUtils.buildSortClause(new Sort("property.`property`")), is("SORT `property`.`property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("property.`.`.`property`")),
+		assertThat(AqlUtils.buildSortClause(new Sort("property.`.`.`property`")),
 			is("SORT `property`.`.`.`property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("property.\\.property")),
+		assertThat(AqlUtils.buildSortClause(new Sort("property.\\.property")),
 			is("SORT `property`.`\\\\`.`property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("property.\\\\`.property")),
+		assertThat(AqlUtils.buildSortClause(new Sort("property.\\\\`.property")),
 			is("SORT `property`.`\\\\\\``.`property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("`property.\\`.property`")),
+		assertThat(AqlUtils.buildSortClause(new Sort("`property.\\`.property`")),
 			is("SORT `property.\\`.property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("`property.\\``.property")),
+		assertThat(AqlUtils.buildSortClause(new Sort("`property.\\``.property")),
 			is("SORT `property.\\``.`property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("`property..property`")), is("SORT `property..property` ASC"));
+		assertThat(AqlUtils.buildSortClause(new Sort("`property..property`")), is("SORT `property..property` ASC"));
 
-		assertThat(AqlUtils.buildSortClause(Sort.by("property\\. REMOVE doc IN collection //")),
+		assertThat(AqlUtils.buildSortClause(new Sort("property\\. REMOVE doc IN collection //")),
 			is("SORT `property\\\\`.` REMOVE doc IN collection //` ASC"));
 
 		// Illegal sort properties
 
 		try {
-			AqlUtils.buildSortClause(Sort.by(".property"));
+			AqlUtils.buildSortClause(new Sort(".property"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("property."));
+			AqlUtils.buildSortClause(new Sort("property."));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("property..property"));
+			AqlUtils.buildSortClause(new Sort("property..property"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("property.`property"));
+			AqlUtils.buildSortClause(new Sort("property.`property"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("pro`perty.property"));
+			AqlUtils.buildSortClause(new Sort("pro`perty.property"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("`property``.property"));
+			AqlUtils.buildSortClause(new Sort("`property``.property"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("`property```.property"));
+			AqlUtils.buildSortClause(new Sort("`property```.property"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("`property.`\\`.property`"));
+			AqlUtils.buildSortClause(new Sort("`property.`\\`.property`"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("`property.`\\``.property`"));
+			AqlUtils.buildSortClause(new Sort("`property.`\\``.property`"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 		try {
-			AqlUtils.buildSortClause(Sort.by("`property`.\\``.property`"));
+			AqlUtils.buildSortClause(new Sort("`property`.\\``.property`"));
 			Assert.fail();
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 		}
 
 	}

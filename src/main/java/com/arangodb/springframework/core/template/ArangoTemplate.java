@@ -155,7 +155,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	private ArangoCollection _collection(final Class<?> entityClass, final String id) {
 		final ArangoPersistentEntity<?> persistentEntity = converter.getMappingContext()
-				.getRequiredPersistentEntity(entityClass);
+				.getPersistentEntity(entityClass);
 		final String name = determineCollectionFromId(Optional.ofNullable(id)).orElse(persistentEntity.getCollection());
 		return _collection(name, persistentEntity, persistentEntity.getCollectionOptions());
 	}
@@ -166,7 +166,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final CollectionCreateOptions options) {
 
 		return collectionCache.computeIfAbsent(name, collName -> {
-			ArangoCollection collection = db().collection(collName);
+			final ArangoCollection collection = db().collection(collName);
 			try {
 				collection.getInfo();
 			} catch (final ArangoDBException e) {

@@ -24,7 +24,6 @@ import java.util.StringJoiner;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -38,7 +37,7 @@ public final class AqlUtils {
 	}
 
 	public static String buildLimitClause(final Pageable pageable) {
-		if (pageable.isUnpaged()) {
+		if (pageable == null) {
 			return "";
 		}
 
@@ -52,23 +51,23 @@ public final class AqlUtils {
 		return buildPageableClause(pageable, null);
 	}
 
-	public static String buildPageableClause(final Pageable pageable, @Nullable final String varName) {
+	public static String buildPageableClause(final Pageable pageable, final String varName) {
 		return buildPageableClause(pageable, varName, new StringBuilder()).toString();
 	}
 
 	private static StringBuilder buildPageableClause(
 		final Pageable pageable,
-		@Nullable final String varName,
+		final String varName,
 		final StringBuilder clause) {
 
-		if (pageable.isUnpaged()) {
+		if (pageable == null) {
 			return clause;
 		}
-		
-		Sort sort = pageable.getSort();
+
+		final Sort sort = pageable.getSort();
 		buildSortClause(sort, varName, clause);
 
-		if (sort.isSorted()) {
+		if (sort != null) {
 			clause.append(' ');
 		}
 
@@ -80,16 +79,13 @@ public final class AqlUtils {
 		return buildSortClause(sort, null);
 	}
 
-	public static String buildSortClause(final Sort sort, @Nullable final String varName) {
+	public static String buildSortClause(final Sort sort, final String varName) {
 		return buildSortClause(sort, varName, new StringBuilder()).toString();
 	}
 
-	private static StringBuilder buildSortClause(
-		final Sort sort,
-		@Nullable final String varName,
-		final StringBuilder clause) {
-		
-		if (sort.isUnsorted()) {
+	private static StringBuilder buildSortClause(final Sort sort, final String varName, final StringBuilder clause) {
+
+		if (sort == null) {
 			return clause;
 		}
 
