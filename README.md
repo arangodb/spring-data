@@ -34,7 +34,7 @@ provides rational & efficient implementation for main-stream persistence-related
 Absurd in upstream Spring Data ArangoDB:
 ![Alt text](docs/img/unreasonable.png?raw=true "Absurd")
 
-Normal record provided with this implementation (the size of is up to 3.69 times smaller (35/129 bytes)):
+Normal record provided with this implementation (the size is up to 3.69 times smaller (35/129 bytes)):
 ![Alt text](docs/img/reasonable.png?raw=true "Normal")
 
 #### <a id="noinheritance"></a>A record for a class that DOESN'T extend another entity/document, & is not extended
