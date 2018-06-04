@@ -30,6 +30,7 @@ import org.springframework.util.Assert;
 
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameters.ArangoParameter;
 
 /**
@@ -41,7 +42,15 @@ import com.arangodb.springframework.repository.query.ArangoParameters.ArangoPara
  */
 public class StringBasedArangoQuery extends AbstractArangoQuery {
 
+	private static final String PAGEABLE_PLACEHOLDER = "#pageable";
+
+	private static final String SORT_PLACEHOLDER = "#sort";
+
 	private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("@(@?[A-Za-z0-9][A-Za-z0-9_]*)");
+
+	private static final Pattern PAGEABLE_PLACEHOLDER_PATTERN = Pattern.compile(Pattern.quote(PAGEABLE_PLACEHOLDER));
+
+	private static final Pattern SORT_PLACEHOLDER_PATTERN = Pattern.compile(Pattern.quote(SORT_PLACEHOLDER));
 
 	private final String query;
 	private final Set<String> queryBindParams;
@@ -55,6 +64,10 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 		Assert.notNull(query, "Query must not be null!");
 
 		this.query = query;
+		
+		assertSinglePageablePlaceholder();
+		assertSingleSortPlaceholder();
+		
 		this.queryBindParams = getBindParamsInQuery();
 	}
 
@@ -62,6 +75,36 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	protected String createQuery(final ArangoParameterAccessor accessor, final Map<String, Object> bindVars,
 			final AqlQueryOptions options) {
 
+		extractBindVars(accessor, bindVars);
+
+		return prepareQuery(accessor);
+	}
+
+	@Override
+	protected boolean isCountQuery() {
+		return false;
+	}
+
+	@Override
+	protected boolean isExistsQuery() {
+		return false;
+	}
+
+	private String prepareQuery(final ArangoParameterAccessor accessor) {
+		if (accessor.getParameters().hasPageableParameter()) {
+			final String pageableClause = AqlUtils.buildPageableClause(accessor.getPageable());
+			return PAGEABLE_PLACEHOLDER_PATTERN.matcher(query).replaceFirst(pageableClause);
+		}
+
+		if (accessor.getParameters().hasSortParameter()) {
+			final String sortClause = AqlUtils.buildSortClause(accessor.getSort());
+			return SORT_PLACEHOLDER_PATTERN.matcher(query).replaceFirst(sortClause);
+		}
+
+		return query;
+	}
+
+	private void extractBindVars(final ArangoParameterAccessor accessor, final Map<String, Object> bindVars) {
 		final Map<String, Object> bindVarsInParams = accessor.getBindVars();
 		if (bindVarsInParams != null) {
 			bindVars.putAll(bindVarsInParams);
@@ -85,18 +128,6 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 				}
 			}
 		}
-
-		return query;
-	}
-
-	@Override
-	protected boolean isCountQuery() {
-		return false;
-	}
-
-	@Override
-	protected boolean isExistsQuery() {
-		return false;
 	}
 
 	private Set<String> getBindParamsInQuery() {
@@ -136,6 +167,30 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 			fixedQuery.append(query.charAt(i));
 		}
 		return fixedQuery.toString();
+	}
+
+	private void assertSinglePageablePlaceholder() {
+		if (method.getParameters().hasPageableParameter()) {
+			int firstOccurrence = query.indexOf(PAGEABLE_PLACEHOLDER);
+			int secondOccurrence = query.indexOf(PAGEABLE_PLACEHOLDER, firstOccurrence + PAGEABLE_PLACEHOLDER.length());
+
+			Assert.isTrue(firstOccurrence > -1 && secondOccurrence < 0,
+				String.format(
+					"Native query with Pageable param must contain exactly one pageable placeholder (%s)! Offending method: %s",
+					PAGEABLE_PLACEHOLDER, method));
+		}
+	}
+
+	private void assertSingleSortPlaceholder() {
+		if (method.getParameters().hasSortParameter()) {
+			int firstOccurrence = query.indexOf(SORT_PLACEHOLDER);
+			int secondOccurrence = query.indexOf(SORT_PLACEHOLDER, firstOccurrence + SORT_PLACEHOLDER.length());
+
+			Assert.isTrue(firstOccurrence > -1 && secondOccurrence < 0,
+				String.format(
+					"Native query with Sort param must contain exactly one sort placeholder (%s)! Offending method: %s",
+					SORT_PLACEHOLDER, method));
+		}
 	}
 
 }
