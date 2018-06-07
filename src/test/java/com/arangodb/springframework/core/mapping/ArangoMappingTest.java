@@ -61,6 +61,9 @@ import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
 import com.arangodb.springframework.annotation.To;
+import com.arangodb.springframework.testdata.Actor;
+import com.arangodb.springframework.testdata.Movie;
+import com.arangodb.springframework.testdata.Role;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
 
@@ -1430,5 +1433,73 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		template.insert(entity);
 		final EnumTestEntity document = template.find(entity.getId(), EnumTestEntity.class).get();
 		assertThat(entity.value, is(document.value));
+	}
+
+	@Test
+	public void cyclicRelationsTest() {
+		final Actor actor = new Actor();
+		actor.setName("George Clooney");
+		template.insert(actor);
+
+		final Movie movie1 = new Movie();
+		movie1.setName("Ocean's Eleven");
+		template.insert(movie1);
+
+		final Movie movie2 = new Movie();
+		movie2.setName("Ocean's Twelve");
+		template.insert(movie2);
+
+		final Movie movie3 = new Movie();
+		movie3.setName("Ocean's Thirteen");
+		template.insert(movie3);
+
+		final Role role1 = new Role();
+		role1.setActor(actor);
+		role1.setMovie(movie1);
+		template.insert(role1);
+
+		final Role role2 = new Role();
+		role2.setActor(actor);
+		role2.setMovie(movie2);
+		template.insert(role2);
+
+		final Role role3 = new Role();
+		role3.setActor(actor);
+		role3.setMovie(movie3);
+		template.insert(role3);
+
+		final Actor retrieved = template.find(actor.getId(), Actor.class).get();
+
+		assertThat(retrieved, is(notNullValue()));
+		
+		assertThat(retrieved.getId(), is(actor.getId()));
+		assertThat(retrieved.getName(), is(actor.getName()));
+		
+		assertThat(retrieved.getRoles(), is(notNullValue()));
+		assertThat(retrieved.getMovies(), is(notNullValue()));
+
+		for (final Role role : retrieved.getRoles()) {
+			assertThat(role.getActor(), is(notNullValue()));
+			assertThat(role.getActor().getId(), is(actor.getId()));
+			assertThat(role.getActor().getName(), is(actor.getName()));
+
+			assertThat(role.getMovie(), is(notNullValue()));
+			assertThat(role.getMovie().getId(), isOneOf(movie1.getId(), movie2.getId(), movie3.getId()));
+			assertThat(role.getMovie().getName(), isOneOf(movie1.getName(), movie2.getName(), movie3.getName()));
+		}
+
+		for (final Movie movie : retrieved.getMovies()) {
+			assertThat(movie, is(notNullValue()));
+			assertThat(movie.getId(), isOneOf(movie1.getId(), movie2.getId(), movie3.getId()));
+			assertThat(movie.getName(), isOneOf(movie1.getName(), movie2.getName(), movie3.getName()));
+
+			assertThat(movie.getActors(), is(notNullValue()));
+			for (final Actor a : movie.getActors()) {
+				assertThat(a, is(notNullValue()));
+				assertThat(a.getId(), isOneOf(actor.getId()));
+				assertThat(a.getName(), isOneOf(actor.getName()));
+			}
+		}
+
 	}
 }
