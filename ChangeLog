@@ -1,3 +1,8 @@
+v2.1.5 (2018-06-07)
+---------------------------
+* upgraded arangodb-java-driver to 4.4.1
+* fixed relation cycle (issue #43)
+
 v2.1.4 (2018-06-04)
 ---------------------------
 * annotated TimeStringConverters for compatibility with Spring Data 2.0.7-RELEASE
