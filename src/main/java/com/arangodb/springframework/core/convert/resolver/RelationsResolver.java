@@ -22,7 +22,6 @@ package com.arangodb.springframework.core.convert.resolver;
 
 import java.util.Arrays;
 
-import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.ArangoOperations;
@@ -49,14 +48,18 @@ public class RelationsResolver extends AbstractResolver<Relations>
 	}
 
 	@Override
-	public Object resolveMultiple(final String id, final Class<?> type, final Relations annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> resolve(i, type, a))
+	public Object resolveMultiple(
+		final String id,
+		final Class<?> type,
+		final Class<?> containerType,
+		final Relations annotation) {
+		return annotation.lazy() ? proxy(id, containerType, annotation, (i, t, a) -> resolve(i, type, a))
 				: resolve(id, type, annotation);
 	}
 
 	@Override
 	public Object resolve(final String id, final Class<?> type, final Relations annotation) {
-		final ArangoCursor<?> result = template.query(
+		return template.query(
 			"WITH @@vertex FOR v IN " + Math.max(1, annotation.minDepth()) + ".." + Math.max(1, annotation.maxDepth())
 					+ " " + annotation.direction()
 					+ " @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v",
@@ -65,9 +68,7 @@ public class RelationsResolver extends AbstractResolver<Relations>
 						Arrays.asList(annotation.edges()).stream().map((e) -> template.collection(e).name())
 								.reduce((a, b) -> a + ", " + b).get())
 					.put("@vertex", type).get(),
-			new AqlQueryOptions(), type);
-
-		return result.hasNext() ? result.next() : null;
+			new AqlQueryOptions(), type).asListRemaining();
 	}
 
 }

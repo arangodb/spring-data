@@ -105,7 +105,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return null;
 		}
 
-		TypeInformation<?> typeToUse = typeMapper.readType(source, type);
+		final TypeInformation<?> typeToUse = typeMapper.readType(source, type);
 
 		if (conversions.hasCustomReadTarget(source.getClass(), typeToUse.getType())) {
 			return conversionService.convert(source, typeToUse.getType());
@@ -287,7 +287,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return resolverFactory.getRelationResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike() && parentId != null) {
 				return Optional.of(resolver.resolveMultiple(parentId.toString(),
-					getNonNullComponentType(property.getTypeInformation()).getType(), annotation));
+					getNonNullComponentType(property.getTypeInformation()).getType(),
+					property.getTypeInformation().getType(), annotation));
 			} else if (source != null) {
 				return Optional.of(
 					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
