@@ -1,3 +1,7 @@
+v2.1.6 (2018-06-07)
+---------------------------
+* fixed relation cycle (issue #43)
+
 v2.1.5 (2018-06-07)
 ---------------------------
 * upgraded arangodb-java-driver to 4.4.1
