@@ -23,7 +23,6 @@ package com.arangodb.springframework.core.template;
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
-import com.arangodb.internal.ArangoCursorImpl;
 import com.arangodb.internal.ArangoCursorIterator;
 import com.arangodb.internal.InternalArangoDatabase;
 import com.arangodb.springframework.core.convert.ArangoConverter;
@@ -33,7 +32,7 @@ import com.arangodb.springframework.core.convert.ArangoConverter;
  * @param <T>
  *
  */
-class ArangoExtCursor<T> extends ArangoCursorImpl<T> {
+class ArangoExtCursor<T> extends ArangoCursor<T> {
 
 	protected ArangoExtCursor(final InternalArangoDatabase<?, ?, ?, ?> db, final ArangoCursorExecute execute,
 		final Class<T> type, final CursorEntity result, final ArangoConverter converter) {
