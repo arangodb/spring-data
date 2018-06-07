@@ -30,6 +30,6 @@ public interface RelationResolver<A extends Annotation> {
 
 	Object resolveOne(String id, Class<?> type, A annotation);
 
-	Object resolveMultiple(String id, Class<?> type, A annotation);
+	Object resolveMultiple(String id, Class<?> type, Class<?> containerType, A annotation);
 
 }
