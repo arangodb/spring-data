@@ -1,3 +1,7 @@
+v2.1.7 (xxxx-xx-xx)
+---------------------------
+* fixed lazy use of @Relations/@From/@To when using a Set<>
+
 v2.1.6 (2018-06-07)
 ---------------------------
 * fixed relation cycle (issue #43)

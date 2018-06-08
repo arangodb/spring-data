@@ -23,6 +23,9 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import org.springframework.core.convert.ConversionService;
+import org.springframework.data.util.TypeInformation;
+
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.ArangoOperations;
 
@@ -35,24 +38,25 @@ public class RefResolver extends AbstractResolver<Ref>
 
 	private final ArangoOperations template;
 
-	public RefResolver(final ArangoOperations template) {
-		super();
+	public RefResolver(final ArangoOperations template, final ConversionService conversionService) {
+		super(conversionService);
 		this.template = template;
 	}
 
 	@Override
-	public Object resolveOne(final String id, final Class<?> type, final Ref annotation) {
+	public Object resolveOne(final String id, final TypeInformation<?> type, final Ref annotation) {
 		return annotation.lazy() ? proxy(id, type, annotation, this) : resolve(id, type, annotation);
 	}
 
 	@Override
-	public Object resolveMultiple(final Collection<String> ids, final Class<?> type, final Ref annotation) {
-		return ids.stream().map(id -> resolveOne(id, type, annotation)).collect(Collectors.toList());
+	public Object resolveMultiple(final Collection<String> ids, final TypeInformation<?> type, final Ref annotation) {
+		return ids.stream().map(id -> resolveOne(id, getNonNullComponentType(type), annotation))
+				.collect(Collectors.toList());
 	}
 
 	@Override
-	public Object resolve(final String id, final Class<?> type, final Ref annotation) {
-		return template.find(id, type).get();
+	public Object resolve(final String id, final TypeInformation<?> type, final Ref annotation) {
+		return template.find(id, type.getType()).get();
 	}
 
 }
