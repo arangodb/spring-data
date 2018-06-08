@@ -23,14 +23,16 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 
+import org.springframework.data.util.TypeInformation;
+
 /**
  * @author Mark Vollmary
  *
  */
 public interface ReferenceResolver<A extends Annotation> {
 
-	Object resolveOne(String id, Class<?> type, A annotation);
+	Object resolveOne(String id, TypeInformation<?> type, A annotation);
 
-	Object resolveMultiple(Collection<String> ids, Class<?> type, A annotation);
+	Object resolveMultiple(Collection<String> ids, TypeInformation<?> type, A annotation);
 
 }

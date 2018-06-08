@@ -22,6 +22,9 @@ package com.arangodb.springframework.core.convert.resolver;
 
 import java.util.Arrays;
 
+import org.springframework.core.convert.ConversionService;
+import org.springframework.data.util.TypeInformation;
+
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.ArangoOperations;
@@ -37,28 +40,24 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	private final ArangoOperations template;
 
-	public RelationsResolver(final ArangoOperations template) {
-		super();
+	public RelationsResolver(final ArangoOperations template, final ConversionService conversionService) {
+		super(conversionService);
 		this.template = template;
 	}
 
 	@Override
-	public Object resolveOne(final String id, final Class<?> type, final Relations annotation) {
+	public Object resolveOne(final String id, final TypeInformation<?> type, final Relations annotation) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Object resolveMultiple(
-		final String id,
-		final Class<?> type,
-		final Class<?> containerType,
-		final Relations annotation) {
-		return annotation.lazy() ? proxy(id, containerType, annotation, (i, t, a) -> resolve(i, type, a))
-				: resolve(id, type, annotation);
+	public Object resolveMultiple(final String id, final TypeInformation<?> type, final Relations annotation) {
+		return annotation.lazy() ? proxy(id, type, annotation, this) : resolve(id, type, annotation);
 	}
 
 	@Override
-	public Object resolve(final String id, final Class<?> type, final Relations annotation) {
+	public Object resolve(final String id, final TypeInformation<?> type, final Relations annotation) {
+		final Class<?> t = getNonNullComponentType(type).getType();
 		return template.query(
 			"WITH @@vertex FOR v IN " + Math.max(1, annotation.minDepth()) + ".." + Math.max(1, annotation.maxDepth())
 					+ " " + annotation.direction()
@@ -67,8 +66,8 @@ public class RelationsResolver extends AbstractResolver<Relations>
 					.put("@edges",
 						Arrays.asList(annotation.edges()).stream().map((e) -> template.collection(e).name())
 								.reduce((a, b) -> a + ", " + b).get())
-					.put("@vertex", type).get(),
-			new AqlQueryOptions(), type).asListRemaining();
+					.put("@vertex", t).get(),
+			new AqlQueryOptions(), t).asListRemaining();
 	}
 
 }

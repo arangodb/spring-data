@@ -30,6 +30,9 @@ import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.objenesis.ObjenesisStd;
 
 /**
@@ -39,34 +42,36 @@ import org.springframework.objenesis.ObjenesisStd;
 public abstract class AbstractResolver<A extends Annotation> {
 
 	private final ObjenesisStd objenesis;
+	private final ConversionService conversionService;
 
-	protected AbstractResolver() {
+	protected AbstractResolver(final ConversionService conversionService) {
 		super();
+		this.conversionService = conversionService;
 		this.objenesis = new ObjenesisStd(true);
 	}
 
 	static interface ResolverCallback<A extends Annotation> {
 
-		Object resolve(String id, Class<?> type, A annotation);
+		Object resolve(String id, TypeInformation<?> type, A annotation);
 
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Object proxy(
 		final String id,
-		final Class<?> type,
+		final TypeInformation<?> type,
 		final A annotation,
 		final ResolverCallback<A> callback) {
-		final ProxyInterceptor interceptor = new ProxyInterceptor(id, type, annotation, callback);
-		if (type.isInterface()) {
-			final ProxyFactory proxyFactory = new ProxyFactory(new Class<?>[] { type });
-			for (final Class<?> interf : type.getInterfaces()) {
+		final ProxyInterceptor interceptor = new ProxyInterceptor(id, type, annotation, callback, conversionService);
+		if (type.getType().isInterface()) {
+			final ProxyFactory proxyFactory = new ProxyFactory(new Class<?>[] { type.getType() });
+			for (final Class<?> interf : type.getType().getInterfaces()) {
 				proxyFactory.addInterface(interf);
 			}
 			proxyFactory.addAdvice(interceptor);
 			return proxyFactory.getProxy();
 		} else {
-			final Factory factory = (Factory) objenesis.newInstance(enhancedTypeFor(type));
+			final Factory factory = (Factory) objenesis.newInstance(enhancedTypeFor(type.getType()));
 			factory.setCallbacks(new Callback[] { interceptor });
 			return factory;
 		}
@@ -84,19 +89,21 @@ public abstract class AbstractResolver<A extends Annotation> {
 
 		private static final long serialVersionUID = -6722757823918987065L;
 		private final String id;
-		private final Class<?> type;
+		final TypeInformation<?> type;
 		private final A annotation;
 		private final ResolverCallback<A> callback;
 		private volatile boolean resolved;
 		private Object result;
+		private final ConversionService conversionService;
 
-		public ProxyInterceptor(final String id, final Class<?> type, final A annotation,
-			final ResolverCallback<A> callback) {
+		public ProxyInterceptor(final String id, final TypeInformation<?> type, final A annotation,
+			final ResolverCallback<A> callback, final ConversionService conversionService) {
 			super();
 			this.id = id;
 			this.type = type;
 			this.annotation = annotation;
 			this.callback = callback;
+			this.conversionService = conversionService;
 			result = null;
 			resolved = false;
 		}
@@ -115,11 +122,22 @@ public abstract class AbstractResolver<A extends Annotation> {
 
 		private synchronized Object resolve() {
 			if (!resolved) {
-				result = callback.resolve(id, type, annotation);
+				result = convertIfNecessary(callback.resolve(id, type, annotation), type.getType());
 				resolved = true;
 			}
 			return result;
 		}
 
+		@SuppressWarnings("unchecked")
+		private <T> T convertIfNecessary(final Object source, final Class<T> type) {
+			return (T) (source == null ? null
+					: type.isAssignableFrom(source.getClass()) ? source : conversionService.convert(source, type));
+		}
 	}
+
+	protected static TypeInformation<?> getNonNullComponentType(final TypeInformation<?> type) {
+		final TypeInformation<?> compType = type.getComponentType();
+		return compType != null ? compType : ClassTypeInformation.OBJECT;
+	}
+
 }
