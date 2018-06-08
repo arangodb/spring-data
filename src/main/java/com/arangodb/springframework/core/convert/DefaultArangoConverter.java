@@ -266,15 +266,14 @@ public class DefaultArangoConverter implements ArangoConverter {
 					throw new MappingException(
 							"Collection of Type String expected for references but found type " + source.getClass());
 				}
-				return Optional.ofNullable(resolver.resolveMultiple(ids,
-					getNonNullComponentType(property.getTypeInformation()).getType(), annotation));
+				return Optional.ofNullable(resolver.resolveMultiple(ids, property.getTypeInformation(), annotation));
 			} else {
 				if (!(source instanceof String)) {
 					throw new MappingException(
 							"Type String expected for reference but found type " + source.getClass());
 				}
-				return Optional.ofNullable(
-					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
+				return Optional
+						.ofNullable(resolver.resolveOne(source.toString(), property.getTypeInformation(), annotation));
 			}
 		});
 	}
@@ -286,12 +285,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final A annotation) {
 		return resolverFactory.getRelationResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike() && parentId != null) {
-				return Optional.of(resolver.resolveMultiple(parentId.toString(),
-					getNonNullComponentType(property.getTypeInformation()).getType(),
-					property.getTypeInformation().getType(), annotation));
+				return Optional
+						.of(resolver.resolveMultiple(parentId.toString(), property.getTypeInformation(), annotation));
 			} else if (source != null) {
-				return Optional.of(
-					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
+				return Optional.of(resolver.resolveOne(source.toString(), property.getTypeInformation(), annotation));
 			}
 			return Optional.empty();
 		});

@@ -38,6 +38,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -559,6 +560,35 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		}
 	}
 
+	public static class DocumentFromLazySetTestEntity extends BasicTestEntity {
+		@From(lazy = true)
+		private Set<BasicEdgeLazyTestEntity> entities;
+	}
+
+	@Test
+	public void documentFromLazySet() {
+		final DocumentFromLazyTestEntity e0 = new DocumentFromLazyTestEntity();
+		template.insert(e0);
+		final DocumentFromLazyTestEntity e1 = new DocumentFromLazyTestEntity();
+		template.insert(e1);
+		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e0, e1);
+		template.insert(edge0);
+		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e0, e1);
+		template.insert(edge1);
+		final DocumentFromLazySetTestEntity document = template.find(e0.id, DocumentFromLazySetTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicEdgeLazyTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getFrom(), is(notNullValue()));
+			assertThat(e.getFrom().getId(), is(notNullValue()));
+			assertThat(e.getFrom().getId(), is(e0.getId()));
+		}
+	}
+
 	public static class DocumentToTestEntity extends BasicTestEntity {
 		@To
 		private Collection<BasicEdgeLazyTestEntity> entities;
@@ -617,6 +647,35 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		}
 	}
 
+	public static class DocumentToLazyTestSetEntity extends BasicTestEntity {
+		@To(lazy = true)
+		private Collection<BasicEdgeLazyTestEntity> entities;
+	}
+
+	@Test
+	public void documentToLazySet() {
+		final DocumentToLazyTestEntity e0 = new DocumentToLazyTestEntity();
+		template.insert(e0);
+		final DocumentToLazyTestEntity e1 = new DocumentToLazyTestEntity();
+		template.insert(e1);
+		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e1, e0);
+		template.insert(edge0);
+		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e1, e0);
+		template.insert(edge1);
+		final DocumentToLazyTestSetEntity document = template.find(e0.id, DocumentToLazyTestSetEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicEdgeLazyTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getTo(), is(notNullValue()));
+			assertThat(e.getTo().getId(), is(notNullValue()));
+			assertThat(e.getTo().getId(), is(e0.getId()));
+		}
+	}
+
 	public static class RelationsTestEntity extends BasicTestEntity {
 		@Relations(edges = BasicEdgeTestEntity.class)
 		private Collection<BasicTestEntity> entities;
@@ -655,12 +714,39 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		template.insert(e1);
 		final BasicTestEntity e2 = new BasicTestEntity();
 		template.insert(e2);
-		final RelationsTestEntity e0 = new RelationsTestEntity();
+		final RelationsLazyTestEntity e0 = new RelationsLazyTestEntity();
 		template.insert(e0);
 		template.insert(new BasicEdgeTestEntity(e0, e1));
 		template.insert(new BasicEdgeTestEntity(e0, e2));
 
 		final RelationsLazyTestEntity document = template.find(e0.id, RelationsLazyTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entities, is(notNullValue()));
+		assertThat(document.entities.size(), is(2));
+		for (final BasicTestEntity e : document.entities) {
+			assertThat(e, instanceOf(BasicTestEntity.class));
+			assertThat(e.getId(), is(notNullValue()));
+			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+		}
+	}
+
+	public static class RelationsLazySetTestEntity extends BasicTestEntity {
+		@Relations(edges = BasicEdgeTestEntity.class, lazy = true)
+		private Set<BasicTestEntity> entities;
+	}
+
+	@Test
+	public void relationsLazySet() {
+		final BasicTestEntity e1 = new BasicTestEntity();
+		template.insert(e1);
+		final BasicTestEntity e2 = new BasicTestEntity();
+		template.insert(e2);
+		final RelationsLazySetTestEntity e0 = new RelationsLazySetTestEntity();
+		template.insert(e0);
+		template.insert(new BasicEdgeTestEntity(e0, e1));
+		template.insert(new BasicEdgeTestEntity(e0, e2));
+
+		final RelationsLazySetTestEntity document = template.find(e0.id, RelationsLazySetTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
 		assertThat(document.entities.size(), is(2));
@@ -1471,10 +1557,10 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final Actor retrieved = template.find(actor.getId(), Actor.class).get();
 
 		assertThat(retrieved, is(notNullValue()));
-		
+
 		assertThat(retrieved.getId(), is(actor.getId()));
 		assertThat(retrieved.getName(), is(actor.getName()));
-		
+
 		assertThat(retrieved.getRoles(), is(notNullValue()));
 		assertThat(retrieved.getMovies(), is(notNullValue()));
 
