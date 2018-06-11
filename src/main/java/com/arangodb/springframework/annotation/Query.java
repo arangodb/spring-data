@@ -25,11 +25,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.data.annotation.QueryAnnotation;
+
 /**
- * Created by F625633 on 12/07/2017.
+ * 
+ * @author Audrius Malele
+ * @author Mark McCormick
+ * @author Mark Vollmary
+ * @author Christian Lechner
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@QueryAnnotation
 public @interface Query {
 
 	/**
