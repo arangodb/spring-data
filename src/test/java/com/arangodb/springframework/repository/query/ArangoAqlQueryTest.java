@@ -1,6 +1,7 @@
 package com.arangodb.springframework.repository.query;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsIn.isOneOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -8,12 +9,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +30,7 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
+import com.arangodb.springframework.repository.OverriddenCrudMethodsRepository;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.CustomerNameProjection;
 
@@ -39,6 +43,9 @@ import com.arangodb.springframework.testdata.CustomerNameProjection;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
+
+	@Autowired
+	protected OverriddenCrudMethodsRepository overriddenRepository;
 
 	@Test
 	public void findOneByIdAqlWithNamedParameterTest() {
@@ -228,6 +235,14 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final List<Customer> retrieved = repository
 				.findByNameWithSort(Sort.by(Direction.DESC, "c.surname").and(Sort.by("c.age")), "A");
 		assertThat(retrieved, is(toBeRetrieved));
+	}
+
+	@Test
+	public void overriddenCrudMethodsTest() {
+		overriddenRepository.saveAll(customers);
+		Iterator<Customer> customers = overriddenRepository.findAll().iterator();
+		assertThat(customers.hasNext(), is(true));
+		assertThat(customers.next(), is(nullValue()));
 	}
 
 }
