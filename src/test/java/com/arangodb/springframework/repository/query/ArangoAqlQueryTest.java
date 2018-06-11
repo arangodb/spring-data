@@ -1,6 +1,7 @@
 package com.arangodb.springframework.repository.query;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsIn.isOneOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -8,12 +9,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +30,7 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
+import com.arangodb.springframework.repository.OverriddenCrudMethodsRepository;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.CustomerNameProjection;
 
@@ -40,14 +44,15 @@ import com.arangodb.springframework.testdata.CustomerNameProjection;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
-	private final AqlQueryOptions OPTIONS = new AqlQueryOptions();
+	@Autowired
+	protected OverriddenCrudMethodsRepository overriddenRepository;
 
 	@Test
 	public void findOneByIdAqlWithNamedParameterTest() {
 		repository.save(customers);
-		final Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(), OPTIONS);
-		final Customer retrievedCustomer = template.getConverter().read(Customer.class,
-			new DBDocumentEntity(retrieved));
+		final Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(),
+				new AqlQueryOptions());
+		final Customer retrievedCustomer = template.getConverter().read(Customer.class, new DBDocumentEntity(retrieved));
 		assertEquals(john, retrievedCustomer);
 	}
 
@@ -61,7 +66,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		allProperties.put("_rev", retrieved.getRevision());
 		retrieved.getProperties().forEach((k, v) -> allProperties.put(k, v));
 		final Customer retrievedCustomer = template.getConverter().read(Customer.class,
-			new DBDocumentEntity(allProperties));
+				new DBDocumentEntity(allProperties));
 		assertEquals(john, retrievedCustomer);
 	}
 
@@ -71,8 +76,8 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		bindVars.put("name", john.getName());
-		final ArangoCursor<Customer> retrieved = repository.findOneByBindVarsAql(OPTIONS.ttl(127).cache(true),
-			bindVars);
+		final ArangoCursor<Customer> retrieved = repository.findOneByBindVarsAql(new AqlQueryOptions().ttl(127).cache(true),
+				bindVars);
 		assertEquals(john, retrieved.next());
 	}
 
@@ -109,7 +114,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdInCollectionAqlWithUnusedParamTest() {
 		repository.save(customers);
 		final Customer retrieved = repository.findOneByIdInCollectionAqlWithUnusedParam(john.getId().split("/")[0],
-			john.getId(), john.getId());
+				john.getId(), john.getId());
 		assertEquals(john, retrieved);
 	}
 
@@ -117,7 +122,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdInNamedCollectionAqlWithUnusedParamTest() {
 		repository.save(customers);
 		final Customer retrieved = repository.findOneByIdInNamedCollectionAqlWithUnusedParam(john.getId().split("/")[0],
-			john.getId(), john.getId());
+				john.getId(), john.getId());
 		assertEquals(john, retrieved);
 	}
 
@@ -125,7 +130,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdInIncorrectNamedCollectionAqlTest() {
 		repository.save(customers);
 		final Customer retrieved = repository.findOneByIdInIncorrectNamedCollectionAql(john.getId().split("/")[0],
-			john.getId(), john.getId());
+				john.getId(), john.getId());
 		assertEquals(john, retrieved);
 	}
 
@@ -133,7 +138,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdInNamedCollectionAqlRejectedTest() {
 		repository.save(customers);
 		final Customer retrieved = repository.findOneByIdInNamedCollectionAqlRejected(john.getId().split("/")[0],
-			john.getId());
+				john.getId());
 		assertEquals(john, retrieved);
 	}
 
@@ -185,7 +190,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdWithDynamicProjectionTest() {
 		repository.save(customers);
 		final CustomerNameProjection retrieved = repository.findOneByIdWithDynamicProjection(john.getId(),
-			CustomerNameProjection.class);
+				CustomerNameProjection.class);
 		assertEquals(retrieved.getName(), john.getName());
 	}
 
@@ -229,6 +234,14 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final List<Customer> retrieved = repository
 				.findByNameWithSort(new Sort(Direction.DESC, "c.surname").and(new Sort("c.age")), "A");
 		assertThat(retrieved, is(toBeRetrieved));
+	}
+
+	@Test
+	public void overriddenCrudMethodsTest() {
+		overriddenRepository.save(customers);
+		Iterator<Customer> customers = overriddenRepository.findAll().iterator();
+		assertThat(customers.hasNext(), is(true));
+		assertThat(customers.next(), is(nullValue()));
 	}
 
 }
