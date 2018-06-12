@@ -7,18 +7,57 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.data.annotation.Id;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
-import com.arangodb.springframework.core.convert.InheritanceSupportTest.PersonSuperClass;
+import com.arangodb.springframework.annotation.Document;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class InheritanceSupportForClassesNotDeclaringDocumentAnnotationTest extends AbstractArangoTest {
-	public static class Child extends PersonSuperClass {
+	@Document("person")
+	public static class Parent {
+		@Id
+		private String id;
+		private String name;
+		
+		public Parent(String name) {
+			super();
+			this.name = name;
+		}
+
+		public String getId() {
+			return id;
+		}
+		
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+
+			Parent other = (Parent) obj;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			return true;
+		}
+	}
+	
+	public static class Child extends Parent {
 		private String extra;
 		
 		public Child(String name, String extra) {
@@ -51,8 +90,8 @@ public class InheritanceSupportForClassesNotDeclaringDocumentAnnotationTest exte
 	}
 
 	@Test
-	public void testThatPeopleWhoInsistOnPersistingNonDocumentsAsDocumentsCanDoSo() {
-		Child orig = new Child("Twisted", "strange");
+	public void itIsPossibleToPersistAClassThatDoesNotHaveADeclaredDocumentAnnotation() {
+		Child orig = new Child("Excessive", "flexibility");
 		final DocumentEntity ref = template.insert(orig);
 		final Child entity = template.find(ref.getId(), Child.class).get();
 		
