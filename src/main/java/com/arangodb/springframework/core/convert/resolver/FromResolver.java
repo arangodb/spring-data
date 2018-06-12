@@ -20,7 +20,8 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
-import java.util.Collection;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.From;
@@ -35,33 +36,31 @@ public class FromResolver extends AbstractResolver<From> implements RelationReso
 
 	private final ArangoOperations template;
 
-	public FromResolver(final ArangoOperations template) {
-		super();
+	public FromResolver(final ArangoOperations template, final ConversionService conversionService) {
+		super(conversionService);
 		this.template = template;
 	}
 
 	@Override
-	public Object resolveOne(final String id, final Class<?> type, final From annotation) {
+	public Object resolveOne(final String id, final TypeInformation<?> type, final From annotation) {
 		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> internalResolveOne(i, t))
 				: internalResolveOne(id, type);
 	}
 
-	private Object internalResolveOne(final String id, final Class<?> type) {
-		return template.find(id, type).get();
+	private Object internalResolveOne(final String id, final TypeInformation<?> type) {
+		return template.find(id, type.getType()).get();
 	}
 
 	@Override
-	public Object resolveMultiple(final String id, final Class<?> type, final From annotation) {
-		return annotation.lazy()
-				? proxy(id, Collection.class, annotation, (i, t, a) -> internalResolveMultiple(i, type))
+	public Object resolveMultiple(final String id, final TypeInformation<?> type, final From annotation) {
+		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> internalResolveMultiple(i, t))
 				: internalResolveMultiple(id, type);
 	}
 
-	private Object internalResolveMultiple(final String id, final Class<?> type) {
-		return template
-				.query("FOR e IN @@edge FILTER e._from == @id RETURN e",
-					new MapBuilder().put("@edge", type).put("id", id).get(), new AqlQueryOptions(), type)
-				.asListRemaining();
+	private Object internalResolveMultiple(final String id, final TypeInformation<?> type) {
+		final Class<?> t = getNonNullComponentType(type).getType();
+		return template.query("FOR e IN @@edge FILTER e._from == @id RETURN e",
+			new MapBuilder().put("@edge", t).put("id", id).get(), new AqlQueryOptions(), t).asListRemaining();
 	}
 
 }

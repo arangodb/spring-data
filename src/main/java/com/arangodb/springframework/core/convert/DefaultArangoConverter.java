@@ -59,7 +59,6 @@ import com.arangodb.springframework.core.util.InheritanceUtils;
 
 /**
  * @author Mark Vollmary
- * @author Reşat SABIQ
  * @author Christian Lechner
  *
  */
@@ -108,7 +107,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return null;
 		}
 
-		TypeInformation<?> typeToUse = typeMapper.readType(source, type);
+		final TypeInformation<?> typeToUse = typeMapper.readType(source, type);
 
 		if (conversions.hasCustomReadTarget(source.getClass(), typeToUse.getType())) {
 			return conversionService.convert(source, typeToUse.getType());
@@ -261,21 +260,22 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final ArangoPersistentProperty property,
 		final Annotation annotation) {
 		return resolverFactory.getReferenceResolver(annotation).flatMap(resolver -> {
+			TypeInformation<?> typeInfo = property.getTypeInformation();
 			if (property.isCollectionLike()) {
 				final Collection<String> ids;
 				try {
 					ids = (Collection<String>) asCollection(source);
 				} catch (final Exception e) {
 					throw new MappingException(
-							"Collection of Type String expected for references but found type " + source.getClass());
+							"Collection of type String expected for references but found type " + source.getClass());
 				}
 
-				// Inheritance should be supported for collections also, & a collection is allowed to contain more than 1 type:
-				Class<?> type = getNonNullComponentType(property.getTypeInformation()).getType();
-				return Optional.ofNullable(resolver.resolveMultiple(ids, type, annotation, id -> {
+				// Inheritance should be supported for collections also, & a collection is currently allowed to contain more than 1 type:
+				TypeInformation<?> itemTypeInfo = getNonNullComponentType(typeInfo);
+				Class<?> type = itemTypeInfo.getType();
+				return Optional.ofNullable(resolver.resolveMultiple(ids, typeInfo, annotation, id -> {
 						Class<?> inheritanceAwareType = InheritanceUtils.determineInheritanceAwareReferenceType(id, type, getMappingContext());
-						addToContextIfNeeded(inheritanceAwareType, property);
-						return inheritanceAwareType;
+						return toTypeInfoAndAddToContextIfNeeded(inheritanceAwareType, type, itemTypeInfo);
 					}));
 			} else {
 				if (!(source instanceof String)) {
@@ -283,28 +283,31 @@ public class DefaultArangoConverter implements ArangoConverter {
 							"Type String expected for reference but found type " + source.getClass());
 				}
 				
-				Class<?> inheritanceAwareType = InheritanceUtils.determineInheritanceAwareReferenceType(source, property.getType(), getMappingContext());
-				addToContextIfNeeded(inheritanceAwareType, property);
+				Class<?> type = property.getType();
+				Class<?> inheritanceAwareType = InheritanceUtils.determineInheritanceAwareReferenceType(source, type, getMappingContext());
+				TypeInformation<?> inheritanceAwareTypeInfo = toTypeInfoAndAddToContextIfNeeded(inheritanceAwareType, type, typeInfo);
 
-				return Optional.ofNullable(resolver.resolveOne(source.toString(), inheritanceAwareType, annotation));
+				return Optional.ofNullable(resolver.resolveOne(source.toString(), inheritanceAwareTypeInfo, annotation));
 			}
 		});
 	}
 
 	/**
-	 * If first property of {@code typeData} is different from {@code property} type, then add to context if it's not already there 
-	 * (i.e., if second property of {@code typeData} is false.
+	 * If {@code typeData} is different from {@code orig} type, then add to context if it's not already there.
 	 * 
-	 * @param typeData	type data.
-	 * @param property	related property.
+	 * @param type			needed type.
+	 * @param origType		original type.
+	 * @param origTypeInfo	original type info.
+	 * @return origType if orig & origType are equal, {@link TypeInformation} for {@code type} otherwise.
 	 */
-	private void addToContextIfNeeded(
-			final Class<?> typeData,
-			final ArangoPersistentProperty property) {
-		//  With Pair it would be a bit lighter on CPU, but would involve a bit more GC: && !typeData.getSecond()
-		if (!typeData.equals(property.getType())) 
+	private TypeInformation<?> toTypeInfoAndAddToContextIfNeeded(final Class<?> type, final Class<?> origType, final TypeInformation<?> origTypeInfo) {
+		//  With Pair it would be a bit lighter on CPU, but would involve a bit more GC:
+		if (!type.equals(origType)) {
 			// This caches it for better performance going forward:
-			getMappingContext().getPersistentEntity(typeData);
+			getMappingContext().getPersistentEntity(type);
+			return ClassTypeInformation.from(type);
+		}
+		return origTypeInfo;
 	}
 
 	private <A extends Annotation> Optional<Object> readRelation(
@@ -314,11 +317,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final A annotation) {
 		return resolverFactory.getRelationResolver(annotation).flatMap(resolver -> {
 			if (property.isCollectionLike() && parentId != null) {
-				return Optional.of(resolver.resolveMultiple(parentId.toString(),
-					getNonNullComponentType(property.getTypeInformation()).getType(), annotation));
+				return Optional
+						.of(resolver.resolveMultiple(parentId.toString(), property.getTypeInformation(), annotation));
 			} else if (source != null) {
-				return Optional.of(
-					resolver.resolveOne(source.toString(), property.getTypeInformation().getType(), annotation));
+				return Optional.of(resolver.resolveOne(source.toString(), property.getTypeInformation(), annotation));
 			}
 			return Optional.empty();
 		});

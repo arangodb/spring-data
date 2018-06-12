@@ -25,14 +25,21 @@ import java.util.Optional;
 
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.AnnotationRepositoryMetadata;
+import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.util.Assert;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
@@ -73,6 +80,15 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	@Override
 	protected Class<?> getRepositoryBaseClass(final RepositoryMetadata metadata) {
 		return SimpleArangoRepository.class;
+	}
+
+	@Override
+	protected RepositoryMetadata getRepositoryMetadata(Class<?> repositoryInterface) {
+		Assert.notNull(repositoryInterface, "Repository interface must not be null!");
+
+		return Repository.class.isAssignableFrom(repositoryInterface)
+				? new DefaultArangoRepositoryMetadata(repositoryInterface)
+				: new AnnotationArangoRepositoryMetadata(repositoryInterface);
 	}
 
 	@Override
@@ -118,6 +134,46 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 				return new StringBasedArangoQuery(queryMethod, operations);
 			} else {
 				return new DerivedArangoQuery(queryMethod, operations);
+			}
+		}
+
+	}
+
+	static class DefaultArangoRepositoryMetadata extends DefaultRepositoryMetadata {
+
+		private final TypeInformation<?> typeInformation;
+
+		public DefaultArangoRepositoryMetadata(Class<?> repositoryInterface) {
+			super(repositoryInterface);
+			typeInformation = ClassTypeInformation.from(repositoryInterface);
+		}
+
+		@Override
+		public Class<?> getReturnedDomainClass(Method method) {
+			if (ArangoCursor.class.isAssignableFrom(method.getReturnType())) {
+				return typeInformation.getReturnType(method).getRequiredComponentType().getType();
+			} else {
+				return super.getReturnedDomainClass(method);
+			}
+		}
+
+	}
+
+	static class AnnotationArangoRepositoryMetadata extends AnnotationRepositoryMetadata {
+
+		private final TypeInformation<?> typeInformation;
+
+		public AnnotationArangoRepositoryMetadata(Class<?> repositoryInterface) {
+			super(repositoryInterface);
+			typeInformation = ClassTypeInformation.from(repositoryInterface);
+		}
+
+		@Override
+		public Class<?> getReturnedDomainClass(Method method) {
+			if (ArangoCursor.class.isAssignableFrom(method.getReturnType())) {
+				return typeInformation.getReturnType(method).getRequiredComponentType().getType();
+			} else {
+				return super.getReturnedDomainClass(method);
 			}
 		}
 

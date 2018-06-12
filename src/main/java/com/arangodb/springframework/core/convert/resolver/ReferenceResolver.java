@@ -24,15 +24,16 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.function.Function;
 
+import org.springframework.data.util.TypeInformation;
+
 /**
  * @author Mark Vollmary
- * @author Reşat SABIQ
  *
  */
 public interface ReferenceResolver<A extends Annotation> {
 
-	Object resolveOne(String id, Class<?> type, A annotation);
+	Object resolveOne(String id, TypeInformation<?> type, A annotation);
 
-	Object resolveMultiple(Collection<String> ids, Class<?> type, A annotation, Function<String, Class<?>> inheritanceHelper);
+	Object resolveMultiple(Collection<String> ids, TypeInformation<?> type, A annotation, Function<String, TypeInformation<?>> inheritanceHelper);
 
 }

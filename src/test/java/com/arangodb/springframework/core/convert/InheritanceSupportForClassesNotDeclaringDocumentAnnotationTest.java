@@ -17,11 +17,11 @@ import com.arangodb.springframework.core.convert.InheritanceSupportTest.PersonSu
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
-public class NonDocumentAdditionalInheritanceSupportTest extends AbstractArangoTest {
-	public static class NonDocument extends PersonSuperClass {
+public class InheritanceSupportForClassesNotDeclaringDocumentAnnotationTest extends AbstractArangoTest {
+	public static class Child extends PersonSuperClass {
 		private String extra;
 		
-		public NonDocument(String name, String extra) {
+		public Child(String name, String extra) {
 			super(name);
 			this.extra = extra;
 		}
@@ -40,7 +40,7 @@ public class NonDocumentAdditionalInheritanceSupportTest extends AbstractArangoT
 				return false;
 			if (getClass() != obj.getClass())
 				return false;
-			NonDocument other = (NonDocument) obj;
+			Child other = (Child) obj;
 			if (extra == null) {
 				if (other.extra != null)
 					return false;
@@ -52,9 +52,9 @@ public class NonDocumentAdditionalInheritanceSupportTest extends AbstractArangoT
 
 	@Test
 	public void testThatPeopleWhoInsistOnPersistingNonDocumentsAsDocumentsCanDoSo() {
-		NonDocument orig = new NonDocument("Twisted", "strange");
+		Child orig = new Child("Twisted", "strange");
 		final DocumentEntity ref = template.insert(orig);
-		final NonDocument entity = template.find(ref.getId(), NonDocument.class).get();
+		final Child entity = template.find(ref.getId(), Child.class).get();
 		
 		assertThat(entity, is(notNullValue()));
 		assertThat(entity.getId(), is(ref.getId()));
