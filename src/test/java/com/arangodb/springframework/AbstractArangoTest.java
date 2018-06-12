@@ -56,7 +56,7 @@ public class AbstractArangoTest {
 
 	@After
 	public void after() {
-//		template.dropDatabase();
+		template.dropDatabase();
 	}
 
 }
