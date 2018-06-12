@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.convert;
 
+import static com.arangodb.springframework.core.util.MetadataUtils.determineDocumentKeyFromId;
+
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,7 +62,7 @@ import com.arangodb.springframework.core.util.InheritanceUtils;
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- *
+ * @author Reşat SABIQ
  */
 public class DefaultArangoConverter implements ArangoConverter {
 
@@ -544,11 +546,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 	private <T> T convertIfNecessary(final Object source, final Class<T> type) {
 		return (T) (source == null ? source
 				: type.isAssignableFrom(source.getClass()) ? source : conversionService.convert(source, type));
-	}
-
-	private String determineDocumentKeyFromId(final String id) {
-		final String[] split = id.split("/");
-		return split[split.length - 1];
 	}
 
 	private void addTypeKeyIfNecessary(final TypeInformation<?> definedType, final Object value, final DBEntity sink) {
