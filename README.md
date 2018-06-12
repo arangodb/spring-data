@@ -1,12 +1,16 @@
 ![ArangoDB-Logo](https://docs.arangodb.com/assets/arangodb_logo_2016_inverted.png)
 
-# Spring Data ArangoDB Supporting COLLECTION-PER-CLASS Type of Inheritance Rationally 
+# Spring Data ArangoDB Supporting Canonical COLLECTION-PER-CLASS Type of Inheritance Rationally 
 
 One maintainer & 1 contributor in Spring Data ArangoDB project have refused to accept inheritance-related contributions implemented here. That decision has obviously
 (& without doubt) been driven not by rational considerations about technology, but by something else. In the process of blocking the contributions implemented here 
 Spring Data ArangoDB upstream project has become tainted by extremely severe inefficiencies & irrationality. The developer who has provided the inheritance-related
 contributions implemented here, believes that what is now in the upstream is so irrational that it cannot be used as is, & therefore has to use a fork that 
-provides rational & efficient implementation for main-stream persistence-related inheritance types like COLLECTION-PER-CLASS (TABLE-PER-CLASS in SQL jargon). 
+provides rational & efficient implementation for a main-stream persistence-related inheritance type like canonical COLLECTION-PER-CLASS approach (similar to 
+TABLE-PER-CLASS inheritance type in JPA). The expression canonical COLLECTION-PER-CLASS type of inheritance is used here not as something set in stone, but just to avoid 
+using a more ambiguous phrase like "classes that have a declared @Document annotation". Bottom line is that this implementation is now more efficient than upstream, 
+even for projects that don't use any persistence-related inheritance at all, because the upstream project has become inefficient & irrational for all 
+records (whether or not any persistence-related inheritance is involved in them). 
 
 * [Inefficiencies & other issues in Spring Data ArangoDB optimized by this implementation](#inefficiencies_optimized)
     * [Visual examples of optimized inefficiencies](#visuals)
@@ -108,17 +112,19 @@ DB records not being tightly-coupled with Java classes.
 
 ## <a name="history"></a>Brief history
 ArangoDB Spring Data had no support for inheritance in @Documents, so an [issue](https://github.com/arangodb/spring-data/issues/17#issue-304481714) was logged on 
-March 13, 2018 focusing on a main-stream inheritance support: COLLECTION-PER-CLASS. On March 24th, a pull request was provided for it. 
+March 13, 2018 focusing on support for a main-stream inheritance type: canonical COLLECTION-PER-CLASS (similar to TABLE-PER-CLASS in JPA). On March 24th, a pull request was provided for it. 
 This pull request didn't receive the same quick treatment that others get. On April 5th, a strange 
 [issue](https://github.com/arangodb/spring-data/issues/27#issue-311595550) was opened by 
 another contributor to support inheritance in properties of interface type. That strange request was
 followed by request to not merge the pull request for main-stream inheritance support of type COLLECTION-PER-CLASS. On April 12th, a pull request was submitted by 
 that same contributor that focuses on
-inheritance in non-@Documents by persisting the fully-qualified class name. On April 17th, despite it having been stated that for COLLECTION-PER-CLASS type of inheritance
+inheritance in non-@Documents by persisting the fully-qualified class name. On April 17th, despite it having been stated that for canonical COLLECTION-PER-CLASS type of inheritance
 storing the fully-qualified class name is 100% unnecessary, that alternative PR got merged into upstream Spring Data ArangoDB. Despite the fact that the inefficiencies introduced by the 
 alternative PR had been clearly shown, the maintainer of ArangoDB Spring Data refused to merge the original pull request (which had been updated to avoid persistence of the fully-qualified
-class name for @Documents (because it's unnecessary & causes inefficiencies)), & closed it on May 22nd. Thus, to have rational
-support for COLLECTION-PER-CLASS type of inheritance, there is a need for a customized implementation.
+class name for @Documents (because it's unnecessary & causes many issues & inefficiencies), leaving other cases as is (i.e., leaving them up to whatever ArangoDB Spring Data in general 
+wants to do with them (such as based on the alternative PR))), & closed it on May 22nd. To make it clear, the developer of this fork never made a request to not merge the alternative PR, 
+or to revert it: but the other developer requested the contributions here to not be merged, & that's how the PR got closed by the maintainer. Thus, to have rational
+support for canonical COLLECTION-PER-CLASS type of inheritance, there is a need for a customized implementation.
 
 
 # Spring Data ArangoDB

@@ -555,7 +555,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Class<?> referenceType = definedType != null ? definedType.getType() : Object.class;
 		final Class<?> valueType = ClassUtils.getUserClass(value.getClass());
 		if (!valueType.equals(referenceType)) {
-			// For TABLE/COLLECTION_PER_CLASS type inheritance there is already an entire 
+			// For classes with declared @Document annotation there is already an entire 
 			// TABLE/COLLECTION dedicated to the class involved, so there is no need to store any type-related properties/columns:
 			if (valueType.getDeclaredAnnotation(Document.class) == null)
 				typeMapper.writeType(valueType, sink);
