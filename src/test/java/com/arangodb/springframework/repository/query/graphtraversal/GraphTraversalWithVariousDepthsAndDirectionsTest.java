@@ -39,7 +39,7 @@ import com.arangodb.springframework.testdata.HumanBeing;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
-public class HumanBeingGraphTraversalTest extends AbstractArangoTest {
+public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractArangoTest {
 	protected static final Class<?>[] COLLECTIONS = new Class<?>[] { HumanBeing.class, ChildOf.class };
 	private static final boolean DO_SYSOUT = false;
 	
