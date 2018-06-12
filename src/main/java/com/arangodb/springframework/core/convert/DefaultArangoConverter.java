@@ -53,6 +53,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
@@ -552,9 +553,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Class<?> referenceType = definedType != null ? definedType.getType() : Object.class;
 		final Class<?> valueType = ClassUtils.getUserClass(value.getClass());
 		if (!valueType.equals(referenceType)) {
-			// For classes with declared @Document annotation there is already an entire 
-			// TABLE/COLLECTION dedicated to the class involved, so there is no need to store any type-related properties/columns:
-			if (valueType.getDeclaredAnnotation(Document.class) == null)
+			// For any class with a declared @Document or @Edge annotation there is no need to store any type-related properties/columns, because 
+			// there is already an entire COLLECTION/TABLE dedicated to the class involved:
+			if (valueType.getDeclaredAnnotation(Document.class) == null && valueType.getDeclaredAnnotation(Edge.class) == null)
 				typeMapper.writeType(valueType, sink);
 		}
 	}
