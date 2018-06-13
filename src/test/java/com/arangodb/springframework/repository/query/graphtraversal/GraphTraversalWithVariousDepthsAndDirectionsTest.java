@@ -1,11 +1,19 @@
 package com.arangodb.springframework.repository.query.graphtraversal;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+// Avoiding this since Eclipse draws unnecessary attention to it due to is(java.lang.Class<T> type) being deprecated:
+//import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,8 +29,8 @@ import com.arangodb.springframework.testdata.ChildOf;
 import com.arangodb.springframework.testdata.HumanBeing;
 
 /**
- * Tests in-bound, & out-bound graph traversals for the following graph (level shown in parantheses):
- *     Sansa(1)
+ * Tests in-bound, & out-bound graph traversals with various depths for the following graph (level/depth shown in parentheses):
+ *   Sansa(1)
  *    /    \
  * Ned(0)  Catelyn(0)  Jon(0)   Jaimie(0)
  *    \    /              \    /
@@ -37,6 +45,10 @@ import com.arangodb.springframework.testdata.HumanBeing;
  * 
  * @author Reşat SABIQ
  */
+/*
+ * These tests were inspired by spring-data-demo, with additions of extra traversals of various depths, 
+ * as well as with additions of OUTBOUND traversals, and other minor modifications, plus conversion to JUnit with assertions of expected results.
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractArangoTest {
@@ -44,17 +56,23 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	private static final boolean DO_SYSOUT = false;
 	
 	@Autowired
-	private HumanBeingRepository characterRepo;
+	private HumanBeingRepository humanBeingRepo;
 	@Autowired
 	protected ArangoOperations template;
+	
+	// For easier & more maintainable comparisons in asserts:
+	static HumanBeing ned = new HumanBeing("Ned", "Stark", false, 61);
+	static HumanBeing catelyn = new HumanBeing("Catelyn", "Stark", false, 60);
+	static HumanBeing sansa = new HumanBeing("Sansa", "Stark", true, 23);
+	static HumanBeing robb = new HumanBeing("Robb", "Stark", false, 40);
+	static HumanBeing jon = new HumanBeing("Jon", "Snow", true, 56);
+	static HumanBeing jaimie = new HumanBeing("Jaimie", "Lanister", true, 56);
+	static HumanBeing emily = new HumanBeing("Emily", "Snow", true, 36);
+	static HumanBeing dude = new HumanBeing("Dude", "Stark", true, 20);
+	static HumanBeing dudette = new HumanBeing("Dudette", "Stark", true, 2);
 
-	public static Collection<HumanBeing> makeCharacters() {
-		return Arrays.asList(new HumanBeing("Ned", "Stark", false, 61), new HumanBeing("Catelyn", "Stark", false, 60),
-				new HumanBeing("Emily", "Snow", true, 40), new HumanBeing("Dude", "Stark", true, 20), 
-				new HumanBeing("Dudette", "Stark", true, 2), new HumanBeing("Sansa", "Stark", true, 13), 
-				new HumanBeing("Robb", "Stark", false, 40), new HumanBeing("Jon", "Snow", true, 16), 
-				new HumanBeing("Jaimie", "Lanister", true, 36)
-		);
+	public static Collection<HumanBeing> obtainHumanBeingsCollection() {
+		return Arrays.asList(ned, catelyn, sansa, robb, jon, jaimie, emily, dude, dudette);
 	}
 
 	@Before
@@ -64,33 +82,37 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 		populateData();
 	}
 
+	private Optional<HumanBeing> findByExample(HumanBeing example) {
+		return humanBeingRepo.findByNameAndSurname(example.getName(), example.getSurname());
+	}
+	
 	private void populateData() {
-		characterRepo.saveAll(makeCharacters());
+		humanBeingRepo.saveAll(obtainHumanBeingsCollection());
 		
-		characterRepo.findByNameAndSurname("Ned", "Stark").ifPresent(ned -> { // Requires Administrate permission on _system
-			characterRepo.findByNameAndSurname("Catelyn", "Stark").ifPresent(catelyn -> {
-				characterRepo.findByNameAndSurname("Robb", "Stark").ifPresent(robb -> {
-					template.insert(Arrays.asList(new ChildOf(robb, ned), new ChildOf(robb, catelyn)), ChildOf.class);
+		findByExample(ned).ifPresent(nedStark -> { // Requires Administrate permission on _system
+			findByExample(catelyn).ifPresent(catelynStark -> {
+				findByExample(robb).ifPresent(robbStark -> {
+					template.insert(Arrays.asList(new ChildOf(robbStark, nedStark), new ChildOf(robbStark, catelynStark)), ChildOf.class);
 				});
-				characterRepo.findByNameAndSurname("Sansa", "Stark").ifPresent(sansa -> {
-					template.insert(Arrays.asList(new ChildOf(sansa, ned), new ChildOf(sansa, catelyn)), ChildOf.class);
+				findByExample(sansa).ifPresent(sansaStark -> {
+					template.insert(Arrays.asList(new ChildOf(sansaStark, nedStark), new ChildOf(sansaStark, catelynStark)), ChildOf.class);
 				});
 			});
 		});
-		characterRepo.findByNameAndSurname("Jon", "Snow").ifPresent(jon -> {
-			characterRepo.findByNameAndSurname("Jaimie", "Lanister").ifPresent(jaimie -> {
-				characterRepo.findByNameAndSurname("Emily", "Snow").ifPresent(emily -> {
-					template.insert(Arrays.asList(new ChildOf(emily, jon), new ChildOf(emily, jaimie)), ChildOf.class);
+		findByExample(jon).ifPresent(jonSnow -> {
+			findByExample(jaimie).ifPresent(jaimieLanister -> {
+				findByExample(emily).ifPresent(emilySnow -> {
+					template.insert(Arrays.asList(new ChildOf(emilySnow, jonSnow), new ChildOf(emilySnow, jaimieLanister)), ChildOf.class);
 				});
 			});
 		});
 
-		characterRepo.findByNameAndSurname("Robb", "Stark").ifPresent(robb -> {
-			characterRepo.findByNameAndSurname("Emily", "Snow").ifPresent(emily-> {
-				characterRepo.findByNameAndSurname("Dude", "Stark").ifPresent(dude-> {
-					template.insert(Arrays.asList(new ChildOf(dude, robb), new ChildOf(dude, emily)), ChildOf.class);
-					characterRepo.findByNameAndSurname("Dudette", "Stark").ifPresent(dudette-> {
-						template.insert(new ChildOf(dudette, dude));
+		findByExample(robb).ifPresent(robbStark -> {
+			findByExample(emily).ifPresent(emilySnow-> {
+				findByExample(dude).ifPresent(dudeStark-> {
+					template.insert(Arrays.asList(new ChildOf(dudeStark, robbStark), new ChildOf(dudeStark, emilySnow)), ChildOf.class);
+					findByExample(dudette).ifPresent(dudetteStark-> {
+						template.insert(new ChildOf(dudetteStark, dudeStark));
 					});
 				});
 			});
@@ -99,76 +121,64 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	
 	@Test
 	public void testFindByNameAndSurname() {
-		characterRepo.findByNameAndSurname("Ned", "Stark").ifPresent(nedStark -> {
+		findByExample(ned).ifPresent(nedStark -> {
 			if (DO_SYSOUT)
 				System.out.println(String.format("## These are the children of %s:", nedStark));
-			Collection<HumanBeing> chars = nedStark.getChildren();
+			Collection<HumanBeing> kids = nedStark.getChildren();
 			if (DO_SYSOUT)
-				chars.forEach(System.out::println);
-			assertEquals(2, chars.size());
+				kids.forEach(System.out::println);
+			assertEquals(2, kids.size());
+			for (HumanBeing human : kids) 
+				assertThat(human, anyOf(Matchers.is(robb), Matchers.is(sansa)));
 		});
 	}
 	
 	@Test
 	public void testFindChildrenAndGrandchildren() {
-		characterRepo.findByNameAndSurname("Catelyn", "Stark").ifPresent(catelynStark -> {
+		findByExample(catelyn).ifPresent(catelynStark -> {
 			if (DO_SYSOUT)
 				System.out.println(String.format("## These are the children (& grand-children) of %s:", catelynStark));
-			Collection<HumanBeing> chars = characterRepo.getAllChildrenAndGrandchildren(catelynStark.getId(), ChildOf.class);
+			Collection<HumanBeing> ancestors = humanBeingRepo.getAllChildrenAndGrandchildren(catelynStark.getId(), ChildOf.class);
 			if (DO_SYSOUT)
-				chars.forEach(System.out::println);
-			assertEquals(3, chars.size());
-			boolean grandChildFound = false;
-			for (HumanBeing character : chars) {
-				if ("Dude".equals(character.getName()) && "Stark".equals(character.getSurname()))
-					grandChildFound = true;
+				ancestors.forEach(System.out::println);
+			assertEquals(3, ancestors.size());
+			for (HumanBeing human : ancestors) {
+				assertThat(human, anyOf(Matchers.is(robb), Matchers.is(sansa), Matchers.is(dude)));
 			}
-			assertTrue(grandChildFound);
 		});
 	}
 
 	@Test
 	public void testFindChildrenGrandchildrenAndGrandgrandchildren() {
-		characterRepo.findByNameAndSurname("Ned", "Stark").ifPresent(nedStark -> {
+		findByExample(ned).ifPresent(nedStark -> {
 			if (DO_SYSOUT)
 				System.out.println(String.format("## These are the children, grand-children & grand-grand-children of %s:", nedStark));
-			Collection<HumanBeing> chars = characterRepo.getAllChildrenMultilevel(nedStark.getId(), (byte)3, ChildOf.class);
+			Collection<HumanBeing> ancestors = humanBeingRepo.getAllChildrenMultilevel(nedStark.getId(), (byte)3, ChildOf.class);
 			if (DO_SYSOUT)
-				chars.forEach(System.out::println);
-			assertEquals(4, chars.size());
-			boolean grandChildFound = false, grandGrandChildFound = false;
-			for (HumanBeing character : chars) {
-				if ("Dude".equals(character.getName()) && "Stark".equals(character.getSurname()))
-					grandChildFound = true;
-				if ("Dudette".equals(character.getName()) && "Stark".equals(character.getSurname()) && 2 == character.getAge() && character.isAlive())
-					grandGrandChildFound = true;
+				ancestors.forEach(System.out::println);
+			assertEquals(4, ancestors.size());
+			for (HumanBeing human : ancestors) {
+				assertThat(human, anyOf(Matchers.is(robb), Matchers.is(sansa), Matchers.is(dude), Matchers.is(dudette)));
+				assertThat(human, not(emily));
 			}
-			assertTrue(grandChildFound);
-			assertTrue(grandGrandChildFound);
 		});
 	}
 	
 	@Test
 	public void testFindParentsGrandparentsAndGrandgrandparents() {
-		characterRepo.findByNameAndSurname("Dudette", "Stark").ifPresent(dudetteStark -> {
+		findByExample(dudette).ifPresent(dudetteStark -> {
 			if (DO_SYSOUT)
 				System.out.println(String.format("## These are the parents, grand-parents & grand-grand-parents of %s:", dudetteStark));
-			Collection<HumanBeing> chars = characterRepo.getAllParentsMultilevel(dudetteStark.getId(), (byte)3, ChildOf.class);
+			Collection<HumanBeing> predecessors = humanBeingRepo.getAllParentsMultilevel(dudetteStark.getId(), (byte)3, ChildOf.class);
 			if (DO_SYSOUT)
-				chars.forEach(System.out::println);
-			assertEquals(7, chars.size());
-			boolean parentFound = false, grandParentFound = false, grandGrandParentFound = false;
-			for (HumanBeing character : chars) {
-				if ("Dude".equals(character.getName()) && "Stark".equals(character.getSurname()))
-					parentFound = true;
-				if ("Robb".equals(character.getName()) && "Stark".equals(character.getSurname()))
-					grandParentFound = true;
-				if ("Jaimie".equals(character.getName()) && "Lanister".equals(character.getSurname()) && 36 == character.getAge() && character.isAlive())
-					grandGrandParentFound = true;
+				predecessors.forEach(System.out::println);
+			assertEquals(7, predecessors.size());
+			List<Matcher<? super HumanBeing>> matchers = Arrays.asList(Matchers.is(dude), Matchers.is(robb), Matchers.is(emily), 
+					Matchers.is(ned), Matchers.is(catelyn), Matchers.is(jon), Matchers.is(jaimie));
+			for (HumanBeing human : predecessors) {
+				assertThat(human, anyOf(matchers));
+				assertThat(human, not(sansa));
 			}
-			assertTrue(parentFound);
-			assertTrue(grandParentFound);
-			assertTrue(grandGrandParentFound);
 		});
 	}
 }
