@@ -27,10 +27,18 @@ records (whether or not any persistence-related inheritance is involved in them)
 3. This also entails unnecessary band-width utilization.
 4. All of the above also entail usage of more CPU cycles at run-time (considering storage of the unnecessary data, its retrieval, & processing).
 5. Issues 1-through-4, can lead to considerable & even noticeable increase in latency (responsiveness). 
-6. Issues 1-through-4, (especially when using a Platform as a service) eventually (for a PaaS, quite quickly) translate to additional expenses (yes, there is also a cash aspect involved).
-7. Extremely absurd clutter when looking at the data (even for [classes that have nothing to do with inheritance](#a-id-noinheritance-a-a-record-for-a-class-that-doesn-t-extend-another-entity-document-is-not-extended): namely, that don't extend another entity/document, & are not extended) (which is actually also a big factor, once one takes a look at it): as can be seen [below](#a-id-list-a-a-record-for-a-class-that-has-a-property-of-type-list-with-2-entities-documents-in-it).
+6. Issues 1-through-4, (especially when using a Platform as a service) eventually (for a PaaS, quite quickly) translate to additional operating expenses 
+(yes, there is also a cash aspect involved).
+7. Extremely absurd clutter when looking at the data (even for 
+[classes that have nothing to do with inheritance](#a-id-noinheritance-a-a-record-for-a-class-that-doesn-t-extend-another-entity-document-is-not-extended): namely, 
+that don't extend another entity/document, & are not extended) (which is actually also a big factor, once one takes a look at it): as can be seen 
+[below](#a-id-list-a-a-record-for-a-class-that-has-a-property-of-type-list-with-2-entities-documents-in-it).
 8. Issue 7 will most likely have a negative effect on developer & DB admin productivity: by inhibiting concentration on useful data due to presence of a lot of useless data.
-9. Unnecessary tight-coupling of DB records to Java classes: a re-factoring of any @Document Java class to a different package (or changing the name of any Document class which already! has a customized! collection name) as of now would require running a query to update all relevant DB records (this is a major code smell & reveals that now there is a conflict (& bizarre duplication) between the inheritance-support implementation focusing on non-Documents & the semantics of @Document value attribute (the former prevents the latter from freely decoupling DB records from the name of Java class): the upstream project now forces updating all relevant DB records if the name of the class is changed).
+9. Unnecessary tight-coupling of DB records to Java classes: a re-factoring of any @Document Java class to a different package (or changing the name of any Document 
+class which already! has a customized! collection name) as of now would require running a query to update all relevant DB records (this is a major code smell & 
+reveals that now there is a conflict (& bizarre duplication) between the inheritance-support implementation focusing on non-Documents & the semantics of @Document 
+value attribute (the former prevents the latter from freely decoupling DB records from the name of Java class): the upstream project now forces updating all relevant 
+DB records if the name of the class is changed).
 
 ### <a id="visuals"></a>Visual examples of optimized inefficiencies
 #### <a id="single"></a>Single record
