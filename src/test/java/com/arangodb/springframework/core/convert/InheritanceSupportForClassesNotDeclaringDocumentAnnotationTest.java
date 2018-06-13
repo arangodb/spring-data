@@ -19,7 +19,7 @@ import com.arangodb.springframework.annotation.Document;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class InheritanceSupportForClassesNotDeclaringDocumentAnnotationTest extends AbstractArangoTest {
-	@Document("person")
+	@Document("parents")
 	public static class Parent {
 		@Id
 		private String id;
