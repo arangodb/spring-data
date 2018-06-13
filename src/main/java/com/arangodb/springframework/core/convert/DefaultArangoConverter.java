@@ -524,7 +524,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Class<?> referenceType = definedType != null ? definedType.getType() : Object.class;
 		final Class<?> valueType = ClassUtils.getUserClass(value.getClass());
 		if (!valueType.equals(referenceType)) {
-			// For a class with declared @Edge annotation, there is no need to store any type-related properties/columns 
+			// For a class with a declared @Edge annotation, there is no need to store any type-related properties/columns 
 			// (there is a 1-to-1 association between that class & the collection in the DB):
 			if (valueType.getDeclaredAnnotation(Edge.class) == null)
 				typeMapper.writeType(valueType, sink);

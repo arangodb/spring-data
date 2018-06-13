@@ -99,6 +99,7 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 				});
 			});
 		});
+		
 		findByExample(jon).ifPresent(jonSnow -> {
 			findByExample(jaimie).ifPresent(jaimieLanister -> {
 				findByExample(emily).ifPresent(emilySnow -> {
