@@ -21,8 +21,8 @@ import com.arangodb.springframework.testdata.ChildOf;
 import com.arangodb.springframework.testdata.HumanBeing;
 
 /**
- * Tests in-bound, & out-bound graph traversals for the following graph (level shown in parantheses):
- *     Sansa(1)
+ * Tests in-bound, & out-bound graph traversals with various depths for the following graph (level/depth shown in parentheses):
+ *   Sansa(1)
  *    /    \
  * Ned(0)  Catelyn(0)  Jon(0)   Jaimie(0)
  *    \    /              \    /
@@ -37,6 +37,10 @@ import com.arangodb.springframework.testdata.HumanBeing;
  * 
  * @author Reşat SABIQ
  */
+/*
+ * These tests were inspired by spring-data-demo, with additions of extra traversals of various depths, 
+ * as well as with additions of OUTBOUND traversals, and other minor modifications, plus conversion to JUnit with assertions of expected results.
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractArangoTest {
@@ -50,10 +54,10 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 
 	public static Collection<HumanBeing> makeCharacters() {
 		return Arrays.asList(new HumanBeing("Ned", "Stark", false, 61), new HumanBeing("Catelyn", "Stark", false, 60),
-				new HumanBeing("Emily", "Snow", true, 40), new HumanBeing("Dude", "Stark", true, 20), 
-				new HumanBeing("Dudette", "Stark", true, 2), new HumanBeing("Sansa", "Stark", true, 13), 
-				new HumanBeing("Robb", "Stark", false, 40), new HumanBeing("Jon", "Snow", true, 16), 
-				new HumanBeing("Jaimie", "Lanister", true, 36)
+				new HumanBeing("Sansa", "Stark", true, 23), new HumanBeing("Robb", "Stark", false, 40),
+				new HumanBeing("Jon", "Snow", true, 56), new HumanBeing("Jaimie", "Lanister", true, 56),
+				new HumanBeing("Emily", "Snow", true, 36), new HumanBeing("Dude", "Stark", true, 20), 
+				new HumanBeing("Dudette", "Stark", true, 2)
 		);
 	}
 

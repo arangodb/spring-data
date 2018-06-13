@@ -9,9 +9,12 @@ import com.arangodb.springframework.annotation.Query;
 import com.arangodb.springframework.testdata.HumanBeing;
 
 /**
- * Provides in-bound, & out-bound graph traversal queries.
+ * Provides in-bound, & out-bound graph traversal queries with various depths.
  * 
  * @author Reşat SABIQ
+ */
+/*
+ * findByNameAndSurname & getAllChildrenAndGrandchildren queries are essentially from spring-data-demo.
  */
 public interface HumanBeingRepository extends ArangoRepository<HumanBeing> {
 	Optional<HumanBeing> findByNameAndSurname(String name, String surname);
