@@ -61,17 +61,17 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	protected ArangoOperations template;
 	
 	// For easier & more maintainable comparisons in asserts:
-	static HumanBeing ned = new HumanBeing("Ned", "Stark", false, 61);
-	static HumanBeing catelyn = new HumanBeing("Catelyn", "Stark", false, 60);
-	static HumanBeing sansa = new HumanBeing("Sansa", "Stark", true, 23);
-	static HumanBeing robb = new HumanBeing("Robb", "Stark", false, 40);
-	static HumanBeing jon = new HumanBeing("Jon", "Snow", true, 56);
-	static HumanBeing jaimie = new HumanBeing("Jaimie", "Lanister", true, 56);
-	static HumanBeing emily = new HumanBeing("Emily", "Snow", true, 36);
-	static HumanBeing dude = new HumanBeing("Dude", "Stark", true, 20);
-	static HumanBeing dudette = new HumanBeing("Dudette", "Stark", true, 2);
+	HumanBeing ned = new HumanBeing("Ned", "Stark", false, 61);
+	HumanBeing catelyn = new HumanBeing("Catelyn", "Stark", false, 60);
+	HumanBeing sansa = new HumanBeing("Sansa", "Stark", true, 23);
+	HumanBeing robb = new HumanBeing("Robb", "Stark", false, 40);
+	HumanBeing jon = new HumanBeing("Jon", "Snow", true, 56);
+	HumanBeing jaimie = new HumanBeing("Jaimie", "Lanister", true, 56);
+	HumanBeing emily = new HumanBeing("Emily", "Snow", true, 36);
+	HumanBeing dude = new HumanBeing("Dude", "Stark", true, 20);
+	HumanBeing dudette = new HumanBeing("Dudette", "Stark", true, 2);
 
-	public static Collection<HumanBeing> obtainHumanBeingsCollection() {
+	public Collection<HumanBeing> obtainHumanBeingsCollection() {
 		return Arrays.asList(ned, catelyn, sansa, robb, jon, jaimie, emily, dude, dudette);
 	}
 
