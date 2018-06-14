@@ -4,11 +4,11 @@
 
 	<groupId>com.arangodb</groupId>
 	<artifactId>arangodb-spring-data-rational</artifactId>
-	<version>2.1.6.1-SNAPSHOT</version>
+	<version>2.1.6.1</version>
 	<inceptionYear>2017</inceptionYear>
 	<packaging>jar</packaging>
 
-	<name>arangodb-spring-data</name>
+	<name>arangodb-spring-data-rational</name>
 	<description>ArangoDB Spring Data</description>
 	<url>http://maven.apache.org</url>
 
