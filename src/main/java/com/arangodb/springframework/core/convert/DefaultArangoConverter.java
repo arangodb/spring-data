@@ -265,7 +265,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 					ids = (Collection<String>) asCollection(source);
 				} catch (final Exception e) {
 					throw new MappingException(
-							"Collection of Type String expected for references but found type " + source.getClass());
+							"Collection of type String expected for references but found type " + source.getClass());
 				}
 				return Optional.ofNullable(resolver.resolveMultiple(ids, property.getTypeInformation(), annotation));
 			} else {

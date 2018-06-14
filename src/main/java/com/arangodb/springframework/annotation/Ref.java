@@ -37,7 +37,7 @@ import org.springframework.data.annotation.Reference;
 public @interface Ref {
 
 	/**
-	 * @return whether the entity should be loaded lazy
+	 * @return whether the entity should be loaded lazily
 	 */
 	boolean lazy() default false;
 

@@ -56,7 +56,7 @@ public @interface Document {
 	 *         of k means that k-1 replicas are kept. Any two copies reside on different DBServers. Replication between
 	 *         them is synchronous, that is, every write operation to the "leader" copy will be replicated to all
 	 *         "follower" replicas, before the write operation is reported successful. If a server fails, this is
-	 *         detected automatically and one of the servers holding copies take over, usually without an error being
+	 *         detected automatically and one of the servers holding copies takes over, usually without an error being
 	 *         reported.
 	 */
 	int replicationFactor() default -1;
@@ -107,7 +107,7 @@ public @interface Document {
 	boolean isSystem() default false;
 
 	/**
-	 * @return The: number of buckets into which indexes using a hash table are split. The default is 16 and this number
+	 * @return The number of buckets into which indexes using a hash table are split. The default is 16 and this number
 	 *         has to be a power of 2 and less than or equal to 1024. For very large collections one should increase
 	 *         this to avoid long pauses when the hash table has to be initially built or resized, since buckets are
 	 *         resized individually and can be initially built in parallel. For example, 64 might be a sensible value
