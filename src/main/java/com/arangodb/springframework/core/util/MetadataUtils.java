@@ -9,7 +9,7 @@ package com.arangodb.springframework.core.util;
  * @author Reşat SABIQ
  */
 public class MetadataUtils {
-	public static final char ID_DELIMITER = '/';
+	public static final char KEY_DELIMITER = '/';
 
 	private MetadataUtils() {}
 	
@@ -19,7 +19,7 @@ public class MetadataUtils {
 	 * @return	_key
 	 */
 	public static String determineDocumentKeyFromId(final String id) {
-		final int lastSlash = id.lastIndexOf(ID_DELIMITER);
+		final int lastSlash = id.lastIndexOf(KEY_DELIMITER);
 		return id.substring(lastSlash+1);
 	}
 }
