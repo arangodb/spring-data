@@ -1,6 +1,6 @@
 ![ArangoDB-Logo](https://docs.arangodb.com/assets/arangodb_logo_2016_inverted.png)
 
-# Spring Data ArangoDB Supporting Canonical COLLECTION-PER-CLASS Type of Inheritance Rationally 
+# ArangoDB Spring Data (Supporting Canonical COLLECTION-PER-CLASS Type of Inheritance) Rational(ly) 
 
 One maintainer & 1 contributor in Spring Data ArangoDB project have refused to accept inheritance-related contributions implemented here. That decision has obviously
 (& without doubt) been driven not by rational considerations about technology, but by something else. In the process of blocking the contributions implemented here 
@@ -8,22 +8,22 @@ Spring Data ArangoDB upstream project has become tainted by extremely severe ine
 contributions implemented here, believes that what is now in the upstream is so irrational that it cannot be used as is, & therefore has to use a fork that 
 provides rational & efficient implementation for a main-stream persistence-related inheritance type like canonical COLLECTION-PER-CLASS approach (similar to 
 TABLE-PER-CLASS inheritance type in JPA). The expression canonical COLLECTION-PER-CLASS type of inheritance is used here not as something set in stone, but just to avoid 
-using a more ambiguous phrase like "classes that have a declared @Document annotation". Bottom line is that this implementation is now more efficient than upstream, 
-even for projects that don't use any persistence-related inheritance at all, because the upstream project has become inefficient & irrational for all 
+using a more ambiguous phrase like "classes that have a declared @Document annotation". **Bottom line is that this implementation is now more efficient than upstream, 
+even for projects that don't use any persistence-related inheritance at all**, because the upstream project has become inefficient & irrational for all 
 records (whether or not any persistence-related inheritance is involved in them). 
 
-* [Inefficiencies & other issues in Spring Data ArangoDB optimized by this implementation](#a-name-inefficiencies_optimized-a-inefficiencies-other-issues-in-spring-data-arangodb-optimized-resolved-by-this-implementation)
-    * [Visual examples of optimized inefficiencies](#a-id-visuals-a-visual-examples-of-optimized-inefficiencies)
-       * [Single record](#a-id-single-a-single-record)
-       * [A record for a class that DOESN'T extend another entity/document, & is not extended](#a-id-noinheritance-a-a-record-for-a-class-that-doesn-t-extend-another-entity-document-is-not-extended)
-       * [A record for a class that has a property of type List with 2 entities/documents in it](#a-id-list-a-a-record-for-a-class-that-has-a-property-of-type-list-with-2-entities-documents-in-it)
-    * [Cumulative effect of optimizations (for JOINs, multiple records matching a query, etc.)](#a-id-multiples-a-cumulative-effect-of-optimizations-for-joins-multiple-records-matching-a-query-etc)
-    * [Cumulative efficiencies: simple sample calculations for various numbers of persisted entities](#a-id-calc-a-cumulative-efficiencies-simple-sample-calculations-for-various-numbers-of-persisted-entities)
-* [Brief history](#a-name-history-a-brief-history)
-* [Test report comparisons (showing that all upstream functionality is preserved, it is just optimized (not less, just better))(#test-report-comparisons-showing-that-all-upstream-functionality-is-preserved-it-is-just-optimized-not-less-just-better)
+* [Inefficiencies & other issues in Spring Data ArangoDB optimized by this implementation](#inefficiencies_optimized)
+    * [Visual examples of optimized inefficiencies](#visuals)
+       * [Single record](#single)
+       * [A record for a class that DOESN'T extend another entity/document, & is not extended](#noinheritance)
+       * [A record for a class that has a property of type List with 2 entities/documents in it](#list)
+    * [Cumulative effect of optimizations (for JOINs, multiple records matching a query, etc.)](#multiples)
+    * [Cumulative efficiencies: simple sample calculations for various numbers of persisted entities](#calc)
+* [Brief history](#history)
+* [Test report comparisons (showing that all upstream functionality is preserved, it is just optimized (not less, just better))](#testing)
 
 ## <a name="inefficiencies_optimized"></a>Inefficiencies & other issues in Spring Data ArangoDB OPTIMIZED/RESOLVED by this implementation
-1. Data pollution & disk space waste: amount of data persisted/processed, etc. when using this implementation is [up to 4 times smaller](#a-id-single-a-single-record).
+1. Data pollution & disk space waste: amount of data persisted/processed, etc. when using this implementation is [up to 4 times smaller](#single).
 2. This data pollution & disk space waste in turn entail more memory utilization at run-time.
 3. This also entails unnecessary band-width utilization.
 4. All of the above also entail usage of more CPU cycles at run-time (considering storage of the unnecessary data, its retrieval, & processing).
@@ -31,9 +31,9 @@ records (whether or not any persistence-related inheritance is involved in them)
 6. Issues 1-through-4, (especially when using a Platform as a service) eventually (for a PaaS, quite quickly) translate to additional operating expenses 
 (yes, there is also a cash aspect involved).
 7. Extremely absurd clutter when looking at the data (even for 
-[classes that have nothing to do with inheritance](#a-id-noinheritance-a-a-record-for-a-class-that-doesn-t-extend-another-entity-document-is-not-extended): namely, 
+[classes that have nothing to do with inheritance](#noinheritance): namely, 
 that don't extend another entity/document, & are not extended) (which is actually also a big factor, once one takes a look at it): as can be seen 
-[below](#a-id-list-a-a-record-for-a-class-that-has-a-property-of-type-list-with-2-entities-documents-in-it).
+[below](#list).
 8. Issue 7 will most likely have a negative effect on developer & DB admin productivity: by inhibiting concentration on useful data due to presence of a lot of useless data.
 9. Unnecessary tight-coupling of DB records to Java classes: a re-factoring of any @Document Java class to a different package (or changing the name of any Document 
 class which already! has a customized! collection name) as of now would require running a query to update all relevant DB records (this is a major code smell & 
@@ -60,14 +60,14 @@ Normal record provided with this implementation:
 
 #### <a id="list"></a>A record for a class that has a property of type List with 2 entities/documents in it
 
-Absurd in upstream Spring Data ArangoDB (with (automatic) join, in this case redundant data would be present in all [3 entities/documents](#a-id-multiples-a-cumulative-effect-of-optimizations-for-joins-multiple-records-matching-a-query-etc) that get retrieved):
+Absurd in upstream Spring Data ArangoDB (with (automatic) join, in this case redundant data would be present in all [3 entities/documents](#multiples) that get retrieved):
 ![Alt text](docs/include/img/aggregate_with_collection_absurd.png?raw=true "Absurd")
 
 Normal record provided with this implementation:
 ![Alt text](docs/include/img/aggregate_with_collection.png?raw=true "Normal")
 
 ### <a id="multiples"></a>Cumulative effect of optimizations (for JOINs, multiple records matching a query, etc.)
-Taking the example of a [single record](#a-id-single-a-single-record) & estimating that the size of single record is 3.69 times smaller (35/129 bytes),
+Taking the example of a [single record](#single) & estimating that the size of single record is 3.69 times smaller (35/129 bytes),
 in each of the following also quite simple 2 examples (involving JOINS into 2 other COLLECTIONS) the effect would be cumulative 
 (i.e., absolute size of data (stored, transferred, processed, etc.) would be multiplied by a factor of 3 (i.e., 1 + 1 + 1 or 1 + 2):
 
@@ -114,6 +114,7 @@ So in this example, absolute size of data (stored, transferred, processed, etc.)
 as well as visual & perceptional aspects (simpler due to less clutter, less ambiguous), etc.).
 
 ### <a id="calc"></a>Cumulative efficiencies: simple sample calculations for various numbers of persisted entities
+Assuming average record size difference to be as shown in example above for [single record](#single):
 ![Alt text](docs/include/img/efficiencies.png?raw=true "Efficiencies")
 
 Conclusion: this implementation is significantly more efficient in terms of disk space, memory, bandwidth, & CPU usage, as well as in terms of latency, operational expenses, & productivity; & is better in terms of visual & perceptional aspects (simpler due to less clutter, less ambiguous), & in terms of 
@@ -135,7 +136,7 @@ wants to do with them (such as based on the alternative PR))), & closed it on Ma
 or to revert it: but the other developer requested the contributions here to not be merged, & that's how the PR got closed by the maintainer. Thus, to have rational
 support for canonical COLLECTION-PER-CLASS type of inheritance, there is a need for a customized implementation.
 
-## Test report comparisons (showing that all upstream functionality is preserved, it is just optimized (not less, just better))
+## <a name="testing"></a>Test report comparisons (showing that all upstream functionality is preserved, it is just optimized (not less, just better))
 ### Release 2.1.7 vs. 2.1.7.1-rational
 [Modified (branch)](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/v2.1.7/auto-testing/modified/surefire-report.html)
 [Upstream (original)](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/v2.1.7/auto-testing/original/surefire-report.html)
@@ -161,4 +162,3 @@ support for canonical COLLECTION-PER-CLASS type of inheritance, there is a need 
 * [JavaDoc 1.0.0](http://arangodb.github.io/spring-data/javadoc-1_0/index.html)
 * [JavaDoc 2.0.0](http://arangodb.github.io/spring-data/javadoc-2_0/index.html)
 * [JavaDoc Java driver](http://arangodb.github.io/arangodb-java-driver/javadoc-4_3/index.html)
-
