@@ -44,26 +44,26 @@ DB records if the name of the class is changed).
 #### <a id="single"></a>Single record
 
 Absurd in upstream Spring Data ArangoDB:
-![Alt text](docs/img/unreasonable.png?raw=true "Absurd")
+![Alt text](docs/include/img/unreasonable.png?raw=true "Absurd")
 
 Normal record provided with this implementation (the size is up to 3.69 times smaller (35/129 bytes)):
-![Alt text](docs/img/reasonable.png?raw=true "Normal")
+![Alt text](docs/include/img/reasonable.png?raw=true "Normal")
 
 #### <a id="noinheritance"></a>A record for a class that DOESN'T extend another entity/document, & is not extended
 
 Absurd in upstream Spring Data ArangoDB:
-![Alt text](docs/img/aggregate_absurd.png?raw=true "Absurd")
+![Alt text](docs/include/img/aggregate_absurd.png?raw=true "Absurd")
 
 Normal record provided with this implementation:
-![Alt text](docs/img/aggregate.png?raw=true "Normal")
+![Alt text](docs/include/img/aggregate.png?raw=true "Normal")
 
 #### <a id="list"></a>A record for a class that has a property of type List with 2 entities/documents in it
 
 Absurd in upstream Spring Data ArangoDB (with (automatic) join, in this case redundant data would be present in all [3 entities/documents](#a-id-multiples-a-cumulative-effect-of-optimizations-for-joins-multiple-records-matching-a-query-etc) that get retrieved):
-![Alt text](docs/img/aggregate_with_collection_absurd.png?raw=true "Absurd")
+![Alt text](docs/include/img/aggregate_with_collection_absurd.png?raw=true "Absurd")
 
 Normal record provided with this implementation:
-![Alt text](docs/img/aggregate_with_collection.png?raw=true "Normal")
+![Alt text](docs/include/img/aggregate_with_collection.png?raw=true "Normal")
 
 ### <a id="multiples"></a>Cumulative effect of optimizations (for JOINs, multiple records matching a query, etc.)
 Taking the example of a [single record](#a-id-single-a-single-record) & estimating that the size of single record is 3.69 times smaller (35/129 bytes),
@@ -113,7 +113,7 @@ So in this example, absolute size of data (stored, transferred, processed, etc.)
 as well as visual & perceptional aspects (simpler due to less clutter, less ambiguous), etc.).
 
 ### <a id="calc"></a>Cumulative efficiencies: simple sample calculations for various numbers of persisted entities
-![Alt text](docs/img/efficiencies.png?raw=true "Efficiencies")
+![Alt text](docs/include/img/efficiencies.png?raw=true "Efficiencies")
 
 Conclusion: this implementation is significantly more efficient in terms of disk space, memory, bandwidth, & CPU usage, as well as in terms of latency, operational expenses, & productivity; & is better in terms of visual & perceptional aspects (simpler due to less clutter, less ambiguous), & in terms of 
 DB records not being tightly-coupled with Java classes.
