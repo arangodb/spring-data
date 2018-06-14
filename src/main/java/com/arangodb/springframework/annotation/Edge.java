@@ -58,6 +58,8 @@ public @interface Edge {
 	 *         "follower" replicas, before the write operation is reported successful. If a server fails, this is
 	 *         detected automatically and one of the servers holding copies take over, usually without an error being
 	 *         reported.
+	 * 
+	 * @see Document#replicationFactor()
 	 */
 	int replicationFactor() default -1;
 
@@ -114,6 +116,8 @@ public @interface Edge {
 	 *         for a collection with 100 000 000 documents. Currently, only the edge index respects this value, but
 	 *         other index types might follow in future ArangoDB versions. Changes (see below) are applied when the
 	 *         collection is loaded the next time.
+	 * 
+	 * @see Document#indexBuckets()
 	 */
 	int indexBuckets() default -1;
 
