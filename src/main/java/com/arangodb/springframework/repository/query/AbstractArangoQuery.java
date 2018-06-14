@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.data.geo.GeoPage;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.util.Assert;
@@ -64,7 +63,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			options = new AqlQueryOptions();
 		}
 
-		if (method.isPageQuery() || GeoPage.class.equals(method.getReturnType())) {
+		if (method.isPageQuery()) {
 			options.fullCount(true);
 		}
 
