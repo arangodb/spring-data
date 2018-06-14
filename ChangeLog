@@ -1,6 +1,8 @@
-v1.1.6 (xxxx-xx-xx)
+v1.1.6 (2018-06-14)
 ---------------------------
 * fixed lazy use of @Relations/@From/@To when using a Set<>
+* allow override of CRUD methods of ArangoRepository with @Query
+* upgraded dependency arangodb-java-driver 4.5.0
 
 v1.1.5 (2018-06-07)
 ---------------------------
