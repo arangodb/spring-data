@@ -1,12 +1,14 @@
-v2.1.6.1-rational (2018-06-14)
+v2.1.7.1-rational (2018-06-14)
 ---------------------------
 * optimizations for obtaining keys from IDs
 * optimization for edges and graph traversals
 * major optimization for classes with declared @Document annotation (in comparison to upstream)
 
-v2.1.7 (xxxx-xx-xx)
+v2.1.7 (2018-06-14)
 ---------------------------
 * fixed lazy use of @Relations/@From/@To when using a Set<>
+* allow override of CRUD methods of ArangoRepository with @Query
+* upgraded dependency arangodb-java-driver 4.5.0
 
 v2.1.6 (2018-06-07)
 ---------------------------
