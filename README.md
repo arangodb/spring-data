@@ -20,6 +20,7 @@ records (whether or not any persistence-related inheritance is involved in them)
     * [Cumulative effect of optimizations (for JOINs, multiple records matching a query, etc.)](#a-id-multiples-a-cumulative-effect-of-optimizations-for-joins-multiple-records-matching-a-query-etc)
     * [Cumulative efficiencies: simple sample calculations for various numbers of persisted entities](#a-id-calc-a-cumulative-efficiencies-simple-sample-calculations-for-various-numbers-of-persisted-entities)
 * [Brief history](#a-name-history-a-brief-history)
+* [Test report comparisons (showing that all upstream functionality is preserved, it is just optimized (not less, just better))(#test-report-comparisons-showing-that-all-upstream-functionality-is-preserved-it-is-just-optimized-not-less-just-better)
 
 ## <a name="inefficiencies_optimized"></a>Inefficiencies & other issues in Spring Data ArangoDB OPTIMIZED/RESOLVED by this implementation
 1. Data pollution & disk space waste: amount of data persisted/processed, etc. when using this implementation is [up to 4 times smaller](#a-id-single-a-single-record).
@@ -134,8 +135,20 @@ wants to do with them (such as based on the alternative PR))), & closed it on Ma
 or to revert it: but the other developer requested the contributions here to not be merged, & that's how the PR got closed by the maintainer. Thus, to have rational
 support for canonical COLLECTION-PER-CLASS type of inheritance, there is a need for a customized implementation.
 
+## Test report comparisons (showing that all upstream functionality is preserved, it is just optimized (not less, just better))
+### Release 2.1.7 vs. 2.1.7.1-rational
+[Modified (branch)](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/v2.1.7/auto-testing/modified/surefire-report.html)
+[Upstream (original)](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/v2.1.7/auto-testing/original/surefire-report.html)
+[Diff](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/v2.1.7/auto-testing/diff/)
 
-# Spring Data ArangoDB
+### Optimization for edges and graph traversal branch
+[Modified (branch)](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/optimization_for_edges_and_graph_traversal/auto-testing/modified/surefire-report.html)
+[Upstream (original)](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/optimization_for_edges_and_graph_traversal/auto-testing/original/surefire-report.html)
+
+### PR 41 vs. equivalent upstream 2.1.4-SNAPSHOT
+[Modified (branch)](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/issue_40/auto-testing/modified/surefire-report.html)
+[Upstream (original)](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/issue_40/auto-testing/original/surefire-report.html)
+[Diff](https://haqer1.github.io/arangodb-spring-data-rational/docs/branch/issue_40/auto-testing/diff/)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data)
 
@@ -148,3 +161,4 @@ support for canonical COLLECTION-PER-CLASS type of inheritance, there is a need 
 * [JavaDoc 1.0.0](http://arangodb.github.io/spring-data/javadoc-1_0/index.html)
 * [JavaDoc 2.0.0](http://arangodb.github.io/spring-data/javadoc-2_0/index.html)
 * [JavaDoc Java driver](http://arangodb.github.io/arangodb-java-driver/javadoc-4_3/index.html)
+
