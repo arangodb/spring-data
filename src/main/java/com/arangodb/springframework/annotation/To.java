@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
 public @interface To {
 
 	/**
-	 * @return whether the entity should be loaded lazy
+	 * @return whether the entity should be loaded lazily
 	 */
 	boolean lazy() default false;
 
