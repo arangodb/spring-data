@@ -39,6 +39,7 @@ import com.arangodb.springframework.core.ArangoOperations;
  * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
+ * @author Reşat SABIQ
  */
 public abstract class AbstractArangoQuery implements RepositoryQuery {
 
@@ -64,7 +65,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			options = new AqlQueryOptions();
 		}
 
-		if (method.isPageQuery() || GeoPage.class.equals(method.getReturnType())) {
+		if (method.isPageQuery() || GeoPage.class.equals(method.getReturnType().getClass())) {
 			options.fullCount(true);
 		}
 
