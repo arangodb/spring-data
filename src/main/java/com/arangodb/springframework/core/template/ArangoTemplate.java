@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.template;
 
+import static com.arangodb.springframework.core.util.MetadataUtils.determineDocumentKeyFromId;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -270,11 +272,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 			final String[] split = i.split("/");
 			return split.length == 2 ? split[0] : null;
 		});
-	}
-
-	private String determineDocumentKeyFromId(final String id) {
-		final String[] split = id.split("/");
-		return split[split.length - 1];
 	}
 
 	private DBEntity toDBEntity(final Object value) {
