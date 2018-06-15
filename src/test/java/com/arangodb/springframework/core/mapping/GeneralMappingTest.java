@@ -31,6 +31,7 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
@@ -44,6 +45,7 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
 import com.arangodb.springframework.testdata.Actor;
@@ -345,5 +347,38 @@ public class GeneralMappingTest extends AbstractArangoTest {
 			}
 		}
 
+	}
+
+	@Document("sameCollection")
+	static class TwoTypesInSameCollectionA extends BasicTestEntity {
+		String value;
+		String a;
+	}
+
+	@Document("sameCollection")
+	static class TwoTypesInSameCollectionB extends BasicTestEntity {
+		String value;
+		String b;
+	}
+
+	@Test
+	public void twoTypesInSameCollection() {
+		final TwoTypesInSameCollectionA a = new TwoTypesInSameCollectionA();
+		a.value = "testA";
+		a.a = "testA";
+		final TwoTypesInSameCollectionB b = new TwoTypesInSameCollectionB();
+		b.value = "testB";
+		b.b = "testB";
+
+		template.insert(a);
+		template.insert(b);
+		final Optional<TwoTypesInSameCollectionA> findA = template.find(a.getKey(), TwoTypesInSameCollectionA.class);
+		assertThat(findA.isPresent(), is(true));
+		assertThat(findA.get().value, is("testA"));
+		assertThat(findA.get().a, is("testA"));
+		final Optional<TwoTypesInSameCollectionB> findB = template.find(b.getKey(), TwoTypesInSameCollectionB.class);
+		assertThat(findB.isPresent(), is(true));
+		assertThat(findB.get().value, is("testB"));
+		assertThat(findB.get().b, is("testB"));
 	}
 }

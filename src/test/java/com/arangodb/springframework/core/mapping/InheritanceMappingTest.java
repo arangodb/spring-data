@@ -37,6 +37,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
+import com.arangodb.springframework.core.mapping.testdata.BasicEdgeTestEntity;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
 
 /**
@@ -323,6 +326,39 @@ public class InheritanceMappingTest extends AbstractArangoTest {
 				assertThat(simpleElem.field, is(value));
 			}
 		}
+	}
+
+	@Document("overrideDocAn")
+	static class SubClassWithOwnDocumentAnnotation extends BasicTestEntity {
+	}
+
+	@Test
+	public void overrideDocumentAnnotation() {
+		final SubClassWithOwnDocumentAnnotation doc = new SubClassWithOwnDocumentAnnotation();
+		template.insert(doc);
+		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("overrideDocAn").exists(), is(true));
+		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("overrideDocAn").count().getCount(),
+			is(1L));
+	}
+
+	@Edge("overrideEdgeAn")
+	static class SubClassWithOwnEdgeAnnotation extends BasicEdgeTestEntity {
+	}
+
+	@Test
+	public void overrideEdgeAnnotation() {
+		final BasicTestEntity from = new BasicTestEntity();
+		final BasicTestEntity to = new BasicTestEntity();
+		template.insert(from);
+		template.insert(to);
+
+		final SubClassWithOwnEdgeAnnotation edge = new SubClassWithOwnEdgeAnnotation();
+		edge.from = from;
+		edge.to = to;
+		template.insert(edge);
+		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("overrideEdgeAn").exists(), is(true));
+		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("overrideEdgeAn").count().getCount(),
+			is(1L));
 	}
 
 }
