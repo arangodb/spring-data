@@ -30,6 +30,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
@@ -39,6 +40,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
 
@@ -262,6 +264,63 @@ public class RefMappingTest extends AbstractArangoTest {
 		assertThat(complexDocument.nestedEntity, is(instanceOf(SimpleBasicChildTestEntity.class)));
 		final SimpleBasicChildTestEntity simpleDocument = (SimpleBasicChildTestEntity) complexDocument.nestedEntity;
 		assertThat(simpleDocument.field, is(innerChild.field));
+	}
+
+	@Document("sameCollection")
+	static class TwoTypesInSameCollectionA extends BasicTestEntity {
+		String value;
+		String a;
+	}
+
+	@Document("sameCollection")
+	static class TwoTypesInSameCollectionB extends BasicTestEntity {
+		String value;
+		String b;
+	}
+
+	static class SameCollectionTestEntity extends BasicTestEntity {
+		@Ref
+		Collection<BasicTestEntity> value;
+	}
+
+	@Test
+	public void twoTypesInSameCollection() {
+		final TwoTypesInSameCollectionA a = new TwoTypesInSameCollectionA();
+		a.value = "testA";
+		a.a = "testA";
+		final TwoTypesInSameCollectionB b = new TwoTypesInSameCollectionB();
+		b.value = "testB";
+		b.b = "testB";
+		final SameCollectionTestEntity c = new SameCollectionTestEntity();
+		c.value = new ArrayList<>();
+		c.value.add(a);
+		c.value.add(b);
+
+		template.insert(a);
+		template.insert(b);
+		template.insert(c);
+		final Optional<SameCollectionTestEntity> findC = template.find(c.getKey(), SameCollectionTestEntity.class);
+		assertThat(findC.isPresent(), is(true));
+		final Collection<BasicTestEntity> value = findC.get().value;
+		assertThat(value.size(), is(2));
+		{
+			assertThat(value.stream().filter(v -> v instanceof TwoTypesInSameCollectionA).count(), is(1L));
+			final Optional<BasicTestEntity> findA = value.stream().filter(v -> v instanceof TwoTypesInSameCollectionA)
+					.findFirst();
+			assertThat(findA.isPresent(), is(true));
+			final TwoTypesInSameCollectionA aa = (TwoTypesInSameCollectionA) findA.get();
+			assertThat(aa.value, is("testA"));
+			assertThat(aa.a, is("testA"));
+		}
+		{
+			assertThat(value.stream().filter(v -> v instanceof TwoTypesInSameCollectionB).count(), is(1L));
+			final Optional<BasicTestEntity> findB = value.stream().filter(v -> v instanceof TwoTypesInSameCollectionB)
+					.findFirst();
+			assertThat(findB.isPresent(), is(true));
+			final TwoTypesInSameCollectionB bb = (TwoTypesInSameCollectionB) findB.get();
+			assertThat(bb.value, is("testB"));
+			assertThat(bb.b, is("testB"));
+		}
 	}
 
 }
