@@ -1,3 +1,9 @@
+v2.1.8 (2018-06-25)
+---------------------------
+* upgraded dependency arangodb-java-driver 4.5.2 
+  * fixed ArangoDB.aquireHostList(true) with authentication
+  * added support for custom serializer
+
 v2.1.7 (2018-06-14)
 ---------------------------
 * fixed lazy use of @Relations/@From/@To when using a Set<>
