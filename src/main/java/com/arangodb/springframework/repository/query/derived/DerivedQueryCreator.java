@@ -90,9 +90,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	private int varsUsed = 0;
 	private boolean checkUnique = false;
 
-	public DerivedQueryCreator(final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context, final Class<?> domainClass, final PartTree tree,
-		final ArangoParameterAccessor accessor, final Map<String, Object> bindVars, final List<String> geoFields,
-		final boolean useFunctions) {
+	public DerivedQueryCreator(
+		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
+		final Class<?> domainClass, final PartTree tree, final ArangoParameterAccessor accessor,
+		final Map<String, Object> bindVars, final List<String> geoFields, final boolean useFunctions) {
 		super(tree, accessor);
 		this.context = context;
 		this.collectionName = collectionName(context.getPersistentEntity(domainClass).getCollection());
@@ -168,20 +169,19 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length") : "";
 		final String limit = tree.isLimiting() ? format(" LIMIT %d", tree.getMaxResults()) : "";
 		final String pageable = accessor.getPageable() == null || accessor.getPageable().isUnpaged() ? ""
-				: format(" LIMIT %d, %d", accessor.getPageable().getOffset(),
-					accessor.getPageable().getPageSize());
+				: format(" LIMIT %d, %d", accessor.getPageable().getOffset(), accessor.getPageable().getPageSize());
 		final String geoFields = format("%s[0], %s[1]", uniqueLocation, uniqueLocation);
 		final String distanceAdjusted = getGeoFields().isEmpty() ? "e"
-				: format("MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields,
-					getUniquePoint()[0], getUniquePoint()[1]);
+				: format("MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields, getUniquePoint()[0],
+					getUniquePoint()[1]);
 		final String type = tree.isDelete() ? (" REMOVE e IN " + collectionName)
 				: ((tree.isCountProjection() || tree.isExistsProjection()) ? " RETURN length"
 						: format(" RETURN %s", distanceAdjusted));
 		String sortString = " " + AqlUtils.buildSortClause(sort, "e");
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
-			final String distanceSortKey = format(" SORT distance(%s, %f, %f)", geoFields,
-				getUniquePoint()[0], getUniquePoint()[1]);
+			final String distanceSortKey = format(" SORT distance(%s, %f, %f)", geoFields, getUniquePoint()[0],
+				getUniquePoint()[1]);
 			if (sort.isUnsorted()) {
 				sortString = distanceSortKey;
 			} else {
@@ -288,8 +288,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				simpleProperties = new StringBuilder();
 				final String iteration = format(TEMPLATE, entity, depths, direction, prevEntity, nested, edges);
 				final String predicate = format(PREDICATE_TEMPLATE, iteration);
-				predicateTemplate = predicateTemplate.length() == 0 ? predicate
-						: format(predicateTemplate, predicate);
+				predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
 			} else if (property.isCollectionLike()) {
 				if (property.getRef().isPresent()) {
 					// collection of references
@@ -665,7 +664,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			break;
 		case CONTAINING:
 			isArray = false;
-			clause = format("@%d IN %s", bindingCounter, ignorePropertyCase(part, property));
+			if (part.getProperty().getTypeInformation().isCollectionLike()) {
+				clause = format("@%d IN %s", bindingCounter, ignorePropertyCase(part, property));
+			} else {
+				clause = format("CONTAINS(%s, @%d)", ignorePropertyCase(part, property), bindingCounter);
+			}
 			arguments = 1;
 			break;
 		case NOT_CONTAINING:
@@ -718,8 +721,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			checkUniqueLocation(part);
 			if (useFunctions) {
 				isArray = true;
-				clause = format(
-					"MINUS(WITHIN(%s, @%d, @%d, @%d, '_distance'), WITHIN(%s, @%d, @%d, @%d, '_distance'))",
+				clause = format("MINUS(WITHIN(%s, @%d, @%d, @%d, '_distance'), WITHIN(%s, @%d, @%d, @%d, '_distance'))",
 					collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3, collectionName,
 					bindingCounter, bindingCounter + 1, bindingCounter + 2);
 				if (geoFields.isEmpty()) {
@@ -727,8 +729,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				}
 			} else {
 				isArray = false;
-				clause = format(
-					"@%d <= distance(%s[0], %s[1], @%d, @%d) AND distance(%s[0], %s[1], @%d, @%d) <= @%d",
+				clause = format("@%d <= distance(%s[0], %s[1], @%d, @%d) AND distance(%s[0], %s[1], @%d, @%d) <= @%d",
 					bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property),
 					bindingCounter, bindingCounter + 1, ignorePropertyCase(part, property),
 					ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1, bindingCounter + 3);
@@ -743,8 +744,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			break;
 		case POLYGON:
 			isArray = false;
-			clause = format("IS_IN_POLYGON(@%d, %s[0], %s[1])", bindingCounter,
-				ignorePropertyCase(part, property), ignorePropertyCase(part, property));
+			clause = format("IS_IN_POLYGON(@%d, %s[0], %s[1])", bindingCounter, ignorePropertyCase(part, property),
+				ignorePropertyCase(part, property));
 			break;
 		case DEFAULT:
 		default:
