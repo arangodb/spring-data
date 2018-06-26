@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [2.1.9] - 2018-06-26
+
 ### Fixed
 
 - fixed derived query with `containing` on `String` (issue #84)
