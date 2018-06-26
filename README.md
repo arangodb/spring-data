@@ -157,8 +157,10 @@ support for canonical COLLECTION-PER-CLASS type of inheritance, there is a need 
 - [Reference](docs/Drivers/SpringData/Reference/README.md)
 
 ## Learn more
-* [ArangoDB](https://www.arangodb.com/)
-* [Demo](https://github.com/arangodb/spring-data-demo)
-* [JavaDoc 1.0.0](http://arangodb.github.io/spring-data/javadoc-1_0/index.html)
-* [JavaDoc 2.0.0](http://arangodb.github.io/spring-data/javadoc-2_0/index.html)
-* [JavaDoc Java driver](http://arangodb.github.io/arangodb-java-driver/javadoc-4_3/index.html)
+
+- [ArangoDB](https://www.arangodb.com/)
+- [Demo](https://github.com/arangodb/spring-data-demo)
+- [JavaDoc 1.0.0](http://arangodb.github.io/spring-data/javadoc-1_0/index.html)
+- [JavaDoc 2.0.0](http://arangodb.github.io/spring-data/javadoc-2_0/index.html)
+- [JavaDoc Java driver](http://arangodb.github.io/arangodb-java-driver/javadoc-4_3/index.html)
+- [Changelog](ChangeLog.md)
