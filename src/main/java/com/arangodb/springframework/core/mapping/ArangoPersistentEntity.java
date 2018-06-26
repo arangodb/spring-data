@@ -70,7 +70,14 @@ public interface ArangoPersistentEntity<T>
 
 	Collection<ArangoPersistentProperty> getFulltextIndexedProperties();
 
+	/**
+	 * @return	true if single-collection for multiple classes case (which could be used to avoid further verification of that aspect), false otherwise.
+	 */
 	Boolean getSingleCollectionForMultipleClasses();
 	
+	/**
+	 * Marks as single-collection for multiple classes case (for more efficient processing subsequently).
+	 * @param b	true to mark as single-collection for multiple classes case (false or null otherwise).
+	 */
 	void setSingleCollectionForMultipleClasses(Boolean b);
 }

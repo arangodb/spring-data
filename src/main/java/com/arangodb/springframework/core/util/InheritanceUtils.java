@@ -138,7 +138,7 @@ public class InheritanceUtils {
 	 * @param candidateType	candidate type to verify.
 	 * @param entityName	entity name to match.
 	 * 
-	 * @return	true if a valid a {@link Document} match, false otherwise.
+	 * @return	true if a valid {@link Document} match, false otherwise.
 	 */
 	private static boolean verifyMatch(final Class<?> candidateType, final String entityName) {
 		Document doc = candidateType.getAnnotation(Document.class);

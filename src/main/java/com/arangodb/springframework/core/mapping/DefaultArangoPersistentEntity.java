@@ -61,6 +61,7 @@ import com.arangodb.springframework.annotation.SkiplistIndexes;
 
 /**
  * @author Mark Vollmary
+ * @author Reşat SABIQ
  * @param <T>
  *
  */
@@ -297,10 +298,16 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 			it -> AnnotatedElementUtils.findMergedRepeatableAnnotations(getType(), it));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Boolean getSingleCollectionForMultipleClasses() {
 		return singleCollectionForMultipleClasses;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setSingleCollectionForMultipleClasses(Boolean singleCollectionForMultipleClasses) {
 		this.singleCollectionForMultipleClasses = singleCollectionForMultipleClasses;
 	}

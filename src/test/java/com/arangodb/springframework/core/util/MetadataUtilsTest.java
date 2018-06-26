@@ -25,7 +25,7 @@ public class MetadataUtilsTest {
 	}
 
 	/**
-	 * Test method for {@link com.arangodb.springframework.core.util.MetadataUtils#determineDocumentKeyFromId(java.lang.String)}.
+	 * Test method for {@link com.arangodb.springframework.core.util.MetadataUtils#determineCollectionFromId(java.lang.String)}.
 	 */
 	@Test
 	public void testDetermineCollectionFromId() {
