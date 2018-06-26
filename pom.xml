@@ -4,7 +4,7 @@
 
 	<groupId>com.arangodb</groupId>
 	<artifactId>arangodb-spring-data-rational</artifactId>
-	<version>2.1.9.1-rational</version>
+	<version>2.1.9.1</version>
 	<inceptionYear>2017</inceptionYear>
 	<packaging>jar</packaging>
 
