@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Added
+
+- added support for satellite collections
+  - added `@Document#satellite()`
+  - added `@Edge#satellite()`
+
 ## [1.1.8] - 2018-06-26
 
 ### Fixed
