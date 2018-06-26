@@ -79,7 +79,7 @@ import com.arangodb.util.MapBuilder;
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- * 
+ *
  */
 public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
