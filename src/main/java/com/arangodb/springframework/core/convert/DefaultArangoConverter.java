@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -51,6 +52,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
@@ -278,6 +280,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 				Class<?> type = itemTypeInfo.getType();
 				return Optional.ofNullable(resolver.resolveMultiple(ids, typeInfo, annotation, id -> {
 						Class<?> inheritanceAwareType = InheritanceUtils.determineInheritanceAwareReferenceType(id, type, getMappingContext());
+						// Use original type for single-collection cases:
+						boolean singleCollection = isSingleCollectionForMultipleClasses(inheritanceAwareType);
+						if (singleCollection)
+							return itemTypeInfo;
 						return toTypeInfoAndAddToContextIfNeeded(inheritanceAwareType, type, itemTypeInfo);
 					}));
 			} else {
@@ -553,13 +559,53 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Class<?> referenceType = definedType != null ? definedType.getType() : Object.class;
 		final Class<?> valueType = ClassUtils.getUserClass(value.getClass());
 		if (!valueType.equals(referenceType)) {
-			// For any class with a declared @Document or @Edge annotation there is no need to store any type-related properties/columns, because 
-			// there is already an entire COLLECTION/TABLE dedicated to the class involved:
-			if (valueType.getDeclaredAnnotation(Document.class) == null && valueType.getDeclaredAnnotation(Edge.class) == null)
+			if (isTypeInfoNecessary(valueType))
 				typeMapper.writeType(valueType, sink);
 		}
 	}
+	
+	private boolean isTypeInfoNecessary(final Class<?> type) {
+		// For any class with a declared @Document or @Edge annotation there is no need to store any type-related properties/columns, because 
+		// there is already an entire COLLECTION/TABLE dedicated to the class involved (with the exception of single-collection for multiple classes case):
+		return (type.getDeclaredAnnotation(Document.class) == null || isSingleCollectionForMultipleClasses(type))
+				&& type.getDeclaredAnnotation(Edge.class) == null;
+	}
 
+	private boolean isSingleCollectionForMultipleClasses(final Class<?> type) {
+		Document doc = type.getAnnotation(Document.class);
+		if (doc == null)
+			return false;
+		String customCollectionName = doc.value();
+
+		if (StringUtils.isEmpty(customCollectionName))
+			return false;
+		ArangoPersistentEntity<?> ape = context.getRequiredPersistentEntity(type);
+		Boolean sc = ape.getSingleCollectionForMultipleClasses();
+		if (Boolean.TRUE.equals(sc))
+			return true;
+		LinkedList<ArangoPersistentEntity<?>> overlappingSingleCollectionEntities = null;
+		for (ArangoPersistentEntity<?> entityNode : context.getPersistentEntities()) {
+			Class<?> t = entityNode.getType();
+			Document d = t.getDeclaredAnnotation(Document.class);
+			if (d != null) {
+				String c = d.value();
+				if (!StringUtils.isEmpty(c) && customCollectionName.equals(c) && !type.equals(t)) {
+					if (overlappingSingleCollectionEntities == null)
+						overlappingSingleCollectionEntities = new LinkedList<>();
+					overlappingSingleCollectionEntities.add(entityNode);
+				}
+			}
+		}
+		if (overlappingSingleCollectionEntities != null) {
+			for (ArangoPersistentEntity<?> persistentEntity : overlappingSingleCollectionEntities) {
+				persistentEntity.setSingleCollectionForMultipleClasses(Boolean.TRUE);
+			}
+			ape.setSingleCollectionForMultipleClasses(Boolean.TRUE);
+			return true;
+		}
+		return false;
+	}
+	
 	private String convertMapKey(final Object key) {
 		if (key instanceof String) {
 			return (String) key;

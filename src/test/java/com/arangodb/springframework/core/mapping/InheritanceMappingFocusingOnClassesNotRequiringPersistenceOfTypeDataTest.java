@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.arangodb.springframework.core.convert;
+package com.arangodb.springframework.core.mapping;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -27,7 +27,8 @@ import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.Ref;
-import com.arangodb.springframework.repository.InheritanceSupportTestRepository;
+import com.arangodb.springframework.core.convert.DefaultArangoTypeMapper;
+import com.arangodb.springframework.repository.InheritanceMappingFocusingOnClassesNotRequiringPersistenceOfTypeDataRepository;
 
 /**
  * @author Reşat SABIQ
@@ -35,9 +36,9 @@ import com.arangodb.springframework.repository.InheritanceSupportTestRepository;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
-public class InheritanceSupportTest extends AbstractArangoTest {
+public class InheritanceMappingFocusingOnClassesNotRequiringPersistenceOfTypeDataTest extends AbstractArangoTest {
 	@Autowired
-	InheritanceSupportTestRepository inheritanceSupportRepository;
+	InheritanceMappingFocusingOnClassesNotRequiringPersistenceOfTypeDataRepository inheritanceSupportRepository;
 	
 	public static abstract class Base {
 		@Id

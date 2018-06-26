@@ -17,9 +17,9 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 
 /**
  * Utilities to facilitate support for inheritance in persisted entities (following DRY principles, & other best practices). At present it is used for optimal 
- * support of inheritance in associations involving classes that have a declared @Document annotation (this is similar to TABLE_PER_CLASS type of inheritance in JPA)
- * (including associations of a {@link Collection} type).
- * E.g., this helps having clean records of entities with inheritance: <br/>
+ * support of inheritance in associations involving classes that have a declared @Document annotation that are persisted in a dedicated collection 
+ * (this is similar to TABLE_PER_CLASS type of inheritance in JPA) (including support for associations of a {@link Collection} type).
+ * E.g., this helps having clean records of entities (with inheritance): <br/>
  *  {"mainSkill":"Java","name":"Reşat"} <br/>
  * as opposed to <br/>
  *  {"_class":"com.arangodb.springframework.core.convert.InheritanceSupportTest$DeveloperSubclass","mainSkill":"Perl","name":"Kevin"}
@@ -27,19 +27,20 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
  * @author Reşat SABIQ
  */
 // This approach is superior to was merged after this push request (18) was submitted as part of pull request 33, because that pull request stores fully-qualified 
-// class name for each record with inheritance which is completely unnecessary for classes that have a declared @Document annotation, because there is already an entire 
-// COLLECTION/TABLE dedicated to the class involved. Thus, by comparison, this approach optimizes:
+// class name for each record (with or without inheritance) which is completely unnecessary for classes that have a declared @Document annotation that are 
+// persisted in a dedicated collection, because there is already an entire COLLECTION/TABLE dedicated to the class involved. 
+// Thus, by comparison, this approach optimizes:
 // 1. disk space, 
 // 2. memory, 
 // 3. bandwidth & 
 // 4. CPU usage, 
-// 5. avoids additional operating expenses, 
-// 6. extreme visual clutter when looking at the data, 
+// 5. avoids additional operating expenses (due to the above), 
+// 6. avoids extreme visual clutter when looking at the data, 
 // 7. & its likely negative effects on productivity, 
 // 8. doesn't entail unnecessary tight-coupling of DB records to Java classes, and 
-// 9. avoids any potential negative impact on latency 
+// 9. avoids any potential negative impact on latency
 // by not having to deal with unnecessary overhead entailed by processing, storage, & retrieval of a lot of unnecessary data.
-// Down the road, this class could also facilitate optimal implementations for other main-stream inheritance types in associations.
+// Down the road, this approach could also facilitate optimal implementations for other main-stream inheritance types in associations.
 public class InheritanceUtils {
 	// (Something like) this could even be made configurable (via arangodb.properties):
 	private static final boolean QUASI_BRUTE_FORCE_SCANNING_INSTEAD_OF_EXCEPTION_4_INHERITANCE_SUPPORT = true;
@@ -56,8 +57,8 @@ public class InheritanceUtils {
 	 * @param propertyType	Reference property type.
 	 * @param context		Mapping context to check while matching.
 	 * 
-	 * @return	A pair, where first property is the (sub)type best matching {@code source}, & second property is true when there had been a persistent entity
-	 * 			in {@code mappingContextPersistentEntities} for it (& false otherwise).
+	 * @return	The (sub)type best matching {@code source}. In cases with single-collection for multiple classes, this is not guaranteed to be the exact match 
+	 * 			(which needs to be determined based on persisted type info).
 	 */
 	public static Class<?> determineInheritanceAwareReferenceType(
 		final Object source,
@@ -65,7 +66,7 @@ public class InheritanceUtils {
 		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context) {
 		Class<?> type = null;
 		String src = source.toString();
-		String entityName = src.substring(0, src.indexOf('/'));
+		String entityName = MetadataUtils.determineCollectionFromId(src);
 		// At present, a subclass would quite likely have a simple class name reflected in Id that is different from the property's (compile-time) type name (ignoring case):
 		handleInheritance:
 		if (!verifyMatch(propertyType, entityName)) {
@@ -137,15 +138,18 @@ public class InheritanceUtils {
 	 * @param candidateType	candidate type to verify.
 	 * @param entityName	entity name to match.
 	 * 
-	 * @return	true if valid match, false otherwise.
+	 * @return	true if a valid a {@link Document} match, false otherwise.
 	 */
 	private static boolean verifyMatch(final Class<?> candidateType, final String entityName) {
 		Document doc = candidateType.getAnnotation(Document.class);
-		// First compare with explicit (annotation) name, then with implicit (class) name:
-		if (doc != null && entityName.equals(doc.value()))
-			return true;
-		String name = candidateType.getSimpleName();
-		name = name.substring(0, 1).toLowerCase() + name.substring(1);
-		return entityName.equals(name);
+		if (doc != null) {
+			// First compare with explicit (annotation) name, then with implicit (class) name:
+			if (entityName.equals(doc.value()))
+				return true;
+			String name = candidateType.getSimpleName();
+			name = Character.toLowerCase(name.charAt(1)) + name.substring(1);
+			return entityName.equals(name);
+		}
+		return false;
 	}
 }

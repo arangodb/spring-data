@@ -45,12 +45,12 @@ public class RefResolver extends AbstractResolver<Ref>
 	}
 
 	@Override
-	public Object resolveOne(final String id, TypeInformation<?> type, final Ref annotation) {
+	public Object resolveOne(final String id, final TypeInformation<?> type, final Ref annotation) {
 		return annotation.lazy() ? proxy(id, type, annotation, this) : resolve(id, type, annotation);
 	}
 
 	@Override
-	public Object resolveMultiple(final Collection<String> ids, TypeInformation<?> type, final Ref annotation, Function<String, TypeInformation<?>> inheritanceHelper) {
+	public Object resolveMultiple(final Collection<String> ids, final TypeInformation<?> type, final Ref annotation, Function<String, TypeInformation<?>> inheritanceHelper) {
 		return ids.stream().map(id -> resolveOne(id, inheritanceHelper.apply(id), annotation))
 				.collect(Collectors.toList());
 	}

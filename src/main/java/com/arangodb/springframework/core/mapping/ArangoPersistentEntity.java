@@ -35,6 +35,7 @@ import com.arangodb.springframework.annotation.SkiplistIndex;
 
 /**
  * @author Mark Vollmary
+ * @author Reşat SABIQ
  * @param <T>
  *
  */
@@ -69,4 +70,7 @@ public interface ArangoPersistentEntity<T>
 
 	Collection<ArangoPersistentProperty> getFulltextIndexedProperties();
 
+	Boolean getSingleCollectionForMultipleClasses();
+	
+	void setSingleCollectionForMultipleClasses(Boolean b);
 }

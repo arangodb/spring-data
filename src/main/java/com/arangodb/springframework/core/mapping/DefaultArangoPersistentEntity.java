@@ -84,7 +84,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private final Map<Class<? extends Annotation>, Optional<Annotation>> annotationCache;
 	private final Map<Class<? extends Annotation>, Set<? extends Annotation>> repeatableAnnotationCache;
-
+	private Boolean singleCollectionForMultipleClasses;
+	
 	public DefaultArangoPersistentEntity(final TypeInformation<T> information) {
 		super(information);
 		collection = StringUtils.uncapitalize(information.getType().getSimpleName());
@@ -294,5 +295,13 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	public <A extends Annotation> Set<A> findAnnotations(final Class<A> annotationType) {
 		return (Set<A>) repeatableAnnotationCache.computeIfAbsent(annotationType,
 			it -> AnnotatedElementUtils.findMergedRepeatableAnnotations(getType(), it));
+	}
+
+	public Boolean getSingleCollectionForMultipleClasses() {
+		return singleCollectionForMultipleClasses;
+	}
+
+	public void setSingleCollectionForMultipleClasses(Boolean singleCollectionForMultipleClasses) {
+		this.singleCollectionForMultipleClasses = singleCollectionForMultipleClasses;
 	}
 }
