@@ -101,4 +101,12 @@ public @interface QueryOptions {
 	 */
 	boolean stream() default false;
 
+	/**
+	 * @since ArangoDB 3.1.0
+	 * @return the maximum number of memory (measured in bytes) that the query is allowed to use. If set, then the query
+	 *         will fail with error "resource limit exceeded" in case it allocates too much memory. A value of 0
+	 *         indicates that there is no memory limit.
+	 */
+	long memoryLimit() default -1;
+
 }
