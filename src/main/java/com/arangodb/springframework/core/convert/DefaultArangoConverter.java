@@ -565,10 +565,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 	
 	private boolean isTypeInfoNecessary(final Class<?> type) {
-		// For any class with a declared @Document or @Edge annotation there is no need to store any type-related properties/columns, because 
+		// For any class with a declared @Document there is no need to store any type-related properties/columns, because 
 		// there is already an entire COLLECTION/TABLE dedicated to the class involved (with the exception of single-collection for multiple classes case):
-		return (type.getDeclaredAnnotation(Document.class) == null || isSingleCollectionForMultipleClasses(type))
-				&& type.getDeclaredAnnotation(Edge.class) == null;
+		return type.getDeclaredAnnotation(Document.class) == null || isSingleCollectionForMultipleClasses(type);
 	}
 
 	private boolean isSingleCollectionForMultipleClasses(final Class<?> type) {

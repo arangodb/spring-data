@@ -74,13 +74,11 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
-import com.arangodb.springframework.core.util.MetadataUtils;
 import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- * @author Reşat SABIQ
  */
 public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
@@ -269,7 +267,10 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	private Optional<String> determineCollectionFromId(final Optional<String> id) {
-		return id.map(i -> MetadataUtils.determineCollectionFromId(i));
+		return id.map(i -> {
+			final String[] split = i.split("/");
+			return split.length == 2 ? split[0] : null;
+		});
 	}
 
 	private DBEntity toDBEntity(final Object value) {
