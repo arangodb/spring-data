@@ -55,7 +55,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
@@ -565,7 +564,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 	
 	private boolean isTypeInfoNecessary(final Class<?> type) {
-		// For any class with a declared @Document there is no need to store any type-related properties/columns, because 
+		// For any class with a declared @Document annotation there is no need to store any type-related properties/columns, because 
 		// there is already an entire COLLECTION/TABLE dedicated to the class involved (with the exception of single-collection for multiple classes case):
 		return type.getDeclaredAnnotation(Document.class) == null || isSingleCollectionForMultipleClasses(type);
 	}
