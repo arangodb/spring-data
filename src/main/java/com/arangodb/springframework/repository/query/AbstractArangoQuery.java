@@ -38,7 +38,6 @@ import com.arangodb.springframework.core.ArangoOperations;
  * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
- * @author Reşat SABIQ
  */
 public abstract class AbstractArangoQuery implements RepositoryQuery {
 

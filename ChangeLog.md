@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Added
+
+- added support for streaming AQL cursors
+  - added `QueryOptions#stream()`
+- added `QueryOptions#memoryLimit()`
+- added support for satellite collections
+  - added `@Document#satellite()`
+  - added `@Edge#satellite()`
+
 ## [2.1.9] - 2018-06-26
 
 ### Fixed
@@ -19,14 +28,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - upgraded dependency arangodb-java-driver 4.5.2
   - fixed `ArangoDB#aquireHostList(true)` with authentication
   - added support for custom serializer
-
-## [2.1.7.1-rational] (2018-06-14)
-
-### Enhanced
-
-* optimizations for obtaining keys from IDs
-* optimization for edges and graph traversals
-* major optimization for classes with declared @Document annotation (in comparison to upstream)
 
 ## [2.1.7] - 2018-06-14
 

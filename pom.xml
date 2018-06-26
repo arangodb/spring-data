@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.arangodb</groupId>
-	<artifactId>arangodb-spring-data-rational</artifactId>
-	<version>2.1.9.1</version>
+	<artifactId>arangodb-spring-data</artifactId>
+	<version>2.1.10-SNAPSHOT</version>
 	<inceptionYear>2017</inceptionYear>
 	<packaging>jar</packaging>
 
-	<name>arangodb-spring-data-rational</name>
+	<name>arangodb-spring-data</name>
 	<description>ArangoDB Spring Data</description>
 	<url>http://maven.apache.org</url>
 
@@ -73,14 +73,6 @@
 		<repository>
 			<id>spring-libs-snapshot</id>
 			<url>https://repo.spring.io/libs-snapshot</url>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>central</id>
-			<name>Maven Repository Switchboard</name>
-			<url>http://repo1.maven.org/maven2</url>
 		</repository>
 	</repositories>
 

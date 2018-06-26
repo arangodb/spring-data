@@ -28,6 +28,7 @@ import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Mark Vollmary
+ * @author Reşat SABIQ
  *
  */
 public interface ReferenceResolver<A extends Annotation> {

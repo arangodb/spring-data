@@ -62,6 +62,12 @@ public @interface Edge {
 	int replicationFactor() default -1;
 
 	/**
+	 * @return If true the collection is created as a satellite collection. In this case {@link #replicationFactor()} is
+	 *         ignored.
+	 */
+	boolean satellite() default false;
+
+	/**
 	 * @return If true then the data is synchronized to disk before returning from a document create, update, replace or
 	 *         removal operation. (default: false)
 	 */
