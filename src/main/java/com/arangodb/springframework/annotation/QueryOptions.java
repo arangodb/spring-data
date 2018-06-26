@@ -87,4 +87,26 @@ public @interface QueryOptions {
 	 */
 	int ttl() default -1;
 
+	/**
+	 * @since ArangoDB 3.4.0
+	 * @return Specify true and the query will be executed in a streaming fashion. The query result is not stored on the
+	 *         server, but calculated on the fly. Beware: long-running queries will need to hold the collection locks
+	 *         for as long as the query cursor exists. When set to false a query will be executed right away in its
+	 *         entirety. In that case query results are either returned right away (if the resultset is small enough),
+	 *         or stored on the arangod instance and accessible via the cursor API (with respect to the ttl). It is
+	 *         advisable to only use this option on short-running queries or without exclusive locks (write-locks on
+	 *         MMFiles). Please note that the query options cache, count and fullCount will not work on streaming
+	 *         queries. Additionally query statistics, warnings and profiling data will only be available after the
+	 *         query is finished. The default value is false
+	 */
+	boolean stream() default false;
+
+	/**
+	 * @since ArangoDB 3.1.0
+	 * @return the maximum number of memory (measured in bytes) that the query is allowed to use. If set, then the query
+	 *         will fail with error "resource limit exceeded" in case it allocates too much memory. A value of 0
+	 *         indicates that there is no memory limit.
+	 */
+	long memoryLimit() default -1;
+
 }

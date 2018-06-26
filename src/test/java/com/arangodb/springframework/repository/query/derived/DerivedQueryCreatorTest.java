@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.data.domain.Page;
@@ -159,6 +160,41 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(customer1);
 		repository.save(customer2);
 		final Collection<Customer> retrieved = repository.findByStringArrayNotContainingIgnoreCase("Hello");
+		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void findByStringContaining() {
+		final Customer c1 = new Customer("abc", "", 0);
+		final Customer c2 = new Customer("Abc", "", 0);
+		final Customer c3 = new Customer("abcd", "", 0);
+		final Customer c4 = new Customer("ab", "", 0);
+		repository.save(c1);
+		repository.save(c2);
+		repository.save(c3);
+		repository.save(c4);
+		final Collection<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(c1);
+		toBeRetrieved.add(c3);
+		final Collection<Customer> retrieved = repository.findByNameContaining("abc");
+		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void findByStringContainingIgnoreCase() {
+		final Customer c1 = new Customer("abc", "", 0);
+		final Customer c2 = new Customer("Abc", "", 0);
+		final Customer c3 = new Customer("abcd", "", 0);
+		final Customer c4 = new Customer("ab", "", 0);
+		repository.save(c1);
+		repository.save(c2);
+		repository.save(c3);
+		repository.save(c4);
+		final Collection<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(c1);
+		toBeRetrieved.add(c2);
+		toBeRetrieved.add(c3);
+		final Collection<Customer> retrieved = repository.findByNameContainingIgnoreCase("abc");
 		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
 	}
 
@@ -621,6 +657,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	@Ignore // https://github.com/arangodb/arangodb/issues/5303
 	public void referenceGeospatialTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("", "", 0);

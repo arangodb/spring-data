@@ -115,6 +115,14 @@ public class ArangoQueryMethod extends QueryMethod {
 		options.fullCount(queryOptions.fullCount());
 		options.profile(queryOptions.profile());
 		options.rules(Arrays.asList(queryOptions.rules()));
+		final boolean stream = queryOptions.stream();
+		if (stream) {
+			options.stream(stream);
+		}
+		final long memoryLimit = queryOptions.memoryLimit();
+		if (memoryLimit != -1) {
+			options.memoryLimit(memoryLimit);
+		}
 		return options;
 	}
 
