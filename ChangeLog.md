@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ### Added
 
 - added support for streaming AQL cursors
+  - added `QueryOptions#stream()`
+- added `QueryOptions#memoryLimit()`
 - added support for satellite collections
   - added `@Document#satellite()`
   - added `@Edge#satellite()`

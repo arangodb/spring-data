@@ -119,6 +119,10 @@ public class ArangoQueryMethod extends QueryMethod {
 		if (stream) {
 			options.stream(stream);
 		}
+		final long memoryLimit = queryOptions.memoryLimit();
+		if (memoryLimit != -1) {
+			options.memoryLimit(memoryLimit);
+		}
 		return options;
 	}
 
