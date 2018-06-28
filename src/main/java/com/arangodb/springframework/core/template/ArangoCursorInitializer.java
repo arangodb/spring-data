@@ -41,7 +41,7 @@ class ArangoCursorInitializer implements com.arangodb.util.ArangoCursorInitializ
 
 	@Override
 	public <T> ArangoCursor<T> createInstance(
-		final InternalArangoDatabase<?, ?, ?, ?> db,
+		final InternalArangoDatabase<?, ?> db,
 		final ArangoCursorExecute execute,
 		final Class<T> type,
 		final CursorEntity result) {

@@ -40,7 +40,7 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 
 	private ArangoConverter converter;
 
-	protected ArangoExtCursorIterator(final ArangoCursor<T> cursor, final InternalArangoDatabase<?, ?, ?, ?> db,
+	protected ArangoExtCursorIterator(final ArangoCursor<T> cursor, final InternalArangoDatabase<?, ?> db,
 		final ArangoCursorExecute execute, final CursorEntity result) {
 		super(cursor, execute, db, result);
 	}

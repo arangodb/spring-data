@@ -35,7 +35,7 @@ import com.arangodb.springframework.core.convert.ArangoConverter;
  */
 class ArangoExtCursor<T> extends ArangoCursorImpl<T> {
 
-	protected ArangoExtCursor(final InternalArangoDatabase<?, ?, ?, ?> db, final ArangoCursorExecute execute,
+	protected ArangoExtCursor(final InternalArangoDatabase<?, ?> db, final ArangoCursorExecute execute,
 		final Class<T> type, final CursorEntity result, final ArangoConverter converter) {
 		super(db, execute, type, result);
 		ArangoExtCursorIterator.class.cast(iterator).setConverter(converter);
@@ -44,7 +44,7 @@ class ArangoExtCursor<T> extends ArangoCursorImpl<T> {
 	@Override
 	protected ArangoCursorIterator<T> createIterator(
 		final ArangoCursor<T> cursor,
-		final InternalArangoDatabase<?, ?, ?, ?> db,
+		final InternalArangoDatabase<?, ?> db,
 		final ArangoCursorExecute execute,
 		final CursorEntity result) {
 		return new ArangoExtCursorIterator<>(cursor, db, execute, result);
