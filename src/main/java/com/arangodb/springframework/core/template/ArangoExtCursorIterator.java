@@ -42,7 +42,7 @@ import com.arangodb.velocypack.VPackSlice;
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- * 
+ *
  * @param <T>
  *
  */
@@ -53,7 +53,8 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 	static {
 		final Set<Class<?>> simpleTypes = new HashSet<>();
 
-		// the following types apply only if the VPackJdk8Module is present on the ArangoDB Java driver,
+		// the following types apply only if the VPackJdk8Module is present on the
+		// ArangoDB Java driver,
 		// but there is no possibility to check
 		simpleTypes.add(Instant.class);
 		simpleTypes.add(LocalDate.class);
@@ -66,8 +67,8 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 
 	private ArangoConverter converter;
 
-	protected ArangoExtCursorIterator(final ArangoCursor<T> cursor, final InternalArangoDatabase<?, ?, ?, ?> db,
-		final ArangoCursorExecute execute, final CursorEntity result) {
+	protected ArangoExtCursorIterator(final ArangoCursor<T> cursor, final InternalArangoDatabase<?, ?> db,
+			final ArangoCursorExecute execute, final CursorEntity result) {
 		super(cursor, execute, db, result);
 	}
 
