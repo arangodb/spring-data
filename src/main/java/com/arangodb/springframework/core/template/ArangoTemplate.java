@@ -28,10 +28,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -46,6 +48,7 @@ import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.entity.UserEntity;
+import com.arangodb.internal.util.ArangoSerializationFactory.Serializer;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.DocumentCreateOptions;
@@ -75,7 +78,9 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.springframework.core.util.MetadataUtils;
+import com.arangodb.util.ArangoSerializer;
 import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
@@ -169,7 +174,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final CollectionCreateOptions options) {
 
 		return collectionCache.computeIfAbsent(name, collName -> {
-			ArangoCollection collection = db().collection(collName);
+			final ArangoCollection collection = db().collection(collName);
 			try {
 				collection.getInfo();
 			} catch (final ArangoDBException e) {
@@ -481,18 +486,52 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		}
 	}
 
+	private static interface SerializerOptionsCallback<T> {
+		void configure(T value, ArangoSerializer.Options options);
+	}
+
+	private <T> MultiDocumentEntity<? extends DocumentEntity> insert(
+		final Iterable<T> values,
+		final Class<T> entityClass,
+		final DocumentCreateOptions options,
+		final SerializerOptionsCallback<T> serializeOptionsCallback) throws DataAccessException {
+		try {
+			final List<VPackSlice> docs = StreamSupport.stream(values.spliterator(), false).map(value -> {
+				final DBEntity dbEntity = toDBEntity(value);
+				final ArangoSerializer.Options serializeOptions = new ArangoSerializer.Options();
+				serializeOptionsCallback.configure(value, serializeOptions);
+				return arango.util(Serializer.CUSTOM).serialize(dbEntity, serializeOptions);
+			}).collect(Collectors.toList());
+			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass).insertDocuments(docs,
+				options);
+			updateDBFields(values, res);
+			return res;
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
 	@Override
 	public <T> MultiDocumentEntity<? extends DocumentEntity> insert(
 		final Iterable<T> values,
 		final Class<T> entityClass,
 		final DocumentCreateOptions options) throws DataAccessException {
+		return insert(values, entityClass, options, (v, o) -> {
+		});
+	}
+
+	private DocumentEntity insert(
+		final Object value,
+		final DocumentCreateOptions options,
+		final ArangoSerializer.Options serializeOptions) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
-					.insertDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
-			updateDBFields(values, res);
+			final DBEntity dbEntity = toDBEntity(value);
+			final VPackSlice slice = arango.util(Serializer.CUSTOM).serialize(dbEntity, serializeOptions);
+			final DocumentEntity res = _collection(value.getClass()).insertDocument(slice, options);
+			updateDBFields(value, res);
 			return res;
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
 	}
 
@@ -505,18 +544,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	@Override
 	public DocumentEntity insert(final Object value, final DocumentCreateOptions options) throws DataAccessException {
-		try {
-			final DocumentEntity res = _collection(value.getClass()).insertDocument(toDBEntity(value), options);
-			updateDBFields(value, res);
-			return res;
-		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
-		}
+		return insert(value, options, new ArangoSerializer.Options());
 	}
 
 	@Override
 	public DocumentEntity insert(final Object value) throws DataAccessException {
-		return insert(value, new DocumentCreateOptions());
+		return insert(value, new DocumentCreateOptions(), new ArangoSerializer.Options());
 	}
 
 	@Override
@@ -598,6 +631,38 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 			default:
 				replace(withId, entityClass);
 				break;
+			}
+		}
+	}
+
+	@Override
+	public <T> void repsert(final T value) throws DataAccessException {
+		final ArangoSerializer.Options options = new ArangoSerializer.Options();
+		addKeyIfNecessary(value, options);
+		insert(value, new DocumentCreateOptions().overwrite(true), options);
+	}
+
+	@Override
+	public <T> void repsert(final Iterable<T> value, final Class<T> entityClass) throws DataAccessException {
+		insert(value, entityClass, new DocumentCreateOptions().overwrite(true), (v, options) -> {
+			addKeyIfNecessary(v, options);
+		});
+	}
+
+	private <T> void addKeyIfNecessary(final T value, final ArangoSerializer.Options options) {
+		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext()
+				.getPersistentEntity(value.getClass());
+		final Optional<ArangoPersistentProperty> keyProperty = entity.getKeyProperty();
+		if (!keyProperty.isPresent()) {
+			final ArangoPersistentProperty idProperty = entity.getIdProperty();
+			if (idProperty != null) {
+				final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(
+						entity.getPropertyAccessor(value), converter.getConversionService());
+				final Object id = accessor.getProperty(idProperty);
+				if (id != null) {
+					final String key = determineDocumentKeyFromId(id.toString());
+					options.getAdditionalFields().put("_key", key);
+				}
 			}
 		}
 	}
