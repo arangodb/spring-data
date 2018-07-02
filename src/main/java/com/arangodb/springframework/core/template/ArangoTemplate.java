@@ -366,19 +366,34 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		return delete(id, entityClass, new DocumentDeleteOptions());
 	}
 
-	@Override
-	public <T> MultiDocumentEntity<? extends DocumentEntity> update(
+	private <T> MultiDocumentEntity<? extends DocumentEntity> update(
 		final Iterable<T> values,
 		final Class<T> entityClass,
-		final DocumentUpdateOptions options) throws DataAccessException {
+		final DocumentUpdateOptions options,
+		final SerializerOptionsCallback<T> serializeOptionsCallback) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
-					.updateDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+			final List<VPackSlice> docs = StreamSupport.stream(values.spliterator(), false).map(value -> {
+				final DBEntity dbEntity = toDBEntity(value);
+				final ArangoSerializer.Options serializeOptions = new ArangoSerializer.Options();
+				serializeOptionsCallback.configure(value, serializeOptions);
+				return arango.util(Serializer.CUSTOM).serialize(dbEntity, serializeOptions);
+			}).collect(Collectors.toList());
+			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass).updateDocuments(docs,
+				options);
 			updateDBFields(values, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+	}
+
+	@Override
+	public <T> MultiDocumentEntity<? extends DocumentEntity> update(
+		final Iterable<T> values,
+		final Class<T> entityClass,
+		final DocumentUpdateOptions options) throws DataAccessException {
+		return update(values, entityClass, options, (v, o) -> {
+		});
 	}
 
 	@Override
@@ -406,19 +421,34 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		return update(id, value, new DocumentUpdateOptions());
 	}
 
-	@Override
-	public <T> MultiDocumentEntity<? extends DocumentEntity> replace(
+	private <T> MultiDocumentEntity<? extends DocumentEntity> replace(
 		final Iterable<T> values,
 		final Class<T> entityClass,
-		final DocumentReplaceOptions options) throws DataAccessException {
+		final DocumentReplaceOptions options,
+		final SerializerOptionsCallback<T> serializeOptionsCallback) throws DataAccessException {
 		try {
-			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
-					.replaceDocuments(DBCollectionEntity.class.cast(toDBEntity(values)), options);
+			final List<VPackSlice> docs = StreamSupport.stream(values.spliterator(), false).map(value -> {
+				final DBEntity dbEntity = toDBEntity(value);
+				final ArangoSerializer.Options serializeOptions = new ArangoSerializer.Options();
+				serializeOptionsCallback.configure(value, serializeOptions);
+				return arango.util(Serializer.CUSTOM).serialize(dbEntity, serializeOptions);
+			}).collect(Collectors.toList());
+			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass).replaceDocuments(docs,
+				options);
 			updateDBFields(values, res);
 			return res;
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+	}
+
+	@Override
+	public <T> MultiDocumentEntity<? extends DocumentEntity> replace(
+		final Iterable<T> values,
+		final Class<T> entityClass,
+		final DocumentReplaceOptions options) throws DataAccessException {
+		return replace(values, entityClass, options, (v, o) -> {
+		});
 	}
 
 	@Override
@@ -573,45 +603,49 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	public <T> void upsert(final T value, final UpsertStrategy strategy) throws DataAccessException {
 		final Class<? extends Object> entityClass = value.getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
-		final ArangoPersistentProperty idProperty = entity.getIdProperty();
-		if (idProperty != null) {
-			final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(
-					entity.getPropertyAccessor(value), converter.getConversionService());
-			final Object id = accessor.getProperty(idProperty);
-			if (id != null) {
-				switch (strategy) {
-				case UPDATE:
-					update(id.toString(), value);
-					break;
-				case REPLACE:
-				default:
-					replace(id.toString(), value);
-					break;
-				}
-				return;
+
+		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(value),
+				converter.getConversionService());
+		final Object id = entity.getKeyProperty().map(property -> {
+			return accessor.getProperty(property);
+		}).orElseGet(() -> {
+			return entity.getIdProperty() != null ? accessor.getProperty(entity.getIdProperty()) : null;
+		});
+		if (id != null) {
+			switch (strategy) {
+			case UPDATE:
+				update(id.toString(), value);
+				break;
+			case REPLACE:
+			default:
+				replace(id.toString(), value);
+				break;
 			}
+		} else {
+			insert(value);
 		}
-		insert(value);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> void upsert(final Iterable<T> value, final UpsertStrategy strategy) throws DataAccessException {
-		Class<T> entityClass = null;
-		ArangoPersistentEntity<?> entity = null;
-		ArangoPersistentProperty idProperty = null;
+		final Optional<T> first = StreamSupport.stream(value.spliterator(), false).findFirst();
+		if (!first.isPresent()) {
+			return;
+		}
+		final Class<T> entityClass = (Class<T>) first.get().getClass();
+		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
+		final ArangoPersistentProperty idProperty = entity.getIdProperty();
+		final Optional<ArangoPersistentProperty> keyProperty = entity.getKeyProperty();
+
 		final Collection<T> withId = new ArrayList<>();
 		final Collection<T> withoutId = new ArrayList<>();
 		for (final T e : value) {
-			if (entityClass == null) {
-				entityClass = (Class<T>) e.getClass();
-				entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
-				idProperty = entity.getIdProperty();
-			}
-			if (idProperty != null) {
+			if (keyProperty.isPresent() || idProperty != null) {
 				final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(
 						entity.getPropertyAccessor(e), converter.getConversionService());
-				final Object id = accessor.getProperty(idProperty);
+				final Object id = keyProperty.map(property -> accessor.getProperty(property))
+						.orElseGet(() -> idProperty != null ? accessor.getProperty(idProperty) : null);
 				if (id != null) {
 					withId.add(e);
 					continue;
@@ -625,11 +659,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		if (!withId.isEmpty()) {
 			switch (strategy) {
 			case UPDATE:
-				update(withId, entityClass);
+				update(withId, entityClass, new DocumentUpdateOptions(), (v, options) -> {
+					addKeyIfNecessary(v, options);
+				});
 				break;
 			case REPLACE:
 			default:
-				replace(withId, entityClass);
+				replace(withId, entityClass, new DocumentReplaceOptions(), (v, options) -> {
+					addKeyIfNecessary(v, options);
+				});
 				break;
 			}
 		}
