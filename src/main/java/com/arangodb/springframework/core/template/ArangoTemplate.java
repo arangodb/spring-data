@@ -169,7 +169,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final CollectionCreateOptions options) {
 
 		return collectionCache.computeIfAbsent(name, collName -> {
-			ArangoCollection collection = db().collection(collName);
+			final ArangoCollection collection = db().collection(collName);
 			try {
 				collection.getInfo();
 			} catch (final ArangoDBException e) {
@@ -600,6 +600,16 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 				break;
 			}
 		}
+	}
+
+	@Override
+	public <T> void repsert(final T value) throws DataAccessException {
+		insert(value, new DocumentCreateOptions().overwrite(true));
+	}
+
+	@Override
+	public <T> void repsert(final Iterable<T> value, final Class<T> entityClass) throws DataAccessException {
+		insert(value, entityClass, new DocumentCreateOptions().overwrite(true));
 	}
 
 	private <T> void updateDBFields(final Iterable<T> values, final MultiDocumentEntity<? extends DocumentEntity> res) {
