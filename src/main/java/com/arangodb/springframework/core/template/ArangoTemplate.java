@@ -36,7 +36,7 @@ import java.util.stream.StreamSupport;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
-import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoCursor;
@@ -542,8 +542,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final Class<? extends Object> entityClass = value.getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
 
-		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(value),
-				converter.getConversionService());
+		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(value);
 		final Object id = entity.getKeyProperty().map(property -> accessor.getProperty(property)).orElseGet(() -> {
 			return entity.getIdProperty() != null ? accessor.getProperty(entity.getIdProperty()) : null;
 		});
@@ -578,8 +577,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final Collection<T> withoutId = new ArrayList<>();
 		for (final T e : value) {
 			if (keyProperty.isPresent() || idProperty != null) {
-				final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(
-						entity.getPropertyAccessor(e), converter.getConversionService());
+				final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(e);
 				final Object id = keyProperty.map(property -> accessor.getProperty(property)).orElseGet(() -> {
 					return idProperty != null ? accessor.getProperty(entity.getIdProperty()) : null;
 				});
@@ -637,8 +635,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	private void updateDBFields(final Object value, final DocumentEntity documentEntity) {
 		final ArangoPersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(value.getClass());
-		final ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(value),
-				converter.getConversionService());
+		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(value);
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null) {
 			accessor.setProperty(idProperty, documentEntity.getId());
