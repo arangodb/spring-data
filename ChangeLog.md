@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ### Added
 
+- added `ArangoOperations#repsert(T)`
+- added `ArangoOperations#repsert(Iterable<T>, Class<T>)`
 - added support for streaming AQL cursors
   - added `QueryOptions#stream()`
 - added `QueryOptions#memoryLimit()`
@@ -18,6 +20,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ## Changed
 
 - upgraded dependency arangodb-java-driver 4.6.0
+- changed `SimpleArangoRepository#save()` to use `ArangoOperations#repsert()` when ArangoDB version >= 3.4.0
+- changed `SimpleArangoRepository#saveAll()` to use `ArangoOperations#repsert()` when ArangoDB version >= 3.4.0
+- changed `ArangoOperations#upsert(T, UpsertStrategy)` to work with `@Id` in addition to `@Key`
+- changed `ArangoOperations#upsert(Iterable<T>, UpsertStrategy)` to work with `@Id` in addition to `@Key`
+
+### Deprecated
+
+- deprecated `ArangoOperations#upsert(T, UpsertStrategy)`
+- deprecated `ArangoOperations#upsert(Iterable<T>, UpsertStrategy)`
 
 ## [1.1.8] - 2018-06-26
 
