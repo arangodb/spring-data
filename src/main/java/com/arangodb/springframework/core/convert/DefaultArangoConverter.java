@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -51,11 +52,14 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
+import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
+import com.arangodb.springframework.core.util.InheritanceUtils;
 
 /**
  * @author Mark Vollmary
@@ -260,6 +264,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final ArangoPersistentProperty property,
 		final Annotation annotation) {
 		return resolverFactory.getReferenceResolver(annotation).flatMap(resolver -> {
+			TypeInformation<?> typeInfo = property.getTypeInformation();
 			if (property.isCollectionLike()) {
 				final Collection<String> ids;
 				try {
@@ -268,16 +273,49 @@ public class DefaultArangoConverter implements ArangoConverter {
 					throw new MappingException(
 							"Collection of type String expected for references but found type " + source.getClass());
 				}
-				return Optional.ofNullable(resolver.resolveMultiple(ids, property.getTypeInformation(), annotation));
+
+				// Inheritance should be supported for collections also, & a collection is currently allowed to contain more than 1 type:
+				TypeInformation<?> itemTypeInfo = getNonNullComponentType(typeInfo);
+				Class<?> type = itemTypeInfo.getType();
+				return Optional.ofNullable(resolver.resolveMultiple(ids, typeInfo, annotation, id -> {
+						Class<?> inheritanceAwareType = InheritanceUtils.determineInheritanceAwareReferenceType(id, type, getMappingContext());
+						// Use original type for single-collection cases:
+						boolean singleCollection = isSingleCollectionForMultipleClasses(inheritanceAwareType);
+						if (singleCollection)
+							return itemTypeInfo;
+						return toTypeInfoAndAddToContextIfNeeded(inheritanceAwareType, type, itemTypeInfo);
+					}));
 			} else {
 				if (!(source instanceof String)) {
 					throw new MappingException(
 							"Type String expected for reference but found type " + source.getClass());
 				}
-				return Optional
-						.ofNullable(resolver.resolveOne(source.toString(), property.getTypeInformation(), annotation));
+				
+				Class<?> type = property.getType();
+				Class<?> inheritanceAwareType = InheritanceUtils.determineInheritanceAwareReferenceType(source, type, getMappingContext());
+				TypeInformation<?> inheritanceAwareTypeInfo = toTypeInfoAndAddToContextIfNeeded(inheritanceAwareType, type, typeInfo);
+
+				return Optional.ofNullable(resolver.resolveOne(source.toString(), inheritanceAwareTypeInfo, annotation));
 			}
 		});
+	}
+
+	/**
+	 * If {@code typeData} is different from {@code orig} type, then add to context if it's not already there.
+	 * 
+	 * @param type			needed type.
+	 * @param origType		original type.
+	 * @param origTypeInfo	original type info.
+	 * @return origType if orig & origType are equal, {@link TypeInformation} for {@code type} otherwise.
+	 */
+	private TypeInformation<?> toTypeInfoAndAddToContextIfNeeded(final Class<?> type, final Class<?> origType, final TypeInformation<?> origTypeInfo) {
+		//  With Pair it would be a bit lighter on CPU, but would involve a bit more GC:
+		if (!type.equals(origType)) {
+			// This caches it for better performance going forward:
+			getMappingContext().getPersistentEntity(type);
+			return ClassTypeInformation.from(type);
+		}
+		return origTypeInfo;
 	}
 
 	private <A extends Annotation> Optional<Object> readRelation(
@@ -520,10 +558,52 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Class<?> referenceType = definedType != null ? definedType.getType() : Object.class;
 		final Class<?> valueType = ClassUtils.getUserClass(value.getClass());
 		if (!valueType.equals(referenceType)) {
-			typeMapper.writeType(valueType, sink);
+			if (isTypeInfoNecessary(valueType))
+				typeMapper.writeType(valueType, sink);
 		}
 	}
+	
+	private boolean isTypeInfoNecessary(final Class<?> type) {
+		// For any class with a declared @Document annotation there is no need to store any type-related properties/columns, because 
+		// there is already an entire COLLECTION/TABLE dedicated to the class involved (with the exception of single-collection for multiple classes case):
+		return type.getDeclaredAnnotation(Document.class) == null || isSingleCollectionForMultipleClasses(type);
+	}
 
+	private boolean isSingleCollectionForMultipleClasses(final Class<?> type) {
+		Document doc = type.getAnnotation(Document.class);
+		if (doc == null)
+			return false;
+		String customCollectionName = doc.value();
+
+		if (StringUtils.isEmpty(customCollectionName))
+			return false;
+		ArangoPersistentEntity<?> ape = context.getRequiredPersistentEntity(type);
+		Boolean sc = ape.getSingleCollectionForMultipleClasses();
+		if (Boolean.TRUE.equals(sc))
+			return true;
+		LinkedList<ArangoPersistentEntity<?>> overlappingSingleCollectionEntities = null;
+		for (ArangoPersistentEntity<?> entityNode : context.getPersistentEntities()) {
+			Class<?> t = entityNode.getType();
+			Document d = t.getDeclaredAnnotation(Document.class);
+			if (d != null) {
+				String c = d.value();
+				if (!StringUtils.isEmpty(c) && customCollectionName.equals(c) && !type.equals(t)) {
+					if (overlappingSingleCollectionEntities == null)
+						overlappingSingleCollectionEntities = new LinkedList<>();
+					overlappingSingleCollectionEntities.add(entityNode);
+				}
+			}
+		}
+		if (overlappingSingleCollectionEntities != null) {
+			for (ArangoPersistentEntity<?> persistentEntity : overlappingSingleCollectionEntities) {
+				persistentEntity.setSingleCollectionForMultipleClasses(Boolean.TRUE);
+			}
+			ape.setSingleCollectionForMultipleClasses(Boolean.TRUE);
+			return true;
+		}
+		return false;
+	}
+	
 	private String convertMapKey(final Object key) {
 		if (key instanceof String) {
 			return (String) key;

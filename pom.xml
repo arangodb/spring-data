@@ -43,6 +43,12 @@
 			<url>https://github.com/mpv1989</url>
 		</developer>
 	</developers>
+	<contributors>
+		<contributor>
+			<name>Reşat SABIQ</name>
+			<url>https://github.com/haqer1</url>
+		</contributor>
+	</contributors>
 
 	<distributionManagement>
 		<snapshotRepository>
