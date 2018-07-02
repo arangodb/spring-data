@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,10 +77,14 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 * @param entity the entity to be saved to the database
 	 * @return the updated entity with any id/key/rev saved
 	 */
-	// TODO refactor once template.upsert() is implemented
+	@SuppressWarnings("deprecation")
 	@Override
 	public <S extends T> S save(final S entity) {
-		arangoOperations.upsert(entity, UpsertStrategy.UPDATE);
+		if (arangoOperations.getVersion().getVersion().compareTo("3.4.0") < 0) {
+			arangoOperations.upsert(entity, UpsertStrategy.UPDATE);
+		} else {
+			arangoOperations.repsert(entity);
+		}
 		return entity;
 	}
 
@@ -90,10 +95,15 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 * @return the iterable of updated entities with any id/key/rev saved in each
 	 *         entity
 	 */
-	// TODO refactor once template.upsert() is implemented
+	@SuppressWarnings("deprecation")
 	@Override
 	public <S extends T> Iterable<S> save(final Iterable<S> entities) {
-		arangoOperations.upsert(entities, UpsertStrategy.UPDATE);
+		if (arangoOperations.getVersion().getVersion().compareTo("3.4.0") < 0) {
+			arangoOperations.upsert(entities, UpsertStrategy.UPDATE);
+		} else {
+			final S first = StreamSupport.stream(entities.spliterator(), false).findFirst().get();
+			arangoOperations.repsert(entities, (Class<S>) first.getClass());
+		}
 		return entities;
 	}
 

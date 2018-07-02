@@ -377,7 +377,7 @@ public interface ArangoOperations {
 	 * @param value
 	 *            A representation of a single document
 	 * @param options
-	 *            Additional options, can be null 
+	 *            Additional options, can be null
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
@@ -385,14 +385,14 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	/**
-	
+	 * 
 	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
 	 * _key is given, a new unique _key is generated automatically.
 	 * 
 	 * @param collectionName
-	 *            Name of the collection in which the new document should be inserted 
+	 *            Name of the collection in which the new document should be inserted
 	 * @param value
-	 *            A representation of a single document 
+	 *            A representation of a single document
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
@@ -406,25 +406,53 @@ public interface ArangoOperations {
 	 * Creates a new document from the given document, unless there is already a document with the id given. In that
 	 * case it updates or replaces the document, depending on the chosen strategy.
 	 * 
+	 * @deprecated use {@link #repsert(Object)} instead
 	 * @param value
 	 *            A representation of a single document
 	 * @param strategy
 	 *            The strategy to use when not inserting the document
 	 * @throws DataAccessException
 	 */
+	@Deprecated
 	<T> void upsert(T value, UpsertStrategy strategy) throws DataAccessException;
 
 	/**
 	 * Creates new documents from the given documents, unless there already exists. In that case it updates or replaces
 	 * the documents, depending on the chosen strategy.
 	 * 
+	 * @deprecated use {@link #repsert(Iterable)} instead
 	 * @param value
 	 *            A List of documents
 	 * @param strategy
 	 *            The strategy to use when not inserting the document
 	 * @throws DataAccessException
 	 */
+	@Deprecated
 	<T> void upsert(Iterable<T> value, UpsertStrategy strategy) throws DataAccessException;
+
+	/**
+	 * Creates a new document from the given document, unless there is already a document with the id given. In that
+	 * case it replaces the document.
+	 * 
+	 * @param value
+	 *            A representation of a single document
+	 * @throws DataAccessException
+	 * @since ArangoDB 3.4
+	 */
+	<T> void repsert(T value) throws DataAccessException;
+
+	/**
+	 * Creates new documents from the given documents, unless there already exists. In that case it replaces the
+	 * documents.
+	 * 
+	 * @param value
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity type of the documents
+	 * @throws DataAccessException
+	 * @since ArangoDB 3.4
+	 */
+	<T> void repsert(Iterable<T> value, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Checks whether the document exists by reading a single document head
