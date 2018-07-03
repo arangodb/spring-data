@@ -359,6 +359,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		private String id;
 		@Key
 		private final String key;
+		@Transient
 		private transient boolean persisted;
 
 		public NewEntityTest(final String key) {
@@ -371,7 +372,6 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		}
 
 		@Override
-		@Transient
 		public boolean isNew() {
 			return !persisted;
 		}
