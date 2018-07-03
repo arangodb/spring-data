@@ -34,6 +34,9 @@ import java.util.stream.StreamSupport;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -45,6 +48,7 @@ import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
@@ -347,6 +351,59 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customers.get(0).get("name").getAsString(), is("John"));
 		assertThat(customers.get(0).get("surname").getAsString(), is("Doe"));
 		assertThat(customers.get(0).get("age").getAsInt(), is(30));
+	}
+
+	public static class NewEntityTest implements Persistable<String> {
+
+		@Id
+		private String id;
+		@Key
+		private final String key;
+		private transient boolean persisted;
+
+		public NewEntityTest(final String key) {
+			super();
+			this.key = key;
+		}
+
+		public void setPersisted(final boolean persisted) {
+			this.persisted = persisted;
+		}
+
+		@Override
+		@Transient
+		public boolean isNew() {
+			return !persisted;
+		}
+
+		@Override
+		public String getId() {
+			return key;
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void upsertWithUserGeneratedKey() {
+		final NewEntityTest entity = new NewEntityTest("test");
+		template.upsert(entity, UpsertStrategy.REPLACE);
+		assertThat(template.collection(NewEntityTest.class).count(), is(1L));
+		entity.setPersisted(true);
+		template.upsert(entity, UpsertStrategy.REPLACE);
+		assertThat(template.collection(NewEntityTest.class).count(), is(1L));
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void mutliUpsertWithUserGeneratedKey() {
+		final NewEntityTest entity1 = new NewEntityTest("test1");
+		final NewEntityTest entity2 = new NewEntityTest("test2");
+		template.upsert(Arrays.asList(entity1, entity2), UpsertStrategy.REPLACE);
+		assertThat(template.collection(NewEntityTest.class).count(), is(2L));
+		entity1.setPersisted(true);
+		entity2.setPersisted(true);
+		template.upsert(Arrays.asList(entity1, entity2), UpsertStrategy.REPLACE);
+		assertThat(template.collection(NewEntityTest.class).count(), is(2L));
 	}
 
 }

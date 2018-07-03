@@ -34,6 +34,7 @@ import java.util.stream.StreamSupport;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 
 import com.arangodb.ArangoCollection;
@@ -526,7 +527,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final Object id = entity.getKeyProperty().map(property -> accessor.getProperty(property)).orElseGet(() -> {
 			return entity.getIdProperty() != null ? accessor.getProperty(entity.getIdProperty()) : null;
 		});
-		if (id != null) {
+		if (id != null && (!(value instanceof Persistable) || !Persistable.class.cast(value).isNew())) {
 			switch (strategy) {
 			case UPDATE:
 				update(id.toString(), value);
@@ -561,7 +562,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 				final Object id = keyProperty.map(property -> accessor.getProperty(property)).orElseGet(() -> {
 					return idProperty != null ? accessor.getProperty(entity.getIdProperty()) : null;
 				});
-				if (id != null) {
+				if (id != null && (!(e instanceof Persistable) || !Persistable.class.cast(e).isNew())) {
 					withId.add(e);
 					continue;
 				}
