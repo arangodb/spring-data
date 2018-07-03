@@ -41,7 +41,6 @@ import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
 import com.arangodb.springframework.core.convert.ArangoTypeMapper;
-import com.arangodb.springframework.core.convert.DBEntityModule;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
 import com.arangodb.springframework.core.convert.DefaultArangoTypeMapper;
 import com.arangodb.springframework.core.convert.resolver.FromResolver;
@@ -53,8 +52,6 @@ import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.convert.resolver.ToResolver;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.template.ArangoTemplate;
-import com.arangodb.velocypack.module.jdk8.VPackJdk8Module;
-import com.arangodb.velocypack.module.joda.VPackJodaModule;
 
 /**
  * @author Mark Vollmary
@@ -68,13 +65,9 @@ public abstract class AbstractArangoConfiguration {
 
 	protected abstract String database();
 
-	private ArangoDB.Builder configure(final ArangoDB.Builder arango) {
-		return arango.registerModules(new VPackJdk8Module(), new VPackJodaModule(), new DBEntityModule());
-	}
-
 	@Bean
 	public ArangoOperations arangoTemplate() throws Exception {
-		return new ArangoTemplate(configure(arango()), database(), arangoConverter());
+		return new ArangoTemplate(arango().build(), database(), arangoConverter());
 	}
 
 	@Bean

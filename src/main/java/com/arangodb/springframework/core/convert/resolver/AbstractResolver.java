@@ -136,7 +136,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 			if (GET_ENTITY_METHOD.equals(method)) {
 				return ensureResolved();
 			}
-			
+
 			if (GET_REF_ID_METHOD.equals(method)) {
 				return id;
 			}

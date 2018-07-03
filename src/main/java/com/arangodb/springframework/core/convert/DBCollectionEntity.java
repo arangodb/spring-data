@@ -27,6 +27,7 @@ import java.util.Collection;
  * @author Mark Vollmary
  *
  */
+@Deprecated
 public class DBCollectionEntity extends ArrayList<Object> implements DBEntity {
 
 	private static final long serialVersionUID = -2068955559598596722L;

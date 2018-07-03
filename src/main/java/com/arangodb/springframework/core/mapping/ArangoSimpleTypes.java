@@ -22,6 +22,7 @@ package com.arangodb.springframework.core.mapping;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -29,25 +30,21 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
-import com.arangodb.entity.BaseDocument;
-import com.arangodb.entity.BaseEdgeDocument;
-import com.arangodb.springframework.core.convert.DBEntity;
+import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
- * This class contains all types that are directly supported by the Java driver (through java-velocypack).
+ * This class contains additional types (besides the default ones) that are supported by the converter.
  * 
  * @author Christian Lechner
  *
  */
-public abstract class ArangoSimpleTypes {
+public final class ArangoSimpleTypes {
 
 	private static final Set<Class<?>> ARANGO_SIMPLE_TYPES;
 
@@ -55,54 +52,15 @@ public abstract class ArangoSimpleTypes {
 		final Set<Class<?>> simpleTypes = new HashSet<>();
 
 		// com.arangodb.*
-		simpleTypes.add(DBEntity.class);
-		simpleTypes.add(BaseDocument.class);
-		simpleTypes.add(BaseEdgeDocument.class);
 		simpleTypes.add(VPackSlice.class);
-
-		// primitives
-		simpleTypes.add(boolean.class);
-		simpleTypes.add(byte.class);
-		simpleTypes.add(char.class);
-		simpleTypes.add(short.class);
-		simpleTypes.add(int.class);
-		simpleTypes.add(long.class);
-		simpleTypes.add(float.class);
-		simpleTypes.add(double.class);
-
-		// primitive arrays
-		simpleTypes.add(boolean[].class);
-		simpleTypes.add(byte[].class);
-		simpleTypes.add(char[].class);
-		simpleTypes.add(short[].class);
-		simpleTypes.add(int[].class);
-		simpleTypes.add(long[].class);
-		simpleTypes.add(float[].class);
-		simpleTypes.add(double[].class);
-
-		// java.lang.*
-		simpleTypes.add(Boolean.class);
-		simpleTypes.add(Byte.class);
-		simpleTypes.add(Character.class);
-		simpleTypes.add(Short.class);
-		simpleTypes.add(Integer.class);
-		simpleTypes.add(Long.class);
-		simpleTypes.add(Float.class);
-		simpleTypes.add(Double.class);
-		simpleTypes.add(Number.class);
-		simpleTypes.add(String.class);
-		simpleTypes.add(Enum.class);
+		simpleTypes.add(DBDocumentEntity.class);
 
 		// java.math.*
 		simpleTypes.add(BigInteger.class);
 		simpleTypes.add(BigDecimal.class);
 
-		// java.util.*
-		simpleTypes.add(UUID.class);
-		simpleTypes.add(Date.class);
-
 		// java.sql.*
-		simpleTypes.add(java.sql.Date.class);
+		simpleTypes.add(Date.class);
 		simpleTypes.add(Timestamp.class);
 
 		// java.time.*
@@ -115,7 +73,7 @@ public abstract class ArangoSimpleTypes {
 		ARANGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 
-	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(ARANGO_SIMPLE_TYPES, false);
+	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(ARANGO_SIMPLE_TYPES, true);
 
 	private ArangoSimpleTypes() {
 	}

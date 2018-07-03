@@ -22,10 +22,13 @@ package com.arangodb.springframework.core.convert;
 
 import org.springframework.data.convert.EntityReader;
 
+import com.arangodb.velocypack.VPackSlice;
+
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
-public interface ArangoEntityReader extends EntityReader<Object, DBEntity> {
+public interface ArangoEntityReader extends EntityReader<Object, VPackSlice> {
 
 }
