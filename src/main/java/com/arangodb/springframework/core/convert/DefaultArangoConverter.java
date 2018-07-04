@@ -56,6 +56,7 @@ import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
+import com.arangodb.springframework.core.util.MetadataUtils;
 
 /**
  * @author Mark Vollmary
@@ -439,11 +440,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 			if (conversions.isSimpleType(valueType)) {
 				final Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(valueType);
 				final Class<?> targetType = customWriteTarget.orElseGet(() -> valueType);
-				sink.put(convertMapKey(key), conversionService.convert(value, targetType));
+				sink.put(convertKey(key), conversionService.convert(value, targetType));
 			} else {
 				final DBEntity entity = createDBEntity(valueType);
 				write(value, ClassTypeInformation.from(valueType), entity, getNonNullMapValueType(definedType));
-				sink.put(convertMapKey(key), entity);
+				sink.put(convertKey(key), entity);
 			}
 		}
 	}
@@ -468,7 +469,14 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private Optional<Object> getId(final Object source, final ArangoPersistentEntity<?> entity) {
-		return Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier());
+		final Object id = entity.getIdentifierAccessor(source).getIdentifier();
+		if (id != null) {
+			return Optional.of(id);
+		}
+
+		final Optional<Object> optKey = entity.getKeyProperty()
+				.map(prop -> entity.getPropertyAccessor(source).getProperty(prop));
+		return optKey.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertKey(key)));
 	}
 
 	private Collection<?> createCollection(final Collection<?> source, final ArangoPersistentProperty property) {
@@ -524,7 +532,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 	}
 
-	private String convertMapKey(final Object key) {
+	private String convertKey(final Object key) {
 		if (key instanceof String) {
 			return (String) key;
 		}
