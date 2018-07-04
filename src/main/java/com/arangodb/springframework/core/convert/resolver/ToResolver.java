@@ -20,7 +20,6 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
-import org.springframework.core.convert.ConversionService;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.model.AqlQueryOptions;
@@ -30,14 +29,15 @@ import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class ToResolver extends AbstractResolver<To> implements RelationResolver<To> {
 
 	private final ArangoOperations template;
 
-	public ToResolver(final ArangoOperations template, final ConversionService conversionService) {
-		super(conversionService);
+	public ToResolver(final ArangoOperations template) {
+		super(template.getConverter().getConversionService());
 		this.template = template;
 	}
 

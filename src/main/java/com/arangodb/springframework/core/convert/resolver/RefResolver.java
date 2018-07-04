@@ -23,7 +23,6 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import org.springframework.core.convert.ConversionService;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.springframework.annotation.Ref;
@@ -31,6 +30,7 @@ import com.arangodb.springframework.core.ArangoOperations;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public class RefResolver extends AbstractResolver<Ref>
@@ -38,8 +38,8 @@ public class RefResolver extends AbstractResolver<Ref>
 
 	private final ArangoOperations template;
 
-	public RefResolver(final ArangoOperations template, final ConversionService conversionService) {
-		super(conversionService);
+	public RefResolver(final ArangoOperations template) {
+		super(template.getConverter().getConversionService());
 		this.template = template;
 	}
 
