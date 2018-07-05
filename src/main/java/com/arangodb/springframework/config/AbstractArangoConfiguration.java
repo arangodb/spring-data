@@ -124,8 +124,7 @@ public abstract class AbstractArangoConfiguration {
 				ReferenceResolver<A> resolver = null;
 				try {
 					if (annotation instanceof Ref) {
-						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate(),
-								arangoConverter().getConversionService());
+						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
 					}
 				} catch (final Exception e) {
 					throw new ArangoDBException(e);
@@ -139,14 +138,11 @@ public abstract class AbstractArangoConfiguration {
 				RelationResolver<A> resolver = null;
 				try {
 					if (annotation instanceof From) {
-						resolver = (RelationResolver<A>) new FromResolver(arangoTemplate(),
-								arangoConverter().getConversionService());
+						resolver = (RelationResolver<A>) new FromResolver(arangoTemplate());
 					} else if (annotation instanceof To) {
-						resolver = (RelationResolver<A>) new ToResolver(arangoTemplate(),
-								arangoConverter().getConversionService());
+						resolver = (RelationResolver<A>) new ToResolver(arangoTemplate());
 					} else if (annotation instanceof Relations) {
-						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate(),
-								arangoConverter().getConversionService());
+						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
 					}
 				} catch (final Exception e) {
 					throw new ArangoDBException(e);

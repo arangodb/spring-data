@@ -40,8 +40,8 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	private final ArangoOperations template;
 
-	public RelationsResolver(final ArangoOperations template, final ConversionService conversionService) {
-		super(conversionService);
+	public RelationsResolver(final ArangoOperations template) {
+		super(template.getConverter().getConversionService());
 		this.template = template;
 	}
 
