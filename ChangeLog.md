@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ### Added
 
 - added support for `@Key` fields on references `@Ref`/`@From`/`@To`
-- added support for saving entities loaded
+- added support for saving entities lazy loaded
 
   Entities loaded over `@Ref`/`@From`/`@To`/`@Relations` with `lazy` == `true` can now be saved back into the database.
 
