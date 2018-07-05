@@ -38,9 +38,22 @@ import org.springframework.objenesis.ObjenesisStd;
 
 /**
  * @author Mark Vollmary
+ * @author Christian Lechner
  *
  */
 public abstract class AbstractResolver<A extends Annotation> {
+
+	private static final Method GET_ENTITY_METHOD;
+	private static final Method GET_REF_ID_METHOD;
+
+	static {
+		try {
+			GET_ENTITY_METHOD = LazyLoadingProxy.class.getMethod("getEntity");
+			GET_REF_ID_METHOD = LazyLoadingProxy.class.getMethod("getRefId");
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	private final ObjenesisStd objenesis;
 	private final ConversionService conversionService;
@@ -69,6 +82,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 			for (final Class<?> interf : type.getType().getInterfaces()) {
 				proxyFactory.addInterface(interf);
 			}
+			proxyFactory.addInterface(LazyLoadingProxy.class);
 			proxyFactory.addAdvice(interceptor);
 			return proxyFactory.getProxy();
 		} else {
@@ -82,6 +96,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 		final Enhancer enhancer = new Enhancer();
 		enhancer.setSuperclass(type);
 		enhancer.setCallbackType(org.springframework.cglib.proxy.MethodInterceptor.class);
+		enhancer.setInterfaces(new Class[] { LazyLoadingProxy.class });
 		return enhancer.createClass();
 	}
 
@@ -117,14 +132,30 @@ public abstract class AbstractResolver<A extends Annotation> {
 		@Override
 		public Object intercept(final Object obj, final Method method, final Object[] args, final MethodProxy proxy)
 				throws Throwable {
-			final Object result = resolve();
+
+			if (GET_ENTITY_METHOD.equals(method)) {
+				return ensureResolved();
+			}
+			
+			if (GET_REF_ID_METHOD.equals(method)) {
+				return id;
+			}
+
+			final Object result = ensureResolved();
 			return result == null ? null : method.invoke(result, args);
+		}
+
+		private Object ensureResolved() {
+			if (!resolved) {
+				result = resolve();
+				resolved = true;
+			}
+			return result;
 		}
 
 		private synchronized Object resolve() {
 			if (!resolved) {
-				result = convertIfNecessary(callback.resolve(id, type, annotation), type.getType());
-				resolved = true;
+				return convertIfNecessary(callback.resolve(id, type, annotation), type.getType());
 			}
 			return result;
 		}
