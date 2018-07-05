@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
   - Check `Persistable#isNew`
 - fixed `ArangoOperations#upsert(Iterable<T>, UpsertStrategy)` (issue #92)
   - Check `Persistable#isNew`
+- fixed `ArangoOperations#getVersion()` use configured database instead of _system
 
 ## [1.2.0] - 2018-07-02
 

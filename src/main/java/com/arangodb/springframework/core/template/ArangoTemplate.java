@@ -289,7 +289,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	public ArangoDBVersion getVersion() throws DataAccessException {
 		try {
 			if (version == null) {
-				version = arango.getVersion();
+				version = db().getVersion();
 			}
 			return version;
 		} catch (final ArangoDBException e) {
