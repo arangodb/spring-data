@@ -105,6 +105,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(res.getId(), is(notNullValue()));
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void upsertReplace() {
 		final Customer customer = new Customer("John", "Doe", 30);
@@ -115,6 +116,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(35));
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void upsertUpdate() {
 		final Customer customer = new Customer("John", "Doe", 30);
@@ -125,6 +127,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(35));
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void upsertReplaceMultiple() {
 		final Customer c1 = new Customer("John", "Doe", 30);
@@ -141,6 +144,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(template.find(c3.getId(), Customer.class).get().getAge(), is(30));
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void upsertUpdateMultiple() {
 		final Customer c1 = new Customer("John", "Doe", 30);
