@@ -823,11 +823,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return Optional.of(((LazyLoadingProxy) source).getRefId());
 		}
 
-		Optional<Object> id = Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier());
-		if (!id.isPresent()) {
-			id = entity.getKeyProperty().map(prop -> entity.getPropertyAccessor(source).getProperty(prop));
-		}
-
+		final Optional<Object> id = Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier());
 		return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertKey(key)));
 	}
 

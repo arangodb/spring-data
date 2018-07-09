@@ -45,8 +45,6 @@ public interface ArangoPersistentEntity<T>
 
 	CollectionCreateOptions getCollectionOptions();
 
-	Optional<ArangoPersistentProperty> getKeyProperty();
-
 	Optional<ArangoPersistentProperty> getRevProperty();
 
 	Collection<HashIndex> getHashIndexes();
