@@ -303,6 +303,17 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
+	public <T> ArangoCursor<T> query(final String query, final Class<T> entityClass) throws DataAccessException {
+		return db().query(query, null, null, entityClass);
+	}
+
+	@Override
+	public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars, final Class<T> entityClass)
+			throws DataAccessException {
+		return db().query(query, bindVars, null, entityClass);
+	}
+
+	@Override
 	public <T> ArangoCursor<T> query(final String query, final AqlQueryOptions options, final Class<T> entityClass)
 			throws DataAccessException {
 		return db().query(query, null, options, entityClass);

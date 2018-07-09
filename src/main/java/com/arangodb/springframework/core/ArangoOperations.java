@@ -79,6 +79,21 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	/**
+	 * Create a cursor and return the first results
+	 * 
+	 * @param query
+	 *            contains the query string to be executed
+	 * @param bindVars
+	 *            key/value pairs representing the bind parameters, can be null
+	 * @param entityClass
+	 *            The entity type of the result
+	 * @return cursor of the results
+	 * @throws DataAccessException
+	 */
+	<T> ArangoCursor<T> query(String query, Map<String, Object> bindVars, Class<T> entityClass)
+			throws DataAccessException;
+
+	/**
 	 * Create a cursor and return the first results. For queries without bind parameters.
 	 * 
 	 * @param query
@@ -91,6 +106,18 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 */
 	<T> ArangoCursor<T> query(String query, AqlQueryOptions options, Class<T> entityClass) throws DataAccessException;
+
+	/**
+	 * Create a cursor and return the first results. For queries without bind parameters.
+	 * 
+	 * @param query
+	 *            contains the query string to be executed
+	 * @param entityClass
+	 *            The entity type of the result
+	 * @return cursor of the results
+	 * @throws DataAccessException
+	 */
+	<T> ArangoCursor<T> query(String query, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Removes multiple document
