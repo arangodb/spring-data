@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.util.Assert;
@@ -40,6 +42,8 @@ import com.arangodb.springframework.core.ArangoOperations;
  * @author Christian Lechner
  */
 public abstract class AbstractArangoQuery implements RepositoryQuery {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractArangoQuery.class);
 
 	protected final ArangoQueryMethod method;
 	protected final ArangoOperations operations;
@@ -73,7 +77,14 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		final Class<?> typeToRead = getTypeToRead(processor);
 
 		final ArangoCursor<?> result = operations.query(query, bindVars, options, typeToRead);
+		logWarningsIfNecessary(result);
 		return processor.processResult(convertResult(result, accessor));
+	}
+
+	private void logWarningsIfNecessary(final ArangoCursor<?> result) {
+		result.getWarnings().forEach(warning -> {
+			LOGGER.warn("Query warning at [" + method + "]: " + warning.getCode() + " - " + warning.getMessage());
+		});
 	}
 
 	@Override

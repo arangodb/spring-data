@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
   Entities loaded over `@Ref`/`@From`/`@To`/`@Relations` with `lazy` == `true` can now be saved back into the database.
 
+- added logging of query warnings when executed through `ArangoRepository`
+
 ### Fixed
 
 - fixed `ArangoOperations#getVersion()` use configured database instead of `_system`
