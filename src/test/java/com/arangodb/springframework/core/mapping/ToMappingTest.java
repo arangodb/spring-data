@@ -123,7 +123,7 @@ public class ToMappingTest extends AbstractArangoTest {
 		template.insert(edge0);
 		final BasicEdgeLazyTestEntity edge1 = new BasicEdgeLazyTestEntity(e1, e0);
 		template.insert(edge1);
-		final DocumentToLazyTestSetEntity document = template.find(e0.id, DocumentToLazyTestSetEntity.class).get();
+		final DocumentToLazyTestEntity document = template.find(e0.id, DocumentToLazyTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
 		assertThat(document.entities.size(), is(2));

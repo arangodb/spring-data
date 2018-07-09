@@ -23,7 +23,6 @@ package com.arangodb.springframework.core.mapping.testdata;
 import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Rev;
 
 /**
@@ -35,8 +34,6 @@ public class BasicTestEntity {
 
 	@Id
 	public String id;
-	@Key
-	public String key;
 	@Rev
 	public String rev;
 
@@ -50,14 +47,6 @@ public class BasicTestEntity {
 
 	public void setId(final String id) {
 		this.id = id;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(final String key) {
-		this.key = key;
 	}
 
 	public String getRev() {

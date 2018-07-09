@@ -116,9 +116,9 @@ public class FromMappingTest extends AbstractArangoTest {
 
 	@Test
 	public void documentFromLazySet() {
-		final DocumentFromLazyTestEntity e0 = new DocumentFromLazyTestEntity();
+		final DocumentFromLazySetTestEntity e0 = new DocumentFromLazySetTestEntity();
 		template.insert(e0);
-		final DocumentFromLazyTestEntity e1 = new DocumentFromLazyTestEntity();
+		final DocumentFromLazySetTestEntity e1 = new DocumentFromLazySetTestEntity();
 		template.insert(e1);
 		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e0, e1);
 		template.insert(edge0);

@@ -24,7 +24,6 @@ import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.GeoIndex;
-import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
 
@@ -37,8 +36,6 @@ public class Product {
 
 	@Id
 	private String id;
-	@Key
-	private String key;
 	@Rev
 	private String rev;
 	private String name;
@@ -71,14 +68,6 @@ public class Product {
 
 	public void setId(final String id) {
 		this.id = id;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(final String key) {
-		this.key = key;
 	}
 
 	public String getRev() {

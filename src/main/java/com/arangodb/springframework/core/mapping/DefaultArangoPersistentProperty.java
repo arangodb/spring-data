@@ -48,6 +48,7 @@ import com.arangodb.springframework.annotation.To;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentProperty<ArangoPersistentProperty>
 		implements ArangoPersistentProperty {
 
@@ -99,9 +100,7 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	public String getFieldName() {
 		final String fieldName;
-		if (isIdProperty()) {
-			fieldName = "_id";
-		} else if (isKeyProperty()) {
+		if (isIdProperty() || isKeyProperty()) {
 			fieldName = "_key";
 		} else if (isRevProperty()) {
 			fieldName = "_rev";

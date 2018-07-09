@@ -48,7 +48,6 @@ import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
-import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
@@ -85,9 +84,9 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Customer c1 = new Customer();
 		final Customer c2 = new Customer();
 		final Customer c3 = new Customer();
-		c3.setKey("3");
+		c3.setId("3");
 		final Customer c4 = new Customer();
-		c4.setKey("3");
+		c4.setId("3");
 		final MultiDocumentEntity<? extends DocumentEntity> res = template.insert(Arrays.asList(c1, c2, c3, c4),
 			Customer.class);
 		assertThat(res, is(notNullValue()));
@@ -360,15 +359,13 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public static class NewEntityTest implements Persistable<String> {
 
 		@Id
-		private String id;
-		@Key
-		private final String key;
+		private final String id;
 		@Transient
 		private transient boolean persisted;
 
-		public NewEntityTest(final String key) {
+		public NewEntityTest(final String id) {
 			super();
-			this.key = key;
+			this.id = id;
 		}
 
 		public void setPersisted(final boolean persisted) {
@@ -382,7 +379,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 		@Override
 		public String getId() {
-			return key;
+			return id;
 		}
 	}
 

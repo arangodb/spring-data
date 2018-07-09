@@ -208,7 +208,7 @@ public class NestedMappingTest extends AbstractArangoTest {
 		c.value.add(b);
 
 		template.insert(c);
-		final Optional<SameCollectionTestEntity> findC = template.find(c.getKey(), SameCollectionTestEntity.class);
+		final Optional<SameCollectionTestEntity> findC = template.find(c.getId(), SameCollectionTestEntity.class);
 		assertThat(findC.isPresent(), is(true));
 		final Collection<Object> value = findC.get().value;
 		assertThat(value.size(), is(2));
