@@ -47,7 +47,7 @@ public interface CollectionOperations {
 	String name();
 
 	/**
-	 * Drops the collection
+	 * Deletes the collection from the database.
 	 * 
 	 * @throws DataAccessException
 	 */
