@@ -37,7 +37,7 @@ import com.arangodb.springframework.testdata.CustomerNameProjection;
  * @author Mark Vollmary
  * @author Christian Lechner
  */
-public interface CustomerRepository extends ArangoRepository<Customer> {
+public interface CustomerRepository extends ArangoRepository<Customer, String> {
 
 	@Query("FOR c IN customer FILTER c._key == @id RETURN c")
 	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);

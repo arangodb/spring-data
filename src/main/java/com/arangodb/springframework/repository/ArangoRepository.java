@@ -26,7 +26,10 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
 
 /**
  * Created by F625633 on 06/07/2017.
+ * 
+ * @author Mark Vollmary
+ *
  */
 @NoRepositoryBean
-public interface ArangoRepository<T> extends PagingAndSortingRepository<T, String>, QueryByExampleExecutor<T> {
+public interface ArangoRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
 }

@@ -21,6 +21,7 @@
 package com.arangodb.springframework;
 
 import org.springframework.context.annotation.Configuration;
+
 import com.arangodb.ArangoDB;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.AbstractArangoConfiguration;
@@ -39,7 +40,7 @@ public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
 	@Override
 	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder();
+		return new ArangoDB.Builder().host("192.168.10.9", 8529);
 	}
 
 	@Override

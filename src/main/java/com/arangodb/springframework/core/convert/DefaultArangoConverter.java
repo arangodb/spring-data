@@ -603,6 +603,13 @@ public class DefaultArangoConverter implements ArangoConverter {
 			if (!property.isWritable()) {
 				return;
 			}
+			if (property.isIdProperty()) {
+				final Object id = entity.getIdentifierAccessor(source).getIdentifier();
+				if (id != null) {
+					sink.add(_KEY, convertId(id));
+				}
+				return;
+			}
 			final Object value = accessor.getProperty(property);
 			if (value != null) {
 				writeProperty(value, sink, property);
@@ -666,12 +673,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			final Object key = entry.getKey();
 			final Object value = entry.getValue();
 
-			if (!isValidKey(key)) {
-				throw new MappingException(
-						String.format("Type %s is not allowed as a map key!", key != null ? key.getClass() : "null"));
-			}
-
-			writeInternal(convertKey(key), value, sink, getNonNullMapValueType(definedType));
+			writeInternal(convertId(key), value, sink, getNonNullMapValueType(definedType));
 		}
 
 		sink.close();
@@ -857,7 +859,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 
 		final Optional<Object> id = Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier());
-		return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertKey(key)));
+		return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key)));
 	}
 
 	private static Collection<?> asCollection(final Object source) {
@@ -906,7 +908,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 	}
 
-	private boolean isValidKey(final Object key) {
+	private boolean isValidId(final Object key) {
 		if (key == null) {
 			return false;
 		}
@@ -916,6 +918,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return false;
 		} else if (VPackSlice.class.isAssignableFrom(type)) {
 			return false;
+		} else if (type.isArray()) {
+			return false;
 		} else if (isSimpleType(type)) {
 			return true;
 		} else {
@@ -923,12 +927,17 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 	}
 
-	private String convertKey(final Object key) {
-		if (key instanceof String) {
-			return key.toString();
+	@Override
+	public String convertId(final Object id) {
+		if (!isValidId(id)) {
+			throw new MappingException(
+					String.format("Type %s is not a valid id type!", id != null ? id.getClass() : "null"));
 		}
-		final boolean hasCustomConverter = conversions.hasCustomWriteTarget(key.getClass(), String.class);
-		return hasCustomConverter ? conversionService.convert(key, String.class) : key.toString();
+		if (id instanceof String) {
+			return id.toString();
+		}
+		final boolean hasCustomConverter = conversions.hasCustomWriteTarget(id.getClass(), String.class);
+		return hasCustomConverter ? conversionService.convert(id, String.class) : id.toString();
 	}
 
 	private TypeInformation<?> getNonNullComponentType(final TypeInformation<?> type) {
