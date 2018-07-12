@@ -81,7 +81,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private final CollectionCreateOptions collectionOptions;
 
-	private final Map<Class<? extends Annotation>, Optional<Annotation>> annotationCache;
 	private final Map<Class<? extends Annotation>, Set<? extends Annotation>> repeatableAnnotationCache;
 
 	public DefaultArangoPersistentEntity(final TypeInformation<T> information) {
@@ -93,18 +92,15 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		persistentIndexedProperties = new ArrayList<>();
 		geoIndexedProperties = new ArrayList<>();
 		fulltextIndexedProperties = new ArrayList<>();
-		annotationCache = new HashMap<>();
 		repeatableAnnotationCache = new HashMap<>();
-		final Optional<Document> document = Optional.ofNullable(findAnnotation(Document.class));
-		final Optional<Edge> edge = Optional.ofNullable(findAnnotation(Edge.class));
-		if (edge.isPresent()) {
-			final Edge e = edge.get();
-			collection = StringUtils.hasText(e.value()) ? e.value() : collection;
-			collectionOptions = createCollectionOptions(e);
-		} else if (document.isPresent()) {
-			final Document d = document.get();
-			collection = StringUtils.hasText(d.value()) ? d.value() : collection;
-			collectionOptions = createCollectionOptions(d);
+		final Document document = findAnnotation(Document.class);
+		final Edge edge = findAnnotation(Edge.class);
+		if (edge != null) {
+			collection = StringUtils.hasText(edge.value()) ? edge.value() : collection;
+			collectionOptions = createCollectionOptions(edge);
+		} else if (document != null) {
+			collection = StringUtils.hasText(document.value()) ? document.value() : collection;
+			collectionOptions = createCollectionOptions(document);
 		} else {
 			collectionOptions = new CollectionCreateOptions().type(CollectionType.DOCUMENT);
 		}
@@ -286,13 +282,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	@Override
 	public Collection<ArangoPersistentProperty> getFulltextIndexedProperties() {
 		return fulltextIndexedProperties;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <A extends Annotation> A findAnnotation(final Class<A> annotationType) {
-		return (A) annotationCache.computeIfAbsent(annotationType,
-			it -> Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(getType(), it))).orElse(null);
 	}
 
 	@SuppressWarnings("unchecked")
