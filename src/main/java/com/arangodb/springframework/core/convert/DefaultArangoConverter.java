@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -914,19 +915,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 
 		final Class<?> type = key.getClass();
-		if (DBDocumentEntity.class.isAssignableFrom(type)) {
-			return false;
-		} else if (VPackSlice.class.isAssignableFrom(type)) {
-			return false;
-		} else if (type.isArray()) {
-			return false;
-		} else if (type.isPrimitive()) {
-			return false;
-		} else if (isSimpleType(type)) {
-			return true;
-		} else {
-			return conversions.hasCustomWriteTarget(key.getClass(), String.class);
-		}
+		final Class<?> supportedTypes[] = { Integer.class, Long.class, BigInteger.class };
+		return Stream.of(supportedTypes).anyMatch(clazz -> clazz.isAssignableFrom(type))
+				|| conversions.hasCustomWriteTarget(key.getClass(), String.class);
 	}
 
 	@Override
