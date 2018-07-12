@@ -920,6 +920,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return false;
 		} else if (type.isArray()) {
 			return false;
+		} else if (type.isPrimitive()) {
+			return false;
 		} else if (isSimpleType(type)) {
 			return true;
 		} else {
