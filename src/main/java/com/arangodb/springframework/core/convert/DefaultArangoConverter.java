@@ -617,11 +617,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 			}
 		});
 
-		final Optional<String> id = getId(source, entity);
-		if (id.isPresent()) {
-			sink.add(_KEY, MetadataUtils.determineDocumentKeyFromId(id.get()));
-		}
-
 		addTypeKeyIfNecessary(definedType, source, sink);
 
 		sink.close();
@@ -737,7 +732,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private void writeReference(final String attribute, final Object source, final VPackBuilder sink) {
-		getId(source).ifPresent(id -> sink.add(attribute, id));
+		getIdRef(source).ifPresent(id -> sink.add(attribute, id));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -852,11 +847,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 		sink.add(attribute, builder.slice());
 	}
 
-	private Optional<String> getId(final Object source) {
-		return getId(source, context.getPersistentEntity(source.getClass()));
+	private Optional<String> getIdRef(final Object source) {
+		return getIdRef(source, context.getPersistentEntity(source.getClass()));
 	}
 
-	private Optional<String> getId(final Object source, final ArangoPersistentEntity<?> entity) {
+	private Optional<String> getIdRef(final Object source, final ArangoPersistentEntity<?> entity) {
 		if (source instanceof LazyLoadingProxy) {
 			return Optional.of(((LazyLoadingProxy) source).getRefId());
 		}
