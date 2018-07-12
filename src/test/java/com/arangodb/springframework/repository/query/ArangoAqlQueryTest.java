@@ -52,8 +52,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(),
 			new AqlQueryOptions());
-		assertThat(retrieved, hasEntry("_id", john.getId()));
-		assertThat(retrieved, hasEntry("_key", john.getKey()));
+		assertThat(retrieved, hasEntry("_key", john.getId()));
 		assertThat(retrieved, hasEntry("_rev", john.getRev()));
 		assertThat(retrieved, hasEntry("name", john.getName()));
 		assertThat(retrieved, hasEntry("surname", john.getSurname()));
@@ -65,8 +64,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdAndNameAqlTest() {
 		repository.saveAll(customers);
 		final BaseDocument retrieved = repository.findOneByIdAndNameAql(john.getId(), john.getName());
-		assertThat(retrieved.getId(), is(john.getId()));
-		assertThat(retrieved.getKey(), is(john.getKey()));
+		assertThat(retrieved.getKey(), is(john.getId()));
 		assertThat(retrieved.getRevision(), is(john.getRev()));
 		assertThat(retrieved.getAttribute("name"), is(john.getName()));
 		assertThat(retrieved.getAttribute("surname"), is(john.getSurname()));
