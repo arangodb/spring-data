@@ -20,13 +20,26 @@
 
 package com.arangodb.springframework.core.convert;
 
-import org.springframework.data.convert.TypeMapper;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
+
+import com.arangodb.velocypack.VPackBuilder;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Christian Lechner
  *
  */
-public interface ArangoTypeMapper extends TypeMapper<DBEntity> {
+public interface ArangoTypeMapper {
+
+	@Nullable
+	TypeInformation<?> readType(VPackSlice source);
+
+	<T> TypeInformation<? extends T> readType(VPackSlice source, TypeInformation<T> defaultType);
+
+	void writeType(Class<?> type, VPackBuilder sink);
+
+	void writeType(TypeInformation<?> type, VPackBuilder sink);
 
 	boolean isTypeKey(String key);
 

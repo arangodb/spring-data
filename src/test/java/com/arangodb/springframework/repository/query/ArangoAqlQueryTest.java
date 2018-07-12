@@ -1,6 +1,7 @@
 package com.arangodb.springframework.repository.query;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsIn.isOneOf;
 import static org.hamcrest.core.Is.is;
@@ -28,7 +29,6 @@ import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDBException;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.springframework.core.convert.DBDocumentEntity;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.repository.OverriddenCrudMethodsRepository;
 import com.arangodb.springframework.testdata.Customer;
@@ -52,23 +52,26 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(),
 			new AqlQueryOptions());
-		final Customer retrievedCustomer = template.getConverter().read(Customer.class,
-			new DBDocumentEntity(retrieved));
-		assertEquals(john, retrievedCustomer);
+		assertThat(retrieved, hasEntry("_id", john.getId()));
+		assertThat(retrieved, hasEntry("_key", john.getKey()));
+		assertThat(retrieved, hasEntry("_rev", john.getRev()));
+		assertThat(retrieved, hasEntry("name", john.getName()));
+		assertThat(retrieved, hasEntry("surname", john.getSurname()));
+		assertThat(retrieved, hasEntry("age", (long) john.getAge()));
+		assertThat(retrieved, hasEntry("alive", john.isAlive()));
 	}
 
 	@Test
 	public void findOneByIdAndNameAqlTest() {
 		repository.saveAll(customers);
 		final BaseDocument retrieved = repository.findOneByIdAndNameAql(john.getId(), john.getName());
-		final Map<String, Object> allProperties = new HashMap<>();
-		allProperties.put("_id", retrieved.getId());
-		allProperties.put("_key", retrieved.getKey());
-		allProperties.put("_rev", retrieved.getRevision());
-		retrieved.getProperties().forEach((k, v) -> allProperties.put(k, v));
-		final Customer retrievedCustomer = template.getConverter().read(Customer.class,
-			new DBDocumentEntity(allProperties));
-		assertEquals(john, retrievedCustomer);
+		assertThat(retrieved.getId(), is(john.getId()));
+		assertThat(retrieved.getKey(), is(john.getKey()));
+		assertThat(retrieved.getRevision(), is(john.getRev()));
+		assertThat(retrieved.getAttribute("name"), is(john.getName()));
+		assertThat(retrieved.getAttribute("surname"), is(john.getSurname()));
+		assertThat(retrieved.getAttribute("age"), is((long) john.getAge()));
+		assertThat(retrieved.getAttribute("alive"), is(john.isAlive()));
 	}
 
 	@Test

@@ -26,7 +26,6 @@ import com.arangodb.internal.ArangoCursorExecute;
 import com.arangodb.internal.ArangoCursorIterator;
 import com.arangodb.internal.InternalArangoDatabase;
 import com.arangodb.springframework.core.convert.ArangoConverter;
-import com.arangodb.springframework.core.convert.DBEntity;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
@@ -51,12 +50,7 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 
 	@Override
 	protected <R> R deserialize(final VPackSlice result, final Class<R> type) {
-		return canDeserializeDirectly(type) ? super.deserialize(result, type)
-				: converter.read(type, super.deserialize(result, DBEntity.class));
-	}
-
-	private boolean canDeserializeDirectly(final Class<?> type) {
-		return !converter.isEntityType(type);
+		return converter.read(type, result);
 	}
 
 }

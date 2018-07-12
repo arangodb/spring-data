@@ -44,7 +44,7 @@ import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.convert.DBDocumentEntity;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * Converts the result returned from the ArangoDB Java driver to the desired type.
@@ -148,13 +148,18 @@ public class ArangoResultConverter {
 		GeoResult<?> geoResult = null;
 		while (cursor.hasNext() && geoResult == null) {
 			final Object object = cursor.next();
-			@SuppressWarnings("unchecked")
-			final Map<String, Object> map = (Map<String, Object>) object;
-			final Double distanceInMeters = (Double) map.get("_distance");
+			if (!(object instanceof VPackSlice)) {
+				continue;
+			}
+
+			final VPackSlice slice = (VPackSlice) object;
+			final VPackSlice distSlice = slice.get("_distance");
+			final Double distanceInMeters = distSlice.isDouble() ? distSlice.getAsDouble() : null;
 			if (distanceInMeters == null) {
 				continue;
 			}
-			final Object entity = operations.getConverter().read(domainClass, new DBDocumentEntity(map));
+
+			final Object entity = operations.getConverter().read(domainClass, slice);
 			final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
 			geoResult = new GeoResult<>(entity, distance);
 		}
@@ -169,16 +174,18 @@ public class ArangoResultConverter {
 	 * @return GeoResult object
 	 */
 	private GeoResult<?> buildGeoResult(final Object object) {
-		if (object == null) {
+		if (object == null || !(object instanceof VPackSlice)) {
 			return null;
 		}
-		@SuppressWarnings("unchecked")
-		final Map<String, Object> map = (Map<String, Object>) object;
-		final Object entity = operations.getConverter().read(domainClass, new DBDocumentEntity(map));
-		final Double distanceInMeters = (Double) map.get("_distance");
+
+		final VPackSlice slice = (VPackSlice) object;
+		final VPackSlice distSlice = slice.get("_distance");
+		final Double distanceInMeters = distSlice.isDouble() ? distSlice.getAsDouble() : null;
 		if (distanceInMeters == null) {
 			return null;
 		}
+
+		final Object entity = operations.getConverter().read(domainClass, slice);
 		final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
 		return new GeoResult<>(entity, distance);
 	}

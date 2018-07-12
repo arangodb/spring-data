@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * 
@@ -169,7 +170,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		}
 
 		if (method.isGeoQuery()) {
-			return Map.class;
+			return VPackSlice.class;
 		}
 
 		final Class<?> typeToRead = processor.getReturnedType().getTypeToRead();

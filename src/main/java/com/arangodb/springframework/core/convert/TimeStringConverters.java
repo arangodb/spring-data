@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.convert;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,35 +28,68 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 
+import com.arangodb.velocypack.internal.util.DateUtil;
 import com.arangodb.velocypack.module.jdk8.internal.util.JavaTimeUtil;
 
 /**
+ * These date and java.time converters are necessary to override (possibly existing) Spring converters.
+ * 
  * @author Mark Vollmary
  * @author Christian Lechner
- *
  */
 public class TimeStringConverters {
 
 	public static Collection<Converter<?, ?>> getConvertersToRegister() {
 		final List<Converter<?, ?>> converters = new ArrayList<>();
+		converters.add(DateToStringConverter.INSTANCE);
 		converters.add(InstantToStringConverter.INSTANCE);
 		converters.add(LocalDateToStringConverter.INSTANCE);
 		converters.add(LocalDateTimeToStringConverter.INSTANCE);
 		converters.add(OffsetDateTimeToStringConverter.INSTANCE);
 		converters.add(ZonedDateTimeToStringConverter.INSTANCE);
 
+		converters.add(StringToDateConverter.INSTANCE);
 		converters.add(StringToInstantConverter.INSTANCE);
 		converters.add(StringToLocalDateConverter.INSTANCE);
 		converters.add(StringToLocalDateTimeConverter.INSTANCE);
 		converters.add(StringToOffsetDateTimeConverter.INSTANCE);
 		converters.add(StringToZonedDateTimeConverter.INSTANCE);
 		return converters;
+	}
+
+	private static Date parseDate(final String source) {
+		try {
+			return source == null ? null : DateUtil.parse(source);
+		} catch (final ParseException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
+
+	@WritingConverter
+	public static enum DateToStringConverter implements Converter<Date, String> {
+		INSTANCE;
+
+		@Override
+		public String convert(final Date source) {
+			return source == null ? null : DateUtil.format(source);
+		}
+	}
+
+	@ReadingConverter
+	public static enum StringToDateConverter implements Converter<String, Date> {
+		INSTANCE;
+
+		@Override
+		public Date convert(final String source) {
+			return parseDate(source);
+		}
 	}
 
 	@WritingConverter
