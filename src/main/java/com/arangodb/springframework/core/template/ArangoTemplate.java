@@ -558,10 +558,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final Class<? extends Object> entityClass = value.getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
 
-		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(value);
-		final Object id = entity.getKeyProperty().map(property -> accessor.getProperty(property)).orElseGet(() -> {
-			return entity.getIdProperty() != null ? accessor.getProperty(entity.getIdProperty()) : null;
-		});
+		final Object id = entity.getIdentifierAccessor(value).getIdentifier();
 		if (id != null && (!(value instanceof Persistable) || !Persistable.class.cast(value).isNew())) {
 			switch (strategy) {
 			case UPDATE:
@@ -586,21 +583,14 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		}
 		final Class<T> entityClass = (Class<T>) first.get().getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
-		final ArangoPersistentProperty idProperty = entity.getIdProperty();
-		final Optional<ArangoPersistentProperty> keyProperty = entity.getKeyProperty();
 
 		final Collection<T> withId = new ArrayList<>();
 		final Collection<T> withoutId = new ArrayList<>();
 		for (final T e : value) {
-			if (keyProperty.isPresent() || idProperty != null) {
-				final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(e);
-				final Object id = keyProperty.map(property -> accessor.getProperty(property)).orElseGet(() -> {
-					return idProperty != null ? accessor.getProperty(entity.getIdProperty()) : null;
-				});
-				if (id != null && (!(e instanceof Persistable) || !Persistable.class.cast(e).isNew())) {
-					withId.add(e);
-					continue;
-				}
+			final Object id = entity.getIdentifierAccessor(e).getIdentifier();
+			if (id != null && (!(e instanceof Persistable) || !Persistable.class.cast(e).isNew())) {
+				withId.add(e);
+				continue;
 			}
 			withoutId.add(e);
 		}
@@ -654,9 +644,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(value);
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null) {
-			accessor.setProperty(idProperty, documentEntity.getId());
+			accessor.setProperty(idProperty, documentEntity.getKey());
 		}
-		entity.getKeyProperty().ifPresent(key -> accessor.setProperty(key, documentEntity.getKey()));
 		entity.getRevProperty().ifPresent(rev -> accessor.setProperty(rev, documentEntity.getRev()));
 	}
 

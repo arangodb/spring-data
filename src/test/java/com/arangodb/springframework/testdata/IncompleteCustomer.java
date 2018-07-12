@@ -5,15 +5,12 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Rev;
 
 @Document("customer")
 public class IncompleteCustomer {
 	@Id
 	private String id;
-	@Key
-	private String key;
 	@Rev
 	private String rev;
 

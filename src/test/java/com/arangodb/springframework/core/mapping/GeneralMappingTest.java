@@ -68,8 +68,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
 		final DocumentEntity ref = template.insert(new BasicTestEntity());
 		final BasicTestEntity entity = template.find(ref.getId(), BasicTestEntity.class).get();
 		assertThat(entity, is(notNullValue()));
-		assertThat(entity.getId(), is(ref.getId()));
-		assertThat(entity.getKey(), is(ref.getKey()));
+		assertThat(entity.getId(), is(ref.getKey()));
 		assertThat(entity.getRev(), is(ref.getRev()));
 	}
 
@@ -86,7 +85,6 @@ public class GeneralMappingTest extends AbstractArangoTest {
 			new AqlQueryOptions(), BasicTestEntity.class).asListRemaining();
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0).getId(), is(value.id));
-		assertThat(result.get(0).getKey(), is(value.id.split("/")[1]));
 		assertThat(result.get(0).getRev(), is(nullValue()));
 	}
 
@@ -372,11 +370,11 @@ public class GeneralMappingTest extends AbstractArangoTest {
 
 		template.insert(a);
 		template.insert(b);
-		final Optional<TwoTypesInSameCollectionA> findA = template.find(a.getKey(), TwoTypesInSameCollectionA.class);
+		final Optional<TwoTypesInSameCollectionA> findA = template.find(a.getId(), TwoTypesInSameCollectionA.class);
 		assertThat(findA.isPresent(), is(true));
 		assertThat(findA.get().value, is("testA"));
 		assertThat(findA.get().a, is("testA"));
-		final Optional<TwoTypesInSameCollectionB> findB = template.find(b.getKey(), TwoTypesInSameCollectionB.class);
+		final Optional<TwoTypesInSameCollectionB> findB = template.find(b.getId(), TwoTypesInSameCollectionB.class);
 		assertThat(findB.isPresent(), is(true));
 		assertThat(findB.get().value, is("testB"));
 		assertThat(findB.get().b, is("testB"));

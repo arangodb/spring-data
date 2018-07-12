@@ -39,21 +39,21 @@ import com.arangodb.springframework.testdata.CustomerNameProjection;
  */
 public interface CustomerRepository extends ArangoRepository<Customer> {
 
-	@Query("FOR c IN customer FILTER c._id == @id RETURN c")
+	@Query("FOR c IN customer FILTER c._key == @id RETURN c")
 	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
-	@Query("FOR c IN customer FILTER c.name == @1 AND c._id == @0 RETURN c")
+	@Query("FOR c IN customer FILTER c.name == @1 AND c._key == @0 RETURN c")
 	@QueryOptions(cache = true, ttl = 128)
 	BaseDocument findOneByIdAndNameAql(String id, String name);
 
 	@QueryOptions(maxPlans = 1000, ttl = 128)
-	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
+	@Query("FOR c IN customer FILTER c._key == @id AND c.name == @name RETURN c")
 	ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @name RETURN c")
+	@Query("FOR c IN customer FILTER c._key == @id AND c.name == @name RETURN c")
 	Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN customer FILTER c._id == @id AND c.name == @0 RETURN c")
+	@Query("FOR c IN customer FILTER c._key == @id AND c.name == @0 RETURN c")
 	Customer findOneByIdAndNameWithBindVarsAql(String name, @BindVars Map<String, Object> bindVars);
 
 	@Query("FOR c IN @@0 FILTER \"@1\" != '@2' AND c._id == @1 RETURN c")
@@ -214,7 +214,7 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 
 	// Static projection
 
-	@Query("FOR c IN customer FILTER c._id == @id RETURN c")
+	@Query("FOR c IN customer FILTER c._key == @id RETURN c")
 	CustomerNameProjection findOneByIdWithStaticProjection(@Param("id") String id);
 
 	@Query("FOR c IN customer FILTER c.age >= 18 RETURN c")
@@ -222,7 +222,7 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 
 	// Dynamic projection
 
-	@Query("FOR c IN customer FILTER c._id == @id RETURN c")
+	@Query("FOR c IN customer FILTER c._key == @id RETURN c")
 	<T> T findOneByIdWithDynamicProjection(@Param("id") String id, Class<T> projection);
 
 	@Query("FOR c IN customer FILTER c.age >= 18 RETURN c")

@@ -72,7 +72,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	private String collection;
 	private final StandardEvaluationContext context;
 
-	private ArangoPersistentProperty keyProperty;
 	private ArangoPersistentProperty revProperty;
 	private final Collection<ArangoPersistentProperty> hashIndexedProperties;
 	private final Collection<ArangoPersistentProperty> skiplistIndexedProperties;
@@ -189,9 +188,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	@Override
 	public void addPersistentProperty(final ArangoPersistentProperty property) {
 		super.addPersistentProperty(property);
-		if (property.isKeyProperty()) {
-			keyProperty = property;
-		}
 		if (property.isRevProperty()) {
 			revProperty = property;
 		}
@@ -203,8 +199,14 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	}
 
 	@Override
-	public Optional<ArangoPersistentProperty> getKeyProperty() {
-		return Optional.ofNullable(keyProperty);
+	protected ArangoPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(
+		final ArangoPersistentProperty property) {
+		final ArangoPersistentProperty idPropertyOrNull = super.returnPropertyIfBetterIdPropertyCandidateOrNull(
+			property);
+		if (idPropertyOrNull == null && property.isKeyProperty()) {
+			return property;
+		}
+		return idPropertyOrNull;
 	}
 
 	@Override

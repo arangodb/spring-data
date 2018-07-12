@@ -617,11 +617,6 @@ public class DefaultArangoConverter implements ArangoConverter {
 			}
 		});
 
-		final Optional<String> id = getId(source, entity);
-		if (id.isPresent() && !getKey(source, entity).isPresent()) {
-			sink.add(_KEY, MetadataUtils.determineDocumentKeyFromId(id.get()));
-		}
-
 		addTypeKeyIfNecessary(definedType, source, sink);
 
 		sink.close();
@@ -737,7 +732,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private void writeReference(final String attribute, final Object source, final VPackBuilder sink) {
-		getId(source).ifPresent(id -> sink.add(attribute, id));
+		getRefId(source).ifPresent(id -> sink.add(attribute, id));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -852,26 +847,17 @@ public class DefaultArangoConverter implements ArangoConverter {
 		sink.add(attribute, builder.slice());
 	}
 
-	private Optional<String> getId(final Object source) {
-		return getId(source, context.getPersistentEntity(source.getClass()));
+	private Optional<String> getRefId(final Object source) {
+		return getRefId(source, context.getPersistentEntity(source.getClass()));
 	}
 
-	private Optional<String> getId(final Object source, final ArangoPersistentEntity<?> entity) {
+	private Optional<String> getRefId(final Object source, final ArangoPersistentEntity<?> entity) {
 		if (source instanceof LazyLoadingProxy) {
 			return Optional.of(((LazyLoadingProxy) source).getRefId());
 		}
 
-		final Object id = entity.getIdentifierAccessor(source).getIdentifier();
-		if (id != null) {
-			return Optional.of(id.toString());
-		}
-
-		return getKey(source, entity)
-				.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertKey(key)));
-	}
-
-	private Optional<Object> getKey(final Object source, final ArangoPersistentEntity<?> entity) {
-		return entity.getKeyProperty().map(prop -> entity.getPropertyAccessor(source).getProperty(prop));
+		final Optional<Object> id = Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier());
+		return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertKey(key)));
 	}
 
 	private static Collection<?> asCollection(final Object source) {
