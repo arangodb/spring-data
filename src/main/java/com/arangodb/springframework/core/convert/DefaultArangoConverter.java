@@ -918,9 +918,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return false;
 		} else if (VPackSlice.class.isAssignableFrom(type)) {
 			return false;
-		} else if (type.isArray()) {
-			return false;
-		} else if (type.isPrimitive()) {
+		} else if (type.isArray() && type.getComponentType() != byte.class) {
 			return false;
 		} else if (isSimpleType(type)) {
 			return true;
