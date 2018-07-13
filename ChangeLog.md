@@ -13,9 +13,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
   Entities loaded over `@Ref`/`@From`/`@To`/`@Relations` with `lazy` == `true` can now be saved back into the database.
 
-- added logging of query warnings when executed through `ArangoRepository`
+- added logging of query warnings when executed through `ArangoRepository` (#issue 56)
 - added convenience method `ArangoOperations#query(String, Class)`
 - added convenience method `ArangoOperations#query(String, Map<String, Object>, Class)`
+- added support for non-String `@Id`s (issue #79)
+
+### Changes
+
+- save `@Id` fields as `_key` instead of `_id` (issue #78)
 
 ### Fixed
 
