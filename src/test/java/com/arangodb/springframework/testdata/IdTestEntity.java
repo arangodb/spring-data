@@ -1,7 +1,7 @@
 /*
  * DISCLAIMER
  *
- * Copyright 2017 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2018 ArangoDB GmbH, Cologne, Germany
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,28 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.repository;
+package com.arangodb.springframework.testdata;
 
-import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.QueryByExampleExecutor;
+import org.springframework.data.annotation.Id;
+
+import com.arangodb.springframework.annotation.Document;
 
 /**
- * Created by F625633 on 06/07/2017.
- * 
  * @author Mark Vollmary
  *
  */
-@NoRepositoryBean
-public interface ArangoRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
+@Document
+public class IdTestEntity<ID> {
+
+	@Id
+	private ID id;
+
+	public ID getId() {
+		return id;
+	}
+
+	public void setId(final ID id) {
+		this.id = id;
+	}
+
 }

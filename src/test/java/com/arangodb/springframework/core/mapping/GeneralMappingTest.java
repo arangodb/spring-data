@@ -36,10 +36,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.data.annotation.Id;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
@@ -59,8 +56,6 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Christian Lechner
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class GeneralMappingTest extends AbstractArangoTest {
 
 	@Test

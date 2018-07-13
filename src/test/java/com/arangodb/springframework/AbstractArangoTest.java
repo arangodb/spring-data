@@ -22,33 +22,35 @@ package com.arangodb.springframework;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.testdata.Customer;
-import com.arangodb.springframework.testdata.Knows;
-import com.arangodb.springframework.testdata.Owns;
-import com.arangodb.springframework.testdata.Person;
-import com.arangodb.springframework.testdata.Product;
-import com.arangodb.springframework.testdata.ShoppingCart;
 
 /**
  * @author Mark Vollmary
  *
  */
-public class AbstractArangoTest {
-
-	protected static final Class<?>[] COLLECTIONS = new Class<?>[] { Customer.class, ShoppingCart.class, Product.class,
-			Person.class, Owns.class, Knows.class };
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = { ArangoTestConfiguration.class })
+public abstract class AbstractArangoTest {
 
 	@Autowired
 	protected ArangoOperations template;
+	protected final Class<?>[] collections;
+
+	protected AbstractArangoTest(final Class<?>... collections) {
+		super();
+		this.collections = collections;
+	}
 
 	@Before
 	public void before() {
 		try {
-			for (final Class<?> collection : COLLECTIONS) {
-				template.collection(collection).drop();
+			for (final Class<?> collection : collections) {
+				template.collection(collection).truncate();
 			}
 		} catch (final Exception e) {
 		}

@@ -16,14 +16,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDBException;
@@ -41,7 +39,6 @@ import com.arangodb.springframework.testdata.CustomerNameProjection;
  * @author Mark Vollmary
  * @author Christian Lechner
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Autowired

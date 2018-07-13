@@ -1,7 +1,7 @@
 /*
  * DISCLAIMER
  *
- * Copyright 2017 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2018 ArangoDB GmbH, Cologne, Germany
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,10 @@
 
 package com.arangodb.springframework.repository;
 
-import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.QueryByExampleExecutor;
-
 /**
- * Created by F625633 on 06/07/2017.
- * 
  * @author Mark Vollmary
  *
  */
-@NoRepositoryBean
-public interface ArangoRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
+public class IdTypeIntegerRepositoryTest extends AbstractTestEntityRepositoryTest<Integer> {
+
 }

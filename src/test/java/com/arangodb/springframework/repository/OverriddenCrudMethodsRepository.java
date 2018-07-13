@@ -28,7 +28,7 @@ import com.arangodb.springframework.testdata.Customer;
  * @author Christian Lechner
  *
  */
-public interface OverriddenCrudMethodsRepository extends ArangoRepository<Customer> {
+public interface OverriddenCrudMethodsRepository extends ArangoRepository<Customer, String> {
 
 	@Override
 	@Query("RETURN NULL")

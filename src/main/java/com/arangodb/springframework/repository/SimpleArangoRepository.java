@@ -50,7 +50,7 @@ import com.arangodb.springframework.core.util.AqlUtils;
  */
 @Repository
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class SimpleArangoRepository<T> implements ArangoRepository<T> {
+public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleArangoRepository.class);
 
@@ -118,7 +118,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 * @return the object representing the document if found
 	 */
 	@Override
-	public Optional<T> findById(final String id) {
+	public Optional<T> findById(final ID id) {
 		return arangoOperations.find(id, domainClass);
 	}
 
@@ -130,7 +130,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 * @return returns true if the document is found, false otherwise
 	 */
 	@Override
-	public boolean existsById(final String id) {
+	public boolean existsById(final ID id) {
 		return arangoOperations.exists(id, domainClass);
 	}
 
@@ -152,7 +152,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 * @return an iterable with documents in the collection which have a id/key in the argument
 	 */
 	@Override
-	public Iterable<T> findAllById(final Iterable<String> ids) {
+	public Iterable<T> findAllById(final Iterable<ID> ids) {
 		return arangoOperations.find(ids, domainClass);
 	}
 
@@ -173,7 +173,7 @@ public class SimpleArangoRepository<T> implements ArangoRepository<T> {
 	 *            id or key of document to be deleted
 	 */
 	@Override
-	public void deleteById(final String id) {
+	public void deleteById(final ID id) {
 		arangoOperations.delete(id, domainClass);
 	}
 

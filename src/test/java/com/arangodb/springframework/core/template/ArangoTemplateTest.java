@@ -33,12 +33,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.ArangoDBVersion;
@@ -47,7 +44,6 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
@@ -59,9 +55,11 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Mark Vollmary
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class ArangoTemplateTest extends AbstractArangoTest {
+
+	public ArangoTemplateTest() {
+		super(Customer.class, Address.class, Product.class);
+	}
 
 	@Test
 	public void template() {

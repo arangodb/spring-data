@@ -31,9 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
@@ -46,8 +43,6 @@ import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
  * @author Mark Vollmary
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class InheritanceMappingTest extends AbstractArangoTest {
 
 	public static class SimpleBasicChildTestEntity extends BasicTestEntity {

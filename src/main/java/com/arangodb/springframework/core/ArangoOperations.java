@@ -161,7 +161,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	DocumentEntity delete(String id, Class<?> entityClass, DocumentDeleteOptions options) throws DataAccessException;
+	DocumentEntity delete(Object id, Class<?> entityClass, DocumentDeleteOptions options) throws DataAccessException;
 
 	/**
 	 * Removes a document
@@ -173,7 +173,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	DocumentEntity delete(String id, Class<?> entityClass) throws DataAccessException;
+	DocumentEntity delete(Object id, Class<?> entityClass) throws DataAccessException;
 
 	/**
 	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
@@ -229,7 +229,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentEntity update(String id, T value, DocumentUpdateOptions options) throws DataAccessException;
+	<T> DocumentEntity update(Object id, T value, DocumentUpdateOptions options) throws DataAccessException;
 
 	/**
 	 * Partially updates the document identified by document id or key. The value must contain a document with the
@@ -243,7 +243,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentEntity update(String id, T value) throws DataAccessException;
+	<T> DocumentEntity update(Object id, T value) throws DataAccessException;
 
 	/**
 	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
@@ -296,7 +296,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentEntity replace(String id, T value, DocumentReplaceOptions options) throws DataAccessException;
+	<T> DocumentEntity replace(Object id, T value, DocumentReplaceOptions options) throws DataAccessException;
 
 	/**
 	 * Replaces the document with key with the one in the body, provided there is such a document and no precondition is
@@ -309,11 +309,11 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentEntity replace(String id, T value) throws DataAccessException;
+	<T> DocumentEntity replace(Object id, T value) throws DataAccessException;
 
-	<T> Optional<T> find(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
+	<T> Optional<T> find(Object id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
 
-	<T> Optional<T> find(String id, Class<T> entityClass) throws DataAccessException;
+	<T> Optional<T> find(Object id, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Reads all documents from a collection
@@ -335,7 +335,7 @@ public interface ArangoOperations {
 	 * @return the documents
 	 * @throws DataAccessException
 	 */
-	<T> Iterable<T> find(final Iterable<String> ids, final Class<T> entityClass) throws DataAccessException;
+	<T> Iterable<T> find(final Iterable<? extends Object> ids, final Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
@@ -491,7 +491,7 @@ public interface ArangoOperations {
 	 * @return true if the document exists, false if not
 	 * @throws DataAccessException
 	 */
-	boolean exists(String id, Class<?> entityClass) throws DataAccessException;
+	boolean exists(Object id, Class<?> entityClass) throws DataAccessException;
 
 	/**
 	 * Drop an existing database

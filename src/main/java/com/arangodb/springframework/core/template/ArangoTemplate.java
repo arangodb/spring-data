@@ -20,8 +20,6 @@
 
 package com.arangodb.springframework.core.template;
 
-import static com.arangodb.springframework.core.util.MetadataUtils.determineDocumentKeyFromId;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -157,10 +155,10 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		return _collection(entityClass, null);
 	}
 
-	private ArangoCollection _collection(final Class<?> entityClass, final String id) {
+	private ArangoCollection _collection(final Class<?> entityClass, final Object id) {
 		final ArangoPersistentEntity<?> persistentEntity = converter.getMappingContext()
 				.getRequiredPersistentEntity(entityClass);
-		final String name = determineCollectionFromId(Optional.ofNullable(id)).orElse(persistentEntity.getCollection());
+		final String name = determineCollectionFromId(id).orElse(persistentEntity.getCollection());
 		return _collection(name, persistentEntity, persistentEntity.getCollectionOptions());
 	}
 
@@ -269,8 +267,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		collection.ensureFulltextIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
-	private Optional<String> determineCollectionFromId(final Optional<String> id) {
-		return id.map(i -> MetadataUtils.determineCollectionFromId(i));
+	private Optional<String> determineCollectionFromId(final Object id) {
+		return id != null ? Optional.ofNullable(MetadataUtils.determineCollectionFromId(converter.convertId(id)))
+				: Optional.empty();
+	}
+
+	private String determineDocumentKeyFromId(final Object id) {
+		return MetadataUtils.determineDocumentKeyFromId(converter.convertId(id));
 	}
 
 	private VPackSlice toVPack(final Object value) {
@@ -279,7 +282,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	private Collection<VPackSlice> toVPackCollection(final Iterable<?> values) {
 		final Collection<VPackSlice> collection = new ArrayList<>();
-		for (Object value : values) {
+		for (final Object value : values) {
 			collection.add(toVPack(value));
 		}
 		return collection;
@@ -364,7 +367,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public DocumentEntity delete(final String id, final Class<?> entityClass, final DocumentDeleteOptions options)
+	public DocumentEntity delete(final Object id, final Class<?> entityClass, final DocumentDeleteOptions options)
 			throws DataAccessException {
 		try {
 			return _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), entityClass, options);
@@ -374,7 +377,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public DocumentEntity delete(final String id, final Class<?> entityClass) throws DataAccessException {
+	public DocumentEntity delete(final Object id, final Class<?> entityClass) throws DataAccessException {
 		return delete(id, entityClass, new DocumentDeleteOptions());
 	}
 
@@ -401,7 +404,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public DocumentEntity update(final String id, final Object value, final DocumentUpdateOptions options)
+	public DocumentEntity update(final Object id, final Object value, final DocumentUpdateOptions options)
 			throws DataAccessException {
 		try {
 			final DocumentEntity res = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id),
@@ -414,7 +417,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public DocumentEntity update(final String id, final Object value) throws DataAccessException {
+	public DocumentEntity update(final Object id, final Object value) throws DataAccessException {
 		return update(id, value, new DocumentUpdateOptions());
 	}
 
@@ -441,7 +444,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public DocumentEntity replace(final String id, final Object value, final DocumentReplaceOptions options)
+	public DocumentEntity replace(final Object id, final Object value, final DocumentReplaceOptions options)
 			throws DataAccessException {
 		try {
 			final DocumentEntity res = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id),
@@ -454,12 +457,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public DocumentEntity replace(final String id, final Object value) throws DataAccessException {
+	public DocumentEntity replace(final Object id, final Object value) throws DataAccessException {
 		return replace(id, value, new DocumentReplaceOptions());
 	}
 
 	@Override
-	public <T> Optional<T> find(final String id, final Class<T> entityClass, final DocumentReadOptions options)
+	public <T> Optional<T> find(final Object id, final Class<T> entityClass, final DocumentReadOptions options)
 			throws DataAccessException {
 		try {
 			final VPackSlice doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
@@ -471,7 +474,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public <T> Optional<T> find(final String id, final Class<T> entityClass) throws DataAccessException {
+	public <T> Optional<T> find(final Object id, final Class<T> entityClass) throws DataAccessException {
 		return find(id, entityClass, new DocumentReadOptions());
 	}
 
@@ -487,7 +490,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public <T> Iterable<T> find(final Iterable<String> ids, final Class<T> entityClass) throws DataAccessException {
+	public <T> Iterable<T> find(final Iterable<? extends Object> ids, final Class<T> entityClass)
+			throws DataAccessException {
 		try {
 			final Collection<String> keys = new ArrayList<>();
 			ids.forEach(id -> keys.add(determineDocumentKeyFromId(id)));
@@ -650,7 +654,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	}
 
 	@Override
-	public boolean exists(final String id, final Class<?> entityClass) throws DataAccessException {
+	public boolean exists(final Object id, final Class<?> entityClass) throws DataAccessException {
 		try {
 			return _collection(entityClass).documentExists(determineDocumentKeyFromId(id));
 		} catch (final ArangoDBException e) {

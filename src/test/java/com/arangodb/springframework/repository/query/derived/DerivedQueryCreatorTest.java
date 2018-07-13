@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +28,6 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
@@ -45,7 +43,6 @@ import com.arangodb.springframework.testdata.ShoppingCart;
 /**
  * Created by N675515 on 27/07/2017.
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 
 	@Test
