@@ -9,21 +9,21 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import org.junit.Before;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.GeoResult;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.testdata.Address;
+import com.arangodb.springframework.testdata.Contains;
 import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.Material;
+import com.arangodb.springframework.testdata.Owns;
+import com.arangodb.springframework.testdata.Product;
+import com.arangodb.springframework.testdata.ShoppingCart;
 
 /**
  * Created by F625633 on 12/07/2017.
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 
 	@Autowired
@@ -38,6 +38,11 @@ public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 	@SuppressWarnings("unchecked")
 	protected Comparator<Object> geoCmp = Comparator.comparing(o -> ((GeoResult<Customer>) o).getContent().getId());
 	protected BiPredicate<Object, Object> geoEq = (o1, o2) -> geoCmp.compare(o1, o2) == 0;
+
+	public AbstractArangoRepositoryTest() {
+		super(Customer.class, Address.class, ShoppingCart.class, Product.class, Material.class, Contains.class,
+				Owns.class);
+	}
 
 	@Before
 	public void createMockCustomers() {

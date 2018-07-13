@@ -31,12 +31,8 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.mapping.testdata.BasicEdgeLazyTestEntity;
 import com.arangodb.springframework.core.mapping.testdata.BasicEdgeTestEntity;
@@ -46,8 +42,6 @@ import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
  * @author Mark Vollmary
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class ToMappingTest extends AbstractArangoTest {
 
 	public static class DocumentToTestEntity extends BasicTestEntity {

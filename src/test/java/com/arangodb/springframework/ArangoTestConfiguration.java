@@ -40,7 +40,7 @@ public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
 	@Override
 	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder();
+		return new ArangoDB.Builder().host("192.168.10.9", 8529);
 	}
 
 	@Override

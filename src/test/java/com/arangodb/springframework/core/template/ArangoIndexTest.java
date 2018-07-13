@@ -27,13 +27,9 @@ import static org.junit.Assert.assertThat;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.entity.IndexType;
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.annotation.FulltextIndex;
 import com.arangodb.springframework.annotation.FulltextIndexed;
 import com.arangodb.springframework.annotation.FulltextIndexes;
@@ -54,8 +50,6 @@ import com.arangodb.springframework.annotation.SkiplistIndexes;
  * @author Mark Vollmary
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class ArangoIndexTest extends AbstractArangoTest {
 
 	private IndexType geo1() {

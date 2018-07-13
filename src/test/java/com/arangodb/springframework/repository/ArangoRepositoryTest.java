@@ -10,13 +10,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
@@ -24,7 +22,6 @@ import com.arangodb.springframework.testdata.Customer;
 /**
  * Created by F625633 on 06/07/2017.
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 
 	@Test

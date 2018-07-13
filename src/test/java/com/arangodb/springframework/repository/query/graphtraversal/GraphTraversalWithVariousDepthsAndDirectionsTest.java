@@ -16,13 +16,9 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.repository.HumanBeingRepository;
 import com.arangodb.springframework.testdata.ChildOf;
@@ -40,11 +36,7 @@ import com.arangodb.springframework.testdata.HumanBeing;
  * additions of OUTBOUND traversals, and other minor modifications, plus conversion to JUnit with assertions of expected
  * results.
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractArangoTest {
-	protected static final Class<?>[] COLLECTIONS = new Class<?>[] { HumanBeing.class, ChildOf.class };
-	private static final boolean DO_SYSOUT = false;
 
 	@Autowired
 	private HumanBeingRepository humanBeingRepo;
@@ -62,15 +54,16 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	HumanBeing dude = new HumanBeing("Dude", "Stark", true, 20);
 	HumanBeing dudette = new HumanBeing("Dudette", "Stark", true, 2);
 
+	public GraphTraversalWithVariousDepthsAndDirectionsTest() {
+		super(HumanBeing.class, ChildOf.class);
+	}
+
 	public Collection<HumanBeing> obtainHumanBeingsCollection() {
 		return Arrays.asList(ned, catelyn, sansa, robb, jon, jaimie, emily, dude, dudette);
 	}
 
 	@Before
 	public void setUp() throws Exception {
-		for (final Class<?> collection : COLLECTIONS) {
-			template.collection(collection).drop();
-		}
 		populateData();
 	}
 
@@ -121,13 +114,7 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	@Test
 	public void testFindByNameAndSurname() {
 		findByExample(ned).ifPresent(nedStark -> {
-			if (DO_SYSOUT) {
-				System.out.println(String.format("## These are the children of %s:", nedStark));
-			}
 			final Collection<HumanBeing> kids = nedStark.getChildren();
-			if (DO_SYSOUT) {
-				kids.forEach(System.out::println);
-			}
 			assertEquals(2, kids.size());
 			for (final HumanBeing human : kids) {
 				assertThat(human, anyOf(Matchers.is(robb), Matchers.is(sansa)));
@@ -138,14 +125,8 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	@Test
 	public void testFindChildrenAndGrandchildren() {
 		findByExample(catelyn).ifPresent(catelynStark -> {
-			if (DO_SYSOUT) {
-				System.out.println(String.format("## These are the children (& grand-children) of %s:", catelynStark));
-			}
 			final Collection<HumanBeing> ancestors = humanBeingRepo
 					.getAllChildrenAndGrandchildren("humanBeing/" + catelynStark.getId(), ChildOf.class);
-			if (DO_SYSOUT) {
-				ancestors.forEach(System.out::println);
-			}
 			assertEquals(3, ancestors.size());
 			for (final HumanBeing human : ancestors) {
 				assertThat(human, anyOf(Matchers.is(robb), Matchers.is(sansa), Matchers.is(dude)));
@@ -156,15 +137,8 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	@Test
 	public void testFindChildrenGrandchildrenAndGrandgrandchildren() {
 		findByExample(ned).ifPresent(nedStark -> {
-			if (DO_SYSOUT) {
-				System.out.println(
-					String.format("## These are the children, grand-children & grand-grand-children of %s:", nedStark));
-			}
 			final Collection<HumanBeing> ancestors = humanBeingRepo
 					.getAllChildrenMultilevel("humanBeing/" + nedStark.getId(), (byte) 3, ChildOf.class);
-			if (DO_SYSOUT) {
-				ancestors.forEach(System.out::println);
-			}
 			assertEquals(4, ancestors.size());
 			for (final HumanBeing human : ancestors) {
 				assertThat(human,
@@ -177,15 +151,8 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	@Test
 	public void testFindParentsGrandparentsAndGrandgrandparents() {
 		findByExample(dudette).ifPresent(dudetteStark -> {
-			if (DO_SYSOUT) {
-				System.out.println(String.format("## These are the parents, grand-parents & grand-grand-parents of %s:",
-					dudetteStark));
-			}
 			final Collection<HumanBeing> predecessors = humanBeingRepo
 					.getAllParentsMultilevel("humanBeing/" + dudetteStark.getId(), (byte) 3, ChildOf.class);
-			if (DO_SYSOUT) {
-				predecessors.forEach(System.out::println);
-			}
 			assertEquals(7, predecessors.size());
 			final List<Matcher<? super HumanBeing>> matchers = Arrays.asList(Matchers.is(dude), Matchers.is(robb),
 				Matchers.is(emily), Matchers.is(ned), Matchers.is(catelyn), Matchers.is(jon), Matchers.is(jaimie));
