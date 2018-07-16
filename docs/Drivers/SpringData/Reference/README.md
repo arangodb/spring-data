@@ -7,7 +7,7 @@
   - [Collection Manipulation](Template/CollectionManipulation.md)
 - [Repositories](Repositories/README.md)
   - [Queries](Repositories/Queries/README.md)
-    - [Derived queries](Repositories/Queries/DerviedQueries.md)
+    - [Derived queries](Repositories/Queries/DerivedQueries.md)
     - [Query methods](Repositories/Queries/QueryMethods.md)
     - [Named queries](Repositories/Queries/NamedQueries.md)
   - [Document Manipulation](Repositories/DocumentManipulation.md)
