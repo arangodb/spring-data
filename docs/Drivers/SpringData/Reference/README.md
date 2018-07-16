@@ -6,4 +6,8 @@
   - [Multiple Document Manipulation](Template/MultiDocumentManipulation.md)
   - [Collection Manipulation](Template/CollectionManipulation.md)
 - [Repositories](Repositories/README.md)
+  - [Queries](Repositories/Queries/README.md)
+    - [Derived queries](Repositories/Queries/DerviedQueries.md)
+    - [Query methods](Repositories/Queries/QueryMethods.md)
+    - [Named queries](Repositories/Queries/NamedQueries.md)
 - [Mapping](Mapping/README.md)

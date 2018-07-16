@@ -5,8 +5,10 @@ An alternative to using the `@Query` annotation on methods is specifying them in
 ```java
 package com.arangodb.repository;
 
-public interface CustomerRepository extends ArangoRepository<Customer> {
+public interface CustomerRepository extends ArangoRepository<Customer, String> {
+
     Customer findByUsername(@Param("username") String username);
+
 }
 ```
 
