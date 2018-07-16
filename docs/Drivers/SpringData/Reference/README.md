@@ -10,4 +10,6 @@
     - [Derived queries](Repositories/Queries/DerviedQueries.md)
     - [Query methods](Repositories/Queries/QueryMethods.md)
     - [Named queries](Repositories/Queries/NamedQueries.md)
+  - [Document Manipulation](Template/DocumentManipulation.md)
+  - [Multiple Document Manipulation](Template/MultiDocumentManipulation.md)
 - [Mapping](Mapping/README.md)
