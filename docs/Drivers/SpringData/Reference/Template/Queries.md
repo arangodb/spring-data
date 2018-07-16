@@ -88,7 +88,7 @@ Performs a database query using the given _query_ and _bindVars_, then returns a
 
 - **type**: `Class<T>`
 
-  The type of the result (POJO class, `VPackSlice`, `String` for Json, or `Collection`/`List`/`Map`)
+  The type of the result (POJO class, `VPackSlice` or `Collection`/`List`/`Map`)
 
 **Examples**
 

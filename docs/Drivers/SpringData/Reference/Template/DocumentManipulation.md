@@ -78,7 +78,7 @@ Creates a new document from the given document, unless there is already a docume
 
 - **value**: `T`
 
-  A representation of a single document (POJO, `VPackSlice` or `String` for Json)
+  A representation of a single document
 
 **Examples**
 
@@ -101,7 +101,7 @@ Creates a new document from the given document, unless there is already a docume
 
 - **value**: `T`
 
-  A representation of a single document (POJO, `VPackSlice` or `String` for Json)
+  A representation of a single document
 
 - **options**: `DocumentCreateOptions`
 
@@ -150,7 +150,7 @@ Replaces the document with _id_ with the one in the body, provided there is such
 
 - **value**: `T`
 
-  A representation of a single document (POJO, `VPackSlice` or `String` for Json)
+  A representation of a single document
 
 - **options**: `DocumentReplaceOptions`
 
@@ -203,7 +203,7 @@ Partially updates the document identified by document id or key. The value must 
 
 - **value**: `T`
 
-  A representation of a single document (POJO, `VPackSlice` or `String` for Json)
+  A representation of a single document
 
 - **options**: `DocumentUpdateOptions`
 

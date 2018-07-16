@@ -262,8 +262,7 @@ public interface ArangoOperations {
 	 * there is such a document and no precondition is violated
 	 *
 	 * @param id      The id or key of the document
-	 * @param value   A representation of a single document (POJO, VPackSlice or
-	 *                String for Json)
+	 * @param value   A representation of a single document
 	 * @param options Additional options, can be null
 	 * @return information about the document
 	 * @throws DataAccessException
@@ -275,8 +274,7 @@ public interface ArangoOperations {
 	 * there is such a document and no precondition is violated
 	 *
 	 * @param id    The id or key of the document
-	 * @param value A representation of a single document (POJO, VPackSlice or
-	 *              String for Json)
+	 * @param value A representation of a single document
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
@@ -358,8 +356,7 @@ public interface ArangoOperations {
 	 * document with the _key given. If no _key is given, a new unique _key is
 	 * generated automatically.
 	 *
-	 * @param value   A representation of a single document (POJO, VPackSlice or
-	 *                String for Json)
+	 * @param value   A representation of a single document
 	 * @param options Additional options, can be null
 	 * @return information about the document
 	 */
@@ -370,8 +367,7 @@ public interface ArangoOperations {
 	 * document with the _key given. If no _key is given, a new unique _key is
 	 * generated automatically.
 	 *
-	 * @param value A representation of a single document (POJO, VPackSlice or
-	 *              String for Json)
+	 * @param value A representation of a single document
 	 * @return information about the document
 	 */
 	<T> DocumentEntity insert(T value) throws DataAccessException;
@@ -438,8 +434,7 @@ public interface ArangoOperations {
 	 * Creates a new document from the given document, unless there is already a
 	 * document with the id given. In that case it replaces the document.
 	 *
-	 * @param value A representation of a single document (POJO, VPackSlice or
-	 *              String for Json)
+	 * @param value A representation of a single document
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
