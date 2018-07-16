@@ -14,3 +14,8 @@
   - [Multiple Document Manipulation](Repositories/MultiDocumentManipulation.md)
   - [Query by example](Repositories/QueryByExample.md)
 - [Mapping](Mapping/README.md)
+  - [Document](Mapping/Document.md)
+  - [Edge](Mapping/Edge.md)
+  - [Reference](Mapping/Reference.md)
+  - [Relations](Mapping/Relations.md)
+  - [Indexes](Mapping/Indexes.md)
