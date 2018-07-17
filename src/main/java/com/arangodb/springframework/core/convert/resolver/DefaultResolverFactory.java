@@ -25,7 +25,7 @@ public class DefaultResolverFactory implements ResolverFactory {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(final Class<A> annotation) {
+	public <A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(final A annotation) {
 		ReferenceResolver<A> resolver = null;
 		if (Ref.class.equals(annotation)) {
 			resolver = (ReferenceResolver<A>) refResolver;
@@ -35,7 +35,7 @@ public class DefaultResolverFactory implements ResolverFactory {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final Class<A> annotation) {
+	public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final A annotation) {
 		RelationResolver<A> resolver = null;
 		if (From.class.equals(annotation)) {
 			resolver = (RelationResolver<A>) fromResolver;
