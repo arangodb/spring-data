@@ -26,9 +26,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * @deprecated Represents the document field {@code _key}. Will be removed in 3.0.0, please use
+ *             {@link org.springframework.data.annotation.Id} then instead.
+ * 
  * @author Mark Vollmary
- *
  */
+@Deprecated
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface Key {

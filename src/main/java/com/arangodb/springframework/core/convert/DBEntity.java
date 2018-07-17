@@ -20,10 +20,15 @@
 
 package com.arangodb.springframework.core.convert;
 
+import com.arangodb.entity.DocumentEntity;
+
 /**
+ * @deprecated Will be removed in 3.0.0, please use {@link DocumentEntity} instead
+ * 
  * @author Mark Vollmary
  *
  */
+@Deprecated
 public interface DBEntity {
 
 	Object put(String key, Object value);

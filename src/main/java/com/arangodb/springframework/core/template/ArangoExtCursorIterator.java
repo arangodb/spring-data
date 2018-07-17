@@ -36,6 +36,7 @@ import com.arangodb.velocypack.VPackSlice;
  * @param <T>
  *
  */
+@SuppressWarnings("deprecation")
 class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 
 	private ArangoConverter converter;

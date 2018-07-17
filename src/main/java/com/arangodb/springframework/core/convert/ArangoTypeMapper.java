@@ -26,6 +26,7 @@ import org.springframework.data.convert.TypeMapper;
  * @author Christian Lechner
  *
  */
+@SuppressWarnings("deprecation")
 public interface ArangoTypeMapper extends TypeMapper<DBEntity> {
 
 	boolean isTypeKey(String key);

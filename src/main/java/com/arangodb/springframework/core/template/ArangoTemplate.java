@@ -84,6 +84,7 @@ import com.arangodb.util.MapBuilder;
  * @author Christian Lechner
  * @author Reşat SABIQ
  */
+@SuppressWarnings("deprecation")
 public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	private volatile ArangoDBVersion version;

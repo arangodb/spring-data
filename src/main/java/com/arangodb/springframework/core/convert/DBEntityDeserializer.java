@@ -29,6 +29,7 @@ import com.arangodb.velocypack.exception.VPackException;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 public class DBEntityDeserializer implements VPackDeserializer<DBEntity> {
 
 	@Override

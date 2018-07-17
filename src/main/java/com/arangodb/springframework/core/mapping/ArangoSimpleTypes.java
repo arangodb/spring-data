@@ -47,6 +47,7 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Christian Lechner
  *
  */
+@SuppressWarnings("deprecation")
 public abstract class ArangoSimpleTypes {
 
 	private static final Set<Class<?>> ARANGO_SIMPLE_TYPES;

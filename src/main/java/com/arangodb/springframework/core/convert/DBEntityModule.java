@@ -33,8 +33,9 @@ import com.arangodb.velocypack.VPackSetupContext;
  */
 public class DBEntityModule implements VPackModule {
 
+	@SuppressWarnings("deprecation")
 	@Override
-	public <C extends VPackSetupContext<C>> void setup(C context) {
+	public <C extends VPackSetupContext<C>> void setup(final C context) {
 		context.registerInstanceCreator(Map.class, new DBDocumentEntityInstantiator())
 				.registerInstanceCreator(Collection.class, new DBCollectionEntityInstantiator())
 				.registerDeserializer(DBEntity.class, new DBEntityDeserializer());
@@ -51,6 +52,7 @@ public class DBEntityModule implements VPackModule {
 
 	public static class DBCollectionEntityInstantiator implements VPackInstanceCreator<Collection<?>> {
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public Collection<?> createInstance() {
 			return new DBCollectionEntity();

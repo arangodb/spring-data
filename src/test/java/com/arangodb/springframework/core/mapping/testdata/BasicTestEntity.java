@@ -30,6 +30,7 @@ import com.arangodb.springframework.annotation.Rev;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 @Document
 public class BasicTestEntity {
 

@@ -27,6 +27,7 @@ import java.util.Map;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 public class DBDocumentEntity extends HashMap<String, Object> implements DBEntity {
 
 	private static final long serialVersionUID = -7251842887063588024L;
@@ -39,6 +40,10 @@ public class DBDocumentEntity extends HashMap<String, Object> implements DBEntit
 		super(m);
 	}
 
+	/**
+	 * @deprecated Will be removed in 3.0.0
+	 */
+	@Deprecated
 	@Override
 	public boolean add(final Object value) {
 		throw new UnsupportedOperationException();

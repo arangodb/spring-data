@@ -26,7 +26,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Deprecated. Please use {@link org.springframework.data.repository.query.Param} instead.
+ * @deprecated. Will be removed in 3.0.0, please use {@link org.springframework.data.repository.query.Param} instead.
  * 
  * @author Audrius Malele
  * @author Mark McCormick
