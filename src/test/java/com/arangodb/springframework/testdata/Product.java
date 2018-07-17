@@ -32,6 +32,7 @@ import com.arangodb.springframework.annotation.Rev;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 @GeoIndex(fields = { "location" })
 public class Product {
 

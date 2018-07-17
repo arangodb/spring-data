@@ -30,6 +30,7 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
  * @author Christian Lechner
  *
  */
+@SuppressWarnings("deprecation")
 public interface ArangoConverter
 		extends EntityConverter<ArangoPersistentEntity<?>, ArangoPersistentProperty, Object, DBEntity>,
 		ArangoEntityReader, ArangoEntityWriter {

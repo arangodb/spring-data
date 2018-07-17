@@ -31,10 +31,11 @@ import com.arangodb.velocypack.VPackSetupContext;
  * @author Christian Lechner
  *
  */
+@SuppressWarnings("deprecation")
 public class DBEntityModule implements VPackModule {
 
 	@Override
-	public <C extends VPackSetupContext<C>> void setup(C context) {
+	public <C extends VPackSetupContext<C>> void setup(final C context) {
 		context.registerInstanceCreator(Map.class, new DBDocumentEntityInstantiator())
 				.registerInstanceCreator(Collection.class, new DBCollectionEntityInstantiator())
 				.registerDeserializer(DBEntity.class, new DBEntityDeserializer());

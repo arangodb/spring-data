@@ -60,6 +60,7 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class ArangoTemplateTest extends AbstractArangoTest {
@@ -355,6 +356,8 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	public static class NewEntityTest implements Persistable<String> {
 
+		private static final long serialVersionUID = 1L;
+
 		@Id
 		private String id;
 		@Key
@@ -382,7 +385,6 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	@Test
 	public void upsertWithUserGeneratedKey() {
 		final NewEntityTest entity = new NewEntityTest("test");
@@ -393,7 +395,6 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(template.collection(NewEntityTest.class).count(), is(1L));
 	}
 
-	@SuppressWarnings("deprecation")
 	@Test
 	public void mutliUpsertWithUserGeneratedKey() {
 		final NewEntityTest entity1 = new NewEntityTest("test1");

@@ -46,6 +46,7 @@ import com.arangodb.velocypack.VPackSlice;
  * @param <T>
  *
  */
+@SuppressWarnings("deprecation")
 class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 
 	private static final SimpleTypeHolder ADDITIONAL_DESERIALIZABLE_TYPES;
@@ -68,7 +69,7 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 	private ArangoConverter converter;
 
 	protected ArangoExtCursorIterator(final ArangoCursor<T> cursor, final InternalArangoDatabase<?, ?> db,
-			final ArangoCursorExecute execute, final CursorEntity result) {
+		final ArangoCursorExecute execute, final CursorEntity result) {
 		super(cursor, execute, db, result);
 	}
 

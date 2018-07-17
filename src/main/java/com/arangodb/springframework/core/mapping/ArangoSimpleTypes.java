@@ -42,6 +42,7 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Christian Lechner
  *
  */
+@SuppressWarnings("deprecation")
 public abstract class ArangoSimpleTypes {
 
 	private static final Set<Class<?>> ARANGO_SIMPLE_TYPES;
@@ -64,7 +65,7 @@ public abstract class ArangoSimpleTypes {
 		simpleTypes.add(long.class);
 		simpleTypes.add(float.class);
 		simpleTypes.add(double.class);
-		
+
 		// primitive arrays
 		simpleTypes.add(boolean[].class);
 		simpleTypes.add(byte[].class);

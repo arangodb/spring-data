@@ -26,6 +26,7 @@ import org.springframework.data.convert.EntityReader;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 public interface ArangoEntityReader extends EntityReader<Object, DBEntity> {
 
 }

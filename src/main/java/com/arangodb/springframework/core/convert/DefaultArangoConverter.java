@@ -59,6 +59,7 @@ import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
  * @author Christian Lechner
  *
  */
+@SuppressWarnings("deprecation")
 public class DefaultArangoConverter implements ArangoConverter {
 
 	private static final String _ID = "_id";

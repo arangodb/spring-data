@@ -8,6 +8,7 @@ import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.Rev;
 
+@SuppressWarnings("deprecation")
 @Document("customer")
 public class IncompleteCustomer {
 	@Id

@@ -48,6 +48,7 @@ import com.arangodb.springframework.annotation.To;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentProperty<ArangoPersistentProperty>
 		implements ArangoPersistentProperty {
 

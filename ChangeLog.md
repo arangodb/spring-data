@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Deprecated
+
+- deprecated `com.arangodb.springframework.annotation.Key`
+- deprecated `com.arangodb.springframework.core.convert.DBEntity`
+- deprecated `com.arangodb.springframework.core.convert.DBCollectionEntity`
+
 ## [1.2.2] - 2018-07-09
 
 - fixed `ArangoOperations#getVersion()` use configured database instead of \_system

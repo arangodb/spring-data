@@ -26,6 +26,7 @@ import org.springframework.data.convert.EntityWriter;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 public interface ArangoEntityWriter extends EntityWriter<Object, DBEntity> {
 
 }

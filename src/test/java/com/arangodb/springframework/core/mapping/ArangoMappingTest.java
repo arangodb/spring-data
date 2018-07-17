@@ -66,6 +66,7 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Christian Lechner
  *
  */
+@SuppressWarnings("deprecation")
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public class ArangoMappingTest extends AbstractArangoTest {
@@ -129,9 +130,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void supplementKey() {
 		final OnlyIdTestEntity value = new OnlyIdTestEntity();
 		template.insert(value);
-		final List<BasicTestEntity> result = template
-				.query("RETURN @doc", new MapBuilder().put("doc", value).get(), new AqlQueryOptions(), BasicTestEntity.class)
-				.asListRemaining();
+		final List<BasicTestEntity> result = template.query("RETURN @doc", new MapBuilder().put("doc", value).get(),
+			new AqlQueryOptions(), BasicTestEntity.class).asListRemaining();
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0).getId(), is(value.id));
 		assertThat(result.get(0).getKey(), is(value.id.split("/")[1]));
@@ -149,7 +149,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		entity.test = "1234";
 		final DocumentEntity res = template.insert(entity);
 		final VPackSlice slice = template.driver().db(ArangoTestConfiguration.DB).getDocument(res.getId(),
-				VPackSlice.class);
+			VPackSlice.class);
 		assertThat(slice, is(notNullValue()));
 		assertThat(slice.get("alt-test").isString(), is(true));
 		assertThat(slice.get("alt-test").getAsString(), is(entity.test));
@@ -192,10 +192,10 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void multipleNestedDocuments() {
 		final MultipleNestedDocumentTestEntity entity = new MultipleNestedDocumentTestEntity();
 		entity.entities = new ArrayList<>(Arrays.asList(new NestedDocumentTestEntity("0"),
-				new NestedDocumentTestEntity("1"), new NestedDocumentTestEntity("2")));
+			new NestedDocumentTestEntity("1"), new NestedDocumentTestEntity("2")));
 		template.insert(entity);
-		final MultipleNestedDocumentTestEntity document = template.find(entity.id, MultipleNestedDocumentTestEntity.class)
-				.get();
+		final MultipleNestedDocumentTestEntity document = template
+				.find(entity.id, MultipleNestedDocumentTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
 		assertThat(document.entities.size(), is(3));
@@ -210,10 +210,10 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void multipleNestedCollections() {
 		final MultipleNestedCollectionsTestEntity entity = new MultipleNestedCollectionsTestEntity();
 		entity.entities = new ArrayList<>(Arrays.asList(
-				new ArrayList<>(Arrays.asList(new NestedDocumentTestEntity("00"), new NestedDocumentTestEntity("01"),
-						new NestedDocumentTestEntity("02"))),
-				new ArrayList<>(Arrays.asList(new NestedDocumentTestEntity("10"), new NestedDocumentTestEntity("11"),
-						new NestedDocumentTestEntity("12")))));
+			new ArrayList<>(Arrays.asList(new NestedDocumentTestEntity("00"), new NestedDocumentTestEntity("01"),
+				new NestedDocumentTestEntity("02"))),
+			new ArrayList<>(Arrays.asList(new NestedDocumentTestEntity("10"), new NestedDocumentTestEntity("11"),
+				new NestedDocumentTestEntity("12")))));
 		template.insert(entity);
 		final MultipleNestedCollectionsTestEntity document = template
 				.find(entity.id, MultipleNestedCollectionsTestEntity.class).get();
@@ -245,7 +245,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entities, is(notNullValue()));
 		final Map<String, String> collect = document.entities.entrySet().stream()
-				.map(e -> new String[] { e.getKey(), e.getValue().test }).collect(Collectors.toMap(k -> k[0], v -> v[1]));
+				.map(e -> new String[] { e.getKey(), e.getValue().test })
+				.collect(Collectors.toMap(k -> k[0], v -> v[1]));
 		for (int i = 0; i <= 2; i++) {
 			assertThat(collect.get(String.valueOf(i)), is(String.valueOf(i)));
 		}
@@ -678,8 +679,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 	public void constructorWithParam() {
 		final ConstructorWithParamTestEntity entity = new ConstructorWithParamTestEntity("test");
 		template.insert(entity);
-		final ConstructorWithParamTestEntity document = template.find(entity.getId(), ConstructorWithParamTestEntity.class)
-				.get();
+		final ConstructorWithParamTestEntity document = template
+				.find(entity.getId(), ConstructorWithParamTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(entity.value));
 	}
@@ -693,7 +694,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		private final String[] value6;
 
 		public ConstructorWithMultipleParamsTestEntity(final String value1, final boolean value2, final double value3,
-				final long value4, final int value5, final String[] value6) {
+			final long value4, final int value5, final String[] value6) {
 			super();
 			this.value1 = value1;
 			this.value2 = value2;
@@ -727,7 +728,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		@Ref
 		private final Collection<BasicTestEntity> value2;
 
-		public ConstructorWithRefParamsTestEntity(final BasicTestEntity value1, final Collection<BasicTestEntity> value2) {
+		public ConstructorWithRefParamsTestEntity(final BasicTestEntity value1,
+			final Collection<BasicTestEntity> value2) {
 			super();
 			this.value1 = value1;
 			this.value2 = value2;
@@ -750,7 +752,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value1.id, is(value1.id));
 		assertThat(document.value2.size(), is(2));
-		assertThat(document.value2.stream().map((e) -> e.id).collect(Collectors.toList()), hasItems(value2.id, value3.id));
+		assertThat(document.value2.stream().map((e) -> e.id).collect(Collectors.toList()),
+			hasItems(value2.id, value3.id));
 	}
 
 	public static class ConstructorWithRefLazyParamsTestEntity extends BasicTestEntity {
@@ -760,7 +763,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		private final Collection<BasicTestEntity> value2;
 
 		public ConstructorWithRefLazyParamsTestEntity(final BasicTestEntity value1,
-				final Collection<BasicTestEntity> value2) {
+			final Collection<BasicTestEntity> value2) {
 			super();
 			this.value1 = value1;
 			this.value2 = value2;
@@ -784,7 +787,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		assertThat(document.value1.getId(), is(value1.id));
 		assertThat(document.value2.size(), is(2));
 		assertThat(document.value2.stream().map((e) -> e.getId()).collect(Collectors.toList()),
-				hasItems(value2.id, value3.id));
+			hasItems(value2.id, value3.id));
 	}
 
 	public static class ConstructorWithRelationsParamsTestEntity extends BasicTestEntity {
@@ -811,7 +814,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final ConstructorWithRelationsParamsTestEntity document = template
 				.find(entity.id, ConstructorWithRelationsParamsTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
-		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()), hasItems(vertex1.id, vertex2.id));
+		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()),
+			hasItems(vertex1.id, vertex2.id));
 	}
 
 	public static class ConstructorWithRelationsLazyParamsTestEntity extends BasicTestEntity {
@@ -838,7 +842,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final ConstructorWithRelationsLazyParamsTestEntity document = template
 				.find(entity.id, ConstructorWithRelationsLazyParamsTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
-		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()), hasItems(vertex1.id, vertex2.id));
+		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()),
+			hasItems(vertex1.id, vertex2.id));
 	}
 
 	public static class ConstructorWithFromParamsTestEntity extends BasicTestEntity {
@@ -891,7 +896,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 				.find(entity.id, ConstructorWithFromLazyParamsTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value.stream().map((e) -> e.getId()).collect(Collectors.toList()),
-				hasItems(edge1.id, edge2.id));
+			hasItems(edge1.id, edge2.id));
 	}
 
 	public static class ConstructorWithToParamsTestEntity extends BasicTestEntity {
@@ -914,8 +919,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final BasicEdgeLazyTestEntity edge2 = new BasicEdgeLazyTestEntity(from, entity);
 		template.insert(edge1);
 		template.insert(edge2);
-		final ConstructorWithToParamsTestEntity document = template.find(entity.id, ConstructorWithToParamsTestEntity.class)
-				.get();
+		final ConstructorWithToParamsTestEntity document = template
+				.find(entity.id, ConstructorWithToParamsTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()), hasItems(edge1.id, edge2.id));
 	}
@@ -944,7 +949,7 @@ public class ArangoMappingTest extends AbstractArangoTest {
 				.find(entity.id, ConstructorWithToLazyParamsTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value.stream().map((e) -> e.getId()).collect(Collectors.toList()),
-				hasItems(edge1.id, edge2.id));
+			hasItems(edge1.id, edge2.id));
 	}
 
 	public static class EdgeConstructorWithFromToParamsTestEntity extends BasicEdgeTestEntity {
@@ -994,8 +999,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final BasicTestEntity to = new BasicTestEntity();
 		template.insert(from);
 		template.insert(to);
-		final EdgeConstructorWithFromToLazyParamsTestEntity edge = new EdgeConstructorWithFromToLazyParamsTestEntity(from,
-				to);
+		final EdgeConstructorWithFromToLazyParamsTestEntity edge = new EdgeConstructorWithFromToLazyParamsTestEntity(
+				from, to);
 		template.insert(edge);
 		final EdgeConstructorWithFromToLazyParamsTestEntity document = template
 				.find(edge.id, EdgeConstructorWithFromToLazyParamsTestEntity.class).get();
@@ -1066,8 +1071,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final PropertyInheritanceTestEntity entity = new PropertyInheritanceTestEntity();
 		entity.value = child;
 		template.insert(entity);
-		final PropertyInheritanceTestEntity document = template.find(entity.getId(), PropertyInheritanceTestEntity.class)
-				.get();
+		final PropertyInheritanceTestEntity document = template
+				.find(entity.getId(), PropertyInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(SimpleBasicChildTestEntity.class)));
 		assertThat(((SimpleBasicChildTestEntity) document.value).field, is(child.field));
@@ -1082,8 +1087,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final PropertyInheritanceTestEntity entity = new PropertyInheritanceTestEntity();
 		entity.value = child;
 		template.insert(entity);
-		final PropertyInheritanceTestEntity document = template.find(entity.getId(), PropertyInheritanceTestEntity.class)
-				.get();
+		final PropertyInheritanceTestEntity document = template
+				.find(entity.getId(), PropertyInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(ComplexBasicChildTestEntity.class)));
 		final ComplexBasicChildTestEntity complexDocument = (ComplexBasicChildTestEntity) document.value;
@@ -1274,7 +1279,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		innerChild.field = "value";
 		final ComplexBasicChildTestEntity child = new ComplexBasicChildTestEntity();
 		child.nestedEntity = innerChild;
-		final ConstructorWithPropertyInheritanceTestEntity entity = new ConstructorWithPropertyInheritanceTestEntity(child);
+		final ConstructorWithPropertyInheritanceTestEntity entity = new ConstructorWithPropertyInheritanceTestEntity(
+				child);
 		template.insert(entity);
 		final ConstructorWithPropertyInheritanceTestEntity document = template
 				.find(entity.getId(), ConstructorWithPropertyInheritanceTestEntity.class).get();
@@ -1308,8 +1314,8 @@ public class ArangoMappingTest extends AbstractArangoTest {
 		final ListInMapInheritanceTestEntity entity = new ListInMapInheritanceTestEntity();
 		entity.value = map;
 		template.insert(entity);
-		final ListInMapInheritanceTestEntity document = template.find(entity.getId(), ListInMapInheritanceTestEntity.class)
-				.get();
+		final ListInMapInheritanceTestEntity document = template
+				.find(entity.getId(), ListInMapInheritanceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.value, is(instanceOf(Map.class)));
 		for (final Map.Entry<String, List<BasicTestEntity>> entry : document.value.entrySet()) {
