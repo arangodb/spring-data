@@ -32,7 +32,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.util.Assert;
@@ -158,25 +157,6 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 
 		public boolean isBindVars() {
 			return parameter.hasParameterAnnotation(BindVars.class);
-		}
-
-		@SuppressWarnings("deprecation")
-		@Override
-		public Optional<String> getName() {
-			Param annotation = parameter.getParameterAnnotation(Param.class);
-			// we need to support the old @Param annotation
-			com.arangodb.springframework.annotation.Param oldAnnotation = parameter
-					.getParameterAnnotation(com.arangodb.springframework.annotation.Param.class);
-			return Optional.ofNullable(
-				annotation == null ? (oldAnnotation == null ? null : oldAnnotation.value()) : annotation.value());
-		}
-
-		@SuppressWarnings("deprecation")
-		@Override
-		public boolean isExplicitlyNamed() {
-			// we need to support the old @Param annotation
-			return super.isExplicitlyNamed()
-					|| parameter.hasMethodAnnotation(com.arangodb.springframework.annotation.Param.class);
 		}
 
 		@Override

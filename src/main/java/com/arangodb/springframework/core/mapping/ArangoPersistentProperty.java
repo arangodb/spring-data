@@ -42,8 +42,6 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 
 	String getFieldName();
 
-	boolean isKeyProperty();
-
 	boolean isRevProperty();
 
 	Optional<Ref> getRef();

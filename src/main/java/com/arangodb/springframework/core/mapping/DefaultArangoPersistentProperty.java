@@ -36,7 +36,6 @@ import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.FulltextIndexed;
 import com.arangodb.springframework.annotation.GeoIndexed;
 import com.arangodb.springframework.annotation.HashIndexed;
-import com.arangodb.springframework.annotation.Key;
 import com.arangodb.springframework.annotation.PersistentIndexed;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
@@ -48,7 +47,6 @@ import com.arangodb.springframework.annotation.To;
  * @author Mark Vollmary
  *
  */
-@SuppressWarnings("deprecation")
 public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentProperty<ArangoPersistentProperty>
 		implements ArangoPersistentProperty {
 
@@ -65,11 +63,6 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	protected Association<ArangoPersistentProperty> createAssociation() {
 		return new Association<>(this, null);
-	}
-
-	@Override
-	public boolean isKeyProperty() {
-		return findAnnotation(Key.class) != null;
 	}
 
 	@Override
@@ -100,7 +93,7 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	public String getFieldName() {
 		final String fieldName;
-		if (isIdProperty() || isKeyProperty()) {
+		if (isIdProperty()) {
 			fieldName = "_key";
 		} else if (isRevProperty()) {
 			fieldName = "_rev";

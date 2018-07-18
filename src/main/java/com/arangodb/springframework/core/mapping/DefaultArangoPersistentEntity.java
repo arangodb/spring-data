@@ -195,17 +195,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	}
 
 	@Override
-	protected ArangoPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(
-		final ArangoPersistentProperty property) {
-		final ArangoPersistentProperty idPropertyOrNull = super.returnPropertyIfBetterIdPropertyCandidateOrNull(
-			property);
-		if (idPropertyOrNull == null && property.isKeyProperty()) {
-			return property;
-		}
-		return idPropertyOrNull;
-	}
-
-	@Override
 	public Optional<ArangoPersistentProperty> getRevProperty() {
 		return Optional.ofNullable(revProperty);
 	}
