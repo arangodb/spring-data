@@ -21,12 +21,14 @@
 package com.arangodb.springframework.config;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
@@ -86,7 +88,11 @@ public abstract class AbstractArangoConfiguration {
 	}
 
 	protected CustomConversions customConversions() {
-		return new ArangoCustomConversions(Collections.emptyList());
+		return new ArangoCustomConversions(customConverters());
+	}
+
+	protected Collection<Converter<?, ?>> customConverters() {
+		return Collections.emptyList();
 	}
 
 	private Set<? extends Class<?>> getInitialEntitySet() throws ClassNotFoundException {
