@@ -62,15 +62,17 @@ public interface ArangoOperations {
 	ArangoDBVersion getVersion() throws DataAccessException;
 
 	/**
-	 * Performs a database query using the given {@code query} and {@code bindVars},
-	 * then returns a new {@code ArangoCursor} instance for the result list.
+	 * Performs a database query using the given {@code query} and {@code bindVars}, then returns a new
+	 * {@code ArangoCursor} instance for the result list.
 	 *
-	 * @param query       An AQL query string
-	 * @param bindVars    key/value pairs defining the variables to bind the query
-	 *                    to
-	 * @param options     Additional options that will be passed to the query API,
-	 *                    can be null
-	 * @param entityClass The entity type of the result
+	 * @param query
+	 *            An AQL query string
+	 * @param bindVars
+	 *            key/value pairs defining the variables to bind the query to
+	 * @param options
+	 *            Additional options that will be passed to the query API, can be null
+	 * @param entityClass
+	 *            The entity type of the result
 	 * @return cursor of the results
 	 * @throws DataAccessException
 	 */
@@ -78,13 +80,15 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	/**
-	 * Performs a database query using the given {@code query} and {@code bindVars},
-	 * then returns a new {@code ArangoCursor} instance for the result list.
+	 * Performs a database query using the given {@code query} and {@code bindVars}, then returns a new
+	 * {@code ArangoCursor} instance for the result list.
 	 *
-	 * @param query       An AQL query string
-	 * @param bindVars    key/value pairs defining the variables to bind the query
-	 *                    to
-	 * @param entityClass The entity type of the result
+	 * @param query
+	 *            An AQL query string
+	 * @param bindVars
+	 *            key/value pairs defining the variables to bind the query to
+	 * @param entityClass
+	 *            The entity type of the result
 	 * @return cursor of the results
 	 * @throws DataAccessException
 	 */
@@ -92,24 +96,28 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	/**
-	 * Performs a database query using the given {@code query}, then returns a new
-	 * {@code ArangoCursor} instance for the result list.
+	 * Performs a database query using the given {@code query}, then returns a new {@code ArangoCursor} instance for the
+	 * result list.
 	 *
-	 * @param query       An AQL query string
-	 * @param options     Additional options that will be passed to the query API,
-	 *                    can be null
-	 * @param entityClass The entity type of the result
+	 * @param query
+	 *            An AQL query string
+	 * @param options
+	 *            Additional options that will be passed to the query API, can be null
+	 * @param entityClass
+	 *            The entity type of the result
 	 * @return cursor of the results
 	 * @throws DataAccessException
 	 */
 	<T> ArangoCursor<T> query(String query, AqlQueryOptions options, Class<T> entityClass) throws DataAccessException;
 
 	/**
-	 * Performs a database query using the given {@code query}, then returns a new
-	 * {@code ArangoCursor} instance for the result list.
+	 * Performs a database query using the given {@code query}, then returns a new {@code ArangoCursor} instance for the
+	 * result list.
 	 *
-	 * @param query       An AQL query string
-	 * @param entityClass The entity type of the result
+	 * @param query
+	 *            An AQL query string
+	 * @param entityClass
+	 *            The entity type of the result
 	 * @return cursor of the results
 	 * @throws DataAccessException
 	 */
@@ -118,20 +126,27 @@ public interface ArangoOperations {
 	/**
 	 * Deletes multiple documents from a collection.
 	 *
-	 * @param values      The keys of the documents or the documents themselves
-	 * @param entityClass The entity class which represents the collection
-	 * @param options     Additional options, can be null
+	 * @param values
+	 *            The keys of the documents or the documents themselves
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<? extends DocumentEntity> delete(Iterable<Object> values, Class<?> entityClass,
-			DocumentDeleteOptions options) throws DataAccessException;
+	MultiDocumentEntity<? extends DocumentEntity> delete(
+		Iterable<Object> values,
+		Class<?> entityClass,
+		DocumentDeleteOptions options) throws DataAccessException;
 
 	/**
 	 * Deletes multiple documents from a collection.
 	 *
-	 * @param values      The keys of the documents or the documents themselves
-	 * @param entityClass The entity class which represents the collection
+	 * @param values
+	 *            The keys of the documents or the documents themselves
+	 * @param entityClass
+	 *            The entity class which represents the collection
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
@@ -141,9 +156,12 @@ public interface ArangoOperations {
 	/**
 	 * Deletes the document with the given {@code id} from a collection.
 	 *
-	 * @param id          The id or key of the document
-	 * @param entityClass The entity class which represents the collection
-	 * @param options     Additional options, can be null
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
@@ -152,44 +170,49 @@ public interface ArangoOperations {
 	/**
 	 * Deletes the document with the given {@code id} from a collection.
 	 *
-	 * @param id          The id or key of the document
-	 * @param entityClass The entity class which represents the collection
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity class which represents the collection
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
 	DocumentEntity delete(Object id, Class<?> entityClass) throws DataAccessException;
 
 	/**
-	 * Partially updates documents, the documents to update are specified by the
-	 * _key attributes in the objects on values. Vales must contain a list of
-	 * document updates with the attributes to patch (the patch documents). All
-	 * attributes from the patch documents will be added to the existing documents
-	 * if they do not yet exist, and overwritten in the existing documents if they
-	 * do exist there.
+	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
+	 * values. Vales must contain a list of document updates with the attributes to patch (the patch documents). All
+	 * attributes from the patch documents will be added to the existing documents if they do not yet exist, and
+	 * overwritten in the existing documents if they do exist there.
 	 *
-	 * @param             <T>
+	 * @param <T>
 	 *
-	 * @param values      A list of documents
-	 * @param entityClass The entity class which represents the collection
-	 * @param options     Additional options, can be null
+	 * @param values
+	 *            A list of documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> update(Iterable<T> values, Class<T> entityClass,
-			DocumentUpdateOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> update(
+		Iterable<T> values,
+		Class<T> entityClass,
+		DocumentUpdateOptions options) throws DataAccessException;
 
 	/**
-	 * Partially updates documents, the documents to update are specified by the
-	 * _key attributes in the objects on values. Vales must contain a list of
-	 * document updates with the attributes to patch (the patch documents). All
-	 * attributes from the patch documents will be added to the existing documents
-	 * if they do not yet exist, and overwritten in the existing documents if they
-	 * do exist there.
+	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
+	 * values. Vales must contain a list of document updates with the attributes to patch (the patch documents). All
+	 * attributes from the patch documents will be added to the existing documents if they do not yet exist, and
+	 * overwritten in the existing documents if they do exist there.
 	 *
-	 * @param             <T>
+	 * @param <T>
 	 *
-	 * @param values      A list of documents
-	 * @param entityClass The entity class which represents the collection
+	 * @param values
+	 *            A list of documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
@@ -197,60 +220,67 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	/**
-	 * Partially updates the document identified by document id or key. The value
-	 * must contain a document with the attributes to patch (the patch document).
-	 * All attributes from the patch document will be added to the existing document
-	 * if they do not yet exist, and overwritten in the existing document if they do
-	 * exist there.
+	 * Partially updates the document identified by document id or key. The value must contain a document with the
+	 * attributes to patch (the patch document). All attributes from the patch document will be added to the existing
+	 * document if they do not yet exist, and overwritten in the existing document if they do exist there.
 	 *
-	 * @param id      The id or key of the document
-	 * @param value   A representation of a single document
-	 * @param options Additional options, can be null
+	 * @param id
+	 *            The id or key of the document
+	 * @param value
+	 *            A representation of a single document
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
 	<T> DocumentEntity update(Object id, T value, DocumentUpdateOptions options) throws DataAccessException;
 
 	/**
-	 * Partially updates the document identified by document id or key. The value
-	 * must contain a document with the attributes to patch (the patch document).
-	 * All attributes from the patch document will be added to the existing document
-	 * if they do not yet exist, and overwritten in the existing document if they do
-	 * exist there.
+	 * Partially updates the document identified by document id or key. The value must contain a document with the
+	 * attributes to patch (the patch document). All attributes from the patch document will be added to the existing
+	 * document if they do not yet exist, and overwritten in the existing document if they do exist there.
 	 *
-	 * @param id    The id or key of the document
-	 * @param value A representation of a single document
+	 * @param id
+	 *            The id or key of the document
+	 * @param value
+	 *            A representation of a single document
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
 	<T> DocumentEntity update(Object id, T value) throws DataAccessException;
 
 	/**
-	 * Replaces multiple documents in the specified collection with the ones in the
-	 * values, the replaced documents are specified by the _key attributes in the
-	 * documents in values.
+	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
+	 * specified by the _key attributes in the documents in values.
 	 *
-	 * @param             <T>
+	 * @param <T>
 	 *
-	 * @param values      A List of documents
-	 * @param entityClass The entity class which represents the collection
-	 * @param options     Additional options, can be null
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> replace(Iterable<T> values, Class<T> entityClass,
-			DocumentReplaceOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> replace(
+		Iterable<T> values,
+		Class<T> entityClass,
+		DocumentReplaceOptions options) throws DataAccessException;
 
 	/**
-	 * Replaces multiple documents in the specified collection with the ones in the
-	 * values, the replaced documents are specified by the _key attributes in the
-	 * documents in values.
+	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
+	 * specified by the _key attributes in the documents in values.
 	 *
-	 * @param             <T>
+	 * @param <T>
 	 *
-	 * @param values      A List of documents
-	 * @param entityClass The entity class which represents the collection
-	 * @param options     Additional options, can be null
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
@@ -258,23 +288,28 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	/**
-	 * Replaces the document with {@code id} with the one in the body, provided
-	 * there is such a document and no precondition is violated
+	 * Replaces the document with {@code id} with the one in the body, provided there is such a document and no
+	 * precondition is violated
 	 *
-	 * @param id      The id or key of the document
-	 * @param value   A representation of a single document
-	 * @param options Additional options, can be null
+	 * @param id
+	 *            The id or key of the document
+	 * @param value
+	 *            A representation of a single document
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
 	<T> DocumentEntity replace(Object id, T value, DocumentReplaceOptions options) throws DataAccessException;
 
 	/**
-	 * Replaces the document with {@code id} with the one in the body, provided
-	 * there is such a document and no precondition is violated
+	 * Replaces the document with {@code id} with the one in the body, provided there is such a document and no
+	 * precondition is violated
 	 *
-	 * @param id    The id or key of the document
-	 * @param value A representation of a single document
+	 * @param id
+	 *            The id or key of the document
+	 * @param value
+	 *            A representation of a single document
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
@@ -283,28 +318,34 @@ public interface ArangoOperations {
 	/**
 	 * Retrieves the document with the given {@code id} from a collection.
 	 *
-	 * @param id          The id or key of the document
-	 * @param entityClass The entity class which represents the collection
-	 * @param options     Additional options, can be null
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @param options
+	 *            Additional options, can be null
 	 * @return the document identified by the id
 	 * @throws DataAccessException
 	 */
-	<T> Optional<T> find(String id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
+	<T> Optional<T> find(Object id, Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
 
 	/**
 	 * Retrieves the document with the given {@code id} from a collection.
 	 *
-	 * @param id          The id or key of the document
-	 * @param entityClass The entity class which represents the collection
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity class which represents the collection
 	 * @return the document identified by the id
 	 * @throws DataAccessException
 	 */
-	<T> Optional<T> find(String id, Class<T> entityClass) throws DataAccessException;
+	<T> Optional<T> find(Object id, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Retrieves all documents from a collection.
 	 *
-	 * @param entityClass The entity class which represents the collection
+	 * @param entityClass
+	 *            The entity class which represents the collection
 	 * @return the documents
 	 * @throws DataAccessException
 	 */
@@ -313,38 +354,45 @@ public interface ArangoOperations {
 	/**
 	 * Retrieves multiple documents with the given {@code ids} from a collection.
 	 *
-	 * @param ids         The ids or keys of the documents
-	 * @param entityClass The entity class which represents the collection
+	 * @param ids
+	 *            The ids or keys of the documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
 	 * @return the documents
 	 * @throws DataAccessException
 	 */
 	<T> Iterable<T> find(final Iterable<? extends Object> ids, final Class<T> entityClass) throws DataAccessException;
 
 	/**
-	 * Creates new documents from the given documents, unless there is already a
-	 * document with the _key given. If no _key is given, a new unique _key is
-	 * generated automatically.
+	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
 	 *
-	 * @param             <T>
+	 * @param <T>
 	 *
-	 * @param values      A List of documents
-	 * @param entityClass The entity class which represents the collection
-	 * @param options     Additional options, can be null
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> insert(Iterable<T> values, Class<T> entityClass,
-			DocumentCreateOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<? extends DocumentEntity> insert(
+		Iterable<T> values,
+		Class<T> entityClass,
+		DocumentCreateOptions options) throws DataAccessException;
 
 	/**
-	 * Creates new documents from the given documents, unless there is already a
-	 * document with the _key given. If no _key is given, a new unique _key is
-	 * generated automatically.
+	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
 	 *
-	 * @param             <T>
+	 * @param <T>
 	 *
-	 * @param values      A List of documents
-	 * @param entityClass The entity class which represents the collection
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
@@ -352,49 +400,52 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	/**
-	 * Creates a new document from the given document, unless there is already a
-	 * document with the _key given. If no _key is given, a new unique _key is
-	 * generated automatically.
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
 	 *
-	 * @param value   A representation of a single document
-	 * @param options Additional options, can be null
+	 * @param value
+	 *            A representation of a single document
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the document
 	 */
 	<T> DocumentEntity insert(T value, DocumentCreateOptions options) throws DataAccessException;
 
 	/**
-	 * Creates a new document from the given document, unless there is already a
-	 * document with the _key given. If no _key is given, a new unique _key is
-	 * generated automatically.
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
 	 *
-	 * @param value A representation of a single document
+	 * @param value
+	 *            A representation of a single document
 	 * @return information about the document
 	 */
 	<T> DocumentEntity insert(T value) throws DataAccessException;
 
 	/**
-	 * Creates a new document from the given document, unless there is already a
-	 * document with the _key given. If no _key is given, a new unique _key is
-	 * generated automatically.
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
 	 *
-	 * @param collectionName Name of the collection in which the new document should
-	 *                       be inserted
-	 * @param value          A representation of a single document
-	 * @param options        Additional options, can be null
+	 * @param collectionName
+	 *            Name of the collection in which the new document should be inserted
+	 * @param value
+	 *            A representation of a single document
+	 * @param options
+	 *            Additional options, can be null
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	DocumentEntity insert(String collectionName, Object value, DocumentCreateOptions options) throws DataAccessException;
+	DocumentEntity insert(String collectionName, Object value, DocumentCreateOptions options)
+			throws DataAccessException;
 
 	/**
 	 *
-	 * Creates a new document from the given document, unless there is already a
-	 * document with the _key given. If no _key is given, a new unique _key is
-	 * generated automatically.
+	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
 	 *
-	 * @param collectionName Name of the collection in which the new document should
-	 *                       be inserted
-	 * @param value          A representation of a single document
+	 * @param collectionName
+	 *            Name of the collection in which the new document should be inserted
+	 * @param value
+	 *            A representation of a single document
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
@@ -405,47 +456,52 @@ public interface ArangoOperations {
 	}
 
 	/**
-	 * Creates a new document from the given document, unless there is already a
-	 * document with the id given. In that case it updates or replaces the document,
-	 * depending on the chosen strategy.
+	 * Creates a new document from the given document, unless there is already a document with the id given. In that
+	 * case it updates or replaces the document, depending on the chosen strategy.
 	 *
 	 * @deprecated use {@link #repsert(Object)} instead
-	 * @param value    A representation of a single document
-	 * @param strategy The strategy to use when not inserting the document
+	 * @param value
+	 *            A representation of a single document
+	 * @param strategy
+	 *            The strategy to use when not inserting the document
 	 * @throws DataAccessException
 	 */
 	@Deprecated
 	<T> void upsert(T value, UpsertStrategy strategy) throws DataAccessException;
 
 	/**
-	 * Creates new documents from the given documents, unless there already exists.
-	 * In that case it updates or replaces the documents, depending on the chosen
-	 * strategy.
+	 * Creates new documents from the given documents, unless there already exists. In that case it updates or replaces
+	 * the documents, depending on the chosen strategy.
 	 *
 	 * @deprecated use {@link #repsert(Iterable)} instead
-	 * @param value    A List of documents
-	 * @param strategy The strategy to use when not inserting the document
+	 * @param value
+	 *            A List of documents
+	 * @param strategy
+	 *            The strategy to use when not inserting the document
 	 * @throws DataAccessException
 	 */
 	@Deprecated
 	<T> void upsert(Iterable<T> value, UpsertStrategy strategy) throws DataAccessException;
 
 	/**
-	 * Creates a new document from the given document, unless there is already a
-	 * document with the id given. In that case it replaces the document.
+	 * Creates a new document from the given document, unless there is already a document with the id given. In that
+	 * case it replaces the document.
 	 *
-	 * @param value A representation of a single document
+	 * @param value
+	 *            A representation of a single document
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
 	<T> void repsert(T value) throws DataAccessException;
 
 	/**
-	 * Creates new documents from the given documents, unless there already exists.
-	 * In that case it replaces the documents.
+	 * Creates new documents from the given documents, unless there already exists. In that case it replaces the
+	 * documents.
 	 *
-	 * @param value       A List of documents
-	 * @param entityClass The entity class which represents the collection
+	 * @param value
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
@@ -454,8 +510,10 @@ public interface ArangoOperations {
 	/**
 	 * Checks whether the document exists by reading a single document head
 	 *
-	 * @param id          The id or key of the document
-	 * @param entityClass The entity type representing the collection
+	 * @param id
+	 *            The id or key of the document
+	 * @param entityClass
+	 *            The entity type representing the collection
 	 * @return true if the document exists, false if not
 	 * @throws DataAccessException
 	 */
@@ -469,48 +527,51 @@ public interface ArangoOperations {
 	void dropDatabase() throws DataAccessException;
 
 	/**
-	 * Returns the operations interface for a collection. If the collection does not
-	 * exists, it is created automatically.
+	 * Returns the operations interface for a collection. If the collection does not exists, it is created
+	 * automatically.
 	 *
-	 * @param entityClass The entity type representing the collection
+	 * @param entityClass
+	 *            The entity type representing the collection
 	 * @return {@link CollectionOperations}
 	 * @throws DataAccessException
 	 */
 	CollectionOperations collection(Class<?> entityClass) throws DataAccessException;
 
 	/**
-	 * Returns the operations interface for a collection. If the collection does not
-	 * exists, it is created automatically.
+	 * Returns the operations interface for a collection. If the collection does not exists, it is created
+	 * automatically.
 	 *
-	 * @param name The name of the collection
+	 * @param name
+	 *            The name of the collection
 	 * @return {@link CollectionOperations}
 	 * @throws DataAccessException
 	 */
 	CollectionOperations collection(String name) throws DataAccessException;
 
 	/**
-	 * Returns the operations interface for a collection. If the collection does not
-	 * exists, it is created automatically.
+	 * Returns the operations interface for a collection. If the collection does not exists, it is created
+	 * automatically.
 	 *
-	 * @param name    The name of the collection
-	 * @param options Additional options for collection creation, can be null
+	 * @param name
+	 *            The name of the collection
+	 * @param options
+	 *            Additional options for collection creation, can be null
 	 * @return {@link CollectionOperations}
 	 * @throws DataAccessException
 	 */
 	CollectionOperations collection(String name, CollectionCreateOptions options) throws DataAccessException;
 
 	/**
-	 * Return the operations interface for a user. The user is not created
-	 * automatically if it does not exists.
+	 * Return the operations interface for a user. The user is not created automatically if it does not exists.
 	 *
-	 * @param username The name of the user
+	 * @param username
+	 *            The name of the user
 	 * @return {@link UserOperations}
 	 */
 	UserOperations user(String username);
 
 	/**
-	 * Fetches data about all users. You can only execute this call if you have
-	 * access to the _system database.
+	 * Fetches data about all users. You can only execute this call if you have access to the _system database.
 	 *
 	 * @return informations about all users
 	 * @throws DataAccessException
