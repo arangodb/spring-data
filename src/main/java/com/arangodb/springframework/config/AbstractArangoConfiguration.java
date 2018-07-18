@@ -20,7 +20,9 @@
 
 package com.arangodb.springframework.config;
 
+import java.lang.annotation.Annotation;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
@@ -30,14 +32,24 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 
 import com.arangodb.ArangoDB;
+import com.arangodb.ArangoDBException;
+import com.arangodb.springframework.annotation.From;
+import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
+import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.ArangoCustomConversions;
 import com.arangodb.springframework.core.convert.ArangoTypeMapper;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
 import com.arangodb.springframework.core.convert.DefaultArangoTypeMapper;
-import com.arangodb.springframework.core.convert.resolver.DefaultResolverFactory;
+import com.arangodb.springframework.core.convert.resolver.FromResolver;
+import com.arangodb.springframework.core.convert.resolver.RefResolver;
+import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
+import com.arangodb.springframework.core.convert.resolver.RelationResolver;
+import com.arangodb.springframework.core.convert.resolver.RelationsResolver;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
+import com.arangodb.springframework.core.convert.resolver.ToResolver;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.template.ArangoTemplate;
 
@@ -97,8 +109,40 @@ public abstract class AbstractArangoConfiguration {
 		return new DefaultArangoTypeMapper(typeKey(), arangoMappingContext());
 	}
 
-	protected ResolverFactory resolverFactory() throws Exception {
-		return new DefaultResolverFactory(arangoTemplate());
+	protected ResolverFactory resolverFactory() {
+		return new ResolverFactory() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public <A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(final A annotation) {
+				ReferenceResolver<A> resolver = null;
+				try {
+					if (annotation instanceof Ref) {
+						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
+					}
+				} catch (final Exception e) {
+					throw new ArangoDBException(e);
+				}
+				return Optional.ofNullable(resolver);
+			}
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final A annotation) {
+				RelationResolver<A> resolver = null;
+				try {
+					if (annotation instanceof From) {
+						resolver = (RelationResolver<A>) new FromResolver(arangoTemplate());
+					} else if (annotation instanceof To) {
+						resolver = (RelationResolver<A>) new ToResolver(arangoTemplate());
+					} else if (annotation instanceof Relations) {
+						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
+					}
+				} catch (final Exception e) {
+					throw new ArangoDBException(e);
+				}
+				return Optional.ofNullable(resolver);
+			}
+		};
 	}
 
 }
