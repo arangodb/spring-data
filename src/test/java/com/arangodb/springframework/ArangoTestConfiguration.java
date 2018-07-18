@@ -20,11 +20,16 @@
 
 package com.arangodb.springframework;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 
 import com.arangodb.ArangoDB;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.AbstractArangoConfiguration;
+import com.arangodb.springframework.core.mapping.CustomMappingTest;
 
 /**
  * 
@@ -46,6 +51,16 @@ public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 	@Override
 	public String database() {
 		return DB;
+	}
+
+	@Override
+	protected Collection<Converter<?, ?>> customConverters() {
+		final Collection<Converter<?, ?>> converters = new ArrayList<>();
+		converters.add(new CustomMappingTest.CustomVPackReadTestConverter());
+		converters.add(new CustomMappingTest.CustomVPackWriteTestConverter());
+		converters.add(new CustomMappingTest.CustomDBEntityReadTestConverter());
+		converters.add(new CustomMappingTest.CustomDBEntityWriteTestConverter());
+		return converters;
 	}
 
 }
