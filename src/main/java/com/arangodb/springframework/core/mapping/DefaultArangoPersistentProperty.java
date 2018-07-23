@@ -31,6 +31,7 @@ import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
 
+import com.arangodb.springframework.annotation.ArangoId;
 import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.FulltextIndexed;
@@ -66,6 +67,11 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	}
 
 	@Override
+	public boolean isArangoIdProperty() {
+		return findAnnotation(ArangoId.class) != null;
+	}
+
+	@Override
 	public boolean isRevProperty() {
 		return findAnnotation(Rev.class) != null;
 	}
@@ -93,7 +99,9 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	public String getFieldName() {
 		final String fieldName;
-		if (isIdProperty()) {
+		if (isArangoIdProperty()) {
+			fieldName = "_id";
+		} else if (isIdProperty()) {
 			fieldName = "_key";
 		} else if (isRevProperty()) {
 			fieldName = "_rev";

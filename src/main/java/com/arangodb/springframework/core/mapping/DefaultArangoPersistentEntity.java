@@ -36,12 +36,15 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.data.mapping.IdentifierAccessor;
+import org.springframework.data.mapping.TargetAwareIdentifierAccessor;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import com.arangodb.entity.CollectionType;
@@ -72,6 +75,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	private String collection;
 	private final StandardEvaluationContext context;
 
+	private ArangoPersistentProperty arangoIdProperty;
 	private ArangoPersistentProperty revProperty;
 	private final Collection<ArangoPersistentProperty> hashIndexedProperties;
 	private final Collection<ArangoPersistentProperty> skiplistIndexedProperties;
@@ -184,6 +188,9 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	@Override
 	public void addPersistentProperty(final ArangoPersistentProperty property) {
 		super.addPersistentProperty(property);
+		if (property.isArangoIdProperty()) {
+			arangoIdProperty = property;
+		}
 		if (property.isRevProperty()) {
 			revProperty = property;
 		}
@@ -192,6 +199,11 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		property.getPersistentIndexed().ifPresent(i -> persistentIndexedProperties.add(property));
 		property.getGeoIndexed().ifPresent(i -> geoIndexedProperties.add(property));
 		property.getFulltextIndexed().ifPresent(i -> fulltextIndexedProperties.add(property));
+	}
+
+	@Override
+	public Optional<ArangoPersistentProperty> getArangoIdProperty() {
+		return Optional.ofNullable(arangoIdProperty);
 	}
 
 	@Override
@@ -278,4 +290,24 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		return (Set<A>) repeatableAnnotationCache.computeIfAbsent(annotationType,
 			it -> AnnotatedElementUtils.findMergedRepeatableAnnotations(getType(), it));
 	}
+
+	private static class AbsentAccessor extends TargetAwareIdentifierAccessor {
+
+		public AbsentAccessor(final Object target) {
+			super(target);
+		}
+
+		@Override
+		@Nullable
+		public Object getIdentifier() {
+			return null;
+		}
+	}
+
+	@Override
+	public IdentifierAccessor getArangoIdAccessor(final Object bean) {
+		return getArangoIdProperty().isPresent() ? new ArangoIdPropertyIdentifierAccessor(this, bean)
+				: new AbsentAccessor(bean);
+	}
+
 }

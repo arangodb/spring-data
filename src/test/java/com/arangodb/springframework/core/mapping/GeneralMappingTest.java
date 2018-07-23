@@ -42,8 +42,10 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.annotation.ArangoId;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Field;
+import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
 import com.arangodb.springframework.testdata.Actor;
 import com.arangodb.springframework.testdata.Movie;
@@ -373,5 +375,39 @@ public class GeneralMappingTest extends AbstractArangoTest {
 		assertThat(findB.isPresent(), is(true));
 		assertThat(findB.get().value, is("testB"));
 		assertThat(findB.get().b, is("testB"));
+	}
+
+	static class ArangoIdOnlyTestEntity {
+		@ArangoId
+		private String id;
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void arangoIdOnly() {
+		final ArangoIdOnlyTestEntity entity = new ArangoIdOnlyTestEntity();
+		template.upsert(entity, UpsertStrategy.UPDATE);
+		assertThat(entity.id, is(notNullValue()));
+		final Optional<ArangoIdOnlyTestEntity> find = template.find(entity.id, ArangoIdOnlyTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().id, is(entity.id));
+	}
+
+	static class ArangoIdAndIdTestEntity {
+		@ArangoId
+		private String arangoId;
+		@Id
+		private String id;
+	}
+
+	@Test
+	public void arangoIdAndId() {
+		final ArangoIdAndIdTestEntity entity = new ArangoIdAndIdTestEntity();
+		entity.arangoId = "arangoIdAndIdTestEntity/test";
+		template.insert(entity);
+		assertThat(entity.arangoId, is("arangoIdAndIdTestEntity/test"));
+		assertThat(entity.id, is("test"));
+		assertThat(template.find(entity.id, ArangoIdAndIdTestEntity.class).isPresent(), is(true));
+		assertThat(template.find(entity.arangoId, ArangoIdAndIdTestEntity.class).isPresent(), is(true));
 	}
 }
