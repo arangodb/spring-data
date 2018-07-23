@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentEntity;
 
 import com.arangodb.model.CollectionCreateOptions;
@@ -44,6 +45,8 @@ public interface ArangoPersistentEntity<T>
 	String getCollection();
 
 	CollectionCreateOptions getCollectionOptions();
+
+	Optional<ArangoPersistentProperty> getArangoIdProperty();
 
 	Optional<ArangoPersistentProperty> getRevProperty();
 
@@ -66,5 +69,7 @@ public interface ArangoPersistentEntity<T>
 	Collection<ArangoPersistentProperty> getGeoIndexedProperties();
 
 	Collection<ArangoPersistentProperty> getFulltextIndexedProperties();
+
+	IdentifierAccessor getArangoIdAccessor(Object bean);
 
 }

@@ -317,8 +317,8 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		exampleCustomer.setNestedCustomer(nested3);
 		final Example<Customer> example = Example.of(exampleCustomer,
 			ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
-					.withIgnorePaths(new String[] { "id", "key", "rev" }).withIgnoreCase("nestedCustomer.name")
-					.withIncludeNullValues()
+					.withIgnorePaths(new String[] { "arangoId", "id", "key", "rev" })
+					.withIgnoreCase("nestedCustomer.name").withIncludeNullValues()
 					.withTransformer("nestedCustomer.age", o -> Optional.of(Integer.valueOf(o.get().toString()) + 1)));
 		final Customer retrieved = repository.findOne(example).get();
 		assertEquals(check, retrieved);

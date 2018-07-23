@@ -557,12 +557,23 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		return insert(collectionName, value, new DocumentCreateOptions());
 	}
 
+	private Object getDocumentKey(final ArangoPersistentEntity<?> entity, final Object value) {
+		Object id = entity.getIdentifierAccessor(value).getIdentifier();
+		if (id == null) {
+			final Object docId = entity.getArangoIdAccessor(value).getIdentifier();
+			if (docId != null) {
+				id = MetadataUtils.determineDocumentKeyFromId((String) docId);
+			}
+		}
+		return id;
+	}
+
 	@Override
 	public <T> void upsert(final T value, final UpsertStrategy strategy) throws DataAccessException {
 		final Class<? extends Object> entityClass = value.getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
 
-		final Object id = entity.getIdentifierAccessor(value).getIdentifier();
+		final Object id = getDocumentKey(entity, value);
 		if (id != null && (!(value instanceof Persistable) || !Persistable.class.cast(value).isNew())) {
 			switch (strategy) {
 			case UPDATE:
@@ -591,7 +602,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final Collection<T> withId = new ArrayList<>();
 		final Collection<T> withoutId = new ArrayList<>();
 		for (final T e : value) {
-			final Object id = entity.getIdentifierAccessor(e).getIdentifier();
+			final Object id = getDocumentKey(entity, e);
 			if (id != null && (!(e instanceof Persistable) || !Persistable.class.cast(e).isNew())) {
 				withId.add(e);
 				continue;
@@ -650,6 +661,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		if (idProperty != null) {
 			accessor.setProperty(idProperty, documentEntity.getKey());
 		}
+		entity.getArangoIdProperty().ifPresent(arangoId -> accessor.setProperty(arangoId, documentEntity.getId()));
 		entity.getRevProperty().ifPresent(rev -> accessor.setProperty(rev, documentEntity.getRev()));
 	}
 

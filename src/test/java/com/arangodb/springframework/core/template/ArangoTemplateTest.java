@@ -180,6 +180,9 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(
 			StreamSupport.stream(customers.spliterator(), false).map((e) -> e.getId()).collect(Collectors.toList()),
 			hasItems(c1.getId(), c2.getId()));
+		for (final Customer customer : customers) {
+			assertThat(customer.getArangoId(), is(notNullValue()));
+		}
 	}
 
 	@Test

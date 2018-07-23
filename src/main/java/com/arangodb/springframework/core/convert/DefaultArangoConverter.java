@@ -624,9 +624,22 @@ public class DefaultArangoConverter implements ArangoConverter {
 			}
 		});
 
+		addKeyIfNecessary(entity, source, sink);
 		addTypeKeyIfNecessary(definedType, source, sink);
 
 		sink.close();
+	}
+
+	private void addKeyIfNecessary(
+		final ArangoPersistentEntity<?> entity,
+		final Object source,
+		final VPackBuilder sink) {
+		if (!entity.hasIdProperty() || entity.getIdentifierAccessor(source).getIdentifier() == null) {
+			final Object id = entity.getArangoIdAccessor(source).getIdentifier();
+			if (id != null) {
+				sink.add(_KEY, MetadataUtils.determineDocumentKeyFromId((String) id));
+			}
+		}
 	}
 
 	private void writeProperty(final Object source, final VPackBuilder sink, final ArangoPersistentProperty property) {
@@ -859,7 +872,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 
 		final Optional<Object> id = Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier());
-		return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key)));
+		if (id.isPresent()) {
+			return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key)));
+		}
+
+		return Optional.ofNullable((String) entity.getArangoIdAccessor(source).getIdentifier());
 	}
 
 	private static Collection<?> asCollection(final Object source) {

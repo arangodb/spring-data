@@ -34,8 +34,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.AbstractArangoTest;
+import com.arangodb.springframework.annotation.ArangoId;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
@@ -317,4 +319,52 @@ public class RefMappingTest extends AbstractArangoTest {
 		}
 	}
 
+	static class ArangoIdOnlyTestEntity {
+		@ArangoId
+		String id;
+		@Ref
+		Collection<ArangoIdOnlyTestEntity> refs;
+	}
+
+	@Test
+	public void arangoIdOnly() {
+		final ArangoIdOnlyTestEntity a = new ArangoIdOnlyTestEntity();
+		final ArangoIdOnlyTestEntity b = new ArangoIdOnlyTestEntity();
+		b.refs = Arrays.asList(a);
+
+		template.insert(a);
+		template.insert(b);
+
+		final Optional<ArangoIdOnlyTestEntity> find = template.find(b.id, ArangoIdOnlyTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		final Collection<ArangoIdOnlyTestEntity> refs = find.get().refs;
+		assertThat(refs.size(), is(1));
+		assertThat(refs.stream().findFirst().get().id, is(a.id));
+	}
+
+	static class ArangoIdAndIdTestEntity {
+		@ArangoId
+		String arangoId;
+		@Id
+		String id;
+		@Ref
+		Collection<ArangoIdAndIdTestEntity> refs;
+	}
+
+	@Test
+	public void arangoIdAndId() {
+		final ArangoIdAndIdTestEntity a = new ArangoIdAndIdTestEntity();
+		final ArangoIdAndIdTestEntity b = new ArangoIdAndIdTestEntity();
+		b.refs = Arrays.asList(a);
+
+		template.insert(a);
+		a.id = null;
+		template.insert(b);
+
+		final Optional<ArangoIdAndIdTestEntity> find = template.find(b.arangoId, ArangoIdAndIdTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		final Collection<ArangoIdAndIdTestEntity> refs = find.get().refs;
+		assertThat(refs.size(), is(1));
+		assertThat(refs.stream().findFirst().get().arangoId, is(a.arangoId));
+	}
 }

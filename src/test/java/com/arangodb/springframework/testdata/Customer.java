@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import org.springframework.data.annotation.Id;
 
+import com.arangodb.springframework.annotation.ArangoId;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.GeoIndexed;
 import com.arangodb.springframework.annotation.Ref;
@@ -37,6 +38,8 @@ import com.arangodb.springframework.annotation.Rev;
 @Document
 public class Customer {
 
+	@ArangoId
+	private String arangoId;
 	@Id
 	private String id;
 	@Rev
@@ -85,6 +88,14 @@ public class Customer {
 		this.surname = surname;
 		this.age = age;
 		this.address = address;
+	}
+
+	public String getArangoId() {
+		return arangoId;
+	}
+
+	public void setArangoId(final String arangoId) {
+		this.arangoId = arangoId;
 	}
 
 	public String getId() {
