@@ -19,9 +19,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - added support for non-String `@Id`s (issue #79)
 - added convenience method `AbstractArangoConfiguration#customConverters()` to add custom converters
 
-### Changes
+### Changed
 
 - save `@Id` fields as `_key` instead of `_id` (issue #78)
+- changed SpEL expression parsing for collection names
+
+  SpEL expressions in `@Document#value`/`@Edge#value` are now parsed whenever the domain entity is accessed. This allows Multi-tenancy on collection level.
 
 ### Fixed
 

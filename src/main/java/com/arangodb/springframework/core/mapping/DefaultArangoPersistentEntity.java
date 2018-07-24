@@ -108,10 +108,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		} else {
 			collectionOptions = new CollectionCreateOptions().type(CollectionType.DOCUMENT);
 		}
-		final Expression expression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
-		if (expression != null) {
-			collection = expression.getValue(context, String.class);
-		}
 	}
 
 	private static CollectionCreateOptions createCollectionOptions(final Document annotation) {
@@ -175,7 +171,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	@Override
 	public String getCollection() {
-		return collection;
+		final Expression expression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
+		return expression != null ? expression.getValue(context, String.class) : collection;
 	}
 
 	@Override

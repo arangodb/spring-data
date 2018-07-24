@@ -23,6 +23,7 @@ package com.arangodb.springframework;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 
@@ -37,6 +38,7 @@ import com.arangodb.springframework.core.mapping.CustomMappingTest;
  * @author Christian Lechner
  */
 @Configuration
+@ComponentScan("com.arangodb.springframework.component")
 @EnableArangoRepositories(basePackages = {
 		"com.arangodb.springframework.repository" }, namedQueriesLocation = "classpath*:arango-named-queries-test.properties")
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
