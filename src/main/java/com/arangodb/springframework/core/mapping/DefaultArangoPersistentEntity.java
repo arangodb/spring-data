@@ -73,6 +73,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private String collection;
+	private final Expression expression;
 	private final StandardEvaluationContext context;
 
 	private ArangoPersistentProperty arangoIdProperty;
@@ -108,10 +109,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		} else {
 			collectionOptions = new CollectionCreateOptions().type(CollectionType.DOCUMENT);
 		}
-		final Expression expression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
-		if (expression != null) {
-			collection = expression.getValue(context, String.class);
-		}
+		expression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
 	}
 
 	private static CollectionCreateOptions createCollectionOptions(final Document annotation) {
@@ -175,7 +173,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	@Override
 	public String getCollection() {
-		return collection;
+		return expression != null ? expression.getValue(context, String.class) : collection;
 	}
 
 	@Override
