@@ -125,18 +125,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 				return db;
 			}
 			db = arango.db(databaseName);
-			try {
-				db.getInfo();
-			} catch (final ArangoDBException e) {
-				if (new Integer(404).equals(e.getResponseCode())) {
-					try {
-						arango.createDatabase(databaseName);
-					} catch (final ArangoDBException e1) {
-						throw translateExceptionIfPossible(e1);
-					}
-				} else {
-					throw translateExceptionIfPossible(e);
-				}
+			if (!db.exists()) {
+				db.create();
 			}
 			database = db;
 			return db;
@@ -169,18 +159,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 		return collectionCache.computeIfAbsent(name, collName -> {
 			final ArangoCollection collection = db().collection(collName);
-			try {
-				collection.getInfo();
-			} catch (final ArangoDBException e) {
-				if (new Integer(404).equals(e.getResponseCode())) {
-					try {
-						db().createCollection(collName, options);
-					} catch (final ArangoDBException e1) {
-						throw translateExceptionIfPossible(e1);
-					}
-				} else {
-					throw translateExceptionIfPossible(e);
-				}
+			if (!collection.exists()) {
+				collection.create(options);
 			}
 			if (persistentEntity != null) {
 				ensureCollectionIndexes(collection(collection), persistentEntity);
