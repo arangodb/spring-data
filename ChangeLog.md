@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - added convenience method `ArangoOperations#query(String, Map<String, Object>, Class)`
 - added support for non-String `@Id`s (issue #79)
 - added convenience method `AbstractArangoConfiguration#customConverters()` to add custom converters
+- added SpEL expression parsing for database names
+
+  SpEL expressions can now be used within `AbstractArangoConfiguration#database()`. This allows Multi-tenancy on database level.
 
 ### Changed
 

@@ -33,10 +33,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.expression.BeanFactoryAccessor;
+import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoCursor;
@@ -81,15 +90,20 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Christian Lechner
  * @author Reşat SABIQ
  */
-public class ArangoTemplate implements ArangoOperations, CollectionCallback {
+public class ArangoTemplate implements ArangoOperations, CollectionCallback, ApplicationContextAware {
+
+	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private volatile ArangoDBVersion version;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final ArangoConverter converter;
 	private final ArangoDB arango;
-	private volatile ArangoDatabase database;
 	private final String databaseName;
-	private final Map<String, ArangoCollection> collectionCache;
+	private final Expression databaseExpression;
+	private final Map<String, ArangoDatabase> databaseCache;
+	private final Map<CollectionCacheKey, CollectionCacheValue> collectionCache;
+
+	private final StandardEvaluationContext context;
 
 	public ArangoTemplate(final ArangoDB arango, final String database) {
 		this(arango, database, null);
@@ -105,32 +119,26 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		this.arango = arango._setCursorInitializer(
 			new com.arangodb.springframework.core.template.ArangoCursorInitializer(converter));
 		this.databaseName = database;
+		this.databaseExpression = PARSER.parseExpression(databaseName, ParserContext.TEMPLATE_EXPRESSION);
 		this.converter = converter;
 		this.exceptionTranslator = exceptionTranslator;
+		this.context = new StandardEvaluationContext();
 		// set concurrency level to 1 as writes are very rare compared to reads
 		collectionCache = new ConcurrentHashMap<>(8, 0.9f, 1);
+		databaseCache = new ConcurrentHashMap<>(8, 0.9f, 1);
 		version = null;
 	}
 
 	private ArangoDatabase db() {
-		// guard against NPE because database can be set to null by dropDatabase() by another thread
-		ArangoDatabase db = database;
-		if (db != null) {
-			return db;
-		}
-		// make sure the database is only created once
-		synchronized (this) {
-			db = database;
-			if (db != null) {
-				return db;
-			}
-			db = arango.db(databaseName);
+		final String key = databaseExpression != null ? databaseExpression.getValue(context, String.class)
+				: databaseName;
+		return databaseCache.computeIfAbsent(key, name -> {
+			final ArangoDatabase db = arango.db(name);
 			if (!db.exists()) {
 				db.create();
 			}
-			database = db;
 			return db;
-		}
+		});
 	}
 
 	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
@@ -157,16 +165,23 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 		final ArangoPersistentEntity<?> persistentEntity,
 		final CollectionCreateOptions options) {
 
-		return collectionCache.computeIfAbsent(name, collName -> {
-			final ArangoCollection collection = db().collection(collName);
-			if (!collection.exists()) {
-				collection.create(options);
-			}
-			if (persistentEntity != null) {
-				ensureCollectionIndexes(collection(collection), persistentEntity);
-			}
-			return collection;
-		});
+		final ArangoDatabase db = db();
+		final Class<?> entityClass = persistentEntity != null ? persistentEntity.getType() : null;
+		final CollectionCacheValue value = collectionCache.computeIfAbsent(new CollectionCacheKey(db.name(), name),
+			key -> {
+				final ArangoCollection collection = db.collection(name);
+				if (!collection.exists()) {
+					collection.create(options);
+				}
+				return new CollectionCacheValue(collection);
+			});
+		final Collection<Class<?>> entities = value.getEntities();
+		final ArangoCollection collection = value.getCollection();
+		if (persistentEntity != null && !entities.contains(entityClass)) {
+			value.addEntityClass(entityClass);
+			ensureCollectionIndexes(collection(collection), persistentEntity);
+		}
+		return collection;
 	}
 
 	private static void ensureCollectionIndexes(
@@ -656,18 +671,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 
 	@Override
 	public void dropDatabase() throws DataAccessException {
-		// guard against NPE because another thread could also call dropDatabase()
-		ArangoDatabase db = database;
-		if (db == null) {
-			db = arango.db(databaseName);
-		}
+		final ArangoDatabase db = db();
 		try {
 			db.drop();
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
-		database = null;
-		collectionCache.clear();
+		databaseCache.remove(db.name());
+		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.name()))
+				.forEach(key -> collectionCache.remove(key));
 	}
 
 	@Override
@@ -707,6 +719,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback {
 	@Override
 	public ArangoConverter getConverter() {
 		return this.converter;
+	}
+
+	@Override
+	public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+		context.setRootObject(applicationContext);
+		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
+		context.addPropertyAccessor(new BeanFactoryAccessor());
 	}
 
 }
