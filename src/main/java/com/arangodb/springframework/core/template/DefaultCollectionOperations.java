@@ -45,11 +45,12 @@ import com.arangodb.springframework.core.CollectionOperations;
 public class DefaultCollectionOperations implements CollectionOperations {
 
 	private final ArangoCollection collection;
-	private final Map<String, ArangoCollection> collectionCache;
+	private final Map<CollectionCacheKey, CollectionCacheValue> collectionCache;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 
 	protected DefaultCollectionOperations(final ArangoCollection collection,
-		final Map<String, ArangoCollection> collectionCache, final PersistenceExceptionTranslator exceptionTranslator) {
+		final Map<CollectionCacheKey, CollectionCacheValue> collectionCache,
+		final PersistenceExceptionTranslator exceptionTranslator) {
 		this.collection = collection;
 		this.collectionCache = collectionCache;
 		this.exceptionTranslator = exceptionTranslator;
@@ -66,7 +67,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 
 	@Override
 	public void drop() throws DataAccessException {
-		collectionCache.remove(collection.name());
+		collectionCache.remove(new CollectionCacheKey(collection.db().name(), collection.name()));
 		try {
 			collection.drop();
 		} catch (final ArangoDBException e) {

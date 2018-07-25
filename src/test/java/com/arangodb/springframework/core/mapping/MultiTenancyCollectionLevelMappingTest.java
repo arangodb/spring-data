@@ -35,7 +35,7 @@ import com.arangodb.springframework.component.TenantProvider;
  * @author Mark Vollmary
  *
  */
-public class MultiTenancyMappingTest extends AbstractArangoTest {
+public class MultiTenancyCollectionLevelMappingTest extends AbstractArangoTest {
 
 	@Document("#{tenantProvider.getId()}_collection")
 	static class MultiTenancyTestEntity {
