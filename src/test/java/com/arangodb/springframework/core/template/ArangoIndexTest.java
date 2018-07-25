@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import com.arangodb.entity.IndexType;
 import com.arangodb.springframework.AbstractArangoTest;
+import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.FulltextIndex;
 import com.arangodb.springframework.annotation.FulltextIndexed;
 import com.arangodb.springframework.annotation.FulltextIndexes;
@@ -557,6 +558,32 @@ public class ArangoIndexTest extends AbstractArangoTest {
 					.collect(Collectors.toList()),
 			hasItems(IndexType.primary, IndexType.hash, IndexType.skiplist, IndexType.persistent, geo1(),
 				IndexType.fulltext));
+	}
+
+	@Document("TwoEntityCollectionWithAdditionalIndexesCollection")
+	@HashIndex(fields = "a")
+	static class TwoEntityCollectionWithAdditionalIndexesTestEntity1 {
+
+	}
+
+	@Document("TwoEntityCollectionWithAdditionalIndexesCollection")
+	@HashIndex(fields = "b")
+	@SkiplistIndex(fields = "a")
+	static class TwoEntityCollectionWithAdditionalIndexesTestEntity2 {
+
+	}
+
+	@Test
+	public void twoEntityCollectionWithAdditionalIndexes() {
+		// one primary + one hash index
+		assertThat(template.collection(TwoEntityCollectionWithAdditionalIndexesTestEntity1.class).getIndexes().size(),
+			is(1 + 1));
+		// one primary + two hash + one skiplist index
+		assertThat(template.collection(TwoEntityCollectionWithAdditionalIndexesTestEntity2.class).getIndexes().size(),
+			is(1 + 3));
+		// one primary + two hash + one skiplist index
+		assertThat(template.collection(TwoEntityCollectionWithAdditionalIndexesTestEntity1.class).getIndexes().size(),
+			is(1 + 3));
 	}
 
 }
