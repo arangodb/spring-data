@@ -36,7 +36,7 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 
 /**
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -50,19 +50,16 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 
 	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
 		super(method, operations);
-		this.tree = new PartTree(method.getName(), this.domainClass);
-		this.context = operations.getConverter().getMappingContext();
-		this.geoFields = getGeoFields();
+		tree = new PartTree(method.getName(), domainClass);
+		context = operations.getConverter().getMappingContext();
+		geoFields = getGeoFields();
 	}
 
 	@Override
-	protected String createQuery(
-		final ArangoParameterAccessor accessor,
-		final Map<String, Object> bindVars,
-		final AqlQueryOptions options) {
+	protected String createQuery(final ArangoParameterAccessor accessor, final Map<String, Object> bindVars,
+			final AqlQueryOptions options) {
 
-		return new DerivedQueryCreator(context, domainClass, tree, accessor, bindVars, geoFields,
-				operations.getVersion().getVersion().compareTo("3.2.0") < 0).createQuery();
+		return new DerivedQueryCreator(context, domainClass, tree, accessor, bindVars, geoFields).createQuery();
 	}
 
 	@Override
