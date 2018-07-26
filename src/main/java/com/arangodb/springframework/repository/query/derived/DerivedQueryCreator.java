@@ -26,7 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -80,6 +79,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private final Map<String, Object> bindVars;
 	private final ArangoParameterAccessor accessor;
 	private final List<String> geoFields;
+	private final Set<String> with;
+
 	private Point uniquePoint = null;
 	private String uniqueLocation = null;
 	private Boolean isUnique = null;
@@ -98,25 +99,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		this.bindVars = bindVars;
 		this.accessor = accessor;
 		this.geoFields = geoFields;
-	}
-
-	private static String collectionName(final String collection) {
-		return collection.contains("-") ? "`" + collection + "`" : collection;
-	}
-
-	public String getCollectionName() {
-		return collectionName;
-	}
-
-	public List<String> getGeoFields() {
-		return geoFields;
-	}
-
-	public double[] getUniquePoint() {
-		if (uniquePoint == null) {
-			return new double[2];
-		}
-		return new double[] { uniquePoint.getY(), uniquePoint.getX() };
+		with = new HashSet<>();
 	}
 
 	@Override
@@ -149,9 +132,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}
 		final StringBuilder query = new StringBuilder();
 
-		final String with = criteria.getWith().stream()
-				.map(c -> collectionName(context.getPersistentEntity(c).getCollection())).distinct()
-				.collect(Collectors.joining(", "));
+		final String with = this.with.stream().collect(Collectors.joining(", "));
 		if (!with.isEmpty()) {
 			query.append("WITH ").append(with).append(" ");
 		}
@@ -207,6 +188,17 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}
 
 		return query.toString();
+	}
+
+	private static String collectionName(final String collection) {
+		return collection.contains("-") ? "`" + collection + "`" : collection;
+	}
+
+	public double[] getUniquePoint() {
+		if (uniquePoint == null) {
+			return new double[2];
+		}
+		return new double[] { uniquePoint.getY(), uniquePoint.getX() };
 	}
 
 	/**
@@ -562,6 +554,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		final String template = templateAndProperty[0];
 		final String property = templateAndProperty[1];
 		String clause = null;
+		final Criteria criteria = null;
 		int arguments = 0;
 		Boolean borderStatus = null;
 		boolean ignoreBindVars = false;
@@ -574,6 +567,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:
+			// final BindParemeterProvider p = new BindParemeterProvider(part, iterator);
+			// criteria = Criteria.eql(ignorePropertyCase(part, property), p.next());
 			clause = format("%s == @%d", ignorePropertyCase(part, property), bindingCounter);
 			arguments = 1;
 			break;
@@ -681,9 +676,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(isUnique == null || isUnique, "Distance is ambiguous for multiple locations");
 		}
+		final int bindings;
 		final ArgumentProcessingResult result = bindArguments(iterator, shouldIgnoreCase(part), arguments, borderStatus,
 				ignoreBindVars);
-		final int bindings = result.bindings;
+		bindings = result.bindings;
 		switch (result.type) {
 		case RANGE:
 			checkUniqueLocation(part);
@@ -707,16 +703,24 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			break;
 		}
 		bindingCounter += bindings;
+
 		if (!template.isEmpty()) {
 			clause = format(template, clause);
 		}
-		final Set<Class<?>> with = new HashSet<>();
-		PropertyPath pp = part.getProperty();
-		do {
-			Optional.ofNullable(pp.isCollection() ? pp.getTypeInformation().getComponentType() : pp.getTypeInformation())
-					.filter(t -> context.getPersistentEntity(t) != null).map(t -> t.getType()).ifPresent(t -> with.add(t));
-		} while ((pp = pp.next()) != null);
-		return clause == null ? null : new Criteria(clause, with);
+		bindCollections(part.getProperty());
+		return criteria != null ? criteria : clause == null ? null : new Criteria(clause);
+	}
+
+	private void bindCollections(final PropertyPath propertyPath) {
+		propertyPath.stream().map(property -> {
+			return property.isCollection() ? property.getTypeInformation().getComponentType() : property.getTypeInformation();
+		}).map(type -> {
+			return context.getPersistentEntity(type);
+		}).filter(entity -> {
+			return entity != null;
+		}).map(entity -> {
+			return collectionName(entity.getCollection());
+		}).forEach(with::add);
 	}
 
 	private String format(final String format, final Object... args) {
@@ -741,4 +745,31 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			DEFAULT, RANGE, BOX, POLYGON
 		}
 	}
+
+	// private class BindParemeterProvider implements Iterator<Integer> {
+	//
+	// private final Iterator<Object> parameters;
+	// private final Part part;
+	//
+	// public BindParemeterProvider(final Part part, final Iterator<Object>
+	// parameters) {
+	// super();
+	// this.part = part;
+	// this.parameters = parameters;
+	// }
+	//
+	// @Override
+	// public boolean hasNext() {
+	// return parameters.hasNext();
+	// }
+	//
+	// @Override
+	// public Integer next() {
+	// final ArgumentProcessingResult result = bindArguments(parameters,
+	// shouldIgnoreCase(part), 1, null, false);
+	// bindingCounter += result.bindings;
+	// return bindingCounter - result.bindings;
+	// }
+	//
+	// }
 }

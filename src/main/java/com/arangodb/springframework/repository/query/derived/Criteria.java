@@ -3,10 +3,6 @@
  */
 package com.arangodb.springframework.repository.query.derived;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * @author Mark
  *
@@ -17,23 +13,17 @@ public class Criteria {
 	private static final String OR_DELIMITER = " OR ";
 
 	private final StringBuilder predicate;
-	private final Set<Class<?>> with;
 
 	public Criteria() {
-		this("", new HashSet<>());
+		this("");
 	}
 
-	public Criteria(final String predicate, final Set<Class<?>> with) {
+	public Criteria(final String predicate) {
 		this.predicate = new StringBuilder(predicate);
-		this.with = with;
 	}
 
 	public String getPredicate() {
 		return predicate.toString();
-	}
-
-	public Collection<Class<?>> getWith() {
-		return with;
 	}
 
 	public Criteria and(final Criteria criteria) {
@@ -52,8 +42,11 @@ public class Criteria {
 			predicate.append(delimiter);
 		}
 		predicate.append(criteria.predicate);
-		with.addAll(criteria.with);
 		return this;
+	}
+
+	public static Criteria eql(final String path, final int index) {
+		return new Criteria(path + " == @" + index);
 	}
 
 }
