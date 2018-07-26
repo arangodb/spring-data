@@ -21,10 +21,11 @@
 package com.arangodb.springframework.core.convert.resolver;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.util.TypeInformation;
 
-import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.util.MapBuilder;
@@ -56,17 +57,25 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	@Override
 	public Object resolve(final String id, final TypeInformation<?> type, final Relations annotation) {
-		final Class<?> t = getNonNullComponentType(type).getType();
-		return template.query(
-			"WITH @@vertex FOR v IN " + Math.max(1, annotation.minDepth()) + ".." + Math.max(1, annotation.maxDepth())
-					+ " " + annotation.direction()
-					+ " @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v",
-			new MapBuilder().put("start", id)
-					.put("@edges",
-						Arrays.asList(annotation.edges()).stream().map((e) -> template.collection(e).name())
-								.reduce((a, b) -> a + ", " + b).get())
-					.put("@vertex", t).get(),
-			new AqlQueryOptions(), t).asListRemaining();
+		final Class<?> compType = getNonNullComponentType(type).getType();
+
+		final String query = String.format(
+			"WITH @@vertex FOR v IN %d .. %d %s @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v", //
+			Math.max(1, annotation.minDepth()), //
+			Math.max(1, annotation.maxDepth()), //
+			annotation.direction());
+
+		final String edges = Arrays.stream(annotation.edges()).map(e -> template.collection(e).name())
+				.collect(Collectors.joining(","));
+
+		final Map<String, Object> bindVars = new MapBuilder()//
+				.put("start", id) //
+				.put("@vertex", compType) //
+				.put("@edges", edges) //
+				.get();
+
+		return template.query(query, bindVars, compType).asListRemaining();
+
 	}
 
 }
