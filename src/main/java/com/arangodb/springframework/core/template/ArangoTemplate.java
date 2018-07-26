@@ -312,7 +312,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars, final Class<T> entityClass)
 			throws DataAccessException {
-		return db().query(query, bindVars, null, entityClass);
+		return db().query(query, bindVars == null ? null : prepareBindVars(bindVars), null, entityClass);
 	}
 
 	@Override
