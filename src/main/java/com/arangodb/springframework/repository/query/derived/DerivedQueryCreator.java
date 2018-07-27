@@ -79,7 +79,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private final Map<String, Object> bindVars;
 	private final ArangoParameterAccessor accessor;
 	private final List<String> geoFields;
-	private final Set<String> with;
+	private final Set<String> withCollections;
 
 	private Point uniquePoint = null;
 	private String uniqueLocation = null;
@@ -99,7 +99,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		this.bindVars = bindVars;
 		this.accessor = accessor;
 		this.geoFields = geoFields;
-		with = new HashSet<>();
+		withCollections = new HashSet<>();
 	}
 
 	@Override
@@ -132,7 +132,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}
 		final StringBuilder query = new StringBuilder();
 
-		final String with = this.with.stream().collect(Collectors.joining(", "));
+		final String with = withCollections.stream().collect(Collectors.joining(", "));
 		if (!with.isEmpty()) {
 			query.append("WITH ").append(with).append(" ");
 		}
@@ -541,145 +541,115 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		uniqueLocation = ignorePropertyCase(part);
 	}
 
-	/**
-	 * Creates a PartInformation containing a String representing either a predicate
-	 * or array expression, and binds arguments from Iterator for a given Part
-	 *
-	 * @param part
-	 * @param iterator
-	 * @return
-	 */
 	private Criteria createCriteria(final Part part, final Iterator<Object> iterator) {
 		final String[] templateAndProperty = createPredicateTemplateAndPropertyString(part);
 		final String template = templateAndProperty[0];
 		final String property = templateAndProperty[1];
 		String clause = null;
-		final Criteria criteria = null;
-		int arguments = 0;
+		Criteria criteria = null;
 		Boolean borderStatus = null;
 		boolean ignoreBindVars = false;
 		checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
-		final Class<?> type = part.getProperty().getLeafProperty().getOwningType().getType();
-		final ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(type);
-		String collectionName = persistentEntity == null ? this.collectionName : persistentEntity.getCollection();
-		if (collectionName.split("-").length > 1) {
-			collectionName = "`" + collectionName + "`";
-		}
+		int index = bindingCounter;
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:
-			// final BindParemeterProvider p = new BindParemeterProvider(part, iterator);
-			// criteria = Criteria.eql(ignorePropertyCase(part, property), p.next());
-			clause = format("%s == @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.eql(ignorePropertyCase(part, property), index++);
 			break;
 		case NEGATING_SIMPLE_PROPERTY:
-			clause = format("%s != @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.neql(ignorePropertyCase(part, property), index++);
 			break;
 		case TRUE:
-			clause = format("%s == true", ignorePropertyCase(part, property));
+			criteria = Criteria.isTrue(ignorePropertyCase(part, property));
 			break;
 		case FALSE:
-			clause = format("%s == false", ignorePropertyCase(part, property));
+			criteria = Criteria.isFalse(ignorePropertyCase(part, property));
 			break;
 		case IS_NULL:
-			clause = format("%s == null", ignorePropertyCase(part, property));
+			criteria = Criteria.isNull(ignorePropertyCase(part, property));
 			break;
 		case IS_NOT_NULL:
-			clause = format("%s != null", ignorePropertyCase(part, property));
+			criteria = Criteria.isNotNull(ignorePropertyCase(part, property));
 			break;
 		case EXISTS:
-			clause = format("HAS(%s, '%s')", property.substring(0, property.lastIndexOf(".")),
-					property.substring(property.lastIndexOf(".") + 1, property.length()));
+			final String document = property.substring(0, property.lastIndexOf("."));
+			final String attribute = property.substring(property.lastIndexOf(".") + 1, property.length());
+			criteria = Criteria.exists(document, attribute);
 			break;
 		case BEFORE:
 		case LESS_THAN:
-			clause = format("%s < @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.lt(ignorePropertyCase(part, property), index++);
 			break;
 		case AFTER:
 		case GREATER_THAN:
-			clause = format("%s > @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.gt(ignorePropertyCase(part, property), index++);
 			break;
 		case LESS_THAN_EQUAL:
-			clause = format("%s <= @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.lte(ignorePropertyCase(part, property), index++);
 			break;
 		case GREATER_THAN_EQUAL:
-			clause = format("%s >= @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.gte(ignorePropertyCase(part, property), index++);
 			break;
 		case BETWEEN:
-			clause = format("@%d <= %s AND %s <= @%d", bindingCounter, ignorePropertyCase(part, property),
-					ignorePropertyCase(part, property), bindingCounter + 1);
-			arguments = 2;
+			criteria = Criteria.gte(ignorePropertyCase(part, property), index++)
+					.and(Criteria.lte(ignorePropertyCase(part, property), index++));
 			break;
 		case LIKE:
-			clause = format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.like(ignorePropertyCase(part, property), index++);
 			break;
 		case NOT_LIKE:
-			clause = format("NOT(%s LIKE @%d)", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.notLike(ignorePropertyCase(part, property), index++);
 			break;
 		case STARTING_WITH:
-			clause = format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.like(ignorePropertyCase(part, property), index++);
 			borderStatus = true;
 			break;
 		case ENDING_WITH:
-			clause = format("%s LIKE @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.like(ignorePropertyCase(part, property), index++);
 			borderStatus = false;
 			break;
 		case REGEX:
-			clause = format("REGEX_TEST(%s, @%d, %b)", ignorePropertyCase(part, property), bindingCounter,
-					shouldIgnoreCase(part));
-			arguments = 1;
+			criteria = Criteria.regex(ignorePropertyCase(part, property), index++, shouldIgnoreCase(part));
 			break;
 		case IN:
-			clause = format("%s IN @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.in(ignorePropertyCase(part, property), index++);
 			break;
 		case NOT_IN:
-			clause = format("%s NOT IN @%d", ignorePropertyCase(part, property), bindingCounter);
-			arguments = 1;
+			criteria = Criteria.nin(ignorePropertyCase(part, property), index++);
 			break;
 		case CONTAINING:
 			if (part.getProperty().getTypeInformation().isCollectionLike()) {
-				clause = format("@%d IN %s", bindingCounter, ignorePropertyCase(part, property));
+				criteria = Criteria.in(index++, ignorePropertyCase(part, property));
 			} else {
-				clause = format("CONTAINS(%s, @%d)", ignorePropertyCase(part, property), bindingCounter);
+				criteria = Criteria.contains(ignorePropertyCase(part, property), index++);
 			}
-			arguments = 1;
 			break;
 		case NOT_CONTAINING:
-			clause = format("@%d NOT IN %s", bindingCounter, ignorePropertyCase(part, property));
-			arguments = 1;
+			criteria = Criteria.nin(index++, ignorePropertyCase(part, property));
 			break;
 		case NEAR:
 			checkUniqueLocation(part);
 			ignoreBindVars = true;
-			arguments = 1;
+			index++;
 			break;
 		case WITHIN:
 			checkUniqueLocation(part);
-			clause = format("distance(%s[0], %s[1], @%d, @%d) <= @%d", ignorePropertyCase(part, property),
-					ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1, bindingCounter + 2);
-			arguments = 2;
+			criteria = Criteria.distance(ignorePropertyCase(part, property), index++, index++, index);
 			break;
 		default:
-			Assert.isTrue(false, format("Part.Type \"%s\" not supported", part.getType().toString()));
-			break;
+			throw new IllegalArgumentException(format("Part.Type \"%s\" not supported", part.getType().toString()));
 		}
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(isUnique == null || isUnique, "Distance is ambiguous for multiple locations");
 		}
 		final int bindings;
-		final ArgumentProcessingResult result = bindArguments(iterator, shouldIgnoreCase(part), arguments, borderStatus,
-				ignoreBindVars);
+		final ArgumentProcessingResult result = bindArguments(iterator, shouldIgnoreCase(part), index - bindingCounter,
+				borderStatus, ignoreBindVars);
 		bindings = result.bindings;
+
+		if (criteria != null) {
+			clause = criteria.getPredicate();
+		}
+
 		switch (result.type) {
 		case RANGE:
 			checkUniqueLocation(part);
@@ -707,6 +677,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		if (!template.isEmpty()) {
 			clause = format(template, clause);
 		}
+		if (criteria != null) {
+			criteria = new Criteria(clause);
+		}
 		bindCollections(part.getProperty());
 		return criteria != null ? criteria : clause == null ? null : new Criteria(clause);
 	}
@@ -720,7 +693,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			return entity != null;
 		}).map(entity -> {
 			return collectionName(entity.getCollection());
-		}).forEach(with::add);
+		}).forEach(withCollections::add);
 	}
 
 	private String format(final String format, final Object... args) {
@@ -746,30 +719,4 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}
 	}
 
-	// private class BindParemeterProvider implements Iterator<Integer> {
-	//
-	// private final Iterator<Object> parameters;
-	// private final Part part;
-	//
-	// public BindParemeterProvider(final Part part, final Iterator<Object>
-	// parameters) {
-	// super();
-	// this.part = part;
-	// this.parameters = parameters;
-	// }
-	//
-	// @Override
-	// public boolean hasNext() {
-	// return parameters.hasNext();
-	// }
-	//
-	// @Override
-	// public Integer next() {
-	// final ArgumentProcessingResult result = bindArguments(parameters,
-	// shouldIgnoreCase(part), 1, null, false);
-	// bindingCounter += result.bindings;
-	// return bindingCounter - result.bindings;
-	// }
-	//
-	// }
 }
