@@ -22,7 +22,6 @@ package com.arangodb.springframework.repository.query.derived;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -32,14 +31,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.geo.Box;
-import org.springframework.data.geo.Circle;
-import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
@@ -53,7 +46,6 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
-import com.arangodb.springframework.repository.query.derived.geo.Ring;
 
 /**
  * Creates a full AQL query from a PartTree and ArangoParameterAccessor
@@ -76,7 +68,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final String collectionName;
 	private final PartTree tree;
-	private final Map<String, Object> bindVars;
 	private final ArangoParameterAccessor accessor;
 	private final List<String> geoFields;
 	private final Set<String> withCollections;
@@ -86,7 +77,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private Boolean isUnique = null;
 	private int bindingCounter = 0;
 	private int varsUsed = 0;
-	private boolean checkUnique = false;
+	private final BindParameterBinding binder;
 
 	public DerivedQueryCreator(
 			final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
@@ -96,10 +87,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		this.context = context;
 		collectionName = collectionName(context.getPersistentEntity(domainClass).getCollection());
 		this.tree = tree;
-		this.bindVars = bindVars;
 		this.accessor = accessor;
 		this.geoFields = geoFields;
 		withCollections = new HashSet<>();
+		binder = new BindParameterBinding(bindVars);
 	}
 
 	@Override
@@ -199,23 +190,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			return new double[2];
 		}
 		return new double[] { uniquePoint.getY(), uniquePoint.getX() };
-	}
-
-	/**
-	 * Escapes special characters which could be used in an operand of LIKE operator
-	 *
-	 * @param string
-	 * @return
-	 */
-	private String escapeSpecialCharacters(final String string) {
-		final StringBuilder escaped = new StringBuilder();
-		for (final char character : string.toCharArray()) {
-			if (character == '%' || character == '_' || character == '\\') {
-				escaped.append('\\');
-			}
-			escaped.append(character);
-		}
-		return escaped.toString();
 	}
 
 	private String ignorePropertyCase(final Part part) {
@@ -349,37 +323,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	}
 
 	/**
-	 * Lowers case of a given argument if its type is String, Iterable<String> or
-	 * String[] if shouldIgnoreCase is true
-	 *
-	 * @param argument
-	 * @param shouldIgnoreCase
-	 * @return
-	 */
-	private Object ignoreArgumentCase(final Object argument, final boolean shouldIgnoreCase) {
-		if (!shouldIgnoreCase) {
-			return argument;
-		}
-		if (argument instanceof String) {
-			return ((String) argument).toLowerCase();
-		}
-		final List<String> lowered = new LinkedList<>();
-		if (argument.getClass().isArray()) {
-			final String[] array = (String[]) argument;
-			for (final String string : array) {
-				lowered.add(string.toLowerCase());
-			}
-		} else {
-			@SuppressWarnings("unchecked")
-			final Iterable<String> iterable = (Iterable<String>) argument;
-			for (final Object object : iterable) {
-				lowered.add(((String) object).toLowerCase());
-			}
-		}
-		return lowered;
-	}
-
-	/**
 	 * Determines whether the case for a Part should be ignored based on property
 	 * type and IgnoreCase keywords in the method name
 	 *
@@ -399,103 +342,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	}
 
 	/**
-	 * Puts actual arguments in bindVars Map based on Part-specific information and
-	 * types of arguments.
-	 *
-	 * @param iterator
-	 * @param shouldIgnoreCase
-	 * @param arguments
-	 * @param borderStatus
-	 * @param ignoreBindVars
-	 * @return
-	 */
-	private ArgumentProcessingResult bindArguments(final Iterator<Object> iterator, final boolean shouldIgnoreCase,
-			final int arguments, final Boolean borderStatus, final boolean ignoreBindVars) {
-		int bindings = 0;
-		ArgumentProcessingResult.Type type = ArgumentProcessingResult.Type.DEFAULT;
-		for (int i = 0; i < arguments; ++i) {
-			Assert.isTrue(iterator.hasNext(), "Too few arguments passed");
-			final Object caseAdjusted = ignoreArgumentCase(iterator.next(), shouldIgnoreCase);
-			if (caseAdjusted.getClass() == Polygon.class) {
-				type = ArgumentProcessingResult.Type.POLYGON;
-				final Polygon polygon = (Polygon) caseAdjusted;
-				final List<List<Double>> points = new LinkedList<>();
-				polygon.forEach(p -> {
-					final List<Double> point = new LinkedList<>();
-					point.add(p.getY());
-					point.add(p.getX());
-					points.add(point);
-				});
-				bindVars.put(Integer.toString(bindingCounter + bindings++), points);
-				break;
-			} else if (caseAdjusted.getClass() == Ring.class) {
-				type = ArgumentProcessingResult.Type.RANGE;
-				final Point point = ((Ring<?>) caseAdjusted).getPoint();
-				checkUniquePoint(point);
-				bindVars.put(Integer.toString(bindingCounter + bindings++), point.getY());
-				bindVars.put(Integer.toString(bindingCounter + bindings++), point.getX());
-				final Range<?> range = ((Ring<?>) caseAdjusted).getRange();
-				bindings = bindRange(range, bindings);
-				break;
-			} else if (caseAdjusted.getClass() == Box.class) {
-				type = ArgumentProcessingResult.Type.BOX;
-				final Box box = (Box) caseAdjusted;
-				final Point first = box.getFirst();
-				final Point second = box.getSecond();
-				final double minLatitude = Math.min(first.getY(), second.getY());
-				final double maxLatitude = Math.max(first.getY(), second.getY());
-				final double minLongitude = Math.min(first.getX(), second.getX());
-				final double maxLongitude = Math.max(first.getX(), second.getX());
-				bindVars.put(Integer.toString(bindingCounter + bindings++), minLatitude);
-				bindVars.put(Integer.toString(bindingCounter + bindings++), maxLatitude);
-				bindVars.put(Integer.toString(bindingCounter + bindings++), minLongitude);
-				bindVars.put(Integer.toString(bindingCounter + bindings++), maxLongitude);
-				break;
-			} else if (caseAdjusted.getClass() == Circle.class) {
-				final Circle circle = (Circle) caseAdjusted;
-				checkUniquePoint(circle.getCenter());
-				bindVars.put(Integer.toString(bindingCounter + bindings++), circle.getCenter().getY());
-				bindVars.put(Integer.toString(bindingCounter + bindings++), circle.getCenter().getX());
-				bindVars.put(Integer.toString(bindingCounter + bindings++), convertDistanceToMeters(circle.getRadius()));
-				break;
-			} else if (caseAdjusted.getClass() == Point.class) {
-				final Point point = (Point) caseAdjusted;
-				checkUniquePoint(point);
-				if (ignoreBindVars) {
-					continue;
-				}
-				bindVars.put(Integer.toString(bindingCounter + bindings++), point.getY());
-				bindVars.put(Integer.toString(bindingCounter + bindings++), point.getX());
-			} else if (caseAdjusted.getClass() == Distance.class) {
-				final Distance distance = (Distance) caseAdjusted;
-				bindVars.put(Integer.toString(bindingCounter + bindings++), convertDistanceToMeters(distance));
-			} else if (caseAdjusted.getClass() == Range.class) {
-				type = ArgumentProcessingResult.Type.RANGE;
-				final Range<?> range = (Range<?>) caseAdjusted;
-				bindings = bindRange(range, bindings);
-			} else if (borderStatus != null && borderStatus) {
-				final String string = (String) caseAdjusted;
-				bindVars.put(Integer.toString(bindingCounter + bindings++), escapeSpecialCharacters(string) + "%");
-			} else if (borderStatus != null) {
-				final String string = (String) caseAdjusted;
-				bindVars.put(Integer.toString(bindingCounter + bindings++), "%" + escapeSpecialCharacters(string));
-			} else {
-				bindVars.put(Integer.toString(bindingCounter + bindings++), caseAdjusted);
-			}
-		}
-		return new ArgumentProcessingResult(type, bindings);
-	}
-
-	/**
 	 * Ensures that Points used in geospatial parts of non-nested properties are the
 	 * same in case geospatial return type is expected
 	 *
 	 * @param point
 	 */
 	private void checkUniquePoint(final Point point) {
-		if (!checkUnique) {
-			return;
-		}
 		final boolean isStillUnique = (uniquePoint == null || uniquePoint.equals(point));
 		if (!isStillUnique) {
 			isUnique = false;
@@ -507,22 +359,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}
 	}
 
-	private int bindRange(final Range<?> range, int bindings) {
-		Object lowerBound = range.getLowerBound().getValue().get();
-		Object upperBound = range.getUpperBound().getValue().get();
-		if (lowerBound.getClass() == Distance.class && upperBound.getClass() == lowerBound.getClass()) {
-			lowerBound = convertDistanceToMeters((Distance) lowerBound);
-			upperBound = convertDistanceToMeters((Distance) upperBound);
-		}
-		bindVars.put(Integer.toString(bindingCounter + bindings++), lowerBound);
-		bindVars.put(Integer.toString(bindingCounter + bindings++), upperBound);
-		return bindings;
-	}
-
-	private double convertDistanceToMeters(final Distance distance) {
-		return distance.getNormalizedValue() * Metrics.KILOMETERS.getMultiplier() * 1000;
-	}
-
 	/**
 	 * Ensures that the same geo fields are used in geospatial parts of non-nested
 	 * properties are the same in case geospatial return type is expected
@@ -530,9 +366,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	 * @param part
 	 */
 	private void checkUniqueLocation(final Part part) {
-		if (!checkUnique) {
-			return;
-		}
 		isUnique = isUnique == null ? true : isUnique;
 		isUnique = (uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part))) ? isUnique : false;
 		if (!geoFields.isEmpty()) {
@@ -549,7 +382,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		Criteria criteria = null;
 		Boolean borderStatus = null;
 		boolean ignoreBindVars = false;
-		checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
+		final boolean checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
 		int index = bindingCounter;
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:
@@ -627,13 +460,18 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			criteria = Criteria.nin(index++, ignorePropertyCase(part, property));
 			break;
 		case NEAR:
-			checkUniqueLocation(part);
+			if (checkUnique) {
+				checkUniqueLocation(part);
+			}
 			ignoreBindVars = true;
 			index++;
 			break;
 		case WITHIN:
-			checkUniqueLocation(part);
-			criteria = Criteria.distance(ignorePropertyCase(part, property), index++, index++, index);
+			if (checkUnique) {
+				checkUniqueLocation(part);
+			}
+			criteria = Criteria.lte(Criteria.distance(ignorePropertyCase(part, property), index++, index++).getPredicate(),
+					index);
 			break;
 		default:
 			throw new IllegalArgumentException(format("Part.Type \"%s\" not supported", part.getType().toString()));
@@ -641,39 +479,44 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(isUnique == null || isUnique, "Distance is ambiguous for multiple locations");
 		}
-		final int bindings;
-		final ArgumentProcessingResult result = bindArguments(iterator, shouldIgnoreCase(part), index - bindingCounter,
-				borderStatus, ignoreBindVars);
-		bindings = result.bindings;
-
+		final ArgumentProcessingResult result = binder.bind(iterator, shouldIgnoreCase(part), index - bindingCounter,
+				borderStatus, ignoreBindVars, point -> {
+					checkUniquePoint(point);
+				}, bindingCounter);
+		final int bindings = result.bindings;
 		if (criteria != null) {
 			clause = criteria.getPredicate();
+			criteria = null;
 		}
-
 		switch (result.type) {
 		case RANGE:
-			checkUniqueLocation(part);
-			clause = format("@%d <= distance(%s[0], %s[1], @%d, @%d) AND distance(%s[0], %s[1], @%d, @%d) <= @%d",
-					bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter,
-					bindingCounter + 1, ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter,
-					bindingCounter + 1, bindingCounter + 3);
+			if (checkUnique) {
+				checkUniqueLocation(part);
+			}
+			criteria = Criteria
+					.lte(bindingCounter + 2,
+							Criteria.distance(ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1).getPredicate())
+					.and(Criteria.lte(
+							Criteria.distance(ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1).getPredicate(),
+							bindingCounter + 3));
 			break;
 		case BOX:
-			clause = format("@%d <= %s[0] AND %s[0] <= @%d AND @%d <= %s[1] AND %s[1] <= @%d", bindingCounter,
-					ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter + 1,
-					bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property),
-					bindingCounter + 3);
+			criteria = Criteria.lte(bindingCounter, ignorePropertyCase(part, property) + "[0]")
+					.and(Criteria.lte(ignorePropertyCase(part, property) + "[0]", bindingCounter + 1))
+					.and(Criteria.lte(bindingCounter + 2, ignorePropertyCase(part, property) + "[1]"))
+					.and(Criteria.lte(ignorePropertyCase(part, property) + "[1]", bindingCounter + 3));
 			break;
 		case POLYGON:
-			clause = format("IS_IN_POLYGON(@%d, %s[0], %s[1])", bindingCounter, ignorePropertyCase(part, property),
-					ignorePropertyCase(part, property));
+			criteria = Criteria.isInPolygon(bindingCounter, ignorePropertyCase(part, property));
 			break;
 		case DEFAULT:
 		default:
 			break;
 		}
 		bindingCounter += bindings;
-
+		if (criteria != null) {
+			clause = criteria.getPredicate();
+		}
 		if (!template.isEmpty()) {
 			clause = format(template, clause);
 		}
@@ -704,7 +547,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	 * Stores how many bindings where used in a Part and if or what kind of special
 	 * type clause should be created
 	 */
-	private static class ArgumentProcessingResult {
+	static class ArgumentProcessingResult {
 
 		private final Type type;
 		private final int bindings;
@@ -714,7 +557,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			this.bindings = bindings;
 		}
 
-		private enum Type {
+		enum Type {
 			DEFAULT, RANGE, BOX, POLYGON
 		}
 	}

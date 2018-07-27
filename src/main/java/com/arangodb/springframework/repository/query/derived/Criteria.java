@@ -85,6 +85,10 @@ public class Criteria {
 		return new Criteria(property + " <= @" + index);
 	}
 
+	public static Criteria lte(final int index, final String property) {
+		return new Criteria("@" + index + " <= " + property);
+	}
+
 	public static Criteria gte(final String property, final int index) {
 		return new Criteria(property + " >= @" + index);
 	}
@@ -105,12 +109,12 @@ public class Criteria {
 		return new Criteria(property + " IN @" + index);
 	}
 
-	public static Criteria nin(final String property, final int index) {
-		return new Criteria(property + " NOT IN @" + index);
-	}
-
 	public static Criteria in(final int index, final String property) {
 		return new Criteria("@" + index + " IN " + property);
+	}
+
+	public static Criteria nin(final String property, final int index) {
+		return new Criteria(property + " NOT IN @" + index);
 	}
 
 	public static Criteria nin(final int index, final String property) {
@@ -124,6 +128,14 @@ public class Criteria {
 	public static Criteria distance(final String property, final int indexLat, final int indexLong, final int indexDist) {
 		return new Criteria(
 				"DISTANCE(" + property + "[0], " + property + "[1], @" + indexLat + ", @" + indexLong + ") <= @" + indexDist);
+	}
+
+	public static Criteria distance(final String property, final int indexLat, final int indexLong) {
+		return new Criteria("DISTANCE(" + property + "[0], " + property + "[1], @" + indexLat + ", @" + indexLong + ")");
+	}
+
+	public static Criteria isInPolygon(final int index, final String property) {
+		return new Criteria("IS_IN_POLYGON(@" + index + ", " + property + "[0], " + property + "[1])");
 	}
 
 }
