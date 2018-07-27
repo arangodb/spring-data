@@ -375,10 +375,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	}
 
 	private Criteria createCriteria(final Part part, final Iterator<Object> iterator) {
+		bindCollections(part.getProperty());
 		final String[] templateAndProperty = createPredicateTemplateAndPropertyString(part);
 		final String template = templateAndProperty[0];
 		final String property = templateAndProperty[1];
-		String clause = null;
 		Criteria criteria = null;
 		Boolean borderStatus = null;
 		boolean ignoreBindVars = false;
@@ -483,11 +483,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 				borderStatus, ignoreBindVars, point -> {
 					checkUniquePoint(point);
 				}, bindingCounter);
-		final int bindings = result.bindings;
-		if (criteria != null) {
-			clause = criteria.getPredicate();
-			criteria = null;
-		}
+
 		switch (result.type) {
 		case RANGE:
 			if (checkUnique) {
@@ -513,18 +509,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		default:
 			break;
 		}
-		bindingCounter += bindings;
-		if (criteria != null) {
-			clause = criteria.getPredicate();
-		}
+		bindingCounter += result.bindings;
 		if (!template.isEmpty()) {
-			clause = format(template, clause);
+			criteria = new Criteria(format(template, criteria.getPredicate()));
 		}
-		if (criteria != null) {
-			criteria = new Criteria(clause);
-		}
-		bindCollections(part.getProperty());
-		return criteria != null ? criteria : clause == null ? null : new Criteria(clause);
+		return criteria;
 	}
 
 	private void bindCollections(final PropertyPath propertyPath) {
