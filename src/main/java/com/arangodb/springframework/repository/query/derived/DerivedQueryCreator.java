@@ -151,8 +151,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		String sortString = " " + AqlUtils.buildSortClause(sort, "e");
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
-			final String distanceSortKey = format(" SORT distance(%s, %f, %f)", geoFields, getUniquePoint()[0],
-				getUniquePoint()[1]);
+
+			final String distanceSortKey = " SORT " + Criteria
+					.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1])).getPredicate();
 			if (sort.isUnsorted()) {
 				sortString = distanceSortKey;
 			} else {
@@ -178,9 +179,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			if (this.geoFields.isEmpty()) {
 				query.append("e");
 			} else {
-				// TODO bindVars
-				query.append(format("MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields, getUniquePoint()[0],
-					getUniquePoint()[1]));
+				query.append(format("MERGE(e, { '_distance': %s })",
+					Criteria.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1]))
+							.getPredicate()));
 			}
 		}
 		return query.toString();
