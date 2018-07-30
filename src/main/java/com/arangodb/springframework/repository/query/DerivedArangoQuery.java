@@ -33,6 +33,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.repository.query.derived.BindParameterBinding;
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 
 /**
@@ -56,10 +57,13 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 	}
 
 	@Override
-	protected String createQuery(final ArangoParameterAccessor accessor, final Map<String, Object> bindVars,
-			final AqlQueryOptions options) {
+	protected String createQuery(
+		final ArangoParameterAccessor accessor,
+		final Map<String, Object> bindVars,
+		final AqlQueryOptions options) {
 
-		return new DerivedQueryCreator(context, domainClass, tree, accessor, bindVars, geoFields).createQuery();
+		return new DerivedQueryCreator(context, domainClass, tree, accessor, new BindParameterBinding(bindVars),
+				geoFields).createQuery();
 	}
 
 	@Override

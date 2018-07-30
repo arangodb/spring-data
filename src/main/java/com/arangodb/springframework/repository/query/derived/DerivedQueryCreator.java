@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -76,26 +75,26 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private final ArangoParameterAccessor accessor;
 	private final List<String> geoFields;
 	private final Set<String> withCollections;
+	private final BindParameterBinding binding;
 
 	private Point uniquePoint = null;
 	private String uniqueLocation = null;
 	private Boolean isUnique = null;
 	private int bindingCounter = 0;
 	private int varsUsed = 0;
-	private final BindParameterBinding binder;
 
 	public DerivedQueryCreator(
 		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
 		final Class<?> domainClass, final PartTree tree, final ArangoParameterAccessor accessor,
-		final Map<String, Object> bindVars, final List<String> geoFields) {
+		final BindParameterBinding binder, final List<String> geoFields) {
 		super(tree, accessor);
 		this.context = context;
 		collectionName = collectionName(context.getPersistentEntity(domainClass).getCollection());
 		this.tree = tree;
 		this.accessor = accessor;
 		this.geoFields = geoFields;
+		this.binding = binder;
 		withCollections = new HashSet<>();
-		binder = new BindParameterBinding(bindVars);
 	}
 
 	@Override
@@ -145,8 +144,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			}
 			query.append(" COLLECT WITH COUNT INTO length");
 		}
-
-		final String geoFields = format("%s[0], %s[1]", uniqueLocation, uniqueLocation);
 
 		String sortString = " " + AqlUtils.buildSortClause(sort, "e");
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
@@ -469,7 +466,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			final Object nearValue = iterator.next();
 			final Class<? extends Object> nearClazz = nearValue.getClass();
 			if (nearClazz != Point.class) {
-				bindingCounter = binder.bind(nearValue, shouldIgnoreCase(part), null, point -> checkUniquePoint(point),
+				bindingCounter = binding.bind(nearValue, shouldIgnoreCase(part), null, point -> checkUniquePoint(point),
 					bindingCounter);
 			}
 			criteria = null;
@@ -544,43 +541,43 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 
 	private int bind(final Part part, final Object value, final Boolean borderStatus) {
 		final int index = bindingCounter;
-		bindingCounter = binder.bind(value, shouldIgnoreCase(part), borderStatus, point -> checkUniquePoint(point),
+		bindingCounter = binding.bind(value, shouldIgnoreCase(part), borderStatus, point -> checkUniquePoint(point),
 			bindingCounter);
 		return index;
 	}
 
 	private int bind(final Object value) {
 		final int index = bindingCounter;
-		bindingCounter = binder.bind(value, false, null, point -> checkUniquePoint(point), bindingCounter);
+		bindingCounter = binding.bind(value, false, null, point -> checkUniquePoint(point), bindingCounter);
 		return index;
 	}
 
 	private void bindPoint(final Part part, final Object value) {
-		bindingCounter = binder.bindPoint(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
+		bindingCounter = binding.bindPoint(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
 			bindingCounter);
 	}
 
 	private void bindCircle(final Part part, final Object value) {
-		bindingCounter = binder.bindCircle(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
+		bindingCounter = binding.bindCircle(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
 			bindingCounter);
 	}
 
 	private void bindRange(final Part part, final Object value) {
-		bindingCounter = binder.bindRange(value, shouldIgnoreCase(part), bindingCounter);
+		bindingCounter = binding.bindRange(value, shouldIgnoreCase(part), bindingCounter);
 	}
 
 	private void bindRing(final Part part, final Object value) {
-		bindingCounter = binder.bindRing(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
+		bindingCounter = binding.bindRing(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
 			bindingCounter);
 	}
 
 	private void bindBox(final Part part, final Object value) {
-		bindingCounter = binder.bindBox(value, shouldIgnoreCase(part), bindingCounter);
+		bindingCounter = binding.bindBox(value, shouldIgnoreCase(part), bindingCounter);
 	}
 
 	private int bindPolygon(final Part part, final Object value) {
 		final int index = bindingCounter;
-		bindingCounter = binder.bindPolygon(value, shouldIgnoreCase(part), bindingCounter);
+		bindingCounter = binding.bindPolygon(value, shouldIgnoreCase(part), bindingCounter);
 		return index;
 	}
 
