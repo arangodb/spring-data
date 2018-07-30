@@ -165,7 +165,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 
 		final Pageable pageable = accessor.getPageable();
 		if (pageable != null && pageable.isPaged()) {
-			query.append(" LIMIT ").append(pageable.getOffset()).append(", ").append(pageable.getPageSize());
+			query.append(" ").append(AqlUtils.buildLimitClause(pageable));
 		}
 		if (tree.isDelete()) {
 			query.append(" REMOVE e IN ").append(collectionName);
