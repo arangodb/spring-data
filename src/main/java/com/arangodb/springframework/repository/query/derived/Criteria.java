@@ -7,6 +7,10 @@ package com.arangodb.springframework.repository.query.derived;
  * @author Mark
  *
  */
+/**
+ * @author Mark Vollmary
+ *
+ */
 public class Criteria {
 
 	private static final String AND_DELIMITER = " AND ";
@@ -125,17 +129,18 @@ public class Criteria {
 		return new Criteria("CONTAINS(" + property + ", @" + index + ")");
 	}
 
-	public static Criteria distance(final String property, final int indexLat, final int indexLong, final int indexDist) {
-		return new Criteria(
-				"DISTANCE(" + property + "[0], " + property + "[1], @" + indexLat + ", @" + indexLong + ") <= @" + indexDist);
-	}
-
 	public static Criteria distance(final String property, final int indexLat, final int indexLong) {
-		return new Criteria("DISTANCE(" + property + "[0], " + property + "[1], @" + indexLat + ", @" + indexLong + ")");
+		return new Criteria(
+				"DISTANCE(" + property + "[0], " + property + "[1], @" + indexLat + ", @" + indexLong + ")");
 	}
 
 	public static Criteria isInPolygon(final int index, final String property) {
 		return new Criteria("IS_IN_POLYGON(@" + index + ", " + property + "[0], " + property + "[1])");
+	}
+
+	@Override
+	public String toString() {
+		return predicate.toString();
 	}
 
 }

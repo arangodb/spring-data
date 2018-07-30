@@ -3,7 +3,6 @@
  */
 package com.arangodb.springframework.repository.query.derived;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -15,9 +14,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.util.Assert;
 
-import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator.ArgumentProcessingResult;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
 
 /**
@@ -37,85 +34,65 @@ public class BindParameterBinding {
 		this.bindVars = bindVars;
 	}
 
-	public ArgumentProcessingResult bind(final Iterator<Object> iterator, final boolean shouldIgnoreCase,
-			final int arguments, final Boolean borderStatus, final boolean ignoreBindVars, final UniqueCheck uniqueCheck,
-			final int startIndex) {
+	public int bind(
+		final Object value,
+		final boolean shouldIgnoreCase,
+		final Boolean borderStatus,
+		final UniqueCheck uniqueCheck,
+		final int startIndex) {
 		int index = startIndex;
-		ArgumentProcessingResult.Type type = ArgumentProcessingResult.Type.DEFAULT;
-		for (int i = 0; i < arguments; ++i) {
-			Assert.isTrue(iterator.hasNext(), "Too few arguments passed");
-			final Object caseAdjusted = ignoreArgumentCase(iterator.next(), shouldIgnoreCase);
-			final Class<? extends Object> clazz = caseAdjusted.getClass();
-			if (clazz == Polygon.class) {
-				type = ArgumentProcessingResult.Type.POLYGON;
-				final Polygon polygon = (Polygon) caseAdjusted;
-				final List<List<Double>> points = new LinkedList<>();
-				polygon.forEach(p -> {
-					final List<Double> point = new LinkedList<>();
-					point.add(p.getY());
-					point.add(p.getX());
-					points.add(point);
-				});
-				bind(index++, points);
-				break;
-			} else if (clazz == Ring.class) {
-				type = ArgumentProcessingResult.Type.RANGE;
-				final Point point = ((Ring<?>) caseAdjusted).getPoint();
-				uniqueCheck.check(point);
-				index = bindPoint(index, point);
-				final Range<?> range = ((Ring<?>) caseAdjusted).getRange();
-				index = bindRange(range, index);
-				break;
-			} else if (clazz == Box.class) {
-				type = ArgumentProcessingResult.Type.BOX;
-				index = bindBox(index, (Box) caseAdjusted);
-				break;
-			} else if (clazz == Circle.class) {
-				index = bindCircle(uniqueCheck, index, (Circle) caseAdjusted);
-				break;
-			} else if (clazz == Point.class) {
-				final Point point = (Point) caseAdjusted;
-				uniqueCheck.check(point);
-				if (!ignoreBindVars) {
-					index = bindPoint(index, point);
-				}
-			} else if (clazz == Distance.class) {
-				final Distance distance = (Distance) caseAdjusted;
-				bind(index++, convertDistanceToMeters(distance));
-			} else if (clazz == Range.class) {
-				type = ArgumentProcessingResult.Type.RANGE;
-				index = bindRange((Range<?>) caseAdjusted, index);
-			} else if (borderStatus != null && borderStatus) {
-				bind(index++, escapeSpecialCharacters((String) caseAdjusted) + "%");
-			} else if (borderStatus != null) {
-				bind(index++, "%" + escapeSpecialCharacters((String) caseAdjusted));
-			} else {
-				bind(index++, caseAdjusted);
-			}
+		final Object caseAdjusted = ignoreArgumentCase(value, shouldIgnoreCase);
+		final Class<? extends Object> clazz = caseAdjusted.getClass();
+		if (clazz == Distance.class) {
+			final Distance distance = (Distance) caseAdjusted;
+			bind(index++, convertDistanceToMeters(distance));
+		} else if (borderStatus != null && borderStatus) {
+			bind(index++, escapeSpecialCharacters((String) caseAdjusted) + "%");
+		} else if (borderStatus != null) {
+			bind(index++, "%" + escapeSpecialCharacters((String) caseAdjusted));
+		} else {
+			bind(index++, caseAdjusted);
 		}
-		return new ArgumentProcessingResult(type, index);
-	}
-
-	private void bind(final int index, final Object value) {
-		bindVars.put(Integer.toString(index), value);
-	}
-
-	private int bindPoint(int index, final Point point) {
-		bind(index++, point.getY());
-		bind(index++, point.getX());
 		return index;
 	}
 
-	private int bindCircle(final UniqueCheck uniqueCheck, int index, final Circle circle) {
-		Point center = circle.getCenter();
-		uniqueCheck.check(center);
-		bind(index++, center.getY());
-		bind(index++, center.getX());
-		bind(index++, convertDistanceToMeters(circle.getRadius()));
+	public int bindPolygon(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
+		int index = startIndex;
+		final Polygon polygon = (Polygon) ignoreArgumentCase(value, shouldIgnoreCase);
+		final List<List<Double>> points = new LinkedList<>();
+		polygon.forEach(p -> {
+			final List<Double> point = new LinkedList<>();
+			point.add(p.getY());
+			point.add(p.getX());
+			points.add(point);
+		});
+		bind(index++, points);
 		return index;
 	}
 
-	private int bindBox(int index, final Box box) {
+	public int bindRing(
+		final Object value,
+		final boolean shouldIgnoreCase,
+		final UniqueCheck uniqueCheck,
+		final int startIndex) {
+		int index = startIndex;
+		final Ring<?> ring = (Ring<?>) ignoreArgumentCase(value, shouldIgnoreCase);
+		final Point point = ring.getPoint();
+		index = bindPoint(point, uniqueCheck, index);
+		final Range<?> range = ring.getRange();
+		index = bindRange(range, index);
+		return index;
+	}
+
+	public int bindRange(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
+		final int index = startIndex;
+		final Range<?> range = (Range<?>) ignoreArgumentCase(value, shouldIgnoreCase);
+		return bindRange(range, index);
+	}
+
+	public int bindBox(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
+		int index = startIndex;
+		final Box box = (Box) ignoreArgumentCase(value, shouldIgnoreCase);
 		final Point first = box.getFirst();
 		final Point second = box.getSecond();
 		final double minLatitude = Math.min(first.getY(), second.getY());
@@ -129,6 +106,37 @@ public class BindParameterBinding {
 		return index;
 	}
 
+	public int bindPoint(
+		final Object value,
+		final boolean shouldIgnoreCase,
+		final UniqueCheck uniqueCheck,
+		final int startIndex) {
+		return bindPoint((Point) ignoreArgumentCase(value, shouldIgnoreCase), uniqueCheck, startIndex);
+	}
+
+	private int bindPoint(final Point point, final UniqueCheck uniqueCheck, final int startIndex) {
+		uniqueCheck.check(point);
+		int index = startIndex;
+		bind(index++, point.getY());
+		bind(index++, point.getX());
+		return index;
+	}
+
+	public int bindCircle(
+		final Object value,
+		final boolean shouldIgnoreCase,
+		final UniqueCheck uniqueCheck,
+		final int startIndex) {
+		int index = startIndex;
+		final Circle circle = (Circle) ignoreArgumentCase(value, shouldIgnoreCase);
+		final Point center = circle.getCenter();
+		uniqueCheck.check(center);
+		bind(index++, center.getY());
+		bind(index++, center.getX());
+		bind(index++, convertDistanceToMeters(circle.getRadius()));
+		return index;
+	}
+
 	private int bindRange(final Range<?> range, int index) {
 		Object lowerBound = range.getLowerBound().getValue().get();
 		Object upperBound = range.getUpperBound().getValue().get();
@@ -139,6 +147,10 @@ public class BindParameterBinding {
 		bind(index++, lowerBound);
 		bind(index++, upperBound);
 		return index;
+	}
+
+	private void bind(final int index, final Object value) {
+		bindVars.put(Integer.toString(index), value);
 	}
 
 	private double convertDistanceToMeters(final Distance distance) {
@@ -163,8 +175,7 @@ public class BindParameterBinding {
 	}
 
 	/**
-	 * Lowers case of a given argument if its type is String, Iterable<String> or
-	 * String[] if shouldIgnoreCase is true
+	 * Lowers case of a given argument if its type is String, Iterable<String> or String[] if shouldIgnoreCase is true
 	 *
 	 * @param argument
 	 * @param shouldIgnoreCase
