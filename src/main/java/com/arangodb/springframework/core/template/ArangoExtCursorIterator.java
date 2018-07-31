@@ -20,24 +20,27 @@
 
 package com.arangodb.springframework.core.template;
 
+import org.springframework.context.ApplicationEventPublisher;
+
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
 import com.arangodb.internal.ArangoCursorIterator;
 import com.arangodb.internal.InternalArangoDatabase;
 import com.arangodb.springframework.core.convert.ArangoConverter;
+import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
+import com.arangodb.springframework.core.mapping.event.ArangoMappingEvent;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
+ * 
  * @author Mark Vollmary
  * @author Christian Lechner
- * 
- * @param <T>
- *
  */
 class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 
 	private ArangoConverter converter;
+	private ApplicationEventPublisher eventPublisher;
 
 	protected ArangoExtCursorIterator(final ArangoCursor<T> cursor, final InternalArangoDatabase<?, ?> db,
 		final ArangoCursorExecute execute, final CursorEntity result) {
@@ -48,9 +51,23 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 		this.converter = converter;
 	}
 
+	public void setEventPublisher(final ApplicationEventPublisher eventPublisher) {
+		this.eventPublisher = eventPublisher;
+	}
+
 	@Override
-	protected <R> R deserialize(final VPackSlice result, final Class<R> type) {
-		return converter.read(type, result);
+	protected <R> R deserialize(final VPackSlice source, final Class<R> type) {
+		final R result = converter.read(type, source);
+		if (result != null) {
+			potentiallyEmitEvent(new AfterLoadEvent<R>(result));
+		}
+		return result;
+	}
+
+	private void potentiallyEmitEvent(final ArangoMappingEvent<?> event) {
+		if (eventPublisher != null) {
+			eventPublisher.publishEvent(event);
+		}
 	}
 
 }

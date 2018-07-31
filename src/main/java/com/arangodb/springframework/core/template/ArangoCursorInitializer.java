@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.template;
 
+import org.springframework.context.ApplicationEventPublisher;
+
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
@@ -27,16 +29,22 @@ import com.arangodb.internal.InternalArangoDatabase;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 
 /**
+ * 
  * @author Mark Vollmary
- *
+ * @author Christian Lechner
  */
 class ArangoCursorInitializer implements com.arangodb.util.ArangoCursorInitializer {
 
 	private final ArangoConverter converter;
+	private final ApplicationEventPublisher eventPublisher;
 
 	public ArangoCursorInitializer(final ArangoConverter converter) {
-		super();
+		this(converter, null);
+	}
+
+	public ArangoCursorInitializer(final ArangoConverter converter, final ApplicationEventPublisher eventPublisher) {
 		this.converter = converter;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Override
@@ -45,7 +53,7 @@ class ArangoCursorInitializer implements com.arangodb.util.ArangoCursorInitializ
 		final ArangoCursorExecute execute,
 		final Class<T> type,
 		final CursorEntity result) {
-		return new ArangoExtCursor<>(db, execute, type, result, converter);
+		return new ArangoExtCursor<>(db, execute, type, result, converter, eventPublisher);
 	}
 
 }
