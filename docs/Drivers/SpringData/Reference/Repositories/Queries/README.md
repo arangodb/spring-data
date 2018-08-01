@@ -16,7 +16,13 @@ The method return type for multiple results can additionally be `ArangoCursor<Ty
 
 You can set additional options for the query and the created cursor over the class `AqlQueryOptions` which you can simply define as a method parameter without a specific name. AqlQuery options can also be defined with the `@QueryOptions` annotation, as shown below. Aql query options from an annotation and those from an argument are merged if both exist, with those in the argument taking precedence.
 
-The `AqlQueryOptions` allows you to set the cursor time-to-live, batch-size, caching flag and several other settings. This special parameter works with both [query methods](QueryMethods.md) and [derived queries](DerivedQueries.md). Keep in mind that some options, like time-to-live, are only effective if the method return type is`ArangoCursor<T>` or `Iterable<T>`.
+The `AqlQueryOptions` allows you to set the cursor time-to-live, batch-size,
+caching flag and several other settings. This special parameter works with both
+[query methods](QueryMethods.md)
+and [derived queries](DerivedQueries.md). Keep in mind that some options, like
+time-to-live, are only effective if the method return type is`ArangoCursor<T>`
+or `Iterable<T>`.
+
 
 **Examples**
 
