@@ -6,7 +6,7 @@
 
 - [Getting Started](docs/Drivers/SpringData/GettingStarted/README.md)
 - [Reference](docs/Drivers/SpringData/Reference/README.md)
-- [Migration](Migration/README.md)
+- [Migration](docs/Drivers/SpringData/Migration/README.md)
 
 ## Learn more
 
