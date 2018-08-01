@@ -36,6 +36,7 @@ import java.util.stream.StreamSupport;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.dao.DataAccessException;
@@ -79,6 +80,12 @@ import com.arangodb.springframework.core.UserOperations;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.core.mapping.event.AfterDeleteEvent;
+import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
+import com.arangodb.springframework.core.mapping.event.AfterSaveEvent;
+import com.arangodb.springframework.core.mapping.event.ArangoMappingEvent;
+import com.arangodb.springframework.core.mapping.event.BeforeDeleteEvent;
+import com.arangodb.springframework.core.mapping.event.BeforeSaveEvent;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.springframework.core.util.MetadataUtils;
@@ -105,6 +112,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	private final StandardEvaluationContext context;
 
+	private ApplicationEventPublisher eventPublisher;
+
 	public ArangoTemplate(final ArangoDB arango, final String database) {
 		this(arango, database, null);
 	}
@@ -116,8 +125,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	public ArangoTemplate(final ArangoDB arango, final String database, final ArangoConverter converter,
 		final PersistenceExceptionTranslator exceptionTranslator) {
 		super();
-		this.arango = arango._setCursorInitializer(
-			new com.arangodb.springframework.core.template.ArangoCursorInitializer(converter));
+		this.arango = arango._setCursorInitializer(new ArangoCursorInitializer(converter));
 		this.databaseName = database;
 		this.databaseExpression = PARSER.parseExpression(databaseName, ParserContext.TEMPLATE_EXPRESSION);
 		this.converter = converter;
@@ -271,20 +279,24 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		return MetadataUtils.determineDocumentKeyFromId(converter.convertId(id));
 	}
 
-	private VPackSlice toVPack(final Object value) {
-		return converter.write(value);
+	private VPackSlice toVPack(final Object source) {
+		return converter.write(source);
 	}
 
 	private Collection<VPackSlice> toVPackCollection(final Iterable<?> values) {
-		final Collection<VPackSlice> collection = new ArrayList<>();
+		final Collection<VPackSlice> vpacks = new ArrayList<>();
 		for (final Object value : values) {
-			collection.add(toVPack(value));
+			vpacks.add(toVPack(value));
 		}
-		return collection;
+		return vpacks;
 	}
 
-	private <T> T fromVPack(final Class<T> entityClass, final VPackSlice doc) {
-		return converter.read(entityClass, doc);
+	private <T> T fromVPack(final Class<T> entityClass, final VPackSlice source) {
+		final T result = converter.read(entityClass, source);
+		if (result != null) {
+			potentiallyEmitEvent(new AfterLoadEvent<>(result));
+		}
+		return result;
 	}
 
 	@Override
@@ -306,19 +318,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	@Override
 	public <T> ArangoCursor<T> query(final String query, final Class<T> entityClass) throws DataAccessException {
-		return db().query(query, null, null, entityClass);
+		return query(query, null, null, entityClass);
 	}
 
 	@Override
 	public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars, final Class<T> entityClass)
 			throws DataAccessException {
-		return db().query(query, bindVars == null ? null : prepareBindVars(bindVars), null, entityClass);
+		return query(query, bindVars, null, entityClass);
 	}
 
 	@Override
 	public <T> ArangoCursor<T> query(final String query, final AqlQueryOptions options, final Class<T> entityClass)
 			throws DataAccessException {
-		return db().query(query, null, options, entityClass);
+		return query(query, null, options, entityClass);
 	}
 
 	@Override
@@ -347,11 +359,18 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final Iterable<Object> values,
 		final Class<?> entityClass,
 		final DocumentDeleteOptions options) throws DataAccessException {
+
+		potentiallyEmitBeforeDeleteEvent(values, entityClass);
+
+		MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			return _collection(entityClass).deleteDocuments(toVPackCollection(values), entityClass, options);
+			result = _collection(entityClass).deleteDocuments(toVPackCollection(values), entityClass, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+
+		potentiallyEmitAfterDeleteEvent(values, entityClass, result);
+		return result;
 	}
 
 	@Override
@@ -364,11 +383,18 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public DocumentEntity delete(final Object id, final Class<?> entityClass, final DocumentDeleteOptions options)
 			throws DataAccessException {
+
+		potentiallyEmitEvent(new BeforeDeleteEvent<>(id, entityClass));
+
+		final DocumentEntity result;
 		try {
-			return _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), entityClass, options);
+			result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), entityClass, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+
+		potentiallyEmitEvent(new AfterDeleteEvent<>(id, entityClass));
+		return result;
 	}
 
 	@Override
@@ -381,14 +407,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final Iterable<T> values,
 		final Class<T> entityClass,
 		final DocumentUpdateOptions options) throws DataAccessException {
+
+		potentiallyEmitBeforeSaveEvent(values);
+
+		final MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
-					.updateDocuments(toVPackCollection(values), options);
-			updateDBFields(values, res);
-			return res;
+			result = _collection(entityClass).updateDocuments(toVPackCollection(values), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+
+		updateDBFields(values, result);
+		potentiallyEmitAfterSaveEvent(values, result);
+		return result;
 	}
 
 	@Override
@@ -401,14 +432,20 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public DocumentEntity update(final Object id, final Object value, final DocumentUpdateOptions options)
 			throws DataAccessException {
+
+		potentiallyEmitEvent(new BeforeSaveEvent<>(value));
+
+		final DocumentEntity result;
 		try {
-			final DocumentEntity res = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id),
-				toVPack(value), options);
-			updateDBFields(value, res);
-			return res;
+			result = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id), toVPack(value),
+				options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+
+		updateDBFields(value, result);
+		potentiallyEmitEvent(new AfterSaveEvent<>(value));
+		return result;
 	}
 
 	@Override
@@ -421,14 +458,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final Iterable<T> values,
 		final Class<T> entityClass,
 		final DocumentReplaceOptions options) throws DataAccessException {
+
+		potentiallyEmitBeforeSaveEvent(values);
+
+		final MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
-					.replaceDocuments(toVPackCollection(values), options);
-			updateDBFields(values, res);
-			return res;
+			result = _collection(entityClass).replaceDocuments(toVPackCollection(values), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+
+		updateDBFields(values, result);
+		potentiallyEmitAfterSaveEvent(values, result);
+		return result;
 	}
 
 	@Override
@@ -441,14 +483,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public DocumentEntity replace(final Object id, final Object value, final DocumentReplaceOptions options)
 			throws DataAccessException {
+		potentiallyEmitEvent(new BeforeSaveEvent<>(value));
+
+		final DocumentEntity result;
 		try {
-			final DocumentEntity res = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id),
-				toVPack(value), options);
-			updateDBFields(value, res);
-			return res;
+			result = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id), toVPack(value),
+				options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+
+		updateDBFields(value, result);
+		potentiallyEmitEvent(new AfterSaveEvent<>(value));
+		return result;
 	}
 
 	@Override
@@ -476,10 +523,11 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public <T> Iterable<T> findAll(final Class<T> entityClass) throws DataAccessException {
 		final String query = "FOR entity IN @@col RETURN entity";
+		final Map<String, Object> bindVars = new MapBuilder().put("@col", entityClass).get();
 		return new Iterable<T>() {
 			@Override
 			public Iterator<T> iterator() {
-				return query(query, new MapBuilder().put("@col", entityClass).get(), null, entityClass);
+				return query(query, bindVars, null, entityClass);
 			}
 		};
 	}
@@ -502,14 +550,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final Iterable<T> values,
 		final Class<T> entityClass,
 		final DocumentCreateOptions options) throws DataAccessException {
+
+		potentiallyEmitBeforeSaveEvent(values);
+
+		final MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			final MultiDocumentEntity<? extends DocumentEntity> res = _collection(entityClass)
-					.insertDocuments(toVPackCollection(values), options);
-			updateDBFields(values, res);
-			return res;
+			result = _collection(entityClass).insertDocuments(toVPackCollection(values), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
+
+		updateDBFields(values, result);
+		potentiallyEmitAfterSaveEvent(values, result);
+		return result;
 	}
 
 	@Override
@@ -521,13 +574,18 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	@Override
 	public DocumentEntity insert(final Object value, final DocumentCreateOptions options) throws DataAccessException {
+		potentiallyEmitEvent(new BeforeSaveEvent<>(value));
+
+		final DocumentEntity result;
 		try {
-			final DocumentEntity res = _collection(value.getClass()).insertDocument(toVPack(value), options);
-			updateDBFields(value, res);
-			return res;
+			result = _collection(value.getClass()).insertDocument(toVPack(value), options);
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
+
+		updateDBFields(value, result);
+		potentiallyEmitEvent(new AfterSaveEvent<>(value));
+		return result;
 	}
 
 	@Override
@@ -538,13 +596,18 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public DocumentEntity insert(final String collectionName, final Object value, final DocumentCreateOptions options)
 			throws DataAccessException {
+		potentiallyEmitEvent(new BeforeSaveEvent<>(value));
+
+		final DocumentEntity result;
 		try {
-			final DocumentEntity res = _collection(collectionName).insertDocument(toVPack(value), options);
-			updateDBFields(value, res);
-			return res;
+			result = _collection(collectionName).insertDocument(toVPack(value), options);
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
+
+		updateDBFields(value, result);
+		potentiallyEmitEvent(new AfterSaveEvent<>(value));
+		return result;
 	}
 
 	@Override
@@ -726,6 +789,59 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		context.setRootObject(applicationContext);
 		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		context.addPropertyAccessor(new BeanFactoryAccessor());
+		eventPublisher = applicationContext;
+		arango._setCursorInitializer(new ArangoCursorInitializer(converter, applicationContext));
+	}
+
+	private void potentiallyEmitEvent(final ArangoMappingEvent<?> event) {
+		if (eventPublisher != null) {
+			eventPublisher.publishEvent(event);
+		}
+	}
+
+	private void potentiallyEmitBeforeSaveEvent(final Iterable<?> values) {
+		for (final Object value : values) {
+			potentiallyEmitEvent(new BeforeSaveEvent<>(value));
+		}
+	}
+
+	private void potentiallyEmitAfterSaveEvent(
+		final Iterable<?> values,
+		final MultiDocumentEntity<? extends DocumentEntity> result) {
+
+		final Iterator<?> valueIterator = values.iterator();
+		final Iterator<?> documentIterator = result.getDocumentsAndErrors().iterator();
+
+		while (valueIterator.hasNext() && documentIterator.hasNext()) {
+			final Object nextDoc = documentIterator.next();
+			final Object nextValue = valueIterator.next();
+			if (nextDoc instanceof DocumentEntity) {
+				potentiallyEmitEvent(new AfterSaveEvent<>(nextValue));
+			}
+		}
+	}
+
+	private void potentiallyEmitBeforeDeleteEvent(final Iterable<?> values, final Class<?> type) {
+		for (final Object value : values) {
+			potentiallyEmitEvent(new BeforeDeleteEvent<>(value, type));
+		}
+	}
+
+	private void potentiallyEmitAfterDeleteEvent(
+		final Iterable<?> values,
+		final Class<?> entityClass,
+		final MultiDocumentEntity<? extends DocumentEntity> result) {
+
+		final Iterator<?> valueIterator = values.iterator();
+		final Iterator<?> documentIterator = result.getDocumentsAndErrors().iterator();
+
+		while (valueIterator.hasNext() && documentIterator.hasNext()) {
+			final Object nextDoc = documentIterator.next();
+			final Object nextValue = valueIterator.next();
+			if (nextDoc instanceof DocumentEntity) {
+				potentiallyEmitEvent(new AfterDeleteEvent<>(nextValue, entityClass));
+			}
+		}
 	}
 
 }

@@ -38,7 +38,7 @@ import com.arangodb.springframework.core.mapping.CustomMappingTest;
  * @author Christian Lechner
  */
 @Configuration
-@ComponentScan("com.arangodb.springframework.component")
+@ComponentScan({ "com.arangodb.springframework.component", "com.arangodb.springframework.core.mapping.event" })
 @EnableArangoRepositories(basePackages = {
 		"com.arangodb.springframework.repository" }, namedQueriesLocation = "classpath*:arango-named-queries-test.properties")
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
