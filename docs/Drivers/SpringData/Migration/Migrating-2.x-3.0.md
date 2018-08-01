@@ -10,6 +10,8 @@ The annotation `@Id` in now saved in the database as field `_key` instead of `_i
 
 If you - for some reason - need the value of `_id` within your application, you can use the annotatioon `@ArangoId` on a `String` field instead of `@Id`.
 
+_Note_: The field annotated with `@ArangoId` will not be persisted in the database. It only exists for reading purposes.
+
 ## ArangoRepository
 
 `ArangoRepository` now requires a second generic type. This type `ID` represents the type of your domain object field annotated with `@Id`.
