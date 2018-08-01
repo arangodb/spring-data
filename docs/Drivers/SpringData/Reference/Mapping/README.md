@@ -20,24 +20,29 @@ In this section we will describe the features and conventions for mapping Java o
 
 ArangoDB uses [VelocyPack](https://github.com/arangodb/velocypack) as it's internal storage format which supports a large number of data types. In addition Spring Data ArangoDB offers - with the underlying Java driver - built-in converters to add additional types to the mapping.
 
-| Java type            | VelocyPack type               |
-| -------------------- | ----------------------------- |
-| java.lang.String     | string                        |
-| java.lang.Boolean    | bool                          |
-| java.lang.Integer    | signed int 4 bytes, smallint  |
-| java.lang.Long       | signed int 8 bytes, smallint  |
-| java.lang.Short      | signed int 2 bytes, smallint  |
-| java.lang.Double     | double                        |
-| java.lang.Float      | double                        |
-| java.math.BigInteger | String                        |
-| java.math.BigDecimal | String                        |
-| java.lang.Number     | double                        |
-| java.lang.Character  | string                        |
-| java.util.Date       | string (date-format ISO 8601) |
-| java.sql.Date        | string (date-format ISO 8601) |
-| java.sql.Timestamp   | string (date-format ISO 8601) |
-| java.util.UUID       | string                        |
-| java.lang.byte[]     | string (Base64)               |
+| Java type                | VelocyPack type               |
+| ------------------------ | ----------------------------- |
+| java.lang.String         | string                        |
+| java.lang.Boolean        | bool                          |
+| java.lang.Integer        | signed int 4 bytes, smallint  |
+| java.lang.Long           | signed int 8 bytes, smallint  |
+| java.lang.Short          | signed int 2 bytes, smallint  |
+| java.lang.Double         | double                        |
+| java.lang.Float          | double                        |
+| java.math.BigInteger     | string                        |
+| java.math.BigDecimal     | string                        |
+| java.lang.Number         | double                        |
+| java.lang.Character      | string                        |
+| java.util.UUID           | string                        |
+| java.lang.byte[]         | string (Base64)               |
+| java.util.Date           | string (date-format ISO 8601) |
+| java.sql.Date            | string (date-format ISO 8601) |
+| java.sql.Timestamp       | string (date-format ISO 8601) |
+| java.time.Instant        | string (date-format ISO 8601) |
+| java.time.LocalDate      | string (date-format ISO 8601) |
+| java.time.LocalDateTime  | string (date-format ISO 8601) |
+| java.time.OffsetDateTime | string (date-format ISO 8601) |
+| java.time.ZonedDateTime  | string (date-format ISO 8601) |
 
 ## Type mapping
 
