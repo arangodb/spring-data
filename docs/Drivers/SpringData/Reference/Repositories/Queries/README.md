@@ -2,7 +2,7 @@
 
 Spring Data ArangoDB supports three kinds of queries:
 
-- [Derived queries](DerviedQueries.md)
+- [Derived queries](DerivedQueries.md)
 - [Query methods](QueryMethods.md)
 - [Named queries](NamedQueries.md)
 
