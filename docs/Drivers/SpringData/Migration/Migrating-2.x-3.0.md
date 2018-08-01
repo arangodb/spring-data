@@ -8,7 +8,7 @@ The annotation `@Key` is removed. Use `@Id` instead.
 
 The annotation `@Id` in now saved in the database as field `_key` instead of `_id`. All operations in `ArangoOperations` and `ArangoRepository` still work with `@Id` and also now supports non-String fields.
 
-If you for - some reason - need the value of `_id` within your application, you can use the annotatioon `@ArangoId` on a `String` field instead of `@Id`.
+If you - for some reason - need the value of `_id` within your application, you can use the annotatioon `@ArangoId` on a `String` field instead of `@Id`.
 
 ## ArangoRepository
 
