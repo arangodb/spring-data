@@ -11,6 +11,28 @@ public class Person {
 }
 ```
 
+## Spring Expression support
+
+Spring Data ArangoDB supports the use of SpEL expressions within `@Document#value`. This feature lets you define a dynamic collection name which can be used to implement multi tenancy applications.
+
+```Java
+@Component
+public class TenantProvider {
+
+	public String getId() {
+		// threadlocal lookup
+	}
+
+}
+```
+
+```java
+@Document("#{tenantProvider.getId()}_persons")
+public class Person {
+  ...
+}
+```
+
 ## Annotation @From and @To
 
 With the annotations `@From` and `@To` applied on a collection or array field in a class annotated with `@Document` the nested edge objects are fetched from the database. Each of the nested edge objects has to be stored as separate edge document in the edge collection described in the `@Edge` annotation of the nested object class with the _\_id_ of the parent document as field _\_from_ or _\_to_.
