@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
   SpEL expressions can now be used within `AbstractArangoConfiguration#database()`. This allows Multi-tenancy on database level.
 
-- added mapping events (`BeforeDeleteEvent`, `AfterDeleteEvent`, `AfterLoadEvent`, `BeforeLoadEvent`, `AfterSaveEvent`)
+- added mapping events (`BeforeDeleteEvent`, `AfterDeleteEvent`, `AfterLoadEvent`, `BeforeSaveEvent`, `AfterSaveEvent`)
 
 ### Changed
 

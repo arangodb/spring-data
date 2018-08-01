@@ -47,7 +47,7 @@ public interface CollectionOperations {
 	String name();
 
 	/**
-	 * Drops the collection
+	 * Deletes the collection from the database.
 	 * 
 	 * @throws DataAccessException
 	 */
@@ -146,7 +146,7 @@ public interface CollectionOperations {
 	IndexEntity ensureFulltextIndex(Iterable<String> fields, FulltextIndexOptions options) throws DataAccessException;
 
 	/**
-	 * Deletes an index
+	 * Deletes the index with the given {@code id} from the collection.
 	 * 
 	 * @param id
 	 *            The index-handle
