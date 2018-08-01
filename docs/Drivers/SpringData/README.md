@@ -2,6 +2,7 @@
 
 - [Getting Started](GettingStarted/README.md)
 - [Reference](Reference/README.md)
+- [Migration](Migration/README.md)
 
 ## Learn more
 
