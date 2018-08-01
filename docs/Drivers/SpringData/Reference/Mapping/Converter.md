@@ -22,7 +22,9 @@ public class MyConfiguration extends AbstractArangoConfiguration {
 
 ## Implementing a Spring Converter
 
-A `Converter` is used for reading or writing if one of the types (source, target) is of type `VPackSlice` or `DBDocumentEntity`.
+A `Converter` is used for reading if the source type is of type `VPackSlice` or `DBDocumentEntity`.
+
+A `Converter` is used for writing if the target type is of type `VPackSlice`, `DBDocumentEntity`, `BigInteger`, `BigDecimal`, `java.sql.Date`, `java.sql.Timestamp`, `Instant`, `LocalDate`, `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`, `Boolean`, `Short`, `Integer`, `Byte`, `Float`, `Double`, `Character`, `String`, `Date`, `Class`, `Enum`, `boolean[]`, `long[]`, `short[]`, `int[]`, `byte[]`, `float[]`, `double[]` or `char[]`.
 
 **Examples**
 
