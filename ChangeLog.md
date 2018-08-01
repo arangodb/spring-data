@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ### Added
 
-- added support for `@Key` fields on references `@Ref`/`@From`/`@To`
+- added support for non-String `@Id`s (issue #79)
+- added annotation `@ArangoId` as representation for field `_id` (instead of `@Id`)
 - added support for saving entities lazy loaded
 
   Entities loaded over `@Ref`/`@From`/`@To`/`@Relations` with `lazy` == `true` can now be saved back into the database.
@@ -16,22 +17,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - added logging of query warnings when executed through `ArangoRepository` (#issue 56)
 - added convenience method `ArangoOperations#query(String, Class)`
 - added convenience method `ArangoOperations#query(String, Map<String, Object>, Class)`
-- added support for non-String `@Id`s (issue #79)
 - added convenience method `AbstractArangoConfiguration#customConverters()` to add custom converters
 - added SpEL expression parsing for database names
 
   SpEL expressions can now be used within `AbstractArangoConfiguration#database()`. This allows Multi-tenancy on database level.
 
+- added mapping events (`BeforeDeleteEvent`, `AfterDeleteEvent`, `AfterLoadEvent`, `BeforeLoadEvent`, `AfterSaveEvent`)
+
 ### Changed
 
-- save `@Id` fields as `_key` instead of `_id` (issue #78)
+- save `@Id` values as `_key` instead of `_id` (issue #78)
 - changed SpEL expression parsing for collection names
 
   SpEL expressions in `@Document#value`/`@Edge#value` are now parsed whenever the domain entity is accessed. This allows Multi-tenancy on collection level.
 
+### Removed
+
+- removed `com.arangodb.springframework.annotation.Key`
+- removed `com.arangodb.springframework.annotation.Param`
+- removed `com.arangodb.springframework.core.convert.DBEntity`
+- removed `com.arangodb.springframework.core.convert.DBCollectionEntity`
+
+## [2.3.0] - 2018-07-18
+
+### Deprecated
+
+- deprecated `com.arangodb.springframework.annotation.Key`
+- deprecated `com.arangodb.springframework.core.convert.DBEntity`
+- deprecated `com.arangodb.springframework.core.convert.DBCollectionEntity`
+
+## [2.2.2] - 2018-07-09
+
 ### Fixed
 
-- fixed `ArangoOperations#getVersion()` use configured database instead of `_system`
+- fixed `ArangoOperations#getVersion()` use configured database instead of \_system
 
 ## [2.2.1] - 2018-07-03
 
