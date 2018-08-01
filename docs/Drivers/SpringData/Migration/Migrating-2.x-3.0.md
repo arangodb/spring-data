@@ -34,7 +34,7 @@ The annotation `com.arangodb.springframework.annotation.Param` is removed. Use `
 
 ## DBEntity
 
-`DBEntity` is removed. Use `DBDocumentEntity` in your converter instead.
+`DBEntity` is removed. Use `VPackSlice` in your converter instead.
 
 ## DBCollectionEntity
 

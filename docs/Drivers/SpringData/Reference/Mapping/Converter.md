@@ -22,19 +22,21 @@ public class MyConfiguration extends AbstractArangoConfiguration {
 
 ## Implementing a Spring Converter
 
-A `Converter` is used for reading or writing if one of the types (source, target) is of type `DBDocumentEntity` or `VPackSlice`.
+A `Converter` is used for reading or writing if one of the types (source, target) is of type `VPackSlice` or `DBDocumentEntity`.
 
 **Examples**
 
 ```Java
-public class MyConverter implements Converter<MyObject, DBDocumentEntity> {
+public class MyConverter implements Converter<MyObject, VPackSlice> {
 
   @Override
-  public DBDocumentEntity convert(final MyObject source) {
-    DBDocumentEntity entity = new DBDocumentEntity();
-    // convert MyObject to DBDocumentEntity
-    return entity;
+  public VPackSlice convert(final MyObject source) {
+    VPackBuilder builder = new VPackBuilder();
+    // map fields of MyObject to builder
+    return builder.slice();
   }
 
 }
 ```
+
+For performance reasons `VPackSlice` should always be used within a converter. If your object is too complexe, you can also use `DBDocumentEntity` to simplify the mapping.
