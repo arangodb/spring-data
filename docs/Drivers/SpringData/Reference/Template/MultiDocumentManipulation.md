@@ -215,12 +215,6 @@ template.update(Arrays.asList(obj1, obj2, obj3), new DocumentUpdateOptions());
 ArangoOperations.delete(Iterable<Object> values, Class<?> entityClass, DocumentDeleteOptions options) : MultiDocumentEntity
 ```
 
-## ArangoOperations.delete
-
-```
-ArangoOperations.delete(Iterable<Object> values, Class<?> entityClass, DocumentDeleteOptions options) : MultiDocumentEntity
-```
-
 Deletes multiple documents from a collection.
 
 **Arguments**
