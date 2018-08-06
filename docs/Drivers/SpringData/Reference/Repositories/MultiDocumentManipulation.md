@@ -63,7 +63,7 @@ MyDomainClass obj3 = ...
 repository.saveAll(Arrays.asList(obj1, obj2, obj3))
 ```
 
-## ArangoRepository.deleteAll
+## ArangoRepository.deleteAll (method 1)
 
 ```
 ArangoRepository.deleteAll() : void
@@ -79,7 +79,7 @@ Deletes all entities managed by the repository.
 repository.deleteAll();
 ```
 
-## ArangoRepository.deleteAll
+## ArangoRepository.deleteAll (method 2)
 
 ```
 ArangoRepository.deleteAll(Iterable<? extends T> entities) : void
