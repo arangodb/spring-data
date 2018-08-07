@@ -89,7 +89,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		final BindParameterBinding binder, final List<String> geoFields) {
 		super(tree, accessor);
 		this.context = context;
-		collectionName = collectionName(context.getPersistentEntity(domainClass).getCollection());
+		collectionName = AqlUtils.buildCollectionName(context.getPersistentEntity(domainClass).getCollection());
 		this.tree = tree;
 		this.accessor = accessor;
 		this.geoFields = geoFields;
@@ -182,10 +182,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			}
 		}
 		return query.toString();
-	}
-
-	private static String collectionName(final String collection) {
-		return collection.contains("-") ? "`" + collection + "`" : collection;
 	}
 
 	public double[] getUniquePoint() {
@@ -590,7 +586,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}).filter(entity -> {
 			return entity != null;
 		}).map(entity -> {
-			return collectionName(entity.getCollection());
+			return AqlUtils.buildCollectionName(entity.getCollection());
 		}).forEach(withCollections::add);
 	}
 
