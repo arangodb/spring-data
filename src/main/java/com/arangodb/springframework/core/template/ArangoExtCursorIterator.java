@@ -25,8 +25,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
-import com.arangodb.internal.ArangoCursorIterator;
 import com.arangodb.internal.InternalArangoDatabase;
+import com.arangodb.internal.cursor.ArangoCursorIterator;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
 import com.arangodb.springframework.core.mapping.event.ArangoMappingEvent;
@@ -59,7 +59,7 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 	protected <R> R deserialize(final VPackSlice source, final Class<R> type) {
 		final R result = converter.read(type, source);
 		if (result != null) {
-			potentiallyEmitEvent(new AfterLoadEvent<R>(result));
+			potentiallyEmitEvent(new AfterLoadEvent<>(result));
 		}
 		return result;
 	}

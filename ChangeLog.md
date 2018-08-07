@@ -31,6 +31,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
   SpEL expressions in `@Document#value`/`@Edge#value` are now parsed whenever the domain entity is accessed. This allows Multi-tenancy on collection level.
 
+- upgraded dependency arangodb-java-driver 4.7.0
+
 ### Removed
 
 - removed `com.arangodb.springframework.annotation.Key`

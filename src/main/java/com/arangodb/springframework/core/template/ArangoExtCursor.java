@@ -25,9 +25,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
-import com.arangodb.internal.ArangoCursorImpl;
-import com.arangodb.internal.ArangoCursorIterator;
 import com.arangodb.internal.InternalArangoDatabase;
+import com.arangodb.internal.cursor.ArangoCursorImpl;
+import com.arangodb.internal.cursor.ArangoCursorIterator;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 
 /**
