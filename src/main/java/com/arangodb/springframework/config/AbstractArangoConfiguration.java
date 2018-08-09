@@ -35,6 +35,8 @@ import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 
 import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDBException;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
@@ -45,13 +47,15 @@ import com.arangodb.springframework.core.convert.ArangoCustomConversions;
 import com.arangodb.springframework.core.convert.ArangoTypeMapper;
 import com.arangodb.springframework.core.convert.DefaultArangoConverter;
 import com.arangodb.springframework.core.convert.DefaultArangoTypeMapper;
-import com.arangodb.springframework.core.convert.resolver.FromResolver;
+import com.arangodb.springframework.core.convert.resolver.DocumentFromResolver;
+import com.arangodb.springframework.core.convert.resolver.DocumentToResolver;
+import com.arangodb.springframework.core.convert.resolver.EdgeFromResolver;
+import com.arangodb.springframework.core.convert.resolver.EdgeToResolver;
 import com.arangodb.springframework.core.convert.resolver.RefResolver;
 import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
 import com.arangodb.springframework.core.convert.resolver.RelationResolver;
 import com.arangodb.springframework.core.convert.resolver.RelationsResolver;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
-import com.arangodb.springframework.core.convert.resolver.ToResolver;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.template.ArangoTemplate;
 
@@ -133,13 +137,23 @@ public abstract class AbstractArangoConfiguration {
 
 			@SuppressWarnings("unchecked")
 			@Override
-			public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final A annotation) {
+			public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(
+				final A annotation,
+				final Class<? extends Annotation> collectionType) {
 				RelationResolver<A> resolver = null;
 				try {
 					if (annotation instanceof From) {
-						resolver = (RelationResolver<A>) new FromResolver(arangoTemplate());
+						if (collectionType == Edge.class) {
+							resolver = (RelationResolver<A>) new EdgeFromResolver(arangoTemplate());
+						} else if (collectionType == Document.class) {
+							resolver = (RelationResolver<A>) new DocumentFromResolver(arangoTemplate());
+						}
 					} else if (annotation instanceof To) {
-						resolver = (RelationResolver<A>) new ToResolver(arangoTemplate());
+						if (collectionType == Edge.class) {
+							resolver = (RelationResolver<A>) new EdgeToResolver(arangoTemplate());
+						} else if (collectionType == Document.class) {
+							resolver = (RelationResolver<A>) new DocumentToResolver(arangoTemplate());
+						}
 					} else if (annotation instanceof Relations) {
 						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
 					}

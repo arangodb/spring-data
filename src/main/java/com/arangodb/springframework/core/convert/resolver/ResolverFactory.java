@@ -31,6 +31,8 @@ public interface ResolverFactory {
 
 	<A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(A annotation);
 
-	<A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(A annotation);
+	<A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(
+		A annotation,
+		Class<? extends Annotation> collectionType);
 
 }

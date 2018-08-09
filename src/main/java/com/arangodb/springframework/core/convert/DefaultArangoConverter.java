@@ -61,6 +61,8 @@ import org.springframework.util.CollectionUtils;
 
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.entity.BaseEdgeDocument;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
@@ -197,7 +199,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		entity.doWithProperties((final ArangoPersistentProperty property) -> {
 			if (!entity.isConstructorArgument(property)) {
 				final VPackSlice value = source.get(property.getFieldName());
-				readProperty(id, accessor, value, property);
+				readProperty(entity, id, accessor, value, property);
 			}
 		});
 
@@ -205,7 +207,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			final ArangoPersistentProperty property = association.getInverse();
 			if (!entity.isConstructorArgument(property)) {
 				final VPackSlice value = source.get(property.getFieldName());
-				readProperty(id, accessor, value, property);
+				readProperty(entity, id, accessor, value, property);
 			}
 		});
 
@@ -213,15 +215,17 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private void readProperty(
+		final ArangoPersistentEntity<?> entity,
 		final String parentId,
 		final PersistentPropertyAccessor accessor,
 		final VPackSlice source,
 		final ArangoPersistentProperty property) {
 
-		accessor.setProperty(property, readPropertyValue(parentId, source, property));
+		accessor.setProperty(property, readPropertyValue(entity, parentId, source, property));
 	}
 
 	private Object readPropertyValue(
+		final ArangoPersistentEntity<?> entity,
 		final String parentId,
 		final VPackSlice source,
 		final ArangoPersistentProperty property) {
@@ -233,17 +237,17 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 		final Optional<Relations> relations = property.getRelations();
 		if (relations.isPresent()) {
-			return readRelation(parentId, source, property, relations.get()).orElse(null);
+			return readRelation(entity, parentId, source, property, relations.get()).orElse(null);
 		}
 
 		final Optional<From> from = property.getFrom();
 		if (from.isPresent()) {
-			return readRelation(parentId, source, property, from.get()).orElse(null);
+			return readRelation(entity, parentId, source, property, from.get()).orElse(null);
 		}
 
 		final Optional<To> to = property.getTo();
 		if (to.isPresent()) {
-			return readRelation(parentId, source, property, to.get()).orElse(null);
+			return readRelation(entity, parentId, source, property, to.get()).orElse(null);
 		}
 
 		return readInternal(property.getTypeInformation(), source);
@@ -348,12 +352,16 @@ public class DefaultArangoConverter implements ArangoConverter {
 	}
 
 	private <A extends Annotation> Optional<Object> readRelation(
+		final ArangoPersistentEntity<?> entity,
 		final String parentId,
 		final VPackSlice source,
 		final ArangoPersistentProperty property,
 		final A annotation) {
 
-		final Optional<RelationResolver<Annotation>> resolver = resolverFactory.getRelationResolver(annotation);
+		final Class<? extends Annotation> collectionType = entity.findAnnotation(Edge.class) != null ? Edge.class
+				: Document.class;
+		final Optional<RelationResolver<Annotation>> resolver = resolverFactory.getRelationResolver(annotation,
+			collectionType);
 
 		if (!resolver.isPresent()) {
 			return Optional.empty();
@@ -366,17 +374,14 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return resolver.map(res -> res.resolveMultiple(parentId, property.getTypeInformation(), annotation));
 		}
 
-		else if (source.isNone()) {
-			return Optional.empty();
+		else if (source.isString()) {
+			return resolver.map(res -> res.resolveOne(source.getAsString(), property.getTypeInformation(), annotation));
 		}
 
 		else {
-			if (!source.isString()) {
-				throw new MappingException(
-						String.format("A reference must be of type String, but got VPack type %s!", source.getType()));
-			}
-			return resolver.map(res -> res.resolveOne(source.getAsString(), property.getTypeInformation(), annotation));
+			return resolver.map(res -> res.resolveOne(parentId, property.getTypeInformation(), annotation));
 		}
+
 	}
 
 	private Object readSimple(final Class<?> type, final VPackSlice source) {
@@ -511,16 +516,19 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final ArangoPersistentEntity<?> entity,
 		final VPackSlice source) {
 
-		final PropertyValueProvider<ArangoPersistentProperty> provider = new ArangoPropertyValueProvider(source);
+		final PropertyValueProvider<ArangoPersistentProperty> provider = new ArangoPropertyValueProvider(entity,
+				source);
 		return new PersistentEntityParameterValueProvider<>(entity, provider, null);
 	}
 
 	private class ArangoPropertyValueProvider implements PropertyValueProvider<ArangoPersistentProperty> {
 
+		private final ArangoPersistentEntity<?> entity;
 		private final VPackSlice source;
 		private final String id;
 
-		public ArangoPropertyValueProvider(final VPackSlice source) {
+		public ArangoPropertyValueProvider(final ArangoPersistentEntity<?> entity, final VPackSlice source) {
+			this.entity = entity;
 			this.source = source;
 			this.id = source.get(_ID).isString() ? source.get(_ID).getAsString() : null;
 		}
@@ -529,7 +537,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		@Override
 		public <T> T getPropertyValue(final ArangoPersistentProperty property) {
 			final VPackSlice value = source.get(property.getFieldName());
-			return (T) readPropertyValue(id, value, property);
+			return (T) readPropertyValue(entity, id, value, property);
 		}
 
 	}

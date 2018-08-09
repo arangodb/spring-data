@@ -181,4 +181,41 @@ public class RelationsMappingTest extends AbstractArangoTest {
 		assertThat(document.value.stream().map((e) -> e.id).collect(Collectors.toList()),
 			hasItems(vertex1.id, vertex2.id));
 	}
+
+	static class SingleRelationsTestEntity extends BasicTestEntity {
+		@Relations(edges = BasicEdgeTestEntity.class)
+		private BasicTestEntity value;
+	}
+
+	@Test
+	public void singleRelations() {
+		final BasicTestEntity vertex = new BasicTestEntity();
+		template.insert(vertex);
+		final SingleRelationsTestEntity entity = new SingleRelationsTestEntity();
+		template.insert(entity);
+		template.insert(new BasicEdgeTestEntity(entity, vertex));
+		final SingleRelationsTestEntity document = template.find(entity.id, SingleRelationsTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value.id, is(vertex.id));
+
+	}
+
+	static class SingleRelationsLazyTestEntity extends BasicTestEntity {
+		@Relations(edges = BasicEdgeTestEntity.class, lazy = true)
+		private BasicTestEntity value;
+	}
+
+	@Test
+	public void singleRelationsLazy() {
+		final BasicTestEntity vertex = new BasicTestEntity();
+		template.insert(vertex);
+		final SingleRelationsLazyTestEntity entity = new SingleRelationsLazyTestEntity();
+		template.insert(entity);
+		template.insert(new BasicEdgeTestEntity(entity, vertex));
+		final SingleRelationsLazyTestEntity document = template.find(entity.id, SingleRelationsLazyTestEntity.class)
+				.get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.value.getId(), is(vertex.id));
+
+	}
 }
