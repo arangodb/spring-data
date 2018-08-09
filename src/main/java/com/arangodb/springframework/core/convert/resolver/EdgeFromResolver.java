@@ -22,45 +22,34 @@ package com.arangodb.springframework.core.convert.resolver;
 
 import org.springframework.data.util.TypeInformation;
 
-import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
- * @author Christian Lechner
  *
  */
-public class FromResolver extends AbstractResolver<From> implements RelationResolver<From> {
+public class EdgeFromResolver extends AbstractResolver<From> implements RelationResolver<From> {
 
 	private final ArangoOperations template;
 
-	public FromResolver(final ArangoOperations template) {
+	public EdgeFromResolver(final ArangoOperations template) {
 		super(template.getConverter().getConversionService());
 		this.template = template;
 	}
 
 	@Override
 	public Object resolveOne(final String id, final TypeInformation<?> type, final From annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> internalResolveOne(i, t))
-				: internalResolveOne(id, type);
+		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t)) : _resolveOne(id, type);
 	}
 
-	private Object internalResolveOne(final String id, final TypeInformation<?> type) {
+	private Object _resolveOne(final String id, final TypeInformation<?> type) {
 		return template.find(id, type.getType()).get();
 	}
 
 	@Override
 	public Object resolveMultiple(final String id, final TypeInformation<?> type, final From annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> internalResolveMultiple(i, t))
-				: internalResolveMultiple(id, type);
-	}
-
-	private Object internalResolveMultiple(final String id, final TypeInformation<?> type) {
-		final Class<?> t = getNonNullComponentType(type).getType();
-		return template.query("FOR e IN @@edge FILTER e._from == @id RETURN e",
-			new MapBuilder().put("@edge", t).put("id", id).get(), new AqlQueryOptions(), t).asListRemaining();
+		throw new UnsupportedOperationException("Edges with multiple 'from' values are not supported.");
 	}
 
 }

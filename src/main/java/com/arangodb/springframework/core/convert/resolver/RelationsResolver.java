@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.util.TypeInformation;
 
+import com.arangodb.ArangoCursor;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.util.MapBuilder;
@@ -35,8 +36,7 @@ import com.arangodb.util.MapBuilder;
  * @author Christian Lechner
  *
  */
-public class RelationsResolver extends AbstractResolver<Relations>
-		implements RelationResolver<Relations>, AbstractResolver.ResolverCallback<Relations> {
+public class RelationsResolver extends AbstractResolver<Relations> implements RelationResolver<Relations> {
 
 	private final ArangoOperations template;
 
@@ -47,35 +47,47 @@ public class RelationsResolver extends AbstractResolver<Relations>
 
 	@Override
 	public Object resolveOne(final String id, final TypeInformation<?> type, final Relations annotation) {
-		throw new UnsupportedOperationException();
+		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t, a))
+				: _resolveOne(id, type, annotation);
 	}
 
 	@Override
 	public Object resolveMultiple(final String id, final TypeInformation<?> type, final Relations annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, this) : resolve(id, type, annotation);
+		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveMultiple(i, t, a))
+				: _resolveMultiple(id, type, annotation);
 	}
 
-	@Override
-	public Object resolve(final String id, final TypeInformation<?> type, final Relations annotation) {
-		final Class<?> compType = getNonNullComponentType(type).getType();
+	private Object _resolveOne(final String id, final TypeInformation<?> type, final Relations annotation) {
+		return _resolve(id, type.getType(), annotation, true).first();
+	}
+
+	private Object _resolveMultiple(final String id, final TypeInformation<?> type, final Relations annotation) {
+		return _resolve(id, getNonNullComponentType(type).getType(), annotation, false).asListRemaining();
+	}
+
+	private ArangoCursor<?> _resolve(
+		final String id,
+		final Class<?> type,
+		final Relations annotation,
+		final boolean limit) {
 
 		final String query = String.format(
-			"WITH @@vertex FOR v IN %d .. %d %s @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} RETURN v", //
+			"WITH @@vertex FOR v IN %d .. %d %s @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} %s RETURN v", //
 			Math.max(1, annotation.minDepth()), //
 			Math.max(1, annotation.maxDepth()), //
-			annotation.direction());
+			annotation.direction(), //
+			limit ? "LIMIT 1" : "");
 
 		final String edges = Arrays.stream(annotation.edges()).map(e -> template.collection(e).name())
 				.collect(Collectors.joining(","));
 
 		final Map<String, Object> bindVars = new MapBuilder()//
 				.put("start", id) //
-				.put("@vertex", compType) //
+				.put("@vertex", type) //
 				.put("@edges", edges) //
 				.get();
 
-		return template.query(query, bindVars, compType).asListRemaining();
-
+		return template.query(query, bindVars, type);
 	}
 
 }

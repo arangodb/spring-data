@@ -61,6 +61,8 @@ import org.springframework.util.CollectionUtils;
 
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.entity.BaseEdgeDocument;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
@@ -353,7 +355,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final ArangoPersistentProperty property,
 		final A annotation) {
 
-		final Optional<RelationResolver<Annotation>> resolver = resolverFactory.getRelationResolver(annotation);
+		final Class<? extends Annotation> collectionType = property.getOwner().findAnnotation(Edge.class) != null
+				? Edge.class : Document.class;
+		final Optional<RelationResolver<Annotation>> resolver = resolverFactory.getRelationResolver(annotation,
+			collectionType);
 
 		if (!resolver.isPresent()) {
 			return Optional.empty();
@@ -366,17 +371,14 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return resolver.map(res -> res.resolveMultiple(parentId, property.getTypeInformation(), annotation));
 		}
 
-		else if (source.isNone()) {
-			return Optional.empty();
+		else if (source.isString()) {
+			return resolver.map(res -> res.resolveOne(source.getAsString(), property.getTypeInformation(), annotation));
 		}
 
 		else {
-			if (!source.isString()) {
-				throw new MappingException(
-						String.format("A reference must be of type String, but got VPack type %s!", source.getType()));
-			}
-			return resolver.map(res -> res.resolveOne(source.getAsString(), property.getTypeInformation(), annotation));
+			return resolver.map(res -> res.resolveOne(parentId, property.getTypeInformation(), annotation));
 		}
+
 	}
 
 	private Object readSimple(final Class<?> type, final VPackSlice source) {

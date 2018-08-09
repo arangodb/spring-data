@@ -183,4 +183,51 @@ public class ToMappingTest extends AbstractArangoTest {
 		assertThat(document.value.stream().map((e) -> e.getId()).collect(Collectors.toList()),
 			hasItems(edge1.id, edge2.id));
 	}
+
+	public static class SingleDocumentToTestEntity extends BasicTestEntity {
+		@To
+		private BasicEdgeLazyTestEntity entity;
+	}
+
+	@Test
+	public void singleDocumentTo() {
+		final SingleDocumentToTestEntity e0 = new SingleDocumentToTestEntity();
+		template.insert(e0);
+		final SingleDocumentToTestEntity e1 = new SingleDocumentToTestEntity();
+		template.insert(e1);
+		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e1, e0);
+		template.insert(edge0);
+		final SingleDocumentToTestEntity document = template.find(e0.id, SingleDocumentToTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entity, is(notNullValue()));
+		assertThat(document.entity.getId(), is(notNullValue()));
+		assertThat(document.entity.getId(), is(edge0.getId()));
+		assertThat(document.entity.getTo(), is(notNullValue()));
+		assertThat(document.entity.getTo().getId(), is(notNullValue()));
+		assertThat(document.entity.getTo().getId(), is(e0.getId()));
+	}
+
+	public static class SingleDocumentToLazyTestEntity extends BasicTestEntity {
+		@To(lazy = true)
+		private BasicEdgeLazyTestEntity entity;
+	}
+
+	@Test
+	public void singleDocumentToLazy() {
+		final SingleDocumentToLazyTestEntity e0 = new SingleDocumentToLazyTestEntity();
+		template.insert(e0);
+		final SingleDocumentToLazyTestEntity e1 = new SingleDocumentToLazyTestEntity();
+		template.insert(e1);
+		final BasicEdgeLazyTestEntity edge0 = new BasicEdgeLazyTestEntity(e1, e0);
+		template.insert(edge0);
+		final SingleDocumentToLazyTestEntity document = template.find(e0.id, SingleDocumentToLazyTestEntity.class)
+				.get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entity, is(notNullValue()));
+		assertThat(document.entity.getId(), is(notNullValue()));
+		assertThat(document.entity.getId(), is(edge0.getId()));
+		assertThat(document.entity.getTo(), is(notNullValue()));
+		assertThat(document.entity.getTo().getId(), is(notNullValue()));
+		assertThat(document.entity.getTo().getId(), is(e0.getId()));
+	}
 }
