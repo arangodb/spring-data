@@ -41,6 +41,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - removed `com.arangodb.springframework.core.convert.DBEntity`
 - removed `com.arangodb.springframework.core.convert.DBCollectionEntity`
 
+### Fixed
+
+- fixed a bug in derived queries when using two times `@Relations` in one entity
+
 ## [2.3.0] - 2018-07-18
 
 ### Deprecated

@@ -81,7 +81,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private String uniqueLocation = null;
 	private Boolean isUnique = null;
 	private int bindingCounter = 0;
-	private int varsUsed = 0;
 
 	public DerivedQueryCreator(
 		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
@@ -237,6 +236,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	 * @return
 	 */
 	private String[] createPredicateTemplateAndPropertyString(final Part part) {
+		int varsUsed = 0;
 		final String PREDICATE_TEMPLATE = "(%s FILTER %%s RETURN 1)[0] == 1";
 		final PersistentPropertyPath<?> persistentPropertyPath = context.getPersistentPropertyPath(part.getProperty());
 		StringBuilder simpleProperties = new StringBuilder();
