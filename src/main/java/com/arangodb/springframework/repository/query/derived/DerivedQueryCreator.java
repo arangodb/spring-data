@@ -87,13 +87,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	private String uniqueLocation = null;
 	private Boolean isUnique = null;
 	private int bindingCounter = 0;
-	private int varsUsed = 0;
 	private boolean checkUnique = false;
 
 	public DerivedQueryCreator(
-			final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
-			final Class<?> domainClass, final PartTree tree, final ArangoParameterAccessor accessor,
-			final Map<String, Object> bindVars, final List<String> geoFields, final boolean useFunctions) {
+		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
+		final Class<?> domainClass, final PartTree tree, final ArangoParameterAccessor accessor,
+		final Map<String, Object> bindVars, final List<String> geoFields, final boolean useFunctions) {
 		super(tree, accessor);
 		this.context = context;
 		this.collectionName = collectionName(context.getPersistentEntity(domainClass).getCollection());
@@ -144,8 +143,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Builds a full AQL query from a built Disjunction, additional information from
-	 * PartTree and special parameters caught by ArangoParameterAccessor
+	 * Builds a full AQL query from a built Disjunction, additional information from PartTree and special parameters
+	 * caught by ArangoParameterAccessor
 	 *
 	 * @param criteria
 	 * @param sort
@@ -161,19 +160,19 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		}
 		final Disjunction disjunction = disjunctionBuilder.build();
 		final String array = disjunction.getArray().length() == 0 ? collectionName : disjunction.getArray();
-		final String predicate = disjunction.getPredicate().length() == 0 ? "" : " FILTER " + disjunction.getPredicate();
+		final String predicate = disjunction.getPredicate().length() == 0 ? ""
+				: " FILTER " + disjunction.getPredicate();
 		final String queryTemplate = "%sFOR e IN %s%s%s%s%s%s%s"; // collection predicate count sort limit pageable
 		// queryType
 		final String count = (tree.isCountProjection() || tree.isExistsProjection())
-				? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length")
-				: "";
+				? ((tree.isDistinct() ? " COLLECT entity = e" : "") + " COLLECT WITH COUNT INTO length") : "";
 		final String limit = tree.isLimiting() ? format(" LIMIT %d", tree.getMaxResults()) : "";
 		final String pageable = accessor.getPageable() == null ? ""
 				: format(" LIMIT %d, %d", accessor.getPageable().getOffset(), accessor.getPageable().getPageSize());
 		final String geoFields = format("%s[0], %s[1]", uniqueLocation, uniqueLocation);
 		final String distanceAdjusted = getGeoFields().isEmpty() ? "e"
 				: format("MERGE(e, { '_distance': distance(%s, %f, %f) })", geoFields, getUniquePoint()[0],
-						getUniquePoint()[1]);
+					getUniquePoint()[1]);
 		final String type = tree.isDelete() ? (" REMOVE e IN " + collectionName)
 				: ((tree.isCountProjection() || tree.isExistsProjection()) ? " RETURN length"
 						: format(" RETURN %s", distanceAdjusted));
@@ -181,7 +180,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
 			final String distanceSortKey = format(" SORT distance(%s, %f, %f)", geoFields, getUniquePoint()[0],
-					getUniquePoint()[1]);
+				getUniquePoint()[1]);
 			if (sort == null) {
 				sortString = distanceSortKey;
 			} else {
@@ -218,8 +217,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Wrapps property expression in order to lower case. Only properties of type
-	 * String or Iterable<String> are lowered
+	 * Wrapps property expression in order to lower case. Only properties of type String or Iterable<String> are lowered
 	 *
 	 * @param part
 	 * @param property
@@ -242,20 +240,20 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	 * @return
 	 */
 	private String getProperty(final Part part) {
-		return "e."
-				+ context.getPersistentPropertyPath(part.getProperty()).toPath(null, ArangoPersistentProperty::getFieldName);
+		return "e." + context.getPersistentPropertyPath(part.getProperty()).toPath(null,
+			ArangoPersistentProperty::getFieldName);
 	}
 
 	/**
-	 * Creates a predicate template with one String placeholder for a Part-specific
-	 * predicate expression from properties in PropertyPath which represent
-	 * references or collections, and, also, returns a 2nd String representing
-	 * property to be used in a Part-specific predicate expression
+	 * Creates a predicate template with one String placeholder for a Part-specific predicate expression from properties
+	 * in PropertyPath which represent references or collections, and, also, returns a 2nd String representing property
+	 * to be used in a Part-specific predicate expression
 	 *
 	 * @param part
+	 * @param varsUsed
 	 * @return
 	 */
-	private String[] createPredicateTemplateAndPropertyString(final Part part) {
+	private String[] createPredicateTemplateAndPropertyString(final Part part, int varsUsed) {
 		final String PREDICATE_TEMPLATE = "(%s FILTER %%s RETURN 1)[0] == 1";
 		final PersistentPropertyPath<?> persistentPropertyPath = context.getPersistentPropertyPath(part.getProperty());
 		StringBuilder simpleProperties = new StringBuilder();
@@ -305,7 +303,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
+					predicateTemplate = predicateTemplate.length() == 0 ? predicate
+							: format(predicateTemplate, predicate);
 				} else {
 					// collection
 					final String TEMPLATE = "FOR %s IN TO_ARRAY(%s%s)";
@@ -315,7 +314,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
+					predicateTemplate = predicateTemplate.length() == 0 ? predicate
+							: format(predicateTemplate, predicate);
 				}
 			} else {
 				if (property.getRef().isPresent() || property.getFrom().isPresent() || property.getTo().isPresent()) {
@@ -331,7 +331,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
+					predicateTemplate = predicateTemplate.length() == 0 ? predicate
+							: format(predicateTemplate, predicate);
 				} else {
 					// simple property
 					simpleProperties.append("." + property.getFieldName());
@@ -343,8 +344,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Lowers case of a given argument if its type is String, Iterable<String> or
-	 * String[] if shouldIgnoreCase is true
+	 * Lowers case of a given argument if its type is String, Iterable<String> or String[] if shouldIgnoreCase is true
 	 *
 	 * @param argument
 	 * @param shouldIgnoreCase
@@ -374,8 +374,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Determines whether the case for a Part should be ignored based on property
-	 * type and IgnoreCase keywords in the method name
+	 * Determines whether the case for a Part should be ignored based on property type and IgnoreCase keywords in the
+	 * method name
 	 *
 	 * @param part
 	 * @return
@@ -393,8 +393,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Puts actual arguments in bindVars Map based on Part-specific information and
-	 * types of arguments.
+	 * Puts actual arguments in bindVars Map based on Part-specific information and types of arguments.
 	 *
 	 * @param iterator
 	 * @param shouldIgnoreCase
@@ -403,8 +402,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	 * @param ignoreBindVars
 	 * @return
 	 */
-	private ArgumentProcessingResult bindArguments(final Iterator<Object> iterator, final boolean shouldIgnoreCase,
-			final int arguments, final Boolean borderStatus, final boolean ignoreBindVars) {
+	private ArgumentProcessingResult bindArguments(
+		final Iterator<Object> iterator,
+		final boolean shouldIgnoreCase,
+		final int arguments,
+		final Boolean borderStatus,
+		final boolean ignoreBindVars) {
 		int bindings = 0;
 		ArgumentProcessingResult.Type type = ArgumentProcessingResult.Type.DEFAULT;
 		for (int i = 0; i < arguments; ++i) {
@@ -450,7 +453,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 				checkUniquePoint(circle.getCenter());
 				bindVars.put(Integer.toString(bindingCounter + bindings++), circle.getCenter().getY());
 				bindVars.put(Integer.toString(bindingCounter + bindings++), circle.getCenter().getX());
-				bindVars.put(Integer.toString(bindingCounter + bindings++), convertDistanceToMeters(circle.getRadius()));
+				bindVars.put(Integer.toString(bindingCounter + bindings++),
+					convertDistanceToMeters(circle.getRadius()));
 				break;
 			} else if (caseAdjusted.getClass() == Point.class) {
 				final Point point = (Point) caseAdjusted;
@@ -481,8 +485,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Ensures that Points used in geospatial parts of non-nested properties are the
-	 * same in case geospatial return type is expected
+	 * Ensures that Points used in geospatial parts of non-nested properties are the same in case geospatial return type
+	 * is expected
 	 *
 	 * @param point
 	 */
@@ -496,7 +500,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		}
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(uniquePoint == null || uniquePoint.equals(point),
-					"Different Points are used - Distance is ambiguous");
+				"Different Points are used - Distance is ambiguous");
 			uniquePoint = point;
 		}
 	}
@@ -518,8 +522,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Ensures that the same geo fields are used in geospatial parts of non-nested
-	 * properties are the same in case geospatial return type is expected
+	 * Ensures that the same geo fields are used in geospatial parts of non-nested properties are the same in case
+	 * geospatial return type is expected
 	 *
 	 * @param part
 	 */
@@ -536,15 +540,16 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Creates a PartInformation containing a String representing either a predicate
-	 * or array expression, and binds arguments from Iterator for a given Part
+	 * Creates a PartInformation containing a String representing either a predicate or array expression, and binds
+	 * arguments from Iterator for a given Part
 	 *
 	 * @param part
 	 * @param iterator
 	 * @return
 	 */
 	private PartInformation createPartInformation(final Part part, final Iterator<Object> iterator) {
-		final String[] templateAndProperty = createPredicateTemplateAndPropertyString(part);
+		int varsUsed = 0;
+		final String[] templateAndProperty = createPredicateTemplateAndPropertyString(part, varsUsed);
 		final String template = templateAndProperty[0];
 		final String property = templateAndProperty[1];
 		boolean isArray = false;
@@ -591,7 +596,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		case EXISTS:
 			isArray = false;
 			clause = format("HAS(%s, '%s')", property.substring(0, property.lastIndexOf(".")),
-					property.substring(property.lastIndexOf(".") + 1, property.length()));
+				property.substring(property.lastIndexOf(".") + 1, property.length()));
 			break;
 		case BEFORE:
 		case LESS_THAN:
@@ -618,7 +623,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		case BETWEEN:
 			isArray = false;
 			clause = format("@%d <= %s AND %s <= @%d", bindingCounter, ignorePropertyCase(part, property),
-					ignorePropertyCase(part, property), bindingCounter + 1);
+				ignorePropertyCase(part, property), bindingCounter + 1);
 			arguments = 2;
 			break;
 		case LIKE:
@@ -646,7 +651,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		case REGEX:
 			isArray = false;
 			clause = format("REGEX_TEST(%s, @%d, %b)", ignorePropertyCase(part, property), bindingCounter,
-					shouldIgnoreCase(part));
+				shouldIgnoreCase(part));
 			arguments = 1;
 			break;
 		case IN:
@@ -678,7 +683,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			if (useFunctions) {
 				isArray = true;
 				clause = format("NEAR(%s, @%d, @%d, COUNT(%s), '_distance')", collectionName, bindingCounter,
-						bindingCounter + 1, collectionName);
+					bindingCounter + 1, collectionName);
 				if (geoFields.isEmpty()) {
 					clause = unsetDistance(clause);
 				}
@@ -691,15 +696,15 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			checkUniqueLocation(part);
 			if (useFunctions) {
 				isArray = true;
-				clause = format("WITHIN(%s, @%d, @%d, @%d, '_distance')", collectionName, bindingCounter, bindingCounter + 1,
-						bindingCounter + 2);
+				clause = format("WITHIN(%s, @%d, @%d, @%d, '_distance')", collectionName, bindingCounter,
+					bindingCounter + 1, bindingCounter + 2);
 				if (geoFields.isEmpty()) {
 					clause = unsetDistance(clause);
 				}
 			} else {
 				isArray = false;
 				clause = format("distance(%s[0], %s[1], @%d, @%d) <= @%d", ignorePropertyCase(part, property),
-						ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1, bindingCounter + 2);
+					ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1, bindingCounter + 2);
 			}
 			arguments = 2;
 			break;
@@ -711,7 +716,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			Assert.isTrue(isUnique == null || isUnique, "Distance is ambiguous for multiple locations");
 		}
 		final ArgumentProcessingResult result = bindArguments(iterator, shouldIgnoreCase(part), arguments, borderStatus,
-				ignoreBindVars);
+			ignoreBindVars);
 		final int bindings = result.bindings;
 		switch (result.type) {
 		case RANGE:
@@ -719,30 +724,30 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			if (useFunctions) {
 				isArray = true;
 				clause = format("MINUS(WITHIN(%s, @%d, @%d, @%d, '_distance'), WITHIN(%s, @%d, @%d, @%d, '_distance'))",
-						collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3, collectionName, bindingCounter,
-						bindingCounter + 1, bindingCounter + 2);
+					collectionName, bindingCounter, bindingCounter + 1, bindingCounter + 3, collectionName,
+					bindingCounter, bindingCounter + 1, bindingCounter + 2);
 				if (geoFields.isEmpty()) {
 					clause = unsetDistance(clause);
 				}
 			} else {
 				isArray = false;
 				clause = format("@%d <= distance(%s[0], %s[1], @%d, @%d) AND distance(%s[0], %s[1], @%d, @%d) <= @%d",
-						bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter,
-						bindingCounter + 1, ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter,
-						bindingCounter + 1, bindingCounter + 3);
+					bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property),
+					bindingCounter, bindingCounter + 1, ignorePropertyCase(part, property),
+					ignorePropertyCase(part, property), bindingCounter, bindingCounter + 1, bindingCounter + 3);
 			}
 			break;
 		case BOX:
 			isArray = false;
 			clause = format("@%d <= %s[0] AND %s[0] <= @%d AND @%d <= %s[1] AND %s[1] <= @%d", bindingCounter,
-					ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter + 1,
-					bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property),
-					bindingCounter + 3);
+				ignorePropertyCase(part, property), ignorePropertyCase(part, property), bindingCounter + 1,
+				bindingCounter + 2, ignorePropertyCase(part, property), ignorePropertyCase(part, property),
+				bindingCounter + 3);
 			break;
 		case POLYGON:
 			isArray = false;
 			clause = format("IS_IN_POLYGON(@%d, %s[0], %s[1])", bindingCounter, ignorePropertyCase(part, property),
-					ignorePropertyCase(part, property));
+				ignorePropertyCase(part, property));
 			break;
 		case DEFAULT:
 		default:
@@ -753,8 +758,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 			if (isArray) {
 				isArray = false;
 				final String subscript = Integer.toString(++varsUsed);
-				clause = format("(FOR e%s IN %s FILTER e%s._id == %s._id RETURN 1)[0] == 1", subscript, clause, subscript,
-						property.substring(0, property.indexOf(".")));
+				clause = format("(FOR e%s IN %s FILTER e%s._id == %s._id RETURN 1)[0] == 1", subscript, clause,
+					subscript, property.substring(0, property.indexOf(".")));
 			}
 			clause = format(template, clause);
 		}
@@ -762,7 +767,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 		PropertyPath pp = part.getProperty();
 		do {
 			Optional.ofNullable(pp.isCollection() ? pp.getOwningType().getComponentType() : pp.getOwningType())
-					.filter(t -> context.getPersistentEntity(t) != null).map(t -> t.getType()).ifPresent(t -> with.add(t));
+					.filter(t -> context.getPersistentEntity(t) != null).map(t -> t.getType())
+					.ifPresent(t -> with.add(t));
 		} while ((pp = pp.next()) != null);
 		return clause == null ? null : new PartInformation(isArray, clause, with);
 	}
@@ -776,8 +782,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	}
 
 	/**
-	 * Stores how many bindings where used in a Part and if or what kind of special
-	 * type clause should be created
+	 * Stores how many bindings where used in a Part and if or what kind of special type clause should be created
 	 */
 	private static class ArgumentProcessingResult {
 
