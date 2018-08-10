@@ -738,6 +738,36 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void twoRelationsSingleLevelTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final List<Customer> customers = new LinkedList<>();
+		List<Customer> retrieved;
+		final Customer john = new Customer("John", "Smith", 52);
+		final Customer adam = new Customer("Adam", "Smith", 294);
+		final Customer matt = new Customer("Matt", "Smith", 34);
+		final Product phone = new Product("phone");
+		final Product car = new Product("car");
+		final Product chair = new Product("chair");
+		template.insert(phone);
+		template.insert(car);
+		template.insert(chair);
+		customers.add(john);
+		customers.add(matt);
+		customers.add(adam);
+		repository.save(customers);
+		template.insert(new Owns(john, phone));
+		template.insert(new Owns(john, car));
+		template.insert(new Owns(adam, chair));
+		template.insert(new Owns(matt, phone));
+		template.insert(new Owns(matt, car));
+		template.insert(new Owns(matt, chair));
+		toBeRetrieved.add(john);
+		toBeRetrieved.add(matt);
+		retrieved = repository.getByOwnsNameAndOwns2Name(phone.getName(), phone.getName());
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
 	public void relationsMultiLevelTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final List<Customer> customers = new LinkedList<>();

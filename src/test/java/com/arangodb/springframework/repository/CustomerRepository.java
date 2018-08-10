@@ -196,6 +196,8 @@ public interface CustomerRepository extends ArangoRepository<Customer> {
 
 	List<Customer> getByOwnsName(String name);
 
+	List<Customer> getByOwnsNameAndOwns2Name(String name, String name2);
+
 	List<Customer> getByOwnsContainsName(String name);
 
 	// Count query

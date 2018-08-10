@@ -64,6 +64,9 @@ public class Customer {
 	@Relations(edges = { Owns.class })
 	private Collection<Product> owns;
 
+	@Relations(edges = { Owns.class })
+	private Collection<Product> owns2;
+
 	public Customer() {
 		super();
 	}
@@ -161,6 +164,14 @@ public class Customer {
 
 	public void setOwns(final Collection<Product> owns) {
 		this.owns = owns;
+	}
+
+	public Collection<Product> getOwns2() {
+		return owns2;
+	}
+
+	public void setOwns2(final Collection<Product> owns2) {
+		this.owns2 = owns2;
 	}
 
 	public boolean isAlive() {

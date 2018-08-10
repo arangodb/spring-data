@@ -87,7 +87,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	private String uniqueLocation = null;
 	private Boolean isUnique = null;
 	private int bindingCounter = 0;
-	private int varsUsed = 0;
 	private boolean checkUnique = false;
 
 	public DerivedQueryCreator(
@@ -146,7 +145,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	/**
 	 * Builds a full AQL query from a built Disjunction, additional information from PartTree and special parameters
 	 * caught by ArangoParameterAccessor
-	 * 
+	 *
 	 * @param criteria
 	 * @param sort
 	 * @return
@@ -197,7 +196,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 
 	/**
 	 * Escapes special characters which could be used in an operand of LIKE operator
-	 * 
+	 *
 	 * @param string
 	 * @return
 	 */
@@ -219,7 +218,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 
 	/**
 	 * Wrapps property expression in order to lower case. Only properties of type String or Iterable<String> are lowered
-	 * 
+	 *
 	 * @param part
 	 * @param property
 	 * @return
@@ -236,7 +235,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 
 	/**
 	 * Returns a String representing a full propertyPath e.g. "e.product.name"
-	 * 
+	 *
 	 * @param part
 	 * @return
 	 */
@@ -249,11 +248,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	 * Creates a predicate template with one String placeholder for a Part-specific predicate expression from properties
 	 * in PropertyPath which represent references or collections, and, also, returns a 2nd String representing property
 	 * to be used in a Part-specific predicate expression
-	 * 
+	 *
 	 * @param part
+	 * @param varsUsed
 	 * @return
 	 */
-	private String[] createPredicateTemplateAndPropertyString(final Part part) {
+	private String[] createPredicateTemplateAndPropertyString(final Part part, int varsUsed) {
 		final String PREDICATE_TEMPLATE = "(%s FILTER %%s RETURN 1)[0] == 1";
 		final PersistentPropertyPath<?> persistentPropertyPath = context.getPersistentPropertyPath(part.getProperty());
 		StringBuilder simpleProperties = new StringBuilder();
@@ -345,7 +345,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 
 	/**
 	 * Lowers case of a given argument if its type is String, Iterable<String> or String[] if shouldIgnoreCase is true
-	 * 
+	 *
 	 * @param argument
 	 * @param shouldIgnoreCase
 	 * @return
@@ -376,7 +376,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	/**
 	 * Determines whether the case for a Part should be ignored based on property type and IgnoreCase keywords in the
 	 * method name
-	 * 
+	 *
 	 * @param part
 	 * @return
 	 */
@@ -394,7 +394,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 
 	/**
 	 * Puts actual arguments in bindVars Map based on Part-specific information and types of arguments.
-	 * 
+	 *
 	 * @param iterator
 	 * @param shouldIgnoreCase
 	 * @param arguments
@@ -487,7 +487,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	/**
 	 * Ensures that Points used in geospatial parts of non-nested properties are the same in case geospatial return type
 	 * is expected
-	 * 
+	 *
 	 * @param point
 	 */
 	private void checkUniquePoint(final Point point) {
@@ -524,7 +524,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	/**
 	 * Ensures that the same geo fields are used in geospatial parts of non-nested properties are the same in case
 	 * geospatial return type is expected
-	 * 
+	 *
 	 * @param part
 	 */
 	private void checkUniqueLocation(final Part part) {
@@ -542,13 +542,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Conjunctio
 	/**
 	 * Creates a PartInformation containing a String representing either a predicate or array expression, and binds
 	 * arguments from Iterator for a given Part
-	 * 
+	 *
 	 * @param part
 	 * @param iterator
 	 * @return
 	 */
 	private PartInformation createPartInformation(final Part part, final Iterator<Object> iterator) {
-		final String[] templateAndProperty = createPredicateTemplateAndPropertyString(part);
+		int varsUsed = 0;
+		final String[] templateAndProperty = createPredicateTemplateAndPropertyString(part, varsUsed);
 		final String template = templateAndProperty[0];
 		final String property = templateAndProperty[1];
 		boolean isArray = false;
