@@ -754,7 +754,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		customers.add(john);
 		customers.add(matt);
 		customers.add(adam);
-		repository.save(customers);
+		repository.saveAll(customers);
 		template.insert(new Owns(john, phone));
 		template.insert(new Owns(john, car));
 		template.insert(new Owns(adam, chair));
