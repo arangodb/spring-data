@@ -64,8 +64,8 @@ public final class AqlUtils {
 		if (pageable.isUnpaged()) {
 			return clause;
 		}
-		
-		Sort sort = pageable.getSort();
+
+		final Sort sort = pageable.getSort();
 		buildSortClause(sort, varName, clause);
 
 		if (sort.isSorted()) {
@@ -88,7 +88,7 @@ public final class AqlUtils {
 		final Sort sort,
 		@Nullable final String varName,
 		final StringBuilder clause) {
-		
+
 		if (sort.isUnsorted()) {
 			return clause;
 		}
@@ -195,6 +195,10 @@ public final class AqlUtils {
 
 		escaped.append('`');
 		return escaped.toString();
+	}
+
+	public static String buildCollectionName(final String collection) {
+		return collection.contains("-") ? "`" + collection + "`" : collection;
 	}
 
 }

@@ -43,31 +43,34 @@ import com.arangodb.springframework.repository.query.ArangoParameters.ArangoPara
 public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 	private static final String PAGEABLE_PLACEHOLDER = "#pageable";
-
-	private static final String SORT_PLACEHOLDER = "#sort";
-
-	private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("@(@?[A-Za-z0-9][A-Za-z0-9_]*)");
-
 	private static final Pattern PAGEABLE_PLACEHOLDER_PATTERN = Pattern.compile(Pattern.quote(PAGEABLE_PLACEHOLDER));
 
+	private static final String SORT_PLACEHOLDER = "#sort";
 	private static final Pattern SORT_PLACEHOLDER_PATTERN = Pattern.compile(Pattern.quote(SORT_PLACEHOLDER));
+
+	private static final String COLLECTION_PLACEHOLDER = "#collection";
+	private static final Pattern COLLECTION_PLACEHOLDER_PATTERN = Pattern
+			.compile(Pattern.quote(COLLECTION_PLACEHOLDER));
+
+	private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("@(@?[A-Za-z0-9][A-Za-z0-9_]*)");
 
 	private final String query;
 	private final Set<String> queryBindParams;
 
-	public StringBasedArangoQuery(ArangoQueryMethod method, ArangoOperations operations) {
+	public StringBasedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
 		this(method.getAnnotatedQuery(), method, operations);
 	}
 
-	public StringBasedArangoQuery(String query, ArangoQueryMethod method, ArangoOperations operations) {
+	public StringBasedArangoQuery(final String query, final ArangoQueryMethod method,
+		final ArangoOperations operations) {
 		super(method, operations);
 		Assert.notNull(query, "Query must not be null!");
 
 		this.query = query;
-		
+
 		assertSinglePageablePlaceholder();
 		assertSingleSortPlaceholder();
-		
+
 		this.queryBindParams = getBindParamsInQuery();
 	}
 
@@ -93,17 +96,23 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	}
 
 	private String prepareQuery(final ArangoParameterAccessor accessor) {
+		String preparedQuery = query;
+
+		final Matcher collectionMatcher = COLLECTION_PLACEHOLDER_PATTERN.matcher(preparedQuery);
+		if (collectionMatcher.find()) {
+			final String collectionName = AqlUtils.buildCollectionName(operations.collection(domainClass).name());
+			preparedQuery = collectionMatcher.replaceAll(collectionName);
+		}
+
 		if (accessor.getParameters().hasPageableParameter()) {
 			final String pageableClause = AqlUtils.buildPageableClause(accessor.getPageable());
-			return PAGEABLE_PLACEHOLDER_PATTERN.matcher(query).replaceFirst(pageableClause);
-		}
-
-		if (accessor.getParameters().hasSortParameter()) {
+			preparedQuery = PAGEABLE_PLACEHOLDER_PATTERN.matcher(preparedQuery).replaceFirst(pageableClause);
+		} else if (accessor.getParameters().hasSortParameter()) {
 			final String sortClause = AqlUtils.buildSortClause(accessor.getSort());
-			return SORT_PLACEHOLDER_PATTERN.matcher(query).replaceFirst(sortClause);
+			preparedQuery = SORT_PLACEHOLDER_PATTERN.matcher(preparedQuery).replaceFirst(sortClause);
 		}
 
-		return query;
+		return preparedQuery;
 	}
 
 	private void extractBindVars(final ArangoParameterAccessor accessor, final Map<String, Object> bindVars) {
@@ -173,8 +182,9 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 	private void assertSinglePageablePlaceholder() {
 		if (method.getParameters().hasPageableParameter()) {
-			int firstOccurrence = query.indexOf(PAGEABLE_PLACEHOLDER);
-			int secondOccurrence = query.indexOf(PAGEABLE_PLACEHOLDER, firstOccurrence + PAGEABLE_PLACEHOLDER.length());
+			final int firstOccurrence = query.indexOf(PAGEABLE_PLACEHOLDER);
+			final int secondOccurrence = query.indexOf(PAGEABLE_PLACEHOLDER,
+				firstOccurrence + PAGEABLE_PLACEHOLDER.length());
 
 			Assert.isTrue(firstOccurrence > -1 && secondOccurrence < 0,
 				String.format(
@@ -185,8 +195,8 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 	private void assertSingleSortPlaceholder() {
 		if (method.getParameters().hasSortParameter()) {
-			int firstOccurrence = query.indexOf(SORT_PLACEHOLDER);
-			int secondOccurrence = query.indexOf(SORT_PLACEHOLDER, firstOccurrence + SORT_PLACEHOLDER.length());
+			final int firstOccurrence = query.indexOf(SORT_PLACEHOLDER);
+			final int secondOccurrence = query.indexOf(SORT_PLACEHOLDER, firstOccurrence + SORT_PLACEHOLDER.length());
 
 			Assert.isTrue(firstOccurrence > -1 && secondOccurrence < 0,
 				String.format(

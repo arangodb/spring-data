@@ -42,18 +42,18 @@ public interface CustomerRepository extends ArangoRepository<Customer, String> {
 	@Query("FOR c IN customer FILTER c._key == @id RETURN c")
 	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
-	@Query("FOR c IN customer FILTER c.name == @1 AND c._key == @0 RETURN c")
+	@Query("FOR c IN #collection FILTER c.name == @1 AND c._key == @0 RETURN c")
 	@QueryOptions(cache = true, ttl = 128)
 	BaseDocument findOneByIdAndNameAql(String id, String name);
 
 	@QueryOptions(maxPlans = 1000, ttl = 128)
-	@Query("FOR c IN customer FILTER c._key == @id AND c.name == @name RETURN c")
+	@Query("FOR c IN #collection FILTER c._key == @id AND c.name == @name RETURN c")
 	ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN customer FILTER c._key == @id AND c.name == @name RETURN c")
+	@Query("FOR c IN #collection FILTER c._key == @id AND c.name == @name RETURN c")
 	Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN customer FILTER c._key == @id AND c.name == @0 RETURN c")
+	@Query("FOR c IN #collection FILTER c._key == @id AND c.name == @0 RETURN c")
 	Customer findOneByIdAndNameWithBindVarsAql(String name, @BindVars Map<String, Object> bindVars);
 
 	@Query("FOR c IN @@0 FILTER \"@1\" != '@2' AND c._id == @1 RETURN c")
@@ -74,7 +74,7 @@ public interface CustomerRepository extends ArangoRepository<Customer, String> {
 	@Query("FOR c IN @collection FILTER c._id == @id RETURN c")
 	Customer findOneByIdInNamedCollectionAqlRejected(@Param("collection") String collection, @Param("id") String id);
 
-	@Query("FOR c in customer FILTER c.surname == @0 RETURN c")
+	@Query("FOR c in #collection FILTER c.surname == @0 RETURN c")
 	List<Customer> findManyBySurname(String surname);
 
 	Set<Customer> findDistinctByNameAfter(String name);
@@ -154,14 +154,14 @@ public interface CustomerRepository extends ArangoRepository<Customer, String> {
 
 	Customer[] findByNameOrderBySurnameAsc(Sort sort, String name);
 
-	@Query("FOR c IN customer FILTER c.name == @1 #sort RETURN c")
+	@Query("FOR c IN #collection FILTER c.name == @1 #sort RETURN c")
 	List<Customer> findByNameWithSort(Sort sort, String name);
 
 	// PAGEABLE
 
 	Page<Customer> readByNameAndSurname(Pageable pageable, String name, AqlQueryOptions options, String surname);
 
-	@Query("FOR c IN customer FILTER c.name == @1 AND c.surname == @2 #pageable RETURN c")
+	@Query("FOR c IN #collection FILTER c.name == @1 AND c.surname == @2 #pageable RETURN c")
 	Page<Customer> findByNameAndSurnameWithPageable(Pageable pageable, String name, String surname);
 
 	// GEO_RESULT, GEO_RESULTS, GEO_PAGE
@@ -216,18 +216,18 @@ public interface CustomerRepository extends ArangoRepository<Customer, String> {
 
 	// Static projection
 
-	@Query("FOR c IN customer FILTER c._key == @id RETURN c")
+	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")
 	CustomerNameProjection findOneByIdWithStaticProjection(@Param("id") String id);
 
-	@Query("FOR c IN customer FILTER c.age >= 18 RETURN c")
+	@Query("FOR c IN #collection FILTER c.age >= 18 RETURN c")
 	List<CustomerNameProjection> findManyLegalAgeWithStaticProjection();
 
 	// Dynamic projection
 
-	@Query("FOR c IN customer FILTER c._key == @id RETURN c")
+	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")
 	<T> T findOneByIdWithDynamicProjection(@Param("id") String id, Class<T> projection);
 
-	@Query("FOR c IN customer FILTER c.age >= 18 RETURN c")
+	@Query("FOR c IN #collection FILTER c.age >= 18 RETURN c")
 	<T> List<T> findManyLegalAgeWithDynamicProjection(Class<T> projection);
 
 }

@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 - added mapping events (`BeforeDeleteEvent`, `AfterDeleteEvent`, `AfterLoadEvent`, `BeforeSaveEvent`, `AfterSaveEvent`)
 - added support for non-collection fields annotated with `@Relations`/`@From`/`@To` in domain objects annotated with `@Document` (issue #104)
+- added support for placeholder `#collection` in `@Query` methods
 
 ### Changed
 
