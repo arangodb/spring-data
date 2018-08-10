@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.template;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
@@ -355,6 +356,23 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customers.get(0).get("name").getAsString(), is("John"));
 		assertThat(customers.get(0).get("surname").getAsString(), is("Doe"));
 		assertThat(customers.get(0).get("age").getAsInt(), is(30));
+	}
+
+	static class TransientTestEntity {
+		@Id
+		private String id;
+		@Transient
+		private String transientField;
+	}
+
+	@Test
+	public void transientTest() {
+		final TransientTestEntity value = new TransientTestEntity();
+		value.transientField = "test";
+		template.insert(value);
+		final Optional<TransientTestEntity> find = template.find(value.id, TransientTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().transientField, is(nullValue()));
 	}
 
 	public static class NewEntityTest implements Persistable<String> {
