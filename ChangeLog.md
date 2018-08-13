@@ -8,7 +8,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ### Fixed
 
+- fixed repository methods with `Example` using `StringMatcher.CONTAINING` (issue #113)
+
 ## [1.3.1] - 2018-08-13
+
+### Fixed
 
 - fixed a bug in derived queries when using two times `@Relations` in one entity
 

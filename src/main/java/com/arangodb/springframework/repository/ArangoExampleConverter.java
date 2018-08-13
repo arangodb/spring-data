@@ -114,6 +114,9 @@ public class ArangoExampleConverter<T> {
 			case ENDING:
 				value = escape(string) + "$";
 				break;
+			case CONTAINING:
+				value = escape(string);
+				break;
 			case DEFAULT:
 			case EXACT:
 			default:
