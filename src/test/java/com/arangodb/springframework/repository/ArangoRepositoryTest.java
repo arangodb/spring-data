@@ -1,7 +1,9 @@
 package com.arangodb.springframework.repository;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ import java.util.Optional;
 import org.junit.Test;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -322,5 +325,20 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 					.withTransformer("nestedCustomer.age", o -> Optional.of(Integer.valueOf(o.get().toString()) + 1)));
 		final Customer retrieved = repository.findOne(example).get();
 		assertEquals(check, retrieved);
+	}
+
+	@Test
+	public void containingExampleTest() {
+		final Customer entity = new Customer("name", "surname", 10);
+		repository.save(entity);
+
+		final Customer probe = new Customer();
+		probe.setName("am");
+		final Example<Customer> example = Example.of(probe,
+			ExampleMatcher.matching().withStringMatcher(StringMatcher.CONTAINING).withIgnorePaths("arangoId", "id",
+				"key", "rev", "surname", "age"));
+		final Optional<Customer> retrieved = repository.findOne(example);
+		assertThat(retrieved.isPresent(), is(true));
+		assertThat(retrieved.get().getName(), is("name"));
 	}
 }
