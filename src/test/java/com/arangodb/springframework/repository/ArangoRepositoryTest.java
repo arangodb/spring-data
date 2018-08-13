@@ -1,6 +1,7 @@
 package com.arangodb.springframework.repository;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -338,8 +339,8 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		final Example<Customer> example = Example.of(probe,
 			ExampleMatcher.matching().withStringMatcher(StringMatcher.CONTAINING).withIgnorePaths("arangoId", "id",
 				"key", "rev", "surname", "age"));
-		final Optional<Customer> retrieved = repository.findOne(example);
-		assertThat(retrieved.isPresent(), is(true));
-		assertThat(retrieved.get().getName(), is("name"));
+		final Customer retrieved = repository.findOne(example);
+		assertThat(retrieved, is(notNullValue()));
+		assertThat(retrieved.getName(), is("name"));
 	}
 }
