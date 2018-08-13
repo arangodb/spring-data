@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ### Fixed
 
+## [1.3.1] - 2018-08-13
+
 - fixed a bug in derived queries when using two times `@Relations` in one entity
 
 ## [1.3.0] - 2018-07-18
