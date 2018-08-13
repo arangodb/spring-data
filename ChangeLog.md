@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.0.0-RC.1] - 2018-08-13
+
 ### Added
 
 - added support for non-String `@Id`s (issue #79)
