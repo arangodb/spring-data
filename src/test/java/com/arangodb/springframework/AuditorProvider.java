@@ -33,16 +33,20 @@ import com.arangodb.springframework.testdata.Person;
  */
 public class AuditorProvider implements AuditorAware<Person> {
 
+	private final ArangoOperations operations;
 	private final Person person;
 
 	public AuditorProvider(final ArangoOperations operations) {
 		super();
-		person = new Person("auditor");
-		operations.insert(person);
+		this.operations = operations;
+		person = new Person();
+		person.setId("auditor");
+		person.setName("Auditor");
 	}
 
 	@Override
 	public Optional<Person> getCurrentAuditor() {
+		operations.repsert(person);
 		return Optional.of(person);
 	}
 
