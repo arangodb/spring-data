@@ -33,7 +33,6 @@ import com.arangodb.ArangoDB;
 import com.arangodb.springframework.annotation.EnableArangoAuditing;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.AbstractArangoConfiguration;
-import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
 import com.arangodb.springframework.testdata.Person;
 
@@ -72,7 +71,7 @@ public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 	}
 
 	@Bean
-	public AuditorAware<Person> auditorProvider(final ArangoOperations operations) {
-		return new AuditorProvider(operations);
+	public AuditorAware<Person> auditorProvider() {
+		return new AuditorProvider();
 	}
 }

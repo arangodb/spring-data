@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import org.springframework.data.domain.AuditorAware;
 
-import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.testdata.Person;
 
 /**
@@ -33,21 +32,23 @@ import com.arangodb.springframework.testdata.Person;
  */
 public class AuditorProvider implements AuditorAware<Person> {
 
-	private final ArangoOperations operations;
-	private final Person person;
+	private Person person;
 
-	public AuditorProvider(final ArangoOperations operations) {
+	public AuditorProvider() {
 		super();
-		this.operations = operations;
-		person = new Person();
-		person.setId("auditor");
-		person.setName("Auditor");
 	}
 
 	@Override
 	public Optional<Person> getCurrentAuditor() {
-		operations.repsert(person);
-		return Optional.of(person);
+		return Optional.ofNullable(person);
+	}
+
+	public Person getPerson() {
+		return person;
+	}
+
+	public void setPerson(final Person person) {
+		this.person = person;
 	}
 
 }
