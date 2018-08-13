@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -36,19 +37,27 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.AuditorProvider;
 import com.arangodb.springframework.annotation.ArangoId;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Field;
+import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
 import com.arangodb.springframework.testdata.Actor;
 import com.arangodb.springframework.testdata.Movie;
+import com.arangodb.springframework.testdata.Person;
 import com.arangodb.springframework.testdata.Role;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
@@ -409,5 +418,89 @@ public class GeneralMappingTest extends AbstractArangoTest {
 		assertThat(entity.id, is("test"));
 		assertThat(template.find(entity.id, ArangoIdAndIdTestEntity.class).isPresent(), is(true));
 		assertThat(template.find(entity.arangoId, ArangoIdAndIdTestEntity.class).isPresent(), is(true));
+	}
+
+	@Document
+	static class AuditingTestEntity {
+		@Id
+		private String id;
+		@CreatedDate
+		private Instant created;
+		@CreatedBy
+		private Person createdBy;
+		@LastModifiedDate
+		private Instant modified;
+		@Ref
+		@LastModifiedBy
+		private Person modifiedBy;
+	}
+
+	@Autowired
+	AuditorProvider auditorProvider;
+
+	@Test
+	public void auditingTest() {
+		final String createID = "create";
+		{
+			final Person person = new Person();
+			person.setId(createID);
+			template.insert(person);
+			auditorProvider.setPerson(person);
+		}
+
+		final Instant beforeInsert = Instant.now();
+		final AuditingTestEntity value = new AuditingTestEntity();
+		template.insert(value);
+		final Instant afterInsert = Instant.now();
+		{
+			final AuditingTestEntity find = template.find(value.id, AuditingTestEntity.class).get();
+			assertThat(find.created, is(notNullValue()));
+			assertThat(find.created.isAfter(beforeInsert), is(true));
+			assertThat(find.created.isBefore(afterInsert), is(true));
+
+			assertThat(find.createdBy, is(notNullValue()));
+			assertThat(find.createdBy.getId(), is(createID));
+
+			assertThat(find.modified, is(notNullValue()));
+			assertThat(find.modified.isAfter(beforeInsert), is(true));
+			assertThat(find.modified.isBefore(afterInsert), is(true));
+
+			assertThat(find.modifiedBy, is(notNullValue()));
+			assertThat(find.modifiedBy.getId(), is(createID));
+		}
+
+		final VPackSlice doc = template.driver().db(ArangoTestConfiguration.DB).collection("auditingTestEntity")
+				.getDocument(value.id, VPackSlice.class);
+		assertThat(doc, is(notNullValue()));
+		assertThat(doc.get("createdBy").isObject(), is(true));
+		assertThat(doc.get("modifiedBy").isString(), is(true));
+
+		final String modifiedID = "modified";
+		{
+			final Person person = new Person();
+			person.setId(modifiedID);
+			template.insert(person);
+			auditorProvider.setPerson(person);
+		}
+
+		final Instant beforeReplace = Instant.now();
+		template.replace(value.id, value);
+		final Instant afterReplace = Instant.now();
+		{
+			final AuditingTestEntity find = template.find(value.id, AuditingTestEntity.class).get();
+			assertThat(find.created, is(notNullValue()));
+			assertThat(find.created.isAfter(beforeInsert), is(true));
+			assertThat(find.created.isBefore(afterInsert), is(true));
+
+			assertThat(find.createdBy, is(notNullValue()));
+			assertThat(find.createdBy.getId(), is(createID));
+
+			assertThat(find.modified, is(notNullValue()));
+			assertThat(find.modified.isAfter(beforeReplace), is(true));
+			assertThat(find.modified.isBefore(afterReplace), is(true));
+
+			assertThat(find.modifiedBy, is(notNullValue()));
+			assertThat(find.modifiedBy.getId(), is(modifiedID));
+		}
 	}
 }

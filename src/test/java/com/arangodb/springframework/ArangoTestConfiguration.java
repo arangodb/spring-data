@@ -23,14 +23,18 @@ package com.arangodb.springframework;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.AuditorAware;
 
 import com.arangodb.ArangoDB;
+import com.arangodb.springframework.annotation.EnableArangoAuditing;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.AbstractArangoConfiguration;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
+import com.arangodb.springframework.testdata.Person;
 
 /**
  * 
@@ -41,6 +45,7 @@ import com.arangodb.springframework.core.mapping.CustomMappingTest;
 @ComponentScan({ "com.arangodb.springframework.component", "com.arangodb.springframework.core.mapping.event" })
 @EnableArangoRepositories(basePackages = {
 		"com.arangodb.springframework.repository" }, namedQueriesLocation = "classpath*:arango-named-queries-test.properties")
+@EnableArangoAuditing(auditorAwareRef = "auditorProvider")
 public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 
 	public static final String DB = "spring-test-db";
@@ -65,4 +70,8 @@ public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 		return converters;
 	}
 
+	@Bean
+	public AuditorAware<Person> auditorProvider() {
+		return new AuditorProvider();
+	}
 }
