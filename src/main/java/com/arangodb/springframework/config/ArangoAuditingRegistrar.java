@@ -35,7 +35,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 
 import com.arangodb.springframework.annotation.EnableArangoAuditing;
-import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.mapping.event.AuditingEventListener;
@@ -91,17 +90,18 @@ public class ArangoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupp
 	static class ArangoMappingContextLookup
 			implements FactoryBean<MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty>> {
 
-		private final ArangoConverter converter;
+		private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
-		public ArangoMappingContextLookup(final ArangoConverter converter) {
+		public ArangoMappingContextLookup(
+			final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context) {
 			super();
-			this.converter = converter;
+			this.context = context;
 		}
 
 		@Override
 		public MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> getObject()
 				throws Exception {
-			return converter.getMappingContext();
+			return context;
 		}
 
 		@Override
