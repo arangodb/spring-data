@@ -21,3 +21,4 @@
   - [Indexes](Mapping/Indexes.md)
   - [Converter](Mapping/Converter.md)
   - [Events](Mapping/Events.md)
+  - [Auditing](Mapping/Auditing.md)
