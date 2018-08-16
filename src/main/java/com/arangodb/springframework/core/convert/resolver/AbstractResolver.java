@@ -35,6 +35,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * @author Mark Vollmary
@@ -50,7 +51,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 		try {
 			GET_ENTITY_METHOD = LazyLoadingProxy.class.getMethod("getEntity");
 			GET_REF_ID_METHOD = LazyLoadingProxy.class.getMethod("getRefId");
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -141,6 +142,20 @@ public abstract class AbstractResolver<A extends Annotation> {
 				return id;
 			}
 
+			if (ReflectionUtils.isObjectMethod(method)) {
+				if (ReflectionUtils.isToStringMethod(method)) {
+					return proxyToString();
+				}
+
+				else if (ReflectionUtils.isEqualsMethod(method)) {
+					return proxyEquals(proxy, args[0]);
+				}
+
+				else if (ReflectionUtils.isHashCodeMethod(method)) {
+					return proxyHashCode();
+				}
+			}
+
 			final Object result = ensureResolved();
 			return result == null ? null : method.invoke(result, args);
 		}
@@ -158,6 +173,29 @@ public abstract class AbstractResolver<A extends Annotation> {
 				return convertIfNecessary(callback.resolve(id, type, annotation), type.getType());
 			}
 			return result;
+		}
+
+		private String proxyToString() {
+			final StringBuilder str = new StringBuilder();
+			str.append(LazyLoadingProxy.class.getSimpleName());
+			str.append(" [");
+			str.append(id);
+			str.append("]");
+			return str.toString();
+		}
+
+		private int proxyHashCode() {
+			return proxyToString().hashCode();
+		}
+
+		private boolean proxyEquals(final Object proxy, final Object obj) {
+			if (!(obj instanceof LazyLoadingProxy)) {
+				return false;
+			}
+			if (obj == proxy) {
+				return true;
+			}
+			return proxyToString().equals(obj.toString());
 		}
 
 		@SuppressWarnings("unchecked")
