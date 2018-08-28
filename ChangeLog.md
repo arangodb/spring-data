@@ -210,3 +210,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ### Fixed
 
 - fixed missing WITH information in AQL when resolving annotation @Relations (issue #9)
+
+[unreleased]: https://github.com/arangodb/spring-data/compare/3.0.0-RC.1...HEAD
+[3.0.0-rc.1]: https://github.com/arangodb/spring-data/compare/2.3.0...3.0.0-RC.1
+[2.3.0]: https://github.com/arangodb/spring-data/compare/2.2.2...2.3.0
+[2.2.2]: https://github.com/arangodb/spring-data/compare/2.2.1...2.2.2
+[2.2.1]: https://github.com/arangodb/spring-data/compare/2.2.0...2.2.1
+[2.2.0]: https://github.com/arangodb/spring-data/compare/2.1.9...2.2.0
+[2.1.9]: https://github.com/arangodb/spring-data/compare/2.1.8...2.1.9
+[2.1.8]: https://github.com/arangodb/spring-data/compare/2.1.7...2.1.8
+[2.1.7]: https://github.com/arangodb/spring-data/compare/2.1.6...2.1.7
+[2.1.6]: https://github.com/arangodb/spring-data/compare/2.1.5...2.1.6
+[2.1.5]: https://github.com/arangodb/spring-data/compare/2.1.4...2.1.5
+[2.1.4]: https://github.com/arangodb/spring-data/compare/2.1.3...2.1.4
+[2.1.3]: https://github.com/arangodb/spring-data/compare/2.1.2...2.1.3
+[2.1.2]: https://github.com/arangodb/spring-data/compare/2.1.1...2.1.2
+[2.1.1]: https://github.com/arangodb/spring-data/compare/2.1.0...2.1.1
+[2.1.0]: https://github.com/arangodb/spring-data/compare/2.0.3...2.1.0
+[2.0.3]: https://github.com/arangodb/spring-data/compare/2.0.2...2.0.3
