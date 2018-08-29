@@ -38,6 +38,7 @@ import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
+import com.arangodb.model.arangosearch.ArangoSearchCreateOptions;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 
 /**
@@ -560,6 +561,12 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 */
 	CollectionOperations collection(String name, CollectionCreateOptions options) throws DataAccessException;
+
+	ArangoSearchOperations arangosearch(Class<?> entityClass) throws DataAccessException;
+
+	ArangoSearchOperations arangosearch(String name) throws DataAccessException;
+
+	ArangoSearchOperations arangosearch(String name, ArangoSearchCreateOptions options) throws DataAccessException;
 
 	/**
 	 * Return the operations interface for a user. The user is not created automatically if it does not exists.

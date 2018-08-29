@@ -48,7 +48,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import com.arangodb.entity.CollectionType;
+import com.arangodb.entity.arangosearch.CollectionLink;
+import com.arangodb.entity.arangosearch.ConsolidationPolicy;
+import com.arangodb.entity.arangosearch.FieldLink;
 import com.arangodb.model.CollectionCreateOptions;
+import com.arangodb.model.arangosearch.ArangoSearchCreateOptions;
+import com.arangodb.springframework.annotation.ArangoSearch;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.annotation.FulltextIndex;
@@ -72,8 +77,11 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
-	private String collection;
-	private final Expression expression;
+	private final String collection;
+	private final String arangosearch;
+
+	private final Expression collectionExpression;
+	private final Expression arangosearchExpression;
 	private final StandardEvaluationContext context;
 
 	private ArangoPersistentProperty arangoIdProperty;
@@ -83,33 +91,55 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	private final Collection<ArangoPersistentProperty> persistentIndexedProperties;
 	private final Collection<ArangoPersistentProperty> geoIndexedProperties;
 	private final Collection<ArangoPersistentProperty> fulltextIndexedProperties;
+	private final Collection<ArangoPersistentProperty> arangosearchLinkedProperties;
 
 	private final CollectionCreateOptions collectionOptions;
+	private final Optional<ArangoSearchCreateOptions> arangosearchOptions;
+	private Optional<CollectionLink> arangosearchLinkOptions;
 
 	private final Map<Class<? extends Annotation>, Set<? extends Annotation>> repeatableAnnotationCache;
 
 	public DefaultArangoPersistentEntity(final TypeInformation<T> information) {
 		super(information);
-		collection = StringUtils.uncapitalize(information.getType().getSimpleName());
 		context = new StandardEvaluationContext();
 		hashIndexedProperties = new ArrayList<>();
 		skiplistIndexedProperties = new ArrayList<>();
 		persistentIndexedProperties = new ArrayList<>();
 		geoIndexedProperties = new ArrayList<>();
 		fulltextIndexedProperties = new ArrayList<>();
+		arangosearchLinkedProperties = new ArrayList<>();
 		repeatableAnnotationCache = new HashMap<>();
 		final Document document = findAnnotation(Document.class);
 		final Edge edge = findAnnotation(Edge.class);
+		final ArangoSearch as = findAnnotation(ArangoSearch.class);
+		final String simpleTypeName = StringUtils.uncapitalize(information.getType().getSimpleName());
 		if (edge != null) {
-			collection = StringUtils.hasText(edge.value()) ? edge.value() : collection;
+			collection = StringUtils.hasText(edge.value()) ? edge.value() : simpleTypeName;
 			collectionOptions = createCollectionOptions(edge);
+			collectionExpression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
 		} else if (document != null) {
-			collection = StringUtils.hasText(document.value()) ? document.value() : collection;
+			collection = StringUtils.hasText(document.value()) ? document.value() : simpleTypeName;
 			collectionOptions = createCollectionOptions(document);
-		} else {
+			collectionExpression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
+		} else if (as == null) {
+			collection = simpleTypeName;
 			collectionOptions = new CollectionCreateOptions().type(CollectionType.DOCUMENT);
+			collectionExpression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
+		} else {
+			collection = null;
+			collectionOptions = null;
+			collectionExpression = null;
 		}
-		expression = PARSER.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
+		if (as != null) {
+			arangosearch = StringUtils.hasText(as.value()) ? as.value() : simpleTypeName;
+			arangosearchExpression = PARSER.parseExpression(arangosearch, ParserContext.TEMPLATE_EXPRESSION);
+			arangosearchOptions = Optional.ofNullable(createArangoSearchOptions(as));
+		} else {
+			arangosearch = null;
+			arangosearchExpression = null;
+			arangosearchOptions = Optional.empty();
+		}
+		arangosearchLinkOptions = null;
 	}
 
 	private static CollectionCreateOptions createCollectionOptions(final Document annotation) {
@@ -173,7 +203,71 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	@Override
 	public String getCollection() {
-		return expression != null ? expression.getValue(context, String.class) : collection;
+		return collectionExpression != null ? collectionExpression.getValue(context, String.class) : collection;
+	}
+
+	private static ArangoSearchCreateOptions createArangoSearchOptions(final ArangoSearch arangosearch) {
+		final ArangoSearchCreateOptions options = new ArangoSearchCreateOptions();
+		final long consolidationIntervalMsec = arangosearch.consolidationIntervalMsec();
+		if (consolidationIntervalMsec > -1) {
+			options.consolidationIntervalMsec(consolidationIntervalMsec);
+		}
+		final long cleanupIntervalStep = arangosearch.cleanupIntervalStep();
+		if (cleanupIntervalStep > -1) {
+			options.cleanupIntervalStep(cleanupIntervalStep);
+		}
+		final double consolidationThreshold = arangosearch.consolidationThreshold();
+		final long consolidationSegmentThreshold = arangosearch.consolidationSegmentThreshold();
+		if (consolidationThreshold > -1 || consolidationSegmentThreshold > -1) {
+			final ConsolidationPolicy consolidationPolicy = ConsolidationPolicy.of(arangosearch.consolidationType());
+			options.consolidationPolicy(consolidationPolicy);
+			if (consolidationThreshold > -1) {
+				consolidationPolicy.threshold(consolidationThreshold);
+			}
+			if (consolidationSegmentThreshold > -1) {
+				consolidationPolicy.segmentThreshold(consolidationSegmentThreshold);
+			}
+		}
+		return options;
+	}
+
+	private CollectionLink createArangosearchLinkOptions() {
+		final String collection = getCollection();
+		if (collection == null) {
+			return null;
+		}
+		final ArangoSearch as = findAnnotation(ArangoSearch.class);
+		if (as == null) {
+			return null;
+		}
+		final CollectionLink options = CollectionLink.on(collection);
+		final String[] analyzers = as.analyzers();
+		if (analyzers.length > 0) {
+			options.analyzers(analyzers);
+		}
+		options.includeAllFields(as.includeAllFields());
+		options.trackListPositions(as.trackListPositions());
+		options.storeValues(as.storeValues());
+		arangosearchLinkedProperties.stream().forEach(property -> {
+			final FieldLink fieldLink = FieldLink.on(property.getFieldName());
+			property.getArangoSearchLinked().ifPresent(link -> {
+				final String[] linkAnalyzers = link.analyzers();
+				if (linkAnalyzers.length > 0) {
+					fieldLink.analyzers(linkAnalyzers);
+				}
+				fieldLink.includeAllFields(link.includeAllFields());
+				fieldLink.trackListPositions(link.trackListPositions());
+				fieldLink.storeValues(link.storeValues());
+			});
+			options.fields(fieldLink);
+		});
+		return options;
+	}
+
+	@Override
+	public Optional<String> getArangoSearch() {
+		return Optional.ofNullable(
+			arangosearchExpression != null ? arangosearchExpression.getValue(context, String.class) : arangosearch);
 	}
 
 	@Override
@@ -197,6 +291,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		property.getPersistentIndexed().ifPresent(i -> persistentIndexedProperties.add(property));
 		property.getGeoIndexed().ifPresent(i -> geoIndexedProperties.add(property));
 		property.getFulltextIndexed().ifPresent(i -> fulltextIndexedProperties.add(property));
+		property.getArangoSearchLinked().ifPresent(i -> arangosearchLinkedProperties.add(property));
 	}
 
 	@Override
@@ -212,6 +307,19 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	@Override
 	public CollectionCreateOptions getCollectionOptions() {
 		return collectionOptions;
+	}
+
+	@Override
+	public Optional<ArangoSearchCreateOptions> getArangoSearchOptions() {
+		return arangosearchOptions;
+	}
+
+	@Override
+	public Optional<CollectionLink> getArangoSearchLinkOptions() {
+		if (arangosearchLinkOptions == null) {
+			arangosearchLinkOptions = Optional.ofNullable(createArangosearchLinkOptions());
+		}
+		return arangosearchLinkOptions;
 	}
 
 	@Override

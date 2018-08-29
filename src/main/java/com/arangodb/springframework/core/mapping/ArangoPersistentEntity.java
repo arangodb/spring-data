@@ -27,7 +27,9 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentEntity;
 
+import com.arangodb.entity.arangosearch.CollectionLink;
 import com.arangodb.model.CollectionCreateOptions;
+import com.arangodb.model.arangosearch.ArangoSearchCreateOptions;
 import com.arangodb.springframework.annotation.FulltextIndex;
 import com.arangodb.springframework.annotation.GeoIndex;
 import com.arangodb.springframework.annotation.HashIndex;
@@ -45,6 +47,12 @@ public interface ArangoPersistentEntity<T>
 	String getCollection();
 
 	CollectionCreateOptions getCollectionOptions();
+
+	Optional<String> getArangoSearch();
+
+	Optional<ArangoSearchCreateOptions> getArangoSearchOptions();
+
+	Optional<CollectionLink> getArangoSearchLinkOptions();
 
 	Optional<ArangoPersistentProperty> getArangoIdProperty();
 

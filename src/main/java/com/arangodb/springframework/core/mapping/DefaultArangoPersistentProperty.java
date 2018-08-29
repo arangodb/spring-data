@@ -32,6 +32,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
 
 import com.arangodb.springframework.annotation.ArangoId;
+import com.arangodb.springframework.annotation.ArangoSearchLinked;
 import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.FulltextIndexed;
@@ -143,6 +144,11 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	public Optional<FulltextIndexed> getFulltextIndexed() {
 		return Optional.ofNullable(findAnnotation(FulltextIndexed.class));
+	}
+
+	@Override
+	public Optional<ArangoSearchLinked> getArangoSearchLinked() {
+		return Optional.ofNullable(findAnnotation(ArangoSearchLinked.class));
 	}
 
 }

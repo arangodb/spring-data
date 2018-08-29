@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.springframework.data.mapping.PersistentProperty;
 
+import com.arangodb.springframework.annotation.ArangoSearchLinked;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.FulltextIndexed;
 import com.arangodb.springframework.annotation.GeoIndexed;
@@ -63,5 +64,7 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 	Optional<GeoIndexed> getGeoIndexed();
 
 	Optional<FulltextIndexed> getFulltextIndexed();
+
+	Optional<ArangoSearchLinked> getArangoSearchLinked();
 
 }

@@ -31,6 +31,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
+import com.arangodb.springframework.annotation.ArangoSearch;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
 
@@ -42,8 +43,9 @@ import com.arangodb.springframework.annotation.Edge;
 public class ArangoEntityClassScanner {
 
 	@SuppressWarnings("unchecked")
-	private static final Class<? extends Annotation>[] ENTITY_ANNOTATIONS = new Class[] { Document.class, Edge.class };
-	
+	private static final Class<? extends Annotation>[] ENTITY_ANNOTATIONS = new Class[] { Document.class, Edge.class,
+			ArangoSearch.class };
+
 	@SuppressWarnings("unchecked")
 	private static final Class<? extends Annotation>[] ADDITIONAL_ANNOTATIONS = new Class[] { TypeAlias.class };
 
