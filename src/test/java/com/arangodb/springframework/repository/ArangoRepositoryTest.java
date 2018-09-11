@@ -341,4 +341,34 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		assertThat(retrieved.isPresent(), is(true));
 		assertThat(retrieved.get().getName(), is("name"));
 	}
+
+	@Test
+	public void plusSignExampleTest() {
+		String NAME = "Abc+Def";
+		final Customer entity = new Customer(NAME, "surname", 10);
+		repository.save(entity);
+
+		final Customer probe = new Customer();
+		probe.setName(NAME);
+		probe.setAge(10);
+		final Example<Customer> example = Example.of(probe);
+		final Optional<Customer> retrieved = repository.findOne(example);
+		assertThat(retrieved.isPresent(), is(true));
+		assertThat(retrieved.get().getName(), is(NAME));
+	}
+
+	@Test
+	public void exampleWithLikeAndEscapingTest() {
+		String NAME = "Abc+Def";
+		final Customer entity = new Customer(NAME, "surname", 10);
+		repository.save(entity);
+
+		final Customer probe = new Customer();
+		probe.setName("Abc+De%");
+		probe.setAge(10);
+		final Example<Customer> example = Example.of(probe);
+		final Optional<Customer> retrieved = repository.findOne(example);
+		assertThat(retrieved.isPresent(), is(false));
+	}
+
 }
