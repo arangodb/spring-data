@@ -20,7 +20,8 @@
 
 package com.arangodb.springframework.repository;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Example;
@@ -28,10 +29,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import com.arangodb.ArangoCursor;
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.util.MapBuilder;
 
@@ -40,8 +44,10 @@ import com.arangodb.util.MapBuilder;
  *
  */
 @Repository
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class SimpleArangoSearchRepository<T> implements ArangoSearchRepository<T> {
 
+	private final ArangoExampleConverter exampleConverter;
 	private final ArangoOperations arangoOperations;
 	private final Class<T> domainClass;
 
@@ -49,83 +55,123 @@ public class SimpleArangoSearchRepository<T> implements ArangoSearchRepository<T
 		super();
 		this.arangoOperations = arangoOperations;
 		this.domainClass = domainClass;
+		this.exampleConverter = new ArangoExampleConverter(
+				(ArangoMappingContext) arangoOperations.getConverter().getMappingContext());
 	}
 
 	@Override
 	public Optional<T> findById(final String id) {
 		return Optional.ofNullable(arangoOperations.query("FOR e IN @@view FILTER e._id == @id LIMIT 1 RETURN e",
-			new MapBuilder().put("@view", domainClass).put("id", id).get(), domainClass).first());
+			new MapBuilder().put("@view", getViewName()).put("id", id).get(), domainClass).first());
 	}
 
 	@Override
 	public boolean existsById(final String id) {
 		return arangoOperations
 				.query("FOR e IN @@view FILTER e._id == @id LIMIT 1 RETURN true",
-					new MapBuilder().put("@view", domainClass).put("id", id).get(), Boolean.class)
+					new MapBuilder().put("@view", getViewName()).put("id", id).get(), Boolean.class)
 				.first() == Boolean.TRUE;
 	}
 
 	@Override
 	public Iterable<T> findAll() {
-		return arangoOperations.query("FOR e IN @@view RETURN e", new MapBuilder().put("@view", domainClass).get(),
+		return arangoOperations.query("FOR e IN @@view RETURN e", new MapBuilder().put("@view", getViewName()).get(),
 			domainClass);
 	}
 
 	@Override
 	public Iterable<T> findAllById(final Iterable<String> ids) {
 		return arangoOperations.query("FOR e IN @@view FILTER e._id IN @ids RETURN e",
-			new MapBuilder().put("@view", domainClass).put("ids", ids).get(), domainClass);
+			new MapBuilder().put("@view", getViewName()).put("ids", ids).get(), domainClass);
 	}
 
 	@Override
 	public long count() {
-		return arangoOperations
-				.query("RETURN COUNT(@@view)", new MapBuilder().put("@view", domainClass).get(), Long.class).first();
+		final Map<String, Object> bindVars = new MapBuilder().put("@view", getViewName()).get();
+		final String query = "FOR e IN @@view COLLECT WITH COUNT INTO length RETURN length";
+		return arangoOperations.query(query, bindVars, Long.class).first();
 	}
 
 	@Override
 	public Iterable<T> findAll(final Sort sort) {
-		return arangoOperations.query("FOR e IN @@view " + buildSortClause(sort, "e") + " RETURN e",
-			new MapBuilder().put("@view", domainClass).get(), domainClass);
+		return _findAll(sort, null);
 	}
 
 	@Override
 	public Page<T> findAll(final Pageable pageable) {
-		final ArangoCursor<T> result = arangoOperations.query(
-			"FOR e IN @@view " + buildPageableClause(pageable, "e") + " RETURN e",
-			new MapBuilder().put("@view", domainClass).get(), domainClass);
-		final List<T> content = result.asListRemaining();
-		return new PageImpl<>(content, pageable, result.getStats().getFullCount());
+		final ArangoCursor cursor = _findAll(pageable, null);
+		return new PageImpl<>(cursor.asListRemaining(), pageable, cursor.getStats().getFullCount());
 	}
 
 	@Override
 	public <S extends T> Optional<S> findOne(final Example<S> example) {
-		return null;
+		final Map<String, Object> bindVars = new MapBuilder().put("@view", getViewName()).get();
+		final String query = "FOR e IN @@view " + buildSearchClause(example, bindVars) + " LIMIT 1 RETURN e";
+		return Optional.ofNullable((S) arangoOperations.query(query, bindVars, domainClass).first());
 	}
 
 	@Override
 	public <S extends T> Iterable<S> findAll(final Example<S> example) {
-		return null;
+		return _findAll((Pageable) null, example);
 	}
 
 	@Override
 	public <S extends T> Iterable<S> findAll(final Example<S> example, final Sort sort) {
-		return null;
+		return _findAll(sort, example);
 	}
 
 	@Override
 	public <S extends T> Page<S> findAll(final Example<S> example, final Pageable pageable) {
-		return null;
+		final ArangoCursor cursor = _findAll(pageable, example);
+		return new PageImpl<>(cursor.asListRemaining(), pageable, cursor.getStats().getFullCount());
 	}
 
 	@Override
 	public <S extends T> long count(final Example<S> example) {
-		return 0;
+		final Map<String, Object> bindVars = new MapBuilder().put("@view", getViewName()).get();
+		final String query = "FOR e IN @@view " + buildSearchClause(example, bindVars)
+				+ " COLLECT WITH COUNT INTO length RETURN length";
+		return arangoOperations.query(query, bindVars, Long.class).first();
 	}
 
 	@Override
 	public <S extends T> boolean exists(final Example<S> example) {
-		return false;
+		final Map<String, Object> bindVars = new MapBuilder().put("@view", getViewName()).get();
+		final String query = "FOR e IN @@view " + buildSearchClause(example, bindVars) + " LIMIT 1 RETURN true";
+		return arangoOperations.query(query, bindVars, Boolean.class).first() == Boolean.TRUE;
+	}
+
+	private <S extends T> ArangoCursor<S> _findAll(final Sort sort, @Nullable final Example<S> example) {
+		final Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@view", getViewName());
+
+		final String query = "FOR e IN @@view " + buildSearchClause(example, bindVars) + " "
+				+ buildSortClause(sort, "e") + " RETURN e";
+		final ArangoCursor cursor = arangoOperations.query(query, bindVars, domainClass);
+		return cursor;
+	}
+
+	private <S extends T> ArangoCursor<S> _findAll(final Pageable pageable, @Nullable final Example<S> example) {
+		final Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@view", getViewName());
+
+		final String query = "FOR e IN @@view " + buildSearchClause(example, bindVars) + " "
+				+ buildPageableClause(pageable, "e") + " RETURN e";
+		final AqlQueryOptions options = new AqlQueryOptions();
+		if (pageable != null && pageable.isPaged()) {
+			options.fullCount(true);
+		}
+		final ArangoCursor cursor = arangoOperations.query(query, bindVars, options, domainClass);
+		return cursor;
+	}
+
+	private <S extends T> String buildSearchClause(final Example<S> example, final Map<String, Object> bindVars) {
+		if (example == null) {
+			return "";
+		}
+
+		final String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
+		return predicate == null ? "" : "FILTER " + predicate;
 	}
 
 	private String buildPageableClause(final Pageable pageable, final String varName) {
@@ -134,5 +180,10 @@ public class SimpleArangoSearchRepository<T> implements ArangoSearchRepository<T
 
 	private String buildSortClause(final Sort sort, final String varName) {
 		return sort == null ? "" : AqlUtils.buildSortClause(sort, varName);
+	}
+
+	private String getViewName() {
+		return arangoOperations.getConverter().getMappingContext().getPersistentEntity(domainClass).getArangoSearch()
+				.get();
 	}
 }
