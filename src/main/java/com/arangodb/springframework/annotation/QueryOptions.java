@@ -109,4 +109,10 @@ public @interface QueryOptions {
 	 */
 	long memoryLimit() default -1;
 
+	/**
+	 * @since ArangoDB 3.4.0
+	 * @return Set to {@code true} allows reading from followers in an active-failover setup.
+	 */
+	boolean allowDirtyRead() default false;
+
 }

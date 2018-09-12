@@ -123,6 +123,10 @@ public class ArangoQueryMethod extends QueryMethod {
 		if (memoryLimit != -1) {
 			options.memoryLimit(memoryLimit);
 		}
+		final boolean allowDirtyRead = queryOptions.allowDirtyRead();
+		if (allowDirtyRead) {
+			options.allowDirtyRead(allowDirtyRead);
+		}
 		return options;
 	}
 
