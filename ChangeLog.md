@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.1.0-RC.1] - 2018-09-12
+
 ### Added
 
 - added dirty read support ([reading from followers](https://docs.arangodb.com/current/Manual/Administration/ActiveFailover/#reading-from-follower)) for AQL queries
@@ -14,7 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ### Changed
 
 - use AQL `LIKE` instead of `REGEX_TEST` for query by example in `ArangoRepository`
-- upgraded dependency arangodb-java-driver 5.0.0
+- upgraded dependency arangodb-java-driver 5.0.0-RC.1
 
 ## [3.0.0] - 2018-09-04
 
@@ -224,7 +226,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 - fixed missing WITH information in AQL when resolving annotation @Relations (issue #9)
 
-[unreleased]: https://github.com/arangodb/spring-data/compare/3.0.0...HEAD
+[unreleased]: https://github.com/arangodb/spring-data/compare/3.1.0-RC.1...HEAD
+[3.1.0-rc.1]: https://github.com/arangodb/spring-data/compare/3.0.0...3.1.0-RC.1
 [3.0.0]: https://github.com/arangodb/spring-data/compare/2.3.1...3.0.0
 [2.3.1]: https://github.com/arangodb/spring-data/compare/2.3.0...2.3.1
 [2.3.0]: https://github.com/arangodb/spring-data/compare/2.2.2...2.3.0
