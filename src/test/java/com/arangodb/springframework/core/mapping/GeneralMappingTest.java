@@ -439,7 +439,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
 	AuditorProvider auditorProvider;
 
 	@Test
-	public void auditingTest() {
+	public void auditingTest() throws InterruptedException {
 		final String createID = "create";
 		{
 			final Person person = new Person();
@@ -484,7 +484,9 @@ public class GeneralMappingTest extends AbstractArangoTest {
 		}
 
 		final Instant beforeReplace = Instant.now();
+		Thread.sleep(1);
 		template.replace(value.id, value);
+		Thread.sleep(1);
 		final Instant afterReplace = Instant.now();
 		{
 			final AuditingTestEntity find = template.find(value.id, AuditingTestEntity.class).get();
