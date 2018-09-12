@@ -105,23 +105,24 @@ public class ArangoExampleConverter<T> {
 					: (specifier.getIgnoreCase() == null ? false : specifier.getIgnoreCase());
 			final ExampleMatcher.StringMatcher stringMatcher = (specifier == null
 					|| specifier.getStringMatcher() == ExampleMatcher.StringMatcher.DEFAULT)
-							? example.getMatcher().getDefaultStringMatcher() : specifier.getStringMatcher();
+							? example.getMatcher().getDefaultStringMatcher()
+							: specifier.getStringMatcher();
 			final String string = (String) value;
-			clause = String.format("REGEX_TEST(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
+			clause = String.format("LIKE(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
 			switch (stringMatcher) {
 			case STARTING:
-				value = "^" + escape(string);
+				value = escape(string) + "%";
 				break;
 			case ENDING:
-				value = escape(string) + "$";
+				value = "%" + escape(string);
 				break;
 			case CONTAINING:
-				value = escape(string);
+				value = "%" + escape(string) + "%";
 				break;
 			case DEFAULT:
 			case EXACT:
 			default:
-				value = "^" + escape(string) + "$";
+				value = escape(string);
 				break;
 			}
 		} else {
@@ -137,17 +138,8 @@ public class ArangoExampleConverter<T> {
 
 	static {
 		SPECIAL_CHARACTERS.add('\\');
-		SPECIAL_CHARACTERS.add('.');
-		SPECIAL_CHARACTERS.add('?');
-		SPECIAL_CHARACTERS.add('[');
-		SPECIAL_CHARACTERS.add(']');
-		SPECIAL_CHARACTERS.add('*');
-		SPECIAL_CHARACTERS.add('{');
-		SPECIAL_CHARACTERS.add('}');
-		SPECIAL_CHARACTERS.add('(');
-		SPECIAL_CHARACTERS.add(')');
-		SPECIAL_CHARACTERS.add('^');
-		SPECIAL_CHARACTERS.add('$');
+		SPECIAL_CHARACTERS.add('_');
+		SPECIAL_CHARACTERS.add('%');
 	}
 
 	private static String escape(final String string) {
