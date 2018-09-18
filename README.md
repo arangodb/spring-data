@@ -13,3 +13,4 @@
 - [ArangoDB](https://www.arangodb.com/)
 - [Demo](https://github.com/arangodb/spring-data-demo)
 - [Changelog](ChangeLog.md)
+- [JavaDoc](http://arangodb.github.io/spring-data/javadoc-3_1)
