@@ -23,7 +23,7 @@ To use Spring Data ArangoDB in your project, your build automation tool needs to
 <dependency>
   <groupId>com.arangodb</groupId>
   <artifactId>arangodb-spring-data</artifactId>
-  <version>2.3.1</version>
+  <version>3.1.0</version>
 </dependency>
 ```
 
