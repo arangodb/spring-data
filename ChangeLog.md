@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.1.1] - 2018-09-25
+
+### Fixed
+
+- upgraded dependency arangodb-java-driver 5.0.1
+  - fixed dirty read
+  - fixed connection stickiness
+
 ## [3.1.0] - 2018-09-18
 
 ### Added
@@ -16,7 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ### Changed
 
 - use AQL `LIKE` instead of `REGEX_TEST` for query by example in `ArangoRepository`
-- upgraded dependency arangodb-java-driver 5.0.0-RC.1
+- upgraded dependency arangodb-java-driver 5.0.0
 
 ## [3.0.0] - 2018-09-04
 
