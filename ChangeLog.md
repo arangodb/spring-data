@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Added
+
+- added interface `ArangoConfiguration` to replace `AbstractArangoConfiguration`
+
+  `ArangoConfiguration` provides default methods and can be implemented directly without the need of the class `AbstractArangoConfiguration`.
+
+### Deprecated
+
+- deprecated `AbstractArangoConfiguration`
+
 ## [3.1.1] - 2018-09-25
 
 ### Fixed
