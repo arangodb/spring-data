@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Changed
+
+- updated support of spring to `5.1.x`
+- updated support of spring-data to `2.1.x`
+
 ## [3.1.1] - 2018-09-25
 
 ### Fixed

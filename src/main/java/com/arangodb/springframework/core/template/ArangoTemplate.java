@@ -714,13 +714,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	private void updateDBFields(final Object value, final DocumentEntity documentEntity) {
 		final ArangoPersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(value.getClass());
-		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(value);
+		final PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(value);
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();
-		if (idProperty != null) {
+		if (idProperty != null && !idProperty.isImmutable()) {
 			accessor.setProperty(idProperty, documentEntity.getKey());
 		}
-		entity.getArangoIdProperty().ifPresent(arangoId -> accessor.setProperty(arangoId, documentEntity.getId()));
-		entity.getRevProperty().ifPresent(rev -> accessor.setProperty(rev, documentEntity.getRev()));
+		entity.getArangoIdProperty().filter(arangoId -> !arangoId.isImmutable())
+				.ifPresent(arangoId -> accessor.setProperty(arangoId, documentEntity.getId()));
+		entity.getRevProperty().filter(rev -> !rev.isImmutable())
+				.ifPresent(rev -> accessor.setProperty(rev, documentEntity.getRev()));
 	}
 
 	@Override
