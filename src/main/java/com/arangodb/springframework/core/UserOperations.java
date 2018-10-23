@@ -28,6 +28,8 @@ import com.arangodb.model.UserCreateOptions;
 import com.arangodb.model.UserUpdateOptions;
 
 /**
+ * Interface that specifies operations to manage ArangoDB users.
+ *
  * @author Mark Vollmary
  *
  */
@@ -36,7 +38,7 @@ public interface UserOperations {
 	/**
 	 * Fetches data about the specified user. You can fetch information about yourself or you need permission to the
 	 * _system database in order to execute this call.
-	 * 
+	 *
 	 * @return information about the user
 	 * @throws DataAccessException
 	 */
@@ -45,7 +47,7 @@ public interface UserOperations {
 	/**
 	 * Create a new user. This user will not have access to any database. You need permission to the _system database in
 	 * order to execute this call.
-	 * 
+	 *
 	 * @param passwd
 	 *            The user password
 	 * @param options
@@ -58,7 +60,7 @@ public interface UserOperations {
 	/**
 	 * Partially updates the data of an existing user. You can only change the password of your self. You need access to
 	 * the _system database to change the active flag.
-	 * 
+	 *
 	 * @param options
 	 *            Properties of the user to be changed
 	 * @return information about the user
@@ -69,7 +71,7 @@ public interface UserOperations {
 	/**
 	 * Replaces the data of an existing user. You can only change the password of your self. You need access to the
 	 * _system database to change the active flag.
-	 * 
+	 *
 	 * @param options
 	 *            Additional properties of the user, can be null
 	 * @return information about the user
@@ -79,7 +81,7 @@ public interface UserOperations {
 
 	/**
 	 * Removes an existing user, identified by user. You need access to the _system database.
-	 * 
+	 *
 	 * @throws DataAccessException
 	 */
 	void delete() throws DataAccessException;
@@ -87,7 +89,7 @@ public interface UserOperations {
 	/**
 	 * Sets the default access level for databases for the user. You need permission to the _system database in order to
 	 * execute this call.
-	 * 
+	 *
 	 * @param permissions
 	 *            The permissions the user grant
 	 * @since ArangoDB 3.2.0
@@ -98,7 +100,7 @@ public interface UserOperations {
 	/**
 	 * Grants or revoke access to the database for the user. You need permission to the _system database in order to
 	 * execute this call.
-	 * 
+	 *
 	 * @param permissions
 	 *            The permissions the user grant
 	 * @throws DataAccessException
@@ -107,7 +109,7 @@ public interface UserOperations {
 
 	/**
 	 * Clear the database access level, revert back to the default access level.
-	 * 
+	 *
 	 * @since ArangoDB 3.2.0
 	 * @throws DataAccessException
 	 */
@@ -116,7 +118,7 @@ public interface UserOperations {
 	/**
 	 * Sets the default access level for collections for the user. You need permission to the _system database in order
 	 * to execute this call.
-	 * 
+	 *
 	 * @param permissions
 	 *            The permissions the user grant
 	 * @since ArangoDB 3.2.0
@@ -127,7 +129,7 @@ public interface UserOperations {
 	/**
 	 * Grants or revoke access to the collection for user. You need permission to the _system database in order to
 	 * execute this call.
-	 * 
+	 *
 	 * @param entityClass
 	 *            The entity type representing the collection
 	 * @param permissions
@@ -139,7 +141,7 @@ public interface UserOperations {
 	/**
 	 * Grants or revoke access to the collection for user. You need permission to the _system database in order to
 	 * execute this call.
-	 * 
+	 *
 	 * @param name
 	 *            The name of the collection
 	 * @param permissions
@@ -150,7 +152,7 @@ public interface UserOperations {
 
 	/**
 	 * Clear the collection access level, revert back to the default access level.
-	 * 
+	 *
 	 * @param entityClass
 	 *            The entity type representing the collection
 	 * @throws DataAccessException
@@ -159,7 +161,7 @@ public interface UserOperations {
 
 	/**
 	 * Clear the collection access level, revert back to the default access level.
-	 * 
+	 *
 	 * @param name
 	 *            The name of the collection
 	 * @throws DataAccessException
@@ -168,7 +170,7 @@ public interface UserOperations {
 
 	/**
 	 * Get specific database access level
-	 * 
+	 *
 	 * @return permissions of the user
 	 * @since ArangoDB 3.2.0
 	 * @throws DataAccessException
@@ -177,7 +179,7 @@ public interface UserOperations {
 
 	/**
 	 * Get the collection access level
-	 * 
+	 *
 	 * @param entityClass
 	 *            The entity type representing the collection
 	 * @return permissions of the user
@@ -188,7 +190,7 @@ public interface UserOperations {
 
 	/**
 	 * Get the collection access level
-	 * 
+	 *
 	 * @param name
 	 *            The name of the collection
 	 * @return permissions of the user

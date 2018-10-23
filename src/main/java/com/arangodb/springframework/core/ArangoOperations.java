@@ -41,6 +41,8 @@ import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 
 /**
+ * Interface that specifies a basic set of ArangoDB operations.
+ *
  * @author Mark Vollmary
  *
  */

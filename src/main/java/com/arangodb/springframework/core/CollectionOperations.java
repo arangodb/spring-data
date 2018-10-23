@@ -34,6 +34,9 @@ import com.arangodb.model.PersistentIndexOptions;
 import com.arangodb.model.SkiplistIndexOptions;
 
 /**
+ * Interface that specifies a basic set of ArangoDB operations on collection
+ * level.
+ *
  * @author Mark Vollmary
  *
  */
@@ -41,28 +44,28 @@ public interface CollectionOperations {
 
 	/**
 	 * Return the collection name
-	 * 
+	 *
 	 * @return collection name
 	 */
 	String name();
 
 	/**
 	 * Deletes the collection from the database.
-	 * 
+	 *
 	 * @throws DataAccessException
 	 */
 	void drop() throws DataAccessException;
 
 	/**
 	 * Removes all documents from the collection, but leaves the indexes intact
-	 * 
+	 *
 	 * @throws DataAccessException
 	 */
 	void truncate() throws DataAccessException;
 
 	/**
 	 * Counts the documents in a collection
-	 * 
+	 *
 	 * @return number of
 	 * @throws DataAccessException
 	 */
@@ -70,7 +73,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Reads the properties of the specified collection
-	 * 
+	 *
 	 * @return properties of the collection
 	 * @throws DataAccessException
 	 */
@@ -78,7 +81,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Returns all indexes of the collection
-	 * 
+	 *
 	 * @return information about the indexes
 	 * @throws DataAccessException
 	 */
@@ -86,7 +89,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Creates a hash index for the collection if it does not already exist.
-	 * 
+	 *
 	 * @param fields
 	 *            A list of attribute paths
 	 * @param options
@@ -98,7 +101,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Creates a skip-list index for the collection, if it does not already exist.
-	 * 
+	 *
 	 * @param fields
 	 *            A list of attribute paths
 	 * @param options
@@ -110,7 +113,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Creates a persistent index for the collection, if it does not already exist.
-	 * 
+	 *
 	 * @param fields
 	 *            A list of attribute paths
 	 * @param options
@@ -123,7 +126,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Creates a geo-spatial index for the collection, if it does not already exist.
-	 * 
+	 *
 	 * @param fields
 	 *            A list of attribute paths
 	 * @param options
@@ -135,7 +138,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Creates a fulltext index for the collection, if it does not already exist.
-	 * 
+	 *
 	 * @param fields
 	 *            A list of attribute paths
 	 * @param options
@@ -147,7 +150,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Deletes the index with the given {@code id} from the collection.
-	 * 
+	 *
 	 * @param id
 	 *            The index-handle
 	 * @throws DataAccessException
@@ -157,7 +160,7 @@ public interface CollectionOperations {
 	/**
 	 * Grants or revoke access to the collection for user user. You need permission to the _system database in order to
 	 * execute this call.
-	 * 
+	 *
 	 * @param username
 	 *            The name of the user
 	 * @param permissions
@@ -168,7 +171,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Clear the collection access level, revert back to the default access level.
-	 * 
+	 *
 	 * @param username
 	 *            The name of the user
 	 * @since ArangoDB 3.2.0
@@ -178,7 +181,7 @@ public interface CollectionOperations {
 
 	/**
 	 * Get the collection access level
-	 * 
+	 *
 	 * @param username
 	 *            The name of the user
 	 * @return permissions of the user
