@@ -28,8 +28,9 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.ReadOnlyProperty;
 
 /**
- * Representation of ArangoDB document field {@code _id}
- * 
+ * Annotation to declare a field to represent ArangoDB's document field
+ * {@literal _id}.
+ *
  * @author Mark Vollmary
  */
 @Retention(RetentionPolicy.RUNTIME)

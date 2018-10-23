@@ -27,6 +27,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotation to define given fields to be indexed using ArangoDB's Geo index.
+ *
  * @author Mark Vollmary
  *
  */
@@ -36,13 +38,14 @@ import java.lang.annotation.Target;
 public @interface GeoIndex {
 
 	/**
-	 * @return A list of attribute paths
+	 * A list of attribute paths
 	 */
 	String[] fields();
 
 	/**
-	 * @return If a geo-spatial index on a location is constructed and geoJson is true, then the order within the array
-	 *         is longitude followed by latitude. This corresponds to the format described in
+	 * If a geo-spatial index on a location is constructed and geoJson is
+	 * {@literal true}, then the order within the array is longitude followed by
+	 * latitude. This corresponds to the format described in
 	 */
 	boolean geoJson() default false;
 

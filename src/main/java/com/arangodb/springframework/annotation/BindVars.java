@@ -26,6 +26,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotation to mark a method parameter - of type {@code Map<String, Object} -
+ * of a repository method annotated with {@code @Query} to be used as AQL's bind
+ * parameter.
+ * <p>
  * Created by F625633 on 13/07/2017.
  */
 @Target(ElementType.PARAMETER)
