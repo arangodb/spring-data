@@ -39,8 +39,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -56,6 +54,7 @@ import org.springframework.data.mapping.model.PersistentEntityParameterValueProv
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.Base64Utils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -442,7 +441,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			}
 			// primitive array
 			else if (byte[].class.isAssignableFrom(type)) {
-				return DatatypeConverter.parseBase64Binary(source.getAsString());
+				return Base64Utils.decodeFromString(source.getAsString());
 			}
 			// java.sql.*
 			else if (java.sql.Date.class.isAssignableFrom(type)) {
@@ -722,7 +721,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final TypeInformation<?> definedType) {
 
 		if (byte[].class.equals(source.getClass())) {
-			sink.add(attribute, DatatypeConverter.printBase64Binary((byte[]) source));
+			sink.add(attribute, Base64Utils.encodeToString((byte[]) source));
 		}
 
 		else {

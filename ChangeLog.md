@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Removed
+
+- removed use of javax.xml.bind to better support Java 9 and above
+
 ## [3.1.1] - 2018-09-25
 
 ### Fixed
