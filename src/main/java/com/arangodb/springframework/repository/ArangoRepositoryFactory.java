@@ -1,7 +1,7 @@
 /*
  * DISCLAIMER
  *
- * Copyright 2017 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2017-2018 ArangoDB GmbH, Cologne, Germany
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.AnnotationRepositoryMetadata;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -67,7 +67,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T, ID> ArangoEntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
-		return new ArangoPersistentEntityInformation<T, ID>(
+		return new ArangoPersistentEntityInformation<>(
 				(ArangoPersistentEntity<T>) context.getRequiredPersistentEntity(domainClass));
 	}
 
@@ -93,9 +93,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(
-		final QueryLookupStrategy.Key key,
-		final EvaluationContextProvider evaluationContextProvider) {
-
+            final QueryLookupStrategy.Key key, final QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		QueryLookupStrategy strategy = null;
 		switch (key) {
 		case CREATE_IF_NOT_FOUND:
