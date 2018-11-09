@@ -34,7 +34,6 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
-import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackBuilder;
 import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.ValueType;
@@ -44,6 +43,21 @@ import com.arangodb.velocypack.ValueType;
  *
  */
 public class CustomMappingTest extends AbstractArangoTest {
+
+	static class TestEntity {
+
+		private final String test;
+
+		public TestEntity(final String test) {
+			super();
+			this.test = test;
+		}
+
+		public String getTest() {
+			return test;
+		}
+
+	}
 
 	private static final String FIELD = "test";
 
@@ -95,7 +109,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 
 	@Test
 	public void vpackToCustom() {
-		final DocumentEntity meta = template.insert(new MapBuilder().put(FIELD, "abc").get());
+		final DocumentEntity meta = template.insert(new TestEntity("abc"));
 		final Optional<CustomVPackTestEntity> doc = template.find(meta.getId(), CustomVPackTestEntity.class);
 		assertThat(doc.isPresent(), is(true));
 		assertThat(doc.get().getValue(), is("abc"));
@@ -153,7 +167,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 
 	@Test
 	public void vpackToDBEntity() {
-		final DocumentEntity meta = template.insert(new MapBuilder().put(FIELD, "abc").get());
+		final DocumentEntity meta = template.insert(new TestEntity("abc"));
 		final Optional<CustomDBEntityTestEntity> doc = template.find(meta.getId(), CustomDBEntityTestEntity.class);
 		assertThat(doc.isPresent(), is(true));
 		assertThat(doc.get().getValue(), is("abc"));
