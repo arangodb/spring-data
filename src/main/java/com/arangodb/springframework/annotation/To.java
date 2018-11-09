@@ -26,6 +26,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotation to indicate that the annotated field is stored as a document in
+ * another collection using ArangoDB's graph model instead of a nested document.
+ *
  * @author Mark Vollmary
  *
  */
@@ -34,7 +37,7 @@ import java.lang.annotation.Target;
 public @interface To {
 
 	/**
-	 * @return whether the entity should be loaded lazily
+	 * Whether the entity should be loaded lazily
 	 */
 	boolean lazy() default false;
 

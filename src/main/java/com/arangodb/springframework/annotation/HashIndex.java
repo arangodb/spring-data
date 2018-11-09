@@ -27,6 +27,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotation to define given fields to be indexed using ArangoDB's Hash index.
+ *
  * @author Mark Vollmary
  *
  */
@@ -36,22 +38,22 @@ import java.lang.annotation.Target;
 public @interface HashIndex {
 
 	/**
-	 * @return A list of attribute paths
+	 * A list of attribute paths
 	 */
 	String[] fields();
 
 	/**
-	 * @return if true, then create a unique index
+	 * If {@literal true}, then create a unique index
 	 */
 	boolean unique() default false;
 
 	/**
-	 * @return if true, then create a sparse index
+	 * If {@literal true}, then create a sparse index
 	 */
 	boolean sparse() default false;
 
 	/**
-	 * @return if false, the deduplication of array values is turned off.
+	 * If {@literal false}, the deduplication of array values is turned off.
 	 */
 	boolean deduplicate() default true;
 

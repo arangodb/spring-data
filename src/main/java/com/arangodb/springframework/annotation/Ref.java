@@ -28,6 +28,10 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.Reference;
 
 /**
+ * Annotation to indicate that the annotated field is stored as a document in
+ * another collection instead of a nested document. The document {@literal _id}
+ * of that document is stored as a reference in the stored field.
+ *
  * @author Mark Vollmary
  *
  */
@@ -37,7 +41,7 @@ import org.springframework.data.annotation.Reference;
 public @interface Ref {
 
 	/**
-	 * @return whether the entity should be loaded lazily
+	 * Whether the entity should be loaded lazily
 	 */
 	boolean lazy() default false;
 

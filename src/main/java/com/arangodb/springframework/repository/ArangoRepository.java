@@ -25,8 +25,11 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 
 /**
+ * ArangoDB specific {@link org.springframework.data.repository.Repository}
+ * interface.
+ * <p>
  * Created by F625633 on 06/07/2017.
- * 
+ *
  * @author Mark Vollmary
  *
  */

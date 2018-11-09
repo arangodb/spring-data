@@ -26,6 +26,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotation to mark a String field to represent the ArangoDB document field
+ * {@literal _rev}.
+ *
  * @author Mark Vollmary
  *
  */

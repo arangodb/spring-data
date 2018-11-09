@@ -27,8 +27,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 
@@ -36,6 +38,12 @@ import com.arangodb.springframework.repository.ArangoRepositoriesRegistrar;
 import com.arangodb.springframework.repository.ArangoRepositoryFactoryBean;
 
 /**
+ * Annotation to activate ArangoDB repositories.
+ * <p>
+ * If no base package is configured through either {@link #value},
+ * {@link #basePackages} or {@link #basePackageClasses} it will trigger scanning
+ * of the package of annotated class.
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -48,14 +56,41 @@ import com.arangodb.springframework.repository.ArangoRepositoryFactoryBean;
 @Import(ArangoRepositoriesRegistrar.class)
 public @interface EnableArangoRepositories {
 
+	/**
+	 * Alias for {@link #basePackages}.
+	 * <p>
+	 * Intended to be used instead of {@link #basePackages} when no other attributes
+	 * are needed &mdash; for example:
+	 * {@code @EnableArangoRepositories("org.my.project")} instead of
+	 * {@code @EnableArangoRepositories(basePackages = "org.my.project")}.
+	 */
+	@AliasFor("basePackages")
 	String[] value() default {};
 
+	/**
+	 * Base packages to scan for annotated components.
+	 * <p>
+	 * Use {@link #basePackageClasses} for a type-safe alternative to package names.
+	 */
+	@AliasFor("value")
 	String[] basePackages() default {};
 
+	/**
+	 * Type-safe alternative to {@link #basePackages} for specifying the packages to
+	 * scan for annotated components.
+	 */
 	Class<?>[] basePackageClasses() default {};
 
+	/**
+	 * Specifies which types are eligible for component scanning. Further narrows
+	 * the set of candidate components from everything in {@link #basePackages} to
+	 * everything in the base packages that matches the given filter or filters.
+	 */
 	ComponentScan.Filter[] includeFilters() default {};
 
+	/**
+	 * Specifies which types are not eligible for component scanning.
+	 */
 	ComponentScan.Filter[] excludeFilters() default {};
 
 	/**
@@ -63,6 +98,10 @@ public @interface EnableArangoRepositories {
 	 */
 	String repositoryImplementationPostfix() default "Impl";
 
+	/**
+	 * Returns the {@link FactoryBean} class to be used for each repository
+	 * instance. Defaults to {@link ArangoRepositoryFactoryBean}.
+	 */
 	Class<?> repositoryFactoryBeanClass() default ArangoRepositoryFactoryBean.class;
 
 	/**

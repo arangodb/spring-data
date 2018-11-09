@@ -27,6 +27,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotation to define a given field to be indexed using ArangoDB's Fulltext
+ * index.
+ *
  * @author Mark Vollmary
  *
  */
@@ -36,13 +39,14 @@ import java.lang.annotation.Target;
 public @interface FulltextIndex {
 
 	/**
-	 * @return The attribute paths
+	 * The attribute paths
 	 */
 	String field();
 
 	/**
-	 * @return Minimum character length of words to index. Will default to a server-defined value if unspecified. It is
-	 *         thus recommended to set this value explicitly when creating the index.
+	 * Minimum character length of words to index. Will default to a server-defined
+	 * value if unspecified. It is thus recommended to set this value explicitly
+	 * when creating the index.
 	 */
 	int minLength() default -1;
 
