@@ -32,8 +32,8 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.AnnotationRepositoryMetadata;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -48,7 +48,7 @@ import com.arangodb.springframework.repository.query.DerivedArangoQuery;
 import com.arangodb.springframework.repository.query.StringBasedArangoQuery;
 
 /**
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -83,7 +83,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	@Override
-	protected RepositoryMetadata getRepositoryMetadata(Class<?> repositoryInterface) {
+	protected RepositoryMetadata getRepositoryMetadata(final Class<?> repositoryInterface) {
 		Assert.notNull(repositoryInterface, "Repository interface must not be null!");
 
 		return Repository.class.isAssignableFrom(repositoryInterface)
@@ -93,8 +93,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(
-		final QueryLookupStrategy.Key key,
-		final EvaluationContextProvider evaluationContextProvider) {
+			final QueryLookupStrategy.Key key, final QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		QueryLookupStrategy strategy = null;
 		switch (key) {
@@ -143,13 +142,13 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 		private final TypeInformation<?> typeInformation;
 
-		public DefaultArangoRepositoryMetadata(Class<?> repositoryInterface) {
+		public DefaultArangoRepositoryMetadata(final Class<?> repositoryInterface) {
 			super(repositoryInterface);
 			typeInformation = ClassTypeInformation.from(repositoryInterface);
 		}
 
 		@Override
-		public Class<?> getReturnedDomainClass(Method method) {
+		public Class<?> getReturnedDomainClass(final Method method) {
 			if (ArangoCursor.class.isAssignableFrom(method.getReturnType())) {
 				return typeInformation.getReturnType(method).getRequiredComponentType().getType();
 			} else {
@@ -163,13 +162,13 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 		private final TypeInformation<?> typeInformation;
 
-		public AnnotationArangoRepositoryMetadata(Class<?> repositoryInterface) {
+		public AnnotationArangoRepositoryMetadata(final Class<?> repositoryInterface) {
 			super(repositoryInterface);
 			typeInformation = ClassTypeInformation.from(repositoryInterface);
 		}
 
 		@Override
-		public Class<?> getReturnedDomainClass(Method method) {
+		public Class<?> getReturnedDomainClass(final Method method) {
 			if (ArangoCursor.class.isAssignableFrom(method.getReturnType())) {
 				return typeInformation.getReturnType(method).getRequiredComponentType().getType();
 			} else {

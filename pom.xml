@@ -26,14 +26,14 @@
 		<hamcrest-all.version>1.3</hamcrest-all.version>
 		<junit.version>4.12</junit.version>
 		<arangodb-java-driver.version>5.0.1</arangodb-java-driver.version>
-		<spring.version>5.0.2.RELEASE</spring.version>
+		<spring.version>5.1.1.RELEASE</spring.version>
 		<spring-tx.version>${spring.version}</spring-tx.version>
 		<spring-context.version>${spring.version}</spring-context.version>
 		<spring-beans.version>${spring.version}</spring-beans.version>
 		<spring-core.version>${spring.version}</spring-core.version>
 		<spring-expression.version>${spring.version}</spring-expression.version>
 		<spring-test.version>${spring.version}</spring-test.version>
-		<spring-data-commons.version>2.0.7.RELEASE</spring-data-commons.version>
+		<spring-data-commons.version>2.1.1.RELEASE</spring-data-commons.version>
 	</properties>
 
 	<developers>

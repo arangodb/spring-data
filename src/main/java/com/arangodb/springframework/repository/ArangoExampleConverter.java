@@ -61,7 +61,7 @@ public class ArangoExampleConverter<T> {
 		final String javaPath,
 		final ArangoPersistentEntity<?> entity,
 		final Object object) {
-		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(object);
+		final PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(object);
 		entity.doWithProperties((final ArangoPersistentProperty property) -> {
 			if (property.getFrom().isPresent() || property.getTo().isPresent() || property.getRelations().isPresent()) {
 				return;
