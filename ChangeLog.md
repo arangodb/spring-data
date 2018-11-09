@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.2.0] - 2018-11-09
+
 ### Added
 
 - added interface `ArangoConfiguration` to replace `AbstractArangoConfiguration`
@@ -257,7 +259,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 - fixed missing WITH information in AQL when resolving annotation @Relations (issue #9)
 
-[unreleased]: https://github.com/arangodb/spring-data/compare/3.1.0...HEAD
+[unreleased]: https://github.com/arangodb/spring-data/compare/3.2.0...HEAD
+[3.2.0]: https://github.com/arangodb/spring-data/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/arangodb/spring-data/compare/3.0.0...3.1.0
 [3.0.0]: https://github.com/arangodb/spring-data/compare/2.3.1...3.0.0
 [2.3.1]: https://github.com/arangodb/spring-data/compare/2.3.0...2.3.1
