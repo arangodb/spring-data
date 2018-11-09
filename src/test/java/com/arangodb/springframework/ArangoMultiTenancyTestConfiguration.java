@@ -28,17 +28,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 
 import com.arangodb.ArangoDB;
-import com.arangodb.springframework.config.AbstractArangoConfiguration;
+import com.arangodb.springframework.config.ArangoConfiguration;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
 
 /**
- * 
+ *
  * @author Mark Vollmary
  * @author Christian Lechner
  */
 @Configuration
 @ComponentScan("com.arangodb.springframework.component")
-public class ArangoMultiTenancyTestConfiguration extends AbstractArangoConfiguration {
+public class ArangoMultiTenancyTestConfiguration implements ArangoConfiguration {
 
 	public static final String DB = "spring-test-db";
 
@@ -53,7 +53,7 @@ public class ArangoMultiTenancyTestConfiguration extends AbstractArangoConfigura
 	}
 
 	@Override
-	protected Collection<Converter<?, ?>> customConverters() {
+	public Collection<Converter<?, ?>> customConverters() {
 		final Collection<Converter<?, ?>> converters = new ArrayList<>();
 		converters.add(new CustomMappingTest.CustomVPackReadTestConverter());
 		converters.add(new CustomMappingTest.CustomVPackWriteTestConverter());

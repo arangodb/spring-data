@@ -32,12 +32,12 @@ import org.springframework.data.domain.AuditorAware;
 import com.arangodb.ArangoDB;
 import com.arangodb.springframework.annotation.EnableArangoAuditing;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
-import com.arangodb.springframework.config.AbstractArangoConfiguration;
+import com.arangodb.springframework.config.ArangoConfiguration;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
 import com.arangodb.springframework.testdata.Person;
 
 /**
- * 
+ *
  * @author Mark Vollmary
  * @author Christian Lechner
  */
@@ -46,7 +46,7 @@ import com.arangodb.springframework.testdata.Person;
 @EnableArangoRepositories(basePackages = {
 		"com.arangodb.springframework.repository" }, namedQueriesLocation = "classpath*:arango-named-queries-test.properties")
 @EnableArangoAuditing(auditorAwareRef = "auditorProvider")
-public class ArangoTestConfiguration extends AbstractArangoConfiguration {
+public class ArangoTestConfiguration implements ArangoConfiguration {
 
 	public static final String DB = "spring-test-db";
 
@@ -61,7 +61,7 @@ public class ArangoTestConfiguration extends AbstractArangoConfiguration {
 	}
 
 	@Override
-	protected Collection<Converter<?, ?>> customConverters() {
+	public Collection<Converter<?, ?>> customConverters() {
 		final Collection<Converter<?, ?>> converters = new ArrayList<>();
 		converters.add(new CustomMappingTest.CustomVPackReadTestConverter());
 		converters.add(new CustomMappingTest.CustomVPackWriteTestConverter());

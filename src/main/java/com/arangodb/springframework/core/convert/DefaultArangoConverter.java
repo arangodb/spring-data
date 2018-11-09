@@ -191,7 +191,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		final ParameterValueProvider<ArangoPersistentProperty> provider = getParameterProvider(entity, source);
 		final Object instance = instantiator.createInstance(entity, provider);
-		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(instance);
+		final PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(instance);
 
 		final String id = source.get(_ID).isString() ? source.get(_ID).getAsString() : null;
 
@@ -216,11 +216,14 @@ public class DefaultArangoConverter implements ArangoConverter {
 	private void readProperty(
 		final ArangoPersistentEntity<?> entity,
 		final String parentId,
-		final PersistentPropertyAccessor accessor,
+			final PersistentPropertyAccessor<?> accessor,
 		final VPackSlice source,
 		final ArangoPersistentProperty property) {
 
-		accessor.setProperty(property, readPropertyValue(entity, parentId, source, property));
+		final Object propertyValue = readPropertyValue(entity, parentId, source, property);
+		if (propertyValue != null && !property.getType().isPrimitive()) {
+			accessor.setProperty(property, propertyValue);
+		}
 	}
 
 	private Object readPropertyValue(
@@ -604,7 +607,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 		sink.add(attribute, ValueType.OBJECT);
 
-		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
+		final PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(source);
 
 		entity.doWithProperties((final ArangoPersistentProperty property) -> {
 			if (!property.isWritable()) {

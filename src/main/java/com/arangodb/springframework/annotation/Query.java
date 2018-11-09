@@ -28,7 +28,9 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.QueryAnnotation;
 
 /**
- * 
+ * Annotation to declare a custom AQL (ArangoDB Query Language) query on
+ * repository methods.
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -40,7 +42,7 @@ import org.springframework.data.annotation.QueryAnnotation;
 public @interface Query {
 
 	/**
-	 * @return The query string to be executed
+	 * The query string to be executed
 	 */
 	String value();
 

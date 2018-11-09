@@ -26,6 +26,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotation to define metadata for document fields.
+ *
  * @author Mark Vollmary
  *
  */
@@ -33,6 +35,9 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface Field {
 
+	/**
+	 * The field-name to be used to store the field inside the document.
+	 */
 	String value() default "";
 
 }

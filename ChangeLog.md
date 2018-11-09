@@ -6,9 +6,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Added
+
+- added interface `ArangoConfiguration` to replace `AbstractArangoConfiguration`
+
+  `ArangoConfiguration` provides default methods and can be implemented directly without the need of the class `AbstractArangoConfiguration`.
+
+### Changed
+
+- updated support of spring to `5.1.x`
+- updated support of spring-data to `2.1.x`
+
+### Deprecated
+
+- deprecated `AbstractArangoConfiguration`
+
 ### Removed
 
 - removed use of javax.xml.bind to better support Java 9 and above
+
+### Fixed
+
+- fixed NPE when loading non-existing data into fields of primitive type (issue #127)
 
 ## [3.1.1] - 2018-09-25
 

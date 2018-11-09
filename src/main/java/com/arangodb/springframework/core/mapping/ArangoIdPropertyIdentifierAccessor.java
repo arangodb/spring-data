@@ -33,7 +33,7 @@ import org.springframework.util.Assert;
 public class ArangoIdPropertyIdentifierAccessor extends TargetAwareIdentifierAccessor {
 
 	private final ArangoPersistentProperty arangoIdProperty;
-	private final PersistentPropertyAccessor accessor;
+	private final PersistentPropertyAccessor<?> accessor;
 
 	public ArangoIdPropertyIdentifierAccessor(final ArangoPersistentEntity<?> entity, final Object target) {
 		super(target);
