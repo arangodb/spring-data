@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Fixed
+
+- fixed NPE when loading non-existing data into fields of primitive type (issue #127)
+
 ### Changed
 
 - updated support of spring to `5.1.x`

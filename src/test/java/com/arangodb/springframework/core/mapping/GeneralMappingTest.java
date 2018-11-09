@@ -505,4 +505,27 @@ public class GeneralMappingTest extends AbstractArangoTest {
 			assertThat(find.modifiedBy.getId(), is(modifiedID));
 		}
 	}
+
+	@Document("primitive_test_col")
+	static class NoPrimitiveTestEntity {
+		@Id
+		private String id;
+	}
+
+	@Document("primitive_test_col")
+	static class PrimitiveTestEntity {
+		@Id
+		private String id;
+		@SuppressWarnings("unused")
+		private boolean value;
+	}
+
+	@Test
+	public void readNonExistingPrimitive() {
+		final NoPrimitiveTestEntity entity = new NoPrimitiveTestEntity();
+		template.insert(entity);
+		final Optional<PrimitiveTestEntity> find = template.find(entity.id, PrimitiveTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().id, is(entity.id));
+	}
 }

@@ -221,7 +221,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final VPackSlice source,
 		final ArangoPersistentProperty property) {
 
-		accessor.setProperty(property, readPropertyValue(entity, parentId, source, property));
+		final Object propertyValue = readPropertyValue(entity, parentId, source, property);
+		if (propertyValue != null && !property.getType().isPrimitive()) {
+			accessor.setProperty(property, propertyValue);
+		}
 	}
 
 	private Object readPropertyValue(
