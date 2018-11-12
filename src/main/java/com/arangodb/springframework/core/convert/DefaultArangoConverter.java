@@ -162,8 +162,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return readBaseDocument(rawTypeToUse, source);
 		}
 
-		if (typeToUse.isMap() || ClassTypeInformation.OBJECT.equals(typeToUse)) {
+		if (typeToUse.isMap()) {
 			return readMap(typeToUse, source);
+		}
+
+		if (ClassTypeInformation.OBJECT.equals(typeToUse)) {
+			return readMap(ClassTypeInformation.MAP, source);
 		}
 
 		if (typeToUse.getType().isArray()) {

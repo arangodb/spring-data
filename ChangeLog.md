@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Fixed
+
+- fixed deserialization of nested `Map`s
+- fixed deserialization of type `Object` 
+
 ## [3.2.0] - 2018-11-09
 
 ### Added
