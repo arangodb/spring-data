@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Fixed
+
+- fixed `ArangoRepository.save()` to perform _repsert_ instead of _upsert_ (for ArangoDB < 3.4)
+
 ## [3.2.0] - 2018-11-09
 
 ### Added
