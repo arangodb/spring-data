@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.2.1] - 2018-12-17
+
 ### Fixed
 
+- fixed preventing the use of multiple edge entities in a query inside `@Relations`
 - fixed `ArangoRepository.save()` to perform _repsert_ instead of _upsert_ (for ArangoDB < 3.4)
 - fixed deserialization of nested `Map`s
 - fixed deserialization of type `Object` 
@@ -265,7 +268,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 - fixed missing WITH information in AQL when resolving annotation @Relations (issue #9)
 
-[unreleased]: https://github.com/arangodb/spring-data/compare/3.2.0...HEAD
+[unreleased]: https://github.com/arangodb/spring-data/compare/3.2.1...HEAD
+[3.2.1]: https://github.com/arangodb/spring-data/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/arangodb/spring-data/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/arangodb/spring-data/compare/3.0.0...3.1.0
 [3.0.0]: https://github.com/arangodb/spring-data/compare/2.3.1...3.0.0
