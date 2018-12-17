@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,7 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
+import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
@@ -424,6 +426,34 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		entity2.setPersisted(true);
 		template.upsert(Arrays.asList(entity1, entity2), UpsertStrategy.REPLACE);
 		assertThat(template.collection(NewEntityTest.class).count(), is(2L));
+	}
+
+	@Document
+	static class MapContentTestEntity {
+		@Id
+		String id;
+		Map<String, Object> value;
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void replaceMapContent() {
+		final MapContentTestEntity entity = new MapContentTestEntity();
+		entity.value = new HashMap<>();
+		entity.value.put("notToRemove", "test");
+		entity.value.put("toRemove", "test");
+		template.insert(entity);
+
+		entity.value.remove("toRemove");
+		template.upsert(entity, UpsertStrategy.REPLACE);
+		assertThat(entity.value.size(), is(1));
+		assertThat(entity.value.containsKey("notToRemove"), is(true));
+		assertThat(entity.value.containsKey("toRemove"), is(false));
+
+		final Optional<MapContentTestEntity> find = template.find(entity.id, MapContentTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().value.containsKey("notToRemove"), is(true));
+		assertThat(find.get().value.containsKey("toRemove"), is(false));
 	}
 
 }

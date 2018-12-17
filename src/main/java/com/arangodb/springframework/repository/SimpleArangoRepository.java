@@ -84,7 +84,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public <S extends T> S save(final S entity) {
 		if (arangoOperations.getVersion().getVersion().compareTo("3.4.0") < 0) {
-			arangoOperations.upsert(entity, UpsertStrategy.UPDATE);
+			arangoOperations.upsert(entity, UpsertStrategy.REPLACE);
 		} else {
 			arangoOperations.repsert(entity);
 		}
@@ -251,7 +251,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 	/**
 	 * Gets the name of the collection for this repository
-	 * 
+	 *
 	 * @return the name of the collection
 	 */
 	private String getCollectionName() {
@@ -321,7 +321,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 	/**
 	 * Counts the number of documents in the collection which match with the given example
-	 * 
+	 *
 	 * @param example
 	 *            example object to construct query with
 	 * @param <S>
@@ -340,7 +340,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 	/**
 	 * Checks if any documents match with the given example
-	 * 
+	 *
 	 * @param example
 	 * @param <S>
 	 * @return true if any matches are found, else false

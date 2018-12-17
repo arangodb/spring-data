@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ### Fixed
 
+- fixed `ArangoRepository.save()` to perform _repsert_ instead of _upsert_ (for ArangoDB < 3.4)
 - fixed deserialization of nested `Map`s
 - fixed deserialization of type `Object` 
 
