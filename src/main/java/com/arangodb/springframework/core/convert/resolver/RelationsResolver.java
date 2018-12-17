@@ -71,20 +71,20 @@ public class RelationsResolver extends AbstractResolver<Relations> implements Re
 		final Relations annotation,
 		final boolean limit) {
 
+		final String edges = Arrays.stream(annotation.edges()).map(e -> template.collection(e).name())
+				.collect(Collectors.joining(","));
+
 		final String query = String.format(
-			"WITH @@vertex FOR v IN %d .. %d %s @start @@edges OPTIONS {bfs: true, uniqueVertices: \"global\"} %s RETURN v", //
+			"WITH @@vertex FOR v IN %d .. %d %s @start %s OPTIONS {bfs: true, uniqueVertices: \"global\"} %s RETURN v", //
 			Math.max(1, annotation.minDepth()), //
 			Math.max(1, annotation.maxDepth()), //
 			annotation.direction(), //
+			edges, //
 			limit ? "LIMIT 1" : "");
-
-		final String edges = Arrays.stream(annotation.edges()).map(e -> template.collection(e).name())
-				.collect(Collectors.joining(","));
 
 		final Map<String, Object> bindVars = new MapBuilder()//
 				.put("start", id) //
 				.put("@vertex", type) //
-				.put("@edges", edges) //
 				.get();
 
 		return template.query(query, bindVars, type);
