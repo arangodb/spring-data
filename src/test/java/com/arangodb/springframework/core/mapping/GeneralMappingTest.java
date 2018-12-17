@@ -31,7 +31,9 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -527,5 +529,66 @@ public class GeneralMappingTest extends AbstractArangoTest {
 		final Optional<PrimitiveTestEntity> find = template.find(entity.id, PrimitiveTestEntity.class);
 		assertThat(find.isPresent(), is(true));
 		assertThat(find.get().id, is(entity.id));
+	}
+
+	@Document
+	static class ObjectFieldTestEntity {
+		@Id
+		private String id;
+		private Object value;
+	}
+
+	@Test
+	public void readObjectFieldFromString() {
+		final ObjectFieldTestEntity entity = new ObjectFieldTestEntity();
+		entity.value = "test";
+		template.insert(entity);
+		final Optional<ObjectFieldTestEntity> find = template.find(entity.id, ObjectFieldTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().value, is("test"));
+	}
+
+	@Test
+	public void readObjectFieldFromMap() {
+		final ObjectFieldTestEntity entity = new ObjectFieldTestEntity();
+		final HashMap<Object, Object> map = new HashMap<>();
+		map.put("key", "value");
+		entity.value = map;
+		template.insert(entity);
+		final Optional<ObjectFieldTestEntity> find = template.find(entity.id, ObjectFieldTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().value, is(map));
+	}
+
+	@Test
+	public void readObjectFieldFromPOJO() {
+		final ObjectFieldTestEntity entity = new ObjectFieldTestEntity();
+		final SimpleTypesTestEntity value = new SimpleTypesTestEntity();
+		value.stringValue = "test";
+		entity.value = value;
+		template.insert(entity);
+		final Optional<ObjectFieldTestEntity> find = template.find(entity.id, ObjectFieldTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().value instanceof SimpleTypesTestEntity, is(true));
+		assertThat(SimpleTypesTestEntity.class.cast(find.get().value).stringValue, is("test"));
+	}
+
+	@Document
+	static class MapInMapTestEntity {
+		@Id
+		private String id;
+		private Map<String, Object> value;
+	}
+
+	@Test
+	public void readMapInMap() {
+		final MapInMapTestEntity entity = new MapInMapTestEntity();
+		final Map<String, Object> map = new HashMap<>();
+		map.put("map", new HashMap<>());
+		entity.value = map;
+		template.insert(entity);
+		final Optional<MapInMapTestEntity> find = template.find(entity.id, MapInMapTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().value, is(map));
 	}
 }
