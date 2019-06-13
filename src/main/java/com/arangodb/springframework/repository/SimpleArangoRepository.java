@@ -378,7 +378,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		}
 
 		final String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
-		return predicate == null ? "" : "FILTER " + predicate;
+		return predicate == null || "".equals(predicate) ? "" : "FILTER " + predicate;
 	}
 
 	private String buildPageableClause(final Pageable pageable, final String varName) {
