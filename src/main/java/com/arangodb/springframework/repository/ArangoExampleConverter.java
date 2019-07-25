@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.util.Assert;
 
@@ -76,6 +77,23 @@ public class ArangoExampleConverter<T> {
 			} else if (!example.getMatcher().isIgnoredPath(fullJavaPath) && (value != null
 					|| example.getMatcher().getNullHandler().equals(ExampleMatcher.NullHandler.INCLUDE))) {
 				addPredicate(example, predicateBuilder, bindVars, fullPath, fullJavaPath, value);
+			}
+		});
+
+		entity.doWithAssociations((AssociationHandler<ArangoPersistentProperty>) association -> {
+
+			final ArangoPersistentProperty property = association.getInverse();
+			final String fullPath = path + (path.length() == 0 ? "" : ".") + property.getFieldName();
+			final String fullJavaPath = javaPath + (javaPath.length() == 0 ? "" : ".") + property.getName();
+			final Object value = accessor.getProperty(property);
+
+			if (property.isEntity() && property.isAssociation() && value != null) {
+				final ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(property.getType());
+				final PersistentPropertyAccessor<?> associatedAccessor = persistentEntity.getPropertyAccessor(value);
+				final Object idValue = associatedAccessor.getProperty(persistentEntity.getIdProperty());
+
+				String refIdValue = String.format("%s/%s", persistentEntity.getCollection(), idValue);
+				addPredicate(example, predicateBuilder, bindVars, fullPath, fullJavaPath, refIdValue);
 			}
 		});
 	}
