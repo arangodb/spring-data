@@ -166,6 +166,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return readMap(typeToUse, source);
 		}
 
+		if (source.isArray()) {
+			return readArray(typeToUse, source);
+		}
+		
 		if (ClassTypeInformation.OBJECT.equals(typeToUse)) {
 			return readMap(ClassTypeInformation.MAP, source);
 		}
