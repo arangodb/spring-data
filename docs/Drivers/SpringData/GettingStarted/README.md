@@ -2,11 +2,11 @@
 
 ## Supported versions
 
-| Spring Data ArangoDB | Spring Data | ArangoDB    |
-| -------------------- | ----------- | ----------- |
-| 1.3.x                | 1.13.x      | 3.0\*, 3.1+ |
-| 2.3.x                | 2.0.x       | 3.0\*, 3.1+ |
-| 3.0.x                | 2.0.x       | 3.0\*, 3.1+ |
+| Spring Data ArangoDB | Spring Data | ArangoDB               |
+| -------------------- | ----------- | ---------------------- |
+| 1.3.x                | 1.13.x      | 3.0\*, 3.1+            |
+| 2.x.x                | 2.x.x       | 3.0.x, 3.1+            |
+| 3.x.x                | 2.x.x       | 3.3.x, 3.4.x, 3.5.x    |
 
 Spring Data ArangoDB requires ArangoDB 3.0 or higher - which you can download [here](https://www.arangodb.com/download/) - and Java 8 or higher.
 
