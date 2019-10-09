@@ -166,7 +166,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return readMap(typeToUse, source);
 		}
 
-		if (ClassTypeInformation.OBJECT.equals(typeToUse)) {
+		if (!source.isArray() && ClassTypeInformation.OBJECT.equals(typeToUse)) {
 			return readMap(ClassTypeInformation.MAP, source);
 		}
 
@@ -174,8 +174,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 			return readArray(typeToUse, source);
 		}
 
-		if (typeToUse.isCollectionLike() || ClassTypeInformation.OBJECT.equals(typeToUse)) {
+		if (typeToUse.isCollectionLike()) {
 			return readCollection(typeToUse, source);
+		}
+
+		if (ClassTypeInformation.OBJECT.equals(typeToUse)) {
+			return readCollection(ClassTypeInformation.COLLECTION, source);
 		}
 
 		final ArangoPersistentEntity<?> entity = context.getRequiredPersistentEntity(rawTypeToUse);
