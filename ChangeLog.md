@@ -60,7 +60,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ### Added
 
-- added dirty read support ([reading from followers](https://docs.arangodb.com/current/Manual/Administration/ActiveFailover/#reading-from-follower)) for AQL queries
+- added dirty read support ([reading from followers](https://www.arangodb.com/docs/stable/administration-active-failover.html#reading-from-follower)) for AQL queries
   - added `QueryOptions#allowDirtRead`
 
 ### Changed
