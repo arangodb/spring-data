@@ -1,6 +1,7 @@
 # Query methods
 
-Queries using [ArangoDB Query Language (AQL)](https://www.arangodb.com/docs/stable/aql/index.html) can be supplied with the `@Query` annotation on methods.
+Queries using [ArangoDB Query Language (AQL)](https://www.arangodb.com/docs/stable/aql/index.html)
+can be supplied with the `@Query` annotation on methods.
 
 ## Passing collection name
 
