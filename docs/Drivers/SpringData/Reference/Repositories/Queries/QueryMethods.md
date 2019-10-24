@@ -1,6 +1,7 @@
 # Query methods
 
-Queries using [ArangoDB Query Language (AQL)](https://docs.arangodb.com/current/AQL/index.html) can be supplied with the `@Query` annotation on methods.
+Queries using [ArangoDB Query Language (AQL)](https://www.arangodb.com/docs/stable/aql/index.html)
+can be supplied with the `@Query` annotation on methods.
 
 ## Passing collection name
 
@@ -48,7 +49,7 @@ public interface MyRepository extends ArangoRepository<Customer, String>{
 
 ### @BindVars
 
-In addition you can use a method parameter of type `Map<String, Object>` annotated with `@BindVars` as your bind parameters. You can then fill the map with any parameter used in the query. (see [here](https://docs.arangodb.com/3.1/AQL/Fundamentals/BindParameters.html#bind-parameters) for more Information about Bind Parameters).
+In addition you can use a method parameter of type `Map<String, Object>` annotated with `@BindVars` as your bind parameters. You can then fill the map with any parameter used in the query (also see [AQL Bind Parameters](https://www.arangodb.com/docs/stable/aql/fundamentals-bind-parameters.html#bind-parameters)).
 
 ```java
 public interface MyRepository extends ArangoRepository<Customer, String>{
