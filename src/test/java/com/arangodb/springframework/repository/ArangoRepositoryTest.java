@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import com.arangodb.springframework.testdata.ShoppingCart;
 import org.junit.Test;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -102,7 +103,7 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	public void deleteAllTest() {
 		repository.saveAll(customers);
 		repository.deleteAll();
-		assertTrue(repository.count() == 0);
+		assertEquals(0, repository.count());
 	}
 
 	@Test
@@ -369,6 +370,25 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		final Example<Customer> example = Example.of(probe);
 		final Optional<Customer> retrieved = repository.findOne(example);
 		assertThat(retrieved.isPresent(), is(false));
+	}
+
+	@Test
+	public void exampleWithRefPropertyTest() {
+
+		ShoppingCart shoppingCart = new ShoppingCart();
+		shoppingCartRepository.save(shoppingCart);
+
+		Customer customer = new Customer("Dhiren", "Upadhyay", 28);
+		customer.setShoppingCart(shoppingCart);
+		repository.save(customer);
+
+		Customer customer1 = new Customer();
+		customer1.setShoppingCart(shoppingCart);
+		ExampleMatcher exampleMatcher = ExampleMatcher.matching().withIgnorePaths("age", "location", "alive");
+		Example<Customer> example = Example.of(customer1, exampleMatcher);
+
+		final Customer retrieved = repository.findOne(example).orElse(null);
+		assertEquals(customer, retrieved);
 	}
 
 }

@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
+import com.arangodb.springframework.repository.query.ShoppingCartRepository;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.GeoResult;
@@ -28,6 +29,9 @@ public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 
 	@Autowired
 	protected CustomerRepository repository;
+
+	@Autowired
+	protected ShoppingCartRepository shoppingCartRepository;
 
 	protected Customer john;
 	protected Customer bob;
