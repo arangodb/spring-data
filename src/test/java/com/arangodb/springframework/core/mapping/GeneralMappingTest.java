@@ -30,6 +30,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -558,6 +560,17 @@ public class GeneralMappingTest extends AbstractArangoTest {
 		final Optional<ObjectFieldTestEntity> find = template.find(entity.id, ObjectFieldTestEntity.class);
 		assertThat(find.isPresent(), is(true));
 		assertThat(find.get().value, is(map));
+	}
+
+	@Test
+	public void readObjectFieldFromCollectionLike() {
+		final ObjectFieldTestEntity entity = new ObjectFieldTestEntity();
+		final Collection<String> collection = Collections.singleton("test");
+		entity.value = collection;
+		template.insert(entity);
+		final Optional<ObjectFieldTestEntity> find = template.find(entity.id, ObjectFieldTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		assertThat(find.get().value, is(collection));
 	}
 
 	@Test
