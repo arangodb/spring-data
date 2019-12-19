@@ -45,7 +45,8 @@ import com.arangodb.springframework.testdata.Person;
 @ComponentScan({ "com.arangodb.springframework.component", "com.arangodb.springframework.core.mapping.event" })
 @EnableArangoRepositories(basePackages = {
 		"com.arangodb.springframework.repository",
-		"com.arangodb.springframework.example.polymorphic.repository" },
+		"com.arangodb.springframework.example.polymorphic.repository",
+		"com.arangodb.springframework.debug.repository"},
 						  namedQueriesLocation = "classpath*:arango-named-queries-test.properties")
 @EnableArangoAuditing(auditorAwareRef = "auditorProvider")
 public class ArangoTestConfiguration implements ArangoConfiguration {
