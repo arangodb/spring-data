@@ -5,9 +5,9 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data)
 [![Actions Status](https://github.com/arangodb/spring-data/workflows/Java%20CI/badge.svg)](https://github.com/arangodb/spring-data/actions)
 
-- [Getting Started](docs/Drivers/SpringData/GettingStarted/README.md)
-- [Reference](docs/Drivers/SpringData/Reference/README.md)
-- [Migration](docs/Drivers/SpringData/Migration/README.md)
+- [Getting Started](https://www.arangodb.com/docs/stable/drivers/spring-data-getting-started.html)
+- [Reference](https://www.arangodb.com/docs/stable/drivers/spring-data-reference.html)
+- [Migration](https://www.arangodb.com/docs/stable/drivers/spring-data-migration.html)
 
 ## Learn more
 
