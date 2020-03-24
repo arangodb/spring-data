@@ -4,7 +4,7 @@
 
 	<groupId>com.arangodb</groupId>
 	<artifactId>arangodb-spring-data</artifactId>
-	<version>3.2.3</version>
+	<version>3.2.4_PREVIEW_3.7.0-alpha.2_0</version>
 	<inceptionYear>2017</inceptionYear>
 	<packaging>jar</packaging>
 
@@ -25,7 +25,7 @@
 		<logback-classic.version>1.1.3</logback-classic.version>
 		<hamcrest-all.version>1.3</hamcrest-all.version>
 		<junit.version>4.12</junit.version>
-		<arangodb-java-driver.version>6.6.1</arangodb-java-driver.version>
+		<arangodb-java-driver.version>6.7.0_PREVIEW_3.7.0-alpha.2_0</arangodb-java-driver.version>
 		<spring.version>5.1.1.RELEASE</spring.version>
 		<spring-tx.version>${spring.version}</spring-tx.version>
 		<spring-context.version>${spring.version}</spring-context.version>

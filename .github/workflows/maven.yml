@@ -4,10 +4,12 @@ on:
   pull_request:
     branches:
       - master
+      - preview
       - 2.3.x
   push:
     branches:
       - master
+      - preview
       - 2.3.x
 
 jobs:
