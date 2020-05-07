@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
-- upgraded dependency arangodb-java-driver 6.6.1
+## [3.2.4] - 2020-05-07
+
+- dependencies update
 
 ## [3.2.3] - 2019-09-16
 
