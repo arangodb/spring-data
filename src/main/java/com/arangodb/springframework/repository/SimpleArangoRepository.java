@@ -364,7 +364,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final Pageable pageable,
 		@Nullable final Example<S> example,
 		final Map<String, Object> bindVars) {
-
+		arangoOperations.collection(domainClass);
 		final String query = String.format("FOR e IN %s %s %s RETURN e", getCollectionName(),
 			buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
 
