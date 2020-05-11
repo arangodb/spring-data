@@ -75,7 +75,8 @@ public class MultiTenancyDBLevelRepositoryTest {
 		IdTestEntity<String> entity = new IdTestEntity<>();
 		entity.setId("MyId");
 		Example<IdTestEntity<String>> example = Example.of(entity);
-		assertThat(idTestRepository.findOne(example).isEmpty(), is(true));
+		Optional<IdTestEntity<String>> result = idTestRepository.findOne(example);
+		assertThat(result.isPresent(), is(false));
 	}
 
 	@Before
