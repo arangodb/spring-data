@@ -329,6 +329,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> long count(final Example<S> example) {
+		arangoOperations.collection(domainClass);
 		final Map<String, Object> bindVars = new HashMap<>();
 		final String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
 		final String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
@@ -354,7 +355,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final Sort sort,
 		@Nullable final Example<S> example,
 		final Map<String, Object> bindVars) {
-
+		arangoOperations.collection(domainClass);
 		final String query = String.format("FOR e IN %s %s %s RETURN e", getCollectionName(),
 			buildFilterClause(example, bindVars), buildSortClause(sort, "e"));
 		return arangoOperations.query(query, bindVars, null, domainClass);
