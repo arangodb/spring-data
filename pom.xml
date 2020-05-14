@@ -254,7 +254,7 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-commons</artifactId>
-			<version>${parent.version}</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 
 		<!-- Test -->
@@ -271,7 +271,7 @@
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${parent.version}</version>
+				<version>${project.parent.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
