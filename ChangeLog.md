@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.2.5] - 2020-05-14
+
+- set `org.springframework.data.build:spring-data-parent` as parent project
+- added `org.springframework.boot:spring-boot-dependencies` to dependency management
+
 ## [3.2.4] - 2020-05-07
 
 - dependencies update
