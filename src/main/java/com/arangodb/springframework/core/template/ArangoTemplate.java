@@ -717,7 +717,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(value);
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null && !idProperty.isImmutable()) {
-			accessor.setProperty(idProperty, documentEntity.getKey());
+			if(idProperty.getType().isAssignableFrom(documentEntity.getKey().getClass())) {
+				accessor.setProperty(idProperty, documentEntity.getKey());
+			}else{
+				if(converter.getConversionService().canConvert(documentEntity.getKey().getClass(),idProperty.getType())){
+					accessor.setProperty(idProperty,converter.getConversionService().convert(documentEntity.getKey(),idProperty.getType()));
+				}
+			}
 		}
 		entity.getArangoIdProperty().filter(arangoId -> !arangoId.isImmutable())
 				.ifPresent(arangoId -> accessor.setProperty(arangoId, documentEntity.getId()));
