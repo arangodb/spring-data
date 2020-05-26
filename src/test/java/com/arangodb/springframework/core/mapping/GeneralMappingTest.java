@@ -20,34 +20,6 @@
 
 package com.arangodb.springframework.core.mapping;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isOneOf;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.joda.time.DateTimeZone;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
-
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
@@ -65,6 +37,19 @@ import com.arangodb.springframework.testdata.Person;
 import com.arangodb.springframework.testdata.Role;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
+import org.joda.time.DateTimeZone;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.*;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.*;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Mark Vollmary
@@ -565,7 +550,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
 	@Test
 	public void readObjectFieldFromCollectionLike() {
 		final ObjectFieldTestEntity entity = new ObjectFieldTestEntity();
-		final Collection<String> collection = Collections.singleton("test");
+		final Collection<String> collection = Arrays.asList("test", "test");
 		entity.value = collection;
 		template.insert(entity);
 		final Optional<ObjectFieldTestEntity> find = template.find(entity.id, ObjectFieldTestEntity.class);
