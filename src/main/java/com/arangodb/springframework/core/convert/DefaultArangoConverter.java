@@ -20,25 +20,22 @@
 
 package com.arangodb.springframework.core.convert;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-
+import com.arangodb.entity.BaseDocument;
+import com.arangodb.entity.BaseEdgeDocument;
+import com.arangodb.springframework.annotation.*;
+import com.arangodb.springframework.core.convert.resolver.LazyLoadingProxy;
+import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
+import com.arangodb.springframework.core.convert.resolver.RelationResolver;
+import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
+import com.arangodb.springframework.core.util.MetadataUtils;
+import com.arangodb.velocypack.VPackBuilder;
+import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.ValueType;
+import com.arangodb.velocypack.internal.util.DateUtil;
+import com.arangodb.velocypack.module.jdk8.internal.util.JavaTimeUtil;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -58,27 +55,15 @@ import org.springframework.util.Base64Utils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
-import com.arangodb.entity.BaseDocument;
-import com.arangodb.entity.BaseEdgeDocument;
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Edge;
-import com.arangodb.springframework.annotation.From;
-import com.arangodb.springframework.annotation.Ref;
-import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.annotation.To;
-import com.arangodb.springframework.core.convert.resolver.LazyLoadingProxy;
-import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
-import com.arangodb.springframework.core.convert.resolver.RelationResolver;
-import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
-import com.arangodb.springframework.core.util.MetadataUtils;
-import com.arangodb.velocypack.VPackBuilder;
-import com.arangodb.velocypack.VPackSlice;
-import com.arangodb.velocypack.ValueType;
-import com.arangodb.velocypack.internal.util.DateUtil;
-import com.arangodb.velocypack.module.jdk8.internal.util.JavaTimeUtil;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.time.*;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * @author Mark Vollmary
@@ -290,7 +275,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		return map;
 	}
 
-	private Object readCollection(final TypeInformation<?> type, final VPackSlice source) {
+	private Collection<?> readCollection(final TypeInformation<?> type, final VPackSlice source) {
 		if (!source.isArray()) {
 			throw new MappingException(
 					String.format("Can't read collection type %s from VPack type %s!", type, source.getType()));
@@ -298,8 +283,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 		final TypeInformation<?> componentType = getNonNullComponentType(type);
 		final Class<?> collectionType = Iterable.class.equals(type.getType()) ? Collection.class : type.getType();
-		final Collection<Object> collection = CollectionFactory.createCollection(collectionType,
-			componentType.getType(), source.getLength());
+
+		final Collection<Object> collection = Collection.class == collectionType || List.class == collectionType ?
+				new ArrayList<>(source.getLength()) :
+				CollectionFactory.createCollection(collectionType, componentType.getType(), source.getLength());
 
 		final Iterator<VPackSlice> iterator = source.arrayIterator();
 
