@@ -131,7 +131,6 @@ public class ArangoExampleConverter<T> {
             } else {
                 clause = String.format("LIKE(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
             }
-			clause = String.format("LIKE(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
 			switch (stringMatcher) {
 			case STARTING:
 				value = escape(string) + "%";
