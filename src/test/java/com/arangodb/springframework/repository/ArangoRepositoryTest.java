@@ -1,27 +1,19 @@
 package com.arangodb.springframework.repository;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import com.arangodb.springframework.testdata.Address;
+import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.ShoppingCart;
+import org.junit.Test;
+import org.springframework.data.domain.*;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-import com.arangodb.springframework.testdata.ShoppingCart;
-import org.junit.Test;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.data.domain.ExampleMatcher.StringMatcher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-
-import com.arangodb.springframework.testdata.Address;
-import com.arangodb.springframework.testdata.Customer;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.*;
 
 /**
  * Created by F625633 on 06/07/2017.
@@ -38,6 +30,15 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		repository.save(john);
 		customer = repository.findById(id).get();
 		assertEquals("customers do not match", john, customer);
+	}
+
+	@Test
+	public void saveAllTest() {
+		repository.saveAll(customers);
+		Iterable<Customer> docs = repository.findAll();
+		docs.forEach(d -> d.setName("saveAllTest"));
+		repository.saveAll(docs);
+		repository.findAll().forEach(it -> assertEquals("name does not match", "saveAllTest", it.getName()));
 	}
 
 	@Test

@@ -20,19 +20,25 @@
 
 package com.arangodb.springframework.core.template;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
+import com.arangodb.*;
+import com.arangodb.entity.ArangoDBVersion;
+import com.arangodb.entity.DocumentEntity;
+import com.arangodb.entity.MultiDocumentEntity;
+import com.arangodb.entity.UserEntity;
+import com.arangodb.model.*;
+import com.arangodb.springframework.annotation.*;
+import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.CollectionOperations;
+import com.arangodb.springframework.core.UserOperations;
+import com.arangodb.springframework.core.convert.ArangoConverter;
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.core.mapping.event.*;
+import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
+import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
+import com.arangodb.springframework.core.util.MetadataUtils;
+import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackSlice;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -48,49 +54,11 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-import com.arangodb.ArangoCollection;
-import com.arangodb.ArangoCursor;
-import com.arangodb.ArangoDB;
-import com.arangodb.ArangoDBException;
-import com.arangodb.ArangoDatabase;
-import com.arangodb.entity.ArangoDBVersion;
-import com.arangodb.entity.DocumentEntity;
-import com.arangodb.entity.MultiDocumentEntity;
-import com.arangodb.entity.UserEntity;
-import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.model.CollectionCreateOptions;
-import com.arangodb.model.DocumentCreateOptions;
-import com.arangodb.model.DocumentDeleteOptions;
-import com.arangodb.model.DocumentReadOptions;
-import com.arangodb.model.DocumentReplaceOptions;
-import com.arangodb.model.DocumentUpdateOptions;
-import com.arangodb.model.FulltextIndexOptions;
-import com.arangodb.model.GeoIndexOptions;
-import com.arangodb.model.HashIndexOptions;
-import com.arangodb.model.PersistentIndexOptions;
-import com.arangodb.model.SkiplistIndexOptions;
-import com.arangodb.springframework.annotation.FulltextIndex;
-import com.arangodb.springframework.annotation.GeoIndex;
-import com.arangodb.springframework.annotation.HashIndex;
-import com.arangodb.springframework.annotation.PersistentIndex;
-import com.arangodb.springframework.annotation.SkiplistIndex;
-import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.CollectionOperations;
-import com.arangodb.springframework.core.UserOperations;
-import com.arangodb.springframework.core.convert.ArangoConverter;
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.event.AfterDeleteEvent;
-import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
-import com.arangodb.springframework.core.mapping.event.AfterSaveEvent;
-import com.arangodb.springframework.core.mapping.event.ArangoMappingEvent;
-import com.arangodb.springframework.core.mapping.event.BeforeDeleteEvent;
-import com.arangodb.springframework.core.mapping.event.BeforeSaveEvent;
-import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
-import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
-import com.arangodb.springframework.core.util.MetadataUtils;
-import com.arangodb.util.MapBuilder;
-import com.arangodb.velocypack.VPackSlice;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Mark Vollmary
@@ -524,12 +492,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	public <T> Iterable<T> findAll(final Class<T> entityClass) throws DataAccessException {
 		final String query = "FOR entity IN @@col RETURN entity";
 		final Map<String, Object> bindVars = new MapBuilder().put("@col", entityClass).get();
-		return new Iterable<T>() {
-			@Override
-			public Iterator<T> iterator() {
-				return query(query, bindVars, null, entityClass);
-			}
-		};
+		return query(query, bindVars, null, entityClass).asListRemaining();
 	}
 
 	@Override
