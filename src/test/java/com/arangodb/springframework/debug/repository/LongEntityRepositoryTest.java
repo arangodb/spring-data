@@ -22,7 +22,6 @@ package com.arangodb.springframework.debug.repository;
 
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.debug.repository.entity.LongEntity;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,7 +39,6 @@ public class LongEntityRepositoryTest extends AbstractArangoTest {
 	private LongEntityRepository repo;
 
 	@Test
-	@Ignore
 	public void save() {
 		LongEntity entity = new LongEntity();
 		entity.setId(1L);
@@ -51,6 +49,7 @@ public class LongEntityRepositoryTest extends AbstractArangoTest {
 
 		assertThat(saved, is(entity));
 		assertThat(fetched.isPresent(), is(true));
-		assertThat(fetched.get(), is(entity));
+		assertThat(fetched.get().getId(), is(entity.getId()));
+		assertThat(fetched.get().getValue(), is(entity.getValue()));
 	}
 }
