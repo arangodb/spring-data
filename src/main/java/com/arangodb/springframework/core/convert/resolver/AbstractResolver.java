@@ -65,7 +65,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 		this.objenesis = new ObjenesisStd(true);
 	}
 
-	static interface ResolverCallback<A extends Annotation> {
+	public static interface ResolverCallback<A extends Annotation> {
 
 		Object resolve(String id, TypeInformation<?> type, A annotation);
 
