@@ -657,9 +657,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 		if (property.getRef().isPresent()) {
 			if (sourceType.isCollectionLike()) {
-				writeReferences(fieldName, source, sink);
+				writeReferences(fieldName, source, sink,property.getRef().get());
 			} else {
-				writeReference(fieldName, source, sink);
+				writeReference(fieldName, source, sink,property.getRef().get());
 			}
 		}
 
@@ -669,7 +669,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 		else if (property.getFrom().isPresent() || property.getTo().isPresent()) {
 			if (!sourceType.isCollectionLike()) {
-				writeReference(fieldName, source, sink);
+				writeReference(fieldName, source, sink, null);
 			}
 		}
 
@@ -732,27 +732,27 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 	}
 
-	private void writeReferences(final String attribute, final Object source, final VPackBuilder sink) {
+	private void writeReferences(final String attribute, final Object source, final VPackBuilder sink, final Ref annotation) {
 		sink.add(attribute, ValueType.ARRAY);
 
 		if (source.getClass().isArray()) {
 			for (int i = 0; i < Array.getLength(source); ++i) {
 				final Object element = Array.get(source, i);
-				writeReference(null, element, sink);
+				writeReference(null, element, sink,annotation);
 			}
 		}
 
 		else {
 			for (final Object element : asCollection(source)) {
-				writeReference(null, element, sink);
+				writeReference(null, element, sink,annotation);
 			}
 		}
 
 		sink.close();
 	}
 
-	private void writeReference(final String attribute, final Object source, final VPackBuilder sink) {
-		getRefId(source).ifPresent(id -> sink.add(attribute, id));
+	private void writeReference(final String attribute, final Object source, final VPackBuilder sink, final Ref annotation) {
+		getRefId(source, annotation).ifPresent(id -> sink.add(attribute, id));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -867,18 +867,24 @@ public class DefaultArangoConverter implements ArangoConverter {
 		sink.add(attribute, builder.slice());
 	}
 
-	private Optional<String> getRefId(final Object source) {
-		return getRefId(source, context.getPersistentEntity(source.getClass()));
+	private Optional<String> getRefId(final Object source, final Ref annotation) {
+		return getRefId(source, context.getPersistentEntity(source.getClass()),annotation);
 	}
 
-	private Optional<String> getRefId(final Object source, final ArangoPersistentEntity<?> entity) {
+	private Optional<String> getRefId(final Object source, final ArangoPersistentEntity<?> entity, final Ref annotation) {
 		if (source instanceof LazyLoadingProxy) {
 			return Optional.of(((LazyLoadingProxy) source).getRefId());
 		}
 
 		final Optional<Object> id = Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier());
 		if (id.isPresent()) {
-			return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key)));
+			if(annotation != null){
+				final Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
+				return id.map(key -> resolver.get().write(source, entity, convertId(key),annotation));
+			} else {
+				return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key)));
+			}
+
 		}
 
 		return Optional.ofNullable((String) entity.getArangoIdAccessor(source).getIdentifier());

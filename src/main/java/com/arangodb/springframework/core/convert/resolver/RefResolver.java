@@ -23,6 +23,8 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.util.MetadataUtils;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.springframework.annotation.Ref;
@@ -58,5 +60,11 @@ public class RefResolver extends AbstractResolver<Ref>
 	public Object resolve(final String id, final TypeInformation<?> type, final Ref annotation) {
 		return template.find(id, type.getType()).get();
 	}
+
+	@Override
+	public String write(final Object source, final ArangoPersistentEntity<?> entity, final String id, final Ref annotation) {
+		return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), id);
+	}
+
 
 }
