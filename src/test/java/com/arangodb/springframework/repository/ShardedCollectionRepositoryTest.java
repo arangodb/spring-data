@@ -26,6 +26,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -38,7 +40,7 @@ public class ShardedCollectionRepositoryTest extends AbstractArangoTest {
 
     @Test
     public void save() {
-        ShardedUser d1 = shardedRepository.save(new ShardedUser("name1", "country1"));
+        ShardedUser d1 = shardedRepository.save(new ShardedUser("key-" + UUID.randomUUID().toString(), "name1", "country1"));
         d1.name = "name2";
         ShardedUser d2 = shardedRepository.save(d1);
         assertThat(d2.key).isEqualTo(d1.key);
@@ -54,7 +56,8 @@ class ShardedUser {
     String name;
     String country;
 
-    public ShardedUser(String name, String country) {
+    public ShardedUser(String key, String name, String country) {
+        this.key = key;
         this.name = name;
         this.country = country;
     }
