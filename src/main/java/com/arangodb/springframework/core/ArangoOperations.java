@@ -20,25 +20,18 @@
 
 package com.arangodb.springframework.core;
 
-import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.dao.DataAccessException;
-
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.entity.UserEntity;
-import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.model.CollectionCreateOptions;
-import com.arangodb.model.DocumentCreateOptions;
-import com.arangodb.model.DocumentDeleteOptions;
-import com.arangodb.model.DocumentReadOptions;
-import com.arangodb.model.DocumentReplaceOptions;
-import com.arangodb.model.DocumentUpdateOptions;
+import com.arangodb.model.*;
 import com.arangodb.springframework.core.convert.ArangoConverter;
+import org.springframework.dao.DataAccessException;
+
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Interface that specifies a basic set of ArangoDB operations.
@@ -493,6 +486,10 @@ public interface ArangoOperations {
 	 *            A representation of a single document
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
+	 *
+	 * TODO:
+	 * return {@param value: T} (same identical instance)
+	 *
 	 */
 	<T> void repsert(T value) throws DataAccessException;
 
@@ -500,14 +497,16 @@ public interface ArangoOperations {
 	 * Creates new documents from the given documents, unless there already exists. In that case it replaces the
 	 * documents.
 	 *
-	 * @param value
-	 *            A List of documents
-	 * @param entityClass
-	 *            The entity class which represents the collection
+	 * @param values A List of documents
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
+	 * <p>
+	 * TODO:
+	 * return {@param values: Iterable<T>} (same identical instances)
+	 * <p>
+	 * TODO: refactor use of generic
 	 */
-	<T> void repsert(Iterable<T> value, Class<T> entityClass) throws DataAccessException;
+	<T> void repsert(Iterable<? extends T> values) throws DataAccessException;
 
 	/**
 	 * Checks whether the document exists by reading a single document head

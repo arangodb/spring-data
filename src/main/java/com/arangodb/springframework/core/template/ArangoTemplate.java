@@ -578,6 +578,17 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		return insert(collectionName, value, new DocumentCreateOptions());
 	}
 
+	private static final String REPSERT_QUERY_BODY =
+			"UPSERT { _key: doc._key } " +
+					"INSERT doc._key == null ? UNSET(doc, \"_key\") : doc " +
+					"REPLACE doc " +
+					"IN @@col " +
+					"OPTIONS { ignoreRevs: false } " +
+					"RETURN NEW";
+
+	private static final String REPSERT_QUERY = "LET doc = @doc " + REPSERT_QUERY_BODY;
+	private static final String REPSERT_MANY_QUERY = "FOR doc IN @docs " + REPSERT_QUERY_BODY;
+
 	private Object getDocumentKey(final ArangoPersistentEntity<?> entity, final Object value) {
 		Object id = entity.getIdentifierAccessor(value).getIdentifier();
 		if (id == null) {
@@ -591,15 +602,22 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	@Override
 	public <T> void upsert(final T value, final UpsertStrategy strategy) throws DataAccessException {
+		if (UpsertStrategy.REPLACE.equals(strategy)) {
+			repsert(value);
+			return;
+		}
+
+		// TODO: implement also UPSERT-UPDATE via AQL
+
 		final Class<? extends Object> entityClass = value.getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
 
 		final Object id = getDocumentKey(entity, value);
 		if (id != null && (!(value instanceof Persistable) || !Persistable.class.cast(value).isNew())) {
 			switch (strategy) {
-			case UPDATE:
-				update(id.toString(), value);
-				break;
+				case UPDATE:
+					update(id.toString(), value);
+					break;
 			case REPLACE:
 			default:
 				replace(id.toString(), value);
@@ -617,6 +635,14 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		if (!first.isPresent()) {
 			return;
 		}
+
+		if (UpsertStrategy.REPLACE.equals(strategy)) {
+			repsert(value);
+			return;
+		}
+
+		// TODO: implement also UPSERT-UPDATE via AQL
+
 		final Class<T> entityClass = (Class<T>) first.get().getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
 
@@ -648,19 +674,72 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	@Override
 	public <T> void repsert(final T value) throws DataAccessException {
-		insert(value, new DocumentCreateOptions().overwrite(true));
+		@SuppressWarnings("unchecked") final Class<T> clazz = (Class<T>) value.getClass();
+		final String collectionName = _collection(clazz).name();
+
+		potentiallyEmitEvent(new BeforeSaveEvent<>(value));
+
+		final T result;
+		try {
+			result = query(
+					REPSERT_QUERY,
+					new MapBuilder()
+							.put("@col", collectionName)
+							.put("doc", value)
+							.get(),
+					clazz
+			).first();
+		} catch (final ArangoDBException e) {
+			throw exceptionTranslator.translateExceptionIfPossible(e);
+		}
+
+		updateDBFieldsFromObject(value, result);
+		potentiallyEmitEvent(new AfterSaveEvent<>(result));
 	}
 
 	@Override
-	public <T> void repsert(final Iterable<T> value, final Class<T> entityClass) throws DataAccessException {
-		insert(value, entityClass, new DocumentCreateOptions().overwrite(true));
+	public <T> void repsert(final Iterable<? extends T> values) throws DataAccessException {
+		if (!values.iterator().hasNext()) {
+			return;
+		}
+
+		@SuppressWarnings("unchecked") final Class<? extends T> clazz = (Class<? extends T>) values.iterator().next().getClass();
+		final String collectionName = _collection(clazz).name();
+
+		potentiallyEmitBeforeSaveEvent(values);
+
+		final Iterable<? extends T> result;
+		try {
+			result = query(
+					REPSERT_MANY_QUERY,
+					new MapBuilder()
+							.put("@col", collectionName)
+							.put("docs", values)
+							.get(),
+					clazz
+			).asListRemaining();
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+
+		updateDBFieldsFromDocumentEntities(values, result);
+		result.forEach(it -> potentiallyEmitEvent(new AfterSaveEvent<>(it)));
+	}
+
+	private void updateDBFieldsFromDocumentEntities(final Iterable<?> values, final Iterable<?> res) {
+		// FIXME: res could contain errors
+		final Iterator<?> valueIterator = values.iterator();
+		final Iterator<?> resIterator = res.iterator();
+		while (valueIterator.hasNext() && resIterator.hasNext()) {
+			updateDBFieldsFromObject(valueIterator.next(), resIterator.next());
+		}
 	}
 
 	private <T> void updateDBFields(final Iterable<T> values, final MultiDocumentEntity<? extends DocumentEntity> res) {
 		final Iterator<T> valueIterator = values.iterator();
 		if (res.getErrors().isEmpty()) {
 			final Iterator<? extends DocumentEntity> documentIterator = res.getDocuments().iterator();
-			for (; valueIterator.hasNext() && documentIterator.hasNext();) {
+			for (; valueIterator.hasNext() && documentIterator.hasNext(); ) {
 				updateDBFields(valueIterator.next(), documentIterator.next());
 			}
 		} else {
@@ -686,6 +765,34 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 				.ifPresent(arangoId -> accessor.setProperty(arangoId, documentEntity.getId()));
 		entity.getRevProperty().filter(rev -> !rev.isImmutable())
 				.ifPresent(rev -> accessor.setProperty(rev, documentEntity.getRev()));
+	}
+
+	private void updateDBFieldsFromObject(final Object toModify, final Object toRead) {
+		final ArangoPersistentEntity<?> entityToRead = converter.getMappingContext().getPersistentEntity(toRead.getClass());
+		final PersistentPropertyAccessor<?> accessorToRead = entityToRead.getPropertyAccessor(toRead);
+		final ArangoPersistentProperty idPropertyToRead = entityToRead.getIdProperty();
+		final Optional<ArangoPersistentProperty> arangoIdPropertyToReadOptional = entityToRead.getArangoIdProperty();
+		final Optional<ArangoPersistentProperty> revPropertyToReadOptional = entityToRead.getRevProperty();
+
+		final ArangoPersistentEntity<?> entityToModify = converter.getMappingContext().getPersistentEntity(toModify.getClass());
+		final PersistentPropertyAccessor<?> accessorToWrite = entityToModify.getPropertyAccessor(toModify);
+		final ArangoPersistentProperty idPropertyToWrite = entityToModify.getIdProperty();
+
+		if (idPropertyToWrite != null && !idPropertyToWrite.isImmutable()) {
+			accessorToWrite.setProperty(idPropertyToWrite, accessorToRead.getProperty(idPropertyToRead));
+		}
+
+		if (arangoIdPropertyToReadOptional.isPresent()) {
+			ArangoPersistentProperty arangoIdPropertyToRead = arangoIdPropertyToReadOptional.get();
+			entityToModify.getArangoIdProperty().filter(arangoId -> !arangoId.isImmutable())
+					.ifPresent(arangoId -> accessorToWrite.setProperty(arangoId, accessorToRead.getProperty(arangoIdPropertyToRead)));
+		}
+
+		if (revPropertyToReadOptional.isPresent()) {
+			ArangoPersistentProperty revPropertyToRead = revPropertyToReadOptional.get();
+			entityToModify.getRevProperty().filter(rev -> !rev.isImmutable())
+					.ifPresent(rev -> accessorToWrite.setProperty(rev, accessorToRead.getProperty(revPropertyToRead)));
+		}
 	}
 
 	@Override

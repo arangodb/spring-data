@@ -20,29 +20,18 @@
 
 package com.arangodb.springframework.repository;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.StreamSupport;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Repository;
-
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.util.AqlUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.*;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Repository;
+
+import java.util.*;
 
 /**
  * The implementation of all CRUD, paging and sorting functionality in ArangoRepository from the Spring Data Commons
@@ -80,14 +69,9 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 *            the entity to be saved to the database
 	 * @return the updated entity with any id/key/rev saved
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	public <S extends T> S save(final S entity) {
-		if (arangoOperations.getVersion().getVersion().compareTo("3.4.0") < 0) {
-			arangoOperations.upsert(entity, UpsertStrategy.REPLACE);
-		} else {
-			arangoOperations.repsert(entity);
-		}
+		arangoOperations.repsert(entity);
 		return entity;
 	}
 
@@ -98,15 +82,9 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 *            the iterable of entities to be saved to the database
 	 * @return the iterable of updated entities with any id/key/rev saved in each entity
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
-		if (arangoOperations.getVersion().getVersion().compareTo("3.4.0") < 0) {
-			arangoOperations.upsert(entities, UpsertStrategy.UPDATE);
-		} else {
-			final S first = StreamSupport.stream(entities.spliterator(), false).findFirst().get();
-			arangoOperations.repsert(entities, (Class<S>) first.getClass());
-		}
+		arangoOperations.repsert(entities);
 		return entities;
 	}
 
