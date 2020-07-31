@@ -487,9 +487,6 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 *
-	 * TODO:
-	 * return {@param value: T} (same identical instance)
-	 *
 	 */
 	<T> void repsert(T value) throws DataAccessException;
 
@@ -497,18 +494,12 @@ public interface ArangoOperations {
 	 * Creates new documents from the given documents, unless there already exists. In that case it replaces the
 	 * documents.
 	 *
-	 * @param values A List of documents
+	 * @param values      documents to save
+	 * @param entityClass The entity class which represents the collection
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
-	 * <p>
-	 * TODO:
-	 * return {@param values: Iterable<T>} (same identical instances)
-	 * <p>
-	 * TODO: refactor use of generic
-	 * TODO: add Class<T> as argument, repository should know it from related entity information
-	 * 		 also in this way we keep the same fn signature as b4, so w/o breaking changes
 	 */
-	<T> void repsert(Iterable<? extends T> values) throws DataAccessException;
+	<T> void repsert(Iterable<? extends T> values, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Checks whether the document exists by reading a single document head

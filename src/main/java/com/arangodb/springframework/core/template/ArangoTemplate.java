@@ -636,14 +636,14 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			return;
 		}
 
+		final Class<T> entityClass = (Class<T>) first.get().getClass();
 		if (UpsertStrategy.REPLACE.equals(strategy)) {
-			repsert(value);
+			repsert(value, entityClass);
 			return;
 		}
 
 		// TODO: implement also UPSERT-UPDATE via AQL
 
-		final Class<T> entityClass = (Class<T>) first.get().getClass();
 		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
 
 		final Collection<T> withId = new ArrayList<>();
@@ -698,14 +698,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	@Override
-	public <T> void repsert(final Iterable<? extends T> values) throws DataAccessException {
+	public <T> void repsert(final Iterable<? extends T> values, final Class<T> entityClass) throws DataAccessException {
 		if (!values.iterator().hasNext()) {
 			return;
 		}
 
-		@SuppressWarnings("unchecked") final Class<? extends T> clazz = (Class<? extends T>) values.iterator().next().getClass();
-		final String collectionName = _collection(clazz).name();
-
+		final String collectionName = _collection(entityClass).name();
 		potentiallyEmitBeforeSaveEvent(values);
 
 		final Iterable<? extends T> result;
@@ -716,7 +714,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 							.put("@col", collectionName)
 							.put("docs", values)
 							.get(),
-					clazz
+					entityClass
 			).asListRemaining();
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -727,7 +725,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	private void updateDBFieldsFromDocumentEntities(final Iterable<?> values, final Iterable<?> res) {
-		// FIXME: res could contain errors
 		final Iterator<?> valueIterator = values.iterator();
 		final Iterator<?> resIterator = res.iterator();
 		while (valueIterator.hasNext() && resIterator.hasNext()) {
