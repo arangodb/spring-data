@@ -1,19 +1,27 @@
 package com.arangodb.springframework.repository;
 
-import com.arangodb.springframework.testdata.Address;
-import com.arangodb.springframework.testdata.Customer;
-import com.arangodb.springframework.testdata.ShoppingCart;
-import org.junit.Test;
-import org.springframework.data.domain.*;
-import org.springframework.data.domain.ExampleMatcher.StringMatcher;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import org.junit.Test;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import com.arangodb.springframework.testdata.Address;
+import com.arangodb.springframework.testdata.Customer;
+import com.arangodb.springframework.testdata.ShoppingCart;
 
 /**
  * Created by F625633 on 06/07/2017.
@@ -179,6 +187,29 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void findAllByExampleRegexTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer check1 = new Customer("B", "X", 0);
+		final Customer check2 = new Customer("B", "Y", 0);
+		toBeRetrieved.add(new Customer("A", "Z", 0));
+		toBeRetrieved.add(check1);
+		toBeRetrieved.add(check2);
+		toBeRetrieved.add(new Customer("C", "V", 0));
+		repository.saveAll(toBeRetrieved);
+		Customer find = new Customer("([B])", null, 0);
+		ExampleMatcher exampleMatcher = ExampleMatcher.matching().withIgnoreNullValues().withMatcher("name",
+				match -> match.regex());
+		final Example<Customer> example = Example.of(find, exampleMatcher);
+		final Iterable<?> retrieved = repository.findAll(example);
+		final List<Customer> retrievedList = new LinkedList<>();
+		retrieved.forEach(e -> retrievedList.add((Customer) e));
+		final List<Customer> checkList = new LinkedList<>();
+		checkList.add(check1);
+		checkList.add(check2);
+		assertTrue(equals(checkList, retrievedList, cmp, eq, false));
+	}
+
+	@Test
 	public void findAllSortByExampleTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		toBeRetrieved.add(new Customer("A", "Z", 0));
@@ -186,8 +217,8 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("B", "D", 0));
 		repository.saveAll(toBeRetrieved);
 		repository.save(new Customer("A", "A", 1));
-		final Example<Customer> example = Example.of(new Customer("", "", 0),
-			ExampleMatcher.matchingAny().withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
+		final Example<Customer> example = Example.of(new Customer("", "", 0), ExampleMatcher.matchingAny()
+				.withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
 		final List<Sort.Order> orders = new LinkedList<>();
 		orders.add(new Sort.Order(Sort.Direction.ASC, "name"));
 		orders.add(new Sort.Order(Sort.Direction.ASC, "surname"));
@@ -211,8 +242,8 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("F", "R", 0));
 		repository.saveAll(toBeRetrieved);
 		repository.save(new Customer("A", "A", 1));
-		final Example<Customer> example = Example.of(new Customer("", "", 0),
-			ExampleMatcher.matchingAny().withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
+		final Example<Customer> example = Example.of(new Customer("", "", 0), ExampleMatcher.matchingAny()
+				.withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
 		final List<Sort.Order> orders = new LinkedList<>();
 		orders.add(new Sort.Order(Sort.Direction.ASC, "name"));
 		orders.add(new Sort.Order(Sort.Direction.ASC, "surname"));
@@ -242,8 +273,8 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("F", "Q", 0));
 		toBeRetrieved.add(new Customer("F", "R", 0));
 		repository.saveAll(toBeRetrieved);
-		final Example<Customer> example = Example.of(new Customer("", "", 0),
-			ExampleMatcher.matchingAny().withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
+		final Example<Customer> example = Example.of(new Customer("", "", 0), ExampleMatcher.matchingAny()
+				.withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive" }));
 		final long size = repository.count(example);
 		assertTrue(size == toBeRetrieved.size());
 	}
@@ -296,9 +327,9 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		nested3.setNestedCustomer(nested2);
 		exampleCustomer.setNestedCustomer(nested3);
 		final Example<Customer> example = Example.of(exampleCustomer,
-			ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
-					.withIgnoreCase("nestedCustomer.name").withIgnoreNullValues()
-					.withTransformer("nestedCustomer.age", o -> Optional.of(Integer.valueOf(o.get().toString()) + 1)));
+				ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
+						.withIgnoreCase("nestedCustomer.name").withIgnoreNullValues().withTransformer(
+								"nestedCustomer.age", o -> Optional.of(Integer.valueOf(o.get().toString()) + 1)));
 		final Customer retrieved = repository.findOne(example).get();
 		assertEquals(check, retrieved);
 	}
@@ -321,10 +352,10 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		nested3.setNestedCustomer(nested2);
 		exampleCustomer.setNestedCustomer(nested3);
 		final Example<Customer> example = Example.of(exampleCustomer,
-			ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
-					.withIgnorePaths(new String[] { "arangoId", "id", "key", "rev" })
-					.withIgnoreCase("nestedCustomer.name").withIncludeNullValues()
-					.withTransformer("nestedCustomer.age", o -> Optional.of(Integer.valueOf(o.get().toString()) + 1)));
+				ExampleMatcher.matching().withMatcher("nestedCustomer.name", match -> match.endsWith())
+						.withIgnorePaths(new String[] { "arangoId", "id", "key", "rev" })
+						.withIgnoreCase("nestedCustomer.name").withIncludeNullValues().withTransformer(
+								"nestedCustomer.age", o -> Optional.of(Integer.valueOf(o.get().toString()) + 1)));
 		final Customer retrieved = repository.findOne(example).get();
 		assertEquals(check, retrieved);
 	}
@@ -337,8 +368,8 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		final Customer probe = new Customer();
 		probe.setName("am");
 		final Example<Customer> example = Example.of(probe,
-			ExampleMatcher.matching().withStringMatcher(StringMatcher.CONTAINING).withIgnorePaths("arangoId", "id",
-				"key", "rev", "surname", "age"));
+				ExampleMatcher.matching().withStringMatcher(StringMatcher.CONTAINING).withIgnorePaths("arangoId", "id",
+						"key", "rev", "surname", "age"));
 		final Optional<Customer> retrieved = repository.findOne(example);
 		assertThat(retrieved.isPresent(), is(true));
 		assertThat(retrieved.get().getName(), is("name"));
