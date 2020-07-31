@@ -505,6 +505,8 @@ public interface ArangoOperations {
 	 * return {@param values: Iterable<T>} (same identical instances)
 	 * <p>
 	 * TODO: refactor use of generic
+	 * TODO: add Class<T> as argument, repository should know it from related entity information
+	 * 		 also in this way we keep the same fn signature as b4, so w/o breaking changes
 	 */
 	<T> void repsert(Iterable<? extends T> values) throws DataAccessException;
 
