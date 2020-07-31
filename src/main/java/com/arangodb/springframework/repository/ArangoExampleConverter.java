@@ -126,7 +126,11 @@ public class ArangoExampleConverter<T> {
 							? example.getMatcher().getDefaultStringMatcher()
 							: specifier.getStringMatcher();
 			final String string = (String) value;
-			clause = String.format("LIKE(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
+			if (stringMatcher == ExampleMatcher.StringMatcher.REGEX) {
+                clause = String.format("REGEX_TEST(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
+            } else {
+                clause = String.format("LIKE(e.%s, @%s, %b)", fullPath, binding, ignoreCase);
+            }		
 			switch (stringMatcher) {
 			case STARTING:
 				value = escape(string) + "%";
@@ -137,6 +141,9 @@ public class ArangoExampleConverter<T> {
 			case CONTAINING:
 				value = "%" + escape(string) + "%";
 				break;
+			case REGEX:
+                value = escape(string);
+                break;
 			case DEFAULT:
 			case EXACT:
 			default:
