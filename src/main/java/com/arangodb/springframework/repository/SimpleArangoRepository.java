@@ -63,7 +63,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	/**
-	 * Saves the passed entity to the database using upsert from the template
+	 * Saves the passed entity to the database using repsert from the template
 	 *
 	 * @param entity
 	 *            the entity to be saved to the database
@@ -76,7 +76,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	/**
-	 * Saves the given iterable of entities to the database
+	 * Saves the given iterable of entities to the database using repsert from the template
 	 *
 	 * @param entities
 	 *            the iterable of entities to be saved to the database
