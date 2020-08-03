@@ -151,6 +151,18 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
 
 	}
+	
+
+	@Test
+	public void findManyBySurnameOnImportedQueryTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(new Customer("James", "Smith", 35));
+		toBeRetrieved.add(new Customer("Matt", "Smith", 34));
+		repository.saveAll(toBeRetrieved);
+		final List<Customer> retrieved = repository.importedQuery("Smith");
+		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+
+	}
 
 	@Test
 	public void queryCount() {
