@@ -39,6 +39,7 @@ import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.springframework.core.convert.ArangoConverter;
+import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 
 /**
  * Interface that specifies a basic set of ArangoDB operations.
@@ -581,5 +582,7 @@ public interface ArangoOperations {
 	Iterable<UserEntity> getUsers() throws DataAccessException;
 
 	ArangoConverter getConverter();
+	
+	ResolverFactory getResolverFactory();
 
 }

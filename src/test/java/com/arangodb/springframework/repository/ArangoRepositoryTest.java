@@ -7,6 +7,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -308,6 +309,71 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		final Customer retrieved = repository.findOne(example).get();
 		assertEquals(check, retrieved);
 	}
+	
+	@Test
+	public void findAllByExampleWithArrayTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer check = new Customer("Abba", "Bbaaaa", 100);
+		final Customer nested = new Customer("Bwa?[a.b]baAa", "", 67);
+		final Customer nested2 = new Customer("qwerty", "", 10);
+		check.setNestedCustomers(Arrays.asList(nested, nested2));
+		toBeRetrieved.add(check);
+		toBeRetrieved.add(new Customer("Baabba", "", 67));
+		toBeRetrieved.add(new Customer("B", "", 43));
+		toBeRetrieved.add(new Customer("C", "", 76));
+		repository.saveAll(toBeRetrieved);
+		final Customer exampleCustomer = new Customer("Abba", "Bbaaaa", 100);
+		final Customer exampleNested = new Customer("Bwa?[a.b]baAa", "", 67);
+		exampleCustomer.setNestedCustomers(Arrays.asList(exampleNested));
+		final Example<Customer> example = Example.of(exampleCustomer);
+		final Customer retrieved = repository.findOne(example).get();
+		assertEquals(check, retrieved);
+	}
+
+	@Test
+	public void findAllByExampleWithArray2Test() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer check = new Customer("Abba", "Bbaaaa", 100);
+		final Customer nested = new Customer("Bwa?[a.b]baAa", "", 67);
+		final Customer nested2 = new Customer("qwertyASD", "", 10);
+		check.setNestedCustomers(Arrays.asList(nested, nested2));
+		toBeRetrieved.add(check);
+		toBeRetrieved.add(new Customer("Baabba", "", 67));
+		toBeRetrieved.add(new Customer("B", "", 43));
+		toBeRetrieved.add(new Customer("C", "", 76));
+		repository.saveAll(toBeRetrieved);
+		final Customer exampleCustomer = new Customer();
+		final Customer exampleNested = new Customer("qwertyASD", "", 10);
+		exampleCustomer.setNestedCustomers(Arrays.asList(exampleNested));
+		final Example<Customer> example = Example.of(exampleCustomer, ExampleMatcher.matching()
+				.withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive", "age" }));
+		final Customer retrieved = repository.findOne(example).get();
+		assertEquals(check, retrieved);
+	}
+	
+	@Test
+	public void findAllByExampleWithArrayORTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer check = new Customer("Abba", "Bbaaaa", 100);
+		final Customer nested = new Customer("Bwa?[a.b]baAa", "", 67);
+		final Customer nested2 = new Customer("qwertyASD", "", 10);
+		check.setNestedCustomers(Arrays.asList(nested, nested2));
+		toBeRetrieved.add(check);
+		toBeRetrieved.add(new Customer("Baabba", "", 67));
+		toBeRetrieved.add(new Customer("B", "", 43));
+		toBeRetrieved.add(new Customer("C", "", 76));
+		repository.saveAll(toBeRetrieved);
+		final Customer exampleCustomer = new Customer();
+		final Customer exampleNested = new Customer("qwertyASD", "", 10);
+		final Customer exampleOr = new Customer("qwertyOr", "", 10);
+		exampleCustomer.setNestedCustomers(Arrays.asList(exampleNested, exampleOr));
+		final Example<Customer> example = Example.of(exampleCustomer, ExampleMatcher.matching()
+				.withIgnoreNullValues().withIgnorePaths(new String[] { "location", "alive", "age" }));
+		final Customer retrieved = repository.findOne(example).get();
+		assertEquals(check, retrieved);
+	}
+
+	
 
 	@Test
 	public void endingWithByExampleNestedTest() {
