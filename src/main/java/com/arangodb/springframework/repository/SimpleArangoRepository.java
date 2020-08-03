@@ -334,6 +334,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
 		final String query = String.format("FOR e IN %s%s COLLECT WITH COUNT INTO length RETURN length",
 			getCollectionName(), filter);
+		arangoOperations.collection(domainClass);
 		final ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
 		return cursor.next();
 	}
@@ -354,9 +355,9 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final Sort sort,
 		@Nullable final Example<S> example,
 		final Map<String, Object> bindVars) {
-
 		final String query = String.format("FOR e IN %s %s %s RETURN e", getCollectionName(),
 			buildFilterClause(example, bindVars), buildSortClause(sort, "e"));
+		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars, null, domainClass);
 	}
 
@@ -364,10 +365,9 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final Pageable pageable,
 		@Nullable final Example<S> example,
 		final Map<String, Object> bindVars) {
-
 		final String query = String.format("FOR e IN %s %s %s RETURN e", getCollectionName(),
 			buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
-
+		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars,
 			pageable != null && pageable.isPaged() ? new AqlQueryOptions().fullCount(true) : null, domainClass);
 	}
