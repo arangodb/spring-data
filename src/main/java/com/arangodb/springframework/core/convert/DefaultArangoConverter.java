@@ -691,7 +691,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 			final Object key = entry.getKey();
 			final Object value = entry.getValue();
 
-			writeInternal(convertId(key), value, sink, getNonNullMapValueType(definedType));
+			String convertedKey = convertId(key);
+			if (value != null) {
+				writeInternal(convertedKey, value, sink, getNonNullMapValueType(definedType));
+			}
 		}
 
 		sink.close();
@@ -706,7 +709,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 		sink.add(attribute, ValueType.ARRAY);
 
 		for (final Object entry : asCollection(source)) {
-			writeInternal(null, entry, sink, getNonNullComponentType(definedType));
+			if (entry == null) {
+				writeSimple(null, null, sink);
+			} else {
+				writeInternal(null, entry, sink, getNonNullComponentType(definedType));
+			}
 		}
 
 		sink.close();
@@ -726,7 +733,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 			sink.add(attribute, ValueType.ARRAY);
 			for (int i = 0; i < Array.getLength(source); ++i) {
 				final Object element = Array.get(source, i);
-				writeInternal(null, element, sink, getNonNullComponentType(definedType));
+				if (element == null) {
+					writeSimple(null, null, sink);
+				} else {
+					writeInternal(null, element, sink, getNonNullComponentType(definedType));
+				}
 			}
 			sink.close();
 		}
