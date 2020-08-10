@@ -49,6 +49,7 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -588,5 +589,58 @@ public class GeneralMappingTest extends AbstractArangoTest {
 		final Optional<MapInMapTestEntity> find = template.find(entity.id, MapInMapTestEntity.class);
 		assertThat(find.isPresent(), is(true));
 		assertThat(find.get().value, is(map));
+	}
+
+	@Test
+	public void readMapInMapWithNull() {
+		final MapInMapTestEntity entity = new MapInMapTestEntity();
+		final Map<String, Object> map = new HashMap<>();
+		Map<String, Object> nested = new HashMap<>();
+		nested.put("key1", "test");
+		nested.put("key2", null);
+		map.put("nested", nested);
+		entity.value = map;
+		template.insert(entity);
+		final Optional<MapInMapTestEntity> find = template.find(entity.id, MapInMapTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		Map<String, Object> nestedResult = (Map<String, Object>) find.get().value.get("nested");
+		assertThat(nestedResult.size(), is(1));
+		assertThat(nestedResult.get("key1"), is("test"));
+	}
+
+	@Test
+	public void readMapInMapWithArray() {
+		final MapInMapTestEntity entity = new MapInMapTestEntity();
+		final Map<String, Object> map = new HashMap<>();
+		Map<String, Object> nested = new HashMap<>();
+		String[] nestedArray = {"test", null};
+		nested.put("key1", nestedArray);
+		map.put("nested", nested);
+		entity.value = map;
+		template.insert(entity);
+		final Optional<MapInMapTestEntity> find = template.find(entity.id, MapInMapTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		Map<String, Object> nestedResult = (Map<String, Object>) find.get().value.get("nested");
+		assertThat(nestedResult.size(), is(1));
+		assertThat(((List<String>) nestedResult.get("key1")).size(), is(2));
+		assertEquals(Arrays.asList(nestedArray), nestedResult.get("key1"));
+	}
+
+	@Test
+	public void readMapInMapWithCollection() {
+		final MapInMapTestEntity entity = new MapInMapTestEntity();
+		final Map<String, Object> map = new HashMap<>();
+		Map<String, Object> nested = new HashMap<>();
+		Collection<String> nestedCollection = Arrays.asList("test", null);
+		nested.put("key1", nestedCollection);
+		map.put("nested", nested);
+		entity.value = map;
+		template.insert(entity);
+		final Optional<MapInMapTestEntity> find = template.find(entity.id, MapInMapTestEntity.class);
+		assertThat(find.isPresent(), is(true));
+		Map<String, Object> nestedResult = (Map<String, Object>) find.get().value.get("nested");
+		assertThat(nestedResult.size(), is(1));
+		assertThat(((List<String>) nestedResult.get("key1")).size(), is(2));
+		assertEquals(nestedCollection, nestedResult.get("key1"));
 	}
 }
