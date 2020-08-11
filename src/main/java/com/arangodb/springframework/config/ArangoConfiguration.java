@@ -56,7 +56,7 @@ public interface ArangoConfiguration {
 
 	@Bean
 	default ArangoOperations arangoTemplate() throws Exception {
-		return new ArangoTemplate(arango().build(), database(), arangoConverter());
+		return new ArangoTemplate(arango().build(), database(), arangoConverter(), resolverFactory());
 	}
 
 	@Bean
