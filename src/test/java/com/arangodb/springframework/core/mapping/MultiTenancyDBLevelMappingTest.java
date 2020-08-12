@@ -89,8 +89,6 @@ public class MultiTenancyDBLevelMappingTest {
 		template.dropDatabase();
 		tenantProvider.setId(TENANT01);
 		template.dropDatabase();
-		tenantProvider.setId("");
-		template.dropDatabase();
 	}
 
 }

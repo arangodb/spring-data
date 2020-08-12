@@ -20,22 +20,24 @@
 
 package com.arangodb.springframework;
 
-import org.junit.After;
+import com.arangodb.springframework.core.ArangoOperations;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.arangodb.springframework.core.ArangoOperations;
+import javax.annotation.PostConstruct;
 
 /**
  * @author Mark Vollmary
- *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoTestConfiguration.class })
+@ContextConfiguration(classes = {ArangoTestConfiguration.class})
 public abstract class AbstractArangoTest {
+
+	private static volatile ArangoOperations staticTemplate;
 
 	@Autowired
 	protected ArangoOperations template;
@@ -48,17 +50,20 @@ public abstract class AbstractArangoTest {
 
 	@Before
 	public void before() {
-		try {
-			for (final Class<?> collection : collections) {
-				template.collection(collection).truncate();
-			}
-		} catch (final Exception e) {
+		for (final Class<?> collection : collections) {
+			template.collection(collection).truncate();
 		}
 	}
 
-	@After
-	public void after() {
-		template.dropDatabase();
+	@AfterClass
+	public static void afterClass() {
+		staticTemplate.dropDatabase();
+	}
+
+
+	@PostConstruct
+	private void postConstruct() {
+		staticTemplate = template;
 	}
 
 }
