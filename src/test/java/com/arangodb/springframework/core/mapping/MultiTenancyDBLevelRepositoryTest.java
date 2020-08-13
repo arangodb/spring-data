@@ -23,71 +23,66 @@ package com.arangodb.springframework.core.mapping;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.util.Optional;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.arangodb.springframework.ArangoMultiTenancyTestConfiguration;
-import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.ArangoMultiTenancyRepositoryTestConfiguration;
 import com.arangodb.springframework.component.TenantProvider;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.repository.IdTestRepository;
+import com.arangodb.springframework.testdata.IdTestEntity;
 
 /**
- * @author Mark Vollmary
+ * @author Paulo Ferreira
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ArangoMultiTenancyTestConfiguration.class })
-public class MultiTenancyDBLevelMappingTest {
+@ContextConfiguration(classes = { ArangoMultiTenancyRepositoryTestConfiguration.class })
+public class MultiTenancyDBLevelRepositoryTest {
 
 	private static final String TENANT00 = "tenant00";
-	private static final String TENANT01 = "tenant01";
 
 	@Autowired
 	protected ArangoOperations template;
 
-	@Document("#{tenantProvider.getId()}_collection")
-	static class MultiTenancyTestEntity {
-
-	}
-
 	@Autowired
 	TenantProvider tenantProvider;
 
+	@Autowired
+	IdTestRepository<String> idTestRepository;
+	
+	/*
+	 * For some reason, findAll already creates the collection by itself
+	 */
+
 	@Test
-	public void dbAndCollectionLevel() {
-		{
-			tenantProvider.setId(TENANT00);
-			template.insert(new MultiTenancyTestEntity());
-			assertThat(template.driver().db(ArangoMultiTenancyTestConfiguration.DB + TENANT00)
-					.collection(TENANT00 + "_collection").exists(),
-				is(true));
-		}
-		{
-			tenantProvider.setId(TENANT01);
-			template.insert(new MultiTenancyTestEntity());
-			assertThat(template.driver().db(ArangoMultiTenancyTestConfiguration.DB + TENANT01)
-					.collection(TENANT01 + "_collection").exists(),
-				is(true));
-		}
-		assertThat(template.driver().db(ArangoMultiTenancyTestConfiguration.DB + TENANT00)
-				.collection(TENANT00 + "_collection").count().getCount(),
-			is(1L));
-		assertThat(template.driver().db(ArangoMultiTenancyTestConfiguration.DB + TENANT01)
-				.collection(TENANT01 + "_collection").count().getCount(),
-			is(1L));
+	public void dbFindAll() {
+		tenantProvider.setId(TENANT00);
+		assertThat(idTestRepository.findAll().iterator().hasNext(), is(false));
+	}
+
+	@Test
+	public void dbFindOne() {
+		tenantProvider.setId(TENANT00);
+		IdTestEntity<String> entity = new IdTestEntity<>();
+		entity.setId("MyId");
+		Example<IdTestEntity<String>> example = Example.of(entity);
+		Optional<IdTestEntity<String>> result = idTestRepository.findOne(example);
+		assertThat(result.isPresent(), is(false));
 	}
 
 	@Before
 	@After
 	public void cleanup() {
 		tenantProvider.setId(TENANT00);
-		template.dropDatabase();
-		tenantProvider.setId(TENANT01);
 		template.dropDatabase();
 	}
 

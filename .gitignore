@@ -248,3 +248,6 @@ fabric.properties
 .idea
 
 arangodb-spring-data.iml
+
+/docker/jwtHeader
+/docker/jwtSecret

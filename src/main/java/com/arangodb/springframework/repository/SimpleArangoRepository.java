@@ -34,8 +34,9 @@ import org.springframework.stereotype.Repository;
 import java.util.*;
 
 /**
- * The implementation of all CRUD, paging and sorting functionality in ArangoRepository from the Spring Data Commons
- * CRUD repository and PagingAndSorting repository
+ * The implementation of all CRUD, paging and sorting functionality in
+ * ArangoRepository from the Spring Data Commons CRUD repository and
+ * PagingAndSorting repository
  */
 @Repository
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -49,24 +50,23 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 	/**
 	 *
-	 * @param arangoOperations
-	 *            The template used to execute much of the functionality of this class
-	 * @param domainClass
-	 *            the class type of this repository
+	 * @param arangoOperations The template used to execute much of the
+	 *                         functionality of this class
+	 * @param domainClass      the class type of this repository
 	 */
 	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass) {
 		super();
 		this.arangoOperations = arangoOperations;
 		this.domainClass = domainClass;
 		this.exampleConverter = new ArangoExampleConverter(
-				(ArangoMappingContext) arangoOperations.getConverter().getMappingContext());
+				(ArangoMappingContext) arangoOperations.getConverter().getMappingContext(),
+				arangoOperations.getResolverFactory());
 	}
 
 	/**
 	 * Saves the passed entity to the database using repsert from the template
 	 *
-	 * @param entity
-	 *            the entity to be saved to the database
+	 * @param entity the entity to be saved to the database
 	 * @return the updated entity with any id/key/rev saved
 	 */
 	@Override
@@ -78,9 +78,9 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Saves the given iterable of entities to the database using repsert from the template
 	 *
-	 * @param entities
-	 *            the iterable of entities to be saved to the database
-	 * @return the iterable of updated entities with any id/key/rev saved in each entity
+	 * @param entities the iterable of entities to be saved to the database
+	 * @return the iterable of updated entities with any id/key/rev saved in each
+	 *         entity
 	 */
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
@@ -91,8 +91,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Finds if a document with the given id exists in the database
 	 *
-	 * @param id
-	 *            the id of the document to search for
+	 * @param id the id of the document to search for
 	 * @return the object representing the document if found
 	 */
 	@Override
@@ -103,8 +102,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Checks if a document exists or not based on the given id or key
 	 *
-	 * @param id
-	 *            represents either the key or id of a document to check for
+	 * @param id represents either the key or id of a document to check for
 	 * @return returns true if the document is found, false otherwise
 	 */
 	@Override
@@ -125,9 +123,9 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Finds all documents with the an id or key in the argument
 	 *
-	 * @param ids
-	 *            an iterable with ids/keys of documents to get
-	 * @return an iterable with documents in the collection which have a id/key in the argument
+	 * @param ids an iterable with ids/keys of documents to get
+	 * @return an iterable with documents in the collection which have a id/key in
+	 *         the argument
 	 */
 	@Override
 	public Iterable<T> findAllById(final Iterable<ID> ids) {
@@ -135,7 +133,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	/**
-	 * Counts the number of documents in the collection for the type of this repository
+	 * Counts the number of documents in the collection for the type of this
+	 * repository
 	 *
 	 * @return long with number of documents
 	 */
@@ -147,8 +146,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Deletes the document with the given id or key
 	 *
-	 * @param id
-	 *            id or key of document to be deleted
+	 * @param id id or key of document to be deleted
 	 */
 	@Override
 	public void deleteById(final ID id) {
@@ -156,10 +154,10 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	/**
-	 * Deletes document in the database representing the given object, by getting it's id
+	 * Deletes document in the database representing the given object, by getting
+	 * it's id
 	 *
-	 * @param entity
-	 *            the entity to be deleted from the database
+	 * @param entity the entity to be deleted from the database
 	 */
 	@Override
 	public void delete(final T entity) {
@@ -176,8 +174,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Deletes all the given documents from the database
 	 *
-	 * @param entities
-	 *            iterable of entities to be deleted from the database
+	 * @param entities iterable of entities to be deleted from the database
 	 */
 	@Override
 	public void deleteAll(final Iterable<? extends T> entities) {
@@ -193,10 +190,10 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	/**
-	 * Gets all documents in the collection for the class type of this repository, with the given sort applied
+	 * Gets all documents in the collection for the class type of this repository,
+	 * with the given sort applied
 	 *
-	 * @param sort
-	 *            the sort object to use for sorting
+	 * @param sort the sort object to use for sorting
 	 * @return an iterable with all the documents in the collection
 	 */
 	@Override
@@ -210,10 +207,10 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	/**
-	 * Gets all documents in the collection for the class type of this repository, with pagination
+	 * Gets all documents in the collection for the class type of this repository,
+	 * with pagination
 	 *
-	 * @param pageable
-	 *            the pageable object to use for pagination of the results
+	 * @param pageable the pageable object to use for pagination of the results
 	 * @return an iterable with all the documents in the collection
 	 */
 	@Override
@@ -239,8 +236,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Finds one document which matches the given example object
 	 *
-	 * @param example
-	 *            example object to construct query with
+	 * @param example example object to construct query with
 	 * @param <S>
 	 * @return An object representing the example if it exists, else null
 	 */
@@ -253,8 +249,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Finds all documents which match with the given example
 	 *
-	 * @param example
-	 *            example object to construct query with
+	 * @param example example object to construct query with
 	 * @param <S>
 	 * @return iterable of all matching documents
 	 */
@@ -265,12 +260,11 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	/**
-	 * Finds all documents which match with the given example, then apply the given sort to results
+	 * Finds all documents which match with the given example, then apply the given
+	 * sort to results
 	 *
-	 * @param example
-	 *            example object to construct query with
-	 * @param sort
-	 *            sort object to sort results
+	 * @param example example object to construct query with
+	 * @param sort    sort object to sort results
 	 * @param <S>
 	 * @return sorted iterable of all matching documents
 	 */
@@ -283,10 +277,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	/**
 	 * Finds all documents which match with the given example, with pagination
 	 *
-	 * @param example
-	 *            example object to construct query with
-	 * @param pageable
-	 *            pageable object to apply pagination with
+	 * @param example  example object to construct query with
+	 * @param pageable pageable object to apply pagination with
 	 * @param <S>
 	 * @return iterable of all matching documents, with pagination
 	 */
@@ -298,10 +290,10 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	/**
-	 * Counts the number of documents in the collection which match with the given example
+	 * Counts the number of documents in the collection which match with the given
+	 * example
 	 *
-	 * @param example
-	 *            example object to construct query with
+	 * @param example example object to construct query with
 	 * @param <S>
 	 * @return number of matching documents found
 	 */
@@ -311,7 +303,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
 		final String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
 		final String query = String.format("FOR e IN %s%s COLLECT WITH COUNT INTO length RETURN length",
-			getCollectionName(), filter);
+				getCollectionName(), filter);
+		arangoOperations.collection(domainClass);
 		final ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
 		return cursor.next();
 	}
@@ -328,26 +321,21 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		return count(example) > 0;
 	}
 
-	private <S extends T> ArangoCursor<T> findAllInternal(
-		final Sort sort,
-		@Nullable final Example<S> example,
-		final Map<String, Object> bindVars) {
-
+	private <S extends T> ArangoCursor<T> findAllInternal(final Sort sort, @Nullable final Example<S> example,
+			final Map<String, Object> bindVars) {
 		final String query = String.format("FOR e IN %s %s %s RETURN e", getCollectionName(),
-			buildFilterClause(example, bindVars), buildSortClause(sort, "e"));
+				buildFilterClause(example, bindVars), buildSortClause(sort, "e"));
+		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars, null, domainClass);
 	}
 
-	private <S extends T> ArangoCursor<T> findAllInternal(
-		final Pageable pageable,
-		@Nullable final Example<S> example,
-		final Map<String, Object> bindVars) {
-
+	private <S extends T> ArangoCursor<T> findAllInternal(final Pageable pageable, @Nullable final Example<S> example,
+			final Map<String, Object> bindVars) {
 		final String query = String.format("FOR e IN %s %s %s RETURN e", getCollectionName(),
-			buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
-
+				buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
+		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars,
-			pageable != null && pageable.isPaged() ? new AqlQueryOptions().fullCount(true) : null, domainClass);
+				pageable != null && pageable.isPaged() ? new AqlQueryOptions().fullCount(true) : null, domainClass);
 	}
 
 	private <S extends T> String buildFilterClause(final Example<S> example, final Map<String, Object> bindVars) {

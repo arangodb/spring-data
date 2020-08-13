@@ -409,10 +409,10 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public void upsertWithUserGeneratedKey() {
 		final NewEntityTest entity = new NewEntityTest("test");
 		template.upsert(entity, UpsertStrategy.REPLACE);
-		assertThat(template.collection(NewEntityTest.class).count(), is(1L));
+		assertThat(template.exists("test", NewEntityTest.class), is(true));
 		entity.setPersisted(true);
 		template.upsert(entity, UpsertStrategy.REPLACE);
-		assertThat(template.collection(NewEntityTest.class).count(), is(1L));
+		assertThat(template.exists("test", NewEntityTest.class), is(true));
 	}
 
 	@SuppressWarnings("deprecation")

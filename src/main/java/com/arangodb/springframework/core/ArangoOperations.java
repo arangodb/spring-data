@@ -28,6 +28,7 @@ import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.entity.UserEntity;
 import com.arangodb.model.*;
 import com.arangodb.springframework.core.convert.ArangoConverter;
+import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import org.springframework.dao.DataAccessException;
 
 import java.util.Map;
@@ -574,5 +575,7 @@ public interface ArangoOperations {
 	Iterable<UserEntity> getUsers() throws DataAccessException;
 
 	ArangoConverter getConverter();
+
+	ResolverFactory getResolverFactory();
 
 }
