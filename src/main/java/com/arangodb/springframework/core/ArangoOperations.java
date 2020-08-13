@@ -20,26 +20,19 @@
 
 package com.arangodb.springframework.core;
 
-import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.dao.DataAccessException;
-
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.entity.UserEntity;
-import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.model.CollectionCreateOptions;
-import com.arangodb.model.DocumentCreateOptions;
-import com.arangodb.model.DocumentDeleteOptions;
-import com.arangodb.model.DocumentReadOptions;
-import com.arangodb.model.DocumentReplaceOptions;
-import com.arangodb.model.DocumentUpdateOptions;
+import com.arangodb.model.*;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
+import org.springframework.dao.DataAccessException;
+
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Interface that specifies a basic set of ArangoDB operations.
@@ -501,14 +494,14 @@ public interface ArangoOperations {
 	 * Creates new documents from the given documents, unless there already exists. In that case it replaces the
 	 * documents.
 	 *
-	 * @param value
+	 * @param values
 	 *            A List of documents
 	 * @param entityClass
 	 *            The entity class which represents the collection
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
-	<T> void repsert(Iterable<T> value, Class<T> entityClass) throws DataAccessException;
+	<T> void repsert(Iterable<? extends T> values, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Checks whether the document exists by reading a single document head
@@ -582,7 +575,7 @@ public interface ArangoOperations {
 	Iterable<UserEntity> getUsers() throws DataAccessException;
 
 	ArangoConverter getConverter();
-	
+
 	ResolverFactory getResolverFactory();
 
 }
