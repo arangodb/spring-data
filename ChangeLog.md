@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.3.0] - 2020-08-14
+
+### Added
+
+- find by example using regex string matcher 
+- find by example matching any object in nested array
+
+### Changed
+
+- reimplemented `ArangoOperations.repsert()` using AQL UPSERT (also used by `ArangoRepository.save()`)
+- dependencies update
+
+### Fixed
+- fixed `null` serialization when writing Maps, Arrays and Collections
+- fixed automatical collection creation on `ArangoRepository.count()` and `ArangoRepository.findAll()`
+- fixed serialization of `@Ref` fields with custom names 
+- fixed collection like mapping, allowing duplicate values
+- fixed lazy behavior of `ArangoOperations.findAll()`
+
 ## [3.2.5] - 2020-05-14
 
 - set `org.springframework.data.build:spring-data-parent` as parent project
