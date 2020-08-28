@@ -373,6 +373,22 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		assertEquals(check, retrieved);
 	}
 
+	@Test
+	public void findAllByExampleWhitArrayStringTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("AbbaXP", "BbaaaaXZ", 1001);
+		final Customer customer2 = new Customer("Bwa?[a.b]baAaGH", "", 67);
+		customer1.setStringList(Arrays.asList("testA", "testB", "testC"));
+		customer2.setStringList(Arrays.asList("test1", "test2", "test3"));
+		toBeRetrieved.add(customer1);
+		toBeRetrieved.add(customer2);
+		repository.saveAll(toBeRetrieved);
+		final Customer exampleCustomer = new Customer("AbbaXP", "BbaaaaXZ", 1001);
+		exampleCustomer.setStringList(Arrays.asList("testB"));
+		final Example<Customer> example = Example.of(exampleCustomer);
+		final Customer retrieved = repository.findOne(example).get();
+		assertEquals(customer1, retrieved);
+	}
 	
 
 	@Test

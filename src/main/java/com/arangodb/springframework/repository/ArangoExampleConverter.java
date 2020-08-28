@@ -23,6 +23,7 @@ package com.arangodb.springframework.repository;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,7 +31,9 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
@@ -78,10 +81,15 @@ public class ArangoExampleConverter<T> {
 				final ArangoPersistentEntity<?> persistentEntity = context
 						.getPersistentEntity(property.getActualType());
 				final StringBuilder predicateBuilderArray = new StringBuilder();
-				for (Object item : (Iterable) value) {
+				for (Object item : (Iterable<?>) value) {
 					final StringBuilder predicateBuilderArrayItem = new StringBuilder();
-					traversePropertyTree(example, predicateBuilderArrayItem, bindVars, "", fullJavaPath,
-							persistentEntity, item, "CURRENT");
+					if (ClassUtils.isPrimitiveOrWrapper(item.getClass()) || item.getClass() == String.class) {
+						addPredicate(example, predicateBuilderArrayItem, bindVars, null, fullJavaPath, item, "CURRENT");
+					} else {
+						traversePropertyTree(example, predicateBuilderArrayItem, bindVars, "", fullJavaPath,
+								persistentEntity, item, "CURRENT");
+					}
+
 					if (predicateBuilderArray.length() > 0) {
 						predicateBuilderArray.append(" OR ");
 					}
@@ -154,9 +162,18 @@ public class ArangoExampleConverter<T> {
 							: specifier.getStringMatcher();
 			final String string = (String) value;
 			if (stringMatcher == ExampleMatcher.StringMatcher.REGEX) {
-				clause = String.format("REGEX_TEST(%s.%s, @%s, %b)", bindEntintyName, fullPath, binding, ignoreCase);
+				if (Objects.isNull(fullPath)) {
+					clause = String.format("REGEX_TEST(%s, @%s, %b)", bindEntintyName, binding, ignoreCase);
+				} else {
+					clause = String.format("REGEX_TEST(%s.%s, @%s, %b)", bindEntintyName, fullPath, binding,
+							ignoreCase);
+				}
 			} else {
-				clause = String.format("LIKE(%s.%s, @%s, %b)", bindEntintyName, fullPath, binding, ignoreCase);
+				if (Objects.isNull(fullPath)) {
+					clause = String.format("LIKE(%s, @%s, %b)", bindEntintyName, binding, ignoreCase);
+				} else {
+					clause = String.format("LIKE(%s.%s, @%s, %b)", bindEntintyName, fullPath, binding, ignoreCase);
+				}
 			}
 			switch (stringMatcher) {
 			case STARTING:
@@ -178,7 +195,12 @@ public class ArangoExampleConverter<T> {
 				break;
 			}
 		} else {
-			clause = String.format("%s.%s == @%s", bindEntintyName, fullPath, binding);
+			if (Objects.isNull(fullPath)) {
+				clause = String.format("%s == @%s", bindEntintyName, binding);
+			} else {
+				clause = String.format("%s.%s == @%s", bindEntintyName, fullPath, binding);
+			}
+
 		}
 		predicateBuilder.append(clause);
 		if (value != null) {
