@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.repository.query;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
+import com.arangodb.springframework.ArangoUncategorizedException;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.velocypack.VPackSlice;
 
