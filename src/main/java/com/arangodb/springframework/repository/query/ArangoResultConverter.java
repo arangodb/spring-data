@@ -120,8 +120,8 @@ public class ArangoResultConverter {
 				return getNext(result);
 			}
 			return TYPE_MAP.get(type).invoke(this);
-		} catch (Exception e) {
-			throw new RuntimeException("Can't convert result to type "+type.getName(), e);
+		} catch (InvocationTargetException | IllegalAccessException e) {
+			throw new ArangoUncategorizedException("Unable to convert the result to type "+type.getName(), e);
 		}
 	}
 
