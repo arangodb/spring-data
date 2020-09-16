@@ -112,13 +112,18 @@ public class ArangoResultConverter {
 	 * @return result in desired type
 	 */
 	public Object convertResult(final Class<?> type) {
-		if (type.isArray()) {
-			return TYPE_MAP.get("array").invoke(this);
+		try {
+			if (type.isArray()) {
+				return TYPE_MAP.get("array").invoke(this);
+			}
+			if (!TYPE_MAP.containsKey(type)) {
+				return getNext(result);
+			}
+			return TYPE_MAP.get(type).invoke(this);
+		} 
+		catch (IllegalAccessException e) {
+			throw new RuntimeException("Can't convert result to type "+type.getName(), e);
 		}
-		if (!TYPE_MAP.containsKey(type)) {
-			return getNext(result);
-		}
-		return TYPE_MAP.get(type).invoke(this);
 	}
 
 	/**
