@@ -23,6 +23,7 @@ package com.arangodb.springframework;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.arangodb.jackson.dataformat.velocypack.VelocyJack;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +56,7 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 
 	@Override
 	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder();
+		return new ArangoDB.Builder().serializer(new VelocyJack());
 	}
 
 	@Override

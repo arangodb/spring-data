@@ -20,17 +20,17 @@
 
 package com.arangodb.springframework;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
+import com.arangodb.ArangoDB;
+import com.arangodb.jackson.dataformat.velocypack.VelocyJack;
+import com.arangodb.springframework.annotation.EnableArangoRepositories;
+import com.arangodb.springframework.config.ArangoConfiguration;
+import com.arangodb.springframework.core.mapping.CustomMappingTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 
-import com.arangodb.ArangoDB;
-import com.arangodb.springframework.annotation.EnableArangoRepositories;
-import com.arangodb.springframework.config.ArangoConfiguration;
-import com.arangodb.springframework.core.mapping.CustomMappingTest;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  *
@@ -49,7 +49,7 @@ public class ArangoMultiTenancyRepositoryTestConfiguration implements ArangoConf
 
 	@Override
 	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder();
+		return new ArangoDB.Builder().serializer(new VelocyJack());
 	}
 
 	@Override
