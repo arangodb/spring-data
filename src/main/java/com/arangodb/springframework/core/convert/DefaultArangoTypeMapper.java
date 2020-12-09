@@ -180,6 +180,9 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 			}
 
 			if (source.isObject()) {
+				if (this.typeKey == null) {
+					return Alias.NONE;
+				}
 				final VPackSlice typeKey = source.get(this.typeKey);
 				return Alias.ofNullable(typeKey.isString() ? typeKey.getAsString() : null);
 			}
