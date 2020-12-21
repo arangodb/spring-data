@@ -20,12 +20,12 @@
 
 package com.arangodb.springframework.core.util;
 
-import java.util.StringJoiner;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
+
+import java.util.StringJoiner;
 
 /**
  * 
@@ -155,16 +155,12 @@ public final class AqlUtils {
 					throw new IllegalArgumentException(
 							"Sort properties must only contain backticks at beginning/end of attributes or when escaped.");
 				}
-			}
-
-			else if (currChar == '.') {
+			} else if (currChar == '.') {
 				// the dot is part of an attribute name when inside escaped sequence
 				if (inEscapedSeq) {
 					// add dot without escaping
 					escaped.append('.');
-				}
-
-				else {
+				} else {
 					// properties can only contain 2+ dots in escaped sequences
 					if (nextChar == '.') {
 						throw new IllegalArgumentException(
@@ -178,6 +174,21 @@ public final class AqlUtils {
 
 					// close previous escape sequence and open new one
 					escaped.append("`.`");
+				}
+			} else if (currChar == '[' || currChar == ']') {
+				//  square brackets are part of an attribute name when inside escaped sequence
+				if (inEscapedSeq) {
+					escaped.append(currChar);
+				} else {
+					if (currChar == '[') {
+						// close previous escape sequence
+						escaped.append("`");
+					}
+					escaped.append(currChar);
+					if (nextChar == '.') {
+						escaped.append(".`");
+						i++;
+					}
 				}
 			}
 

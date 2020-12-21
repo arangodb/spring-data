@@ -20,15 +20,15 @@
 
 package com.arangodb.springframework.core.util;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * 
@@ -119,15 +119,21 @@ public class AqlUtilsTest {
 			is("SORT `property`.`\\\\\\``.`property` ASC"));
 
 		assertThat(AqlUtils.buildSortClause(Sort.by("`property.\\`.property`")),
-			is("SORT `property.\\`.property` ASC"));
+				is("SORT `property.\\`.property` ASC"));
 
 		assertThat(AqlUtils.buildSortClause(Sort.by("`property.\\``.property")),
-			is("SORT `property.\\``.`property` ASC"));
+				is("SORT `property.\\``.`property` ASC"));
 
 		assertThat(AqlUtils.buildSortClause(Sort.by("`property..property`")), is("SORT `property..property` ASC"));
 
 		assertThat(AqlUtils.buildSortClause(Sort.by("property\\. REMOVE doc IN collection //")),
-			is("SORT `property\\\\`.` REMOVE doc IN collection //` ASC"));
+				is("SORT `property\\\\`.` REMOVE doc IN collection //` ASC"));
+
+		assertThat(AqlUtils.buildSortClause(Sort.by("values[0].date")),
+				is("SORT `values`[0].`date` ASC"));
+
+		assertThat(AqlUtils.buildSortClause(Sort.by("`values[0]`.date")),
+				is("SORT `values[0]`.`date` ASC"));
 
 		// Illegal sort properties
 
