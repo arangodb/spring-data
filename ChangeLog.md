@@ -6,7 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.4.0] - 2020-12-21
+
+### Added
+- support for array search by example (#202)
+
+### Changed
+- updated support of spring-data to `2.4.x`
+- upgraded dependency `com.arangodb:velocypack:2.5.1`
+- upgraded dependency `com.arangodb:arangodb-java-driver:6.8.0`
+
+### Fixed
 - fixed swallowed exception in query result conversion (#213)
+- fixed escaping of array brackets in user queries (#208)
 
 ## [3.3.0] - 2020-08-14
 
