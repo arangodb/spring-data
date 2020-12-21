@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- fixed swallowed exception in query result conversion (#213)
+
 ## [3.3.0] - 2020-08-14
 
 ### Added

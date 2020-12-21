@@ -40,6 +40,7 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
@@ -121,8 +122,7 @@ public class ArangoResultConverter {
 			}
 			return TYPE_MAP.get(type).invoke(this);
 		} catch (final Exception e) {
-			e.printStackTrace();
-			return null;
+			throw new MappingException(String.format("Can't convert result to type %s!", type.getName()), e);
 		}
 	}
 
