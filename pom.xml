@@ -45,6 +45,10 @@
 		</repository>
 	</distributionManagement>
 
+	<properties>
+		<java-module-name>com.arangodb.springframework</java-module-name>
+	</properties>
+
 	<repositories>
 		<repository>
 			<id>spring-libs-milestone</id>
