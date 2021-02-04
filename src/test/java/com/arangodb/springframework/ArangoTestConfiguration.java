@@ -20,22 +20,21 @@
 
 package com.arangodb.springframework;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
-import com.arangodb.jackson.dataformat.velocypack.VelocyJack;
+import com.arangodb.ArangoDB;
+import com.arangodb.mapping.ArangoJack;
+import com.arangodb.springframework.annotation.EnableArangoAuditing;
+import com.arangodb.springframework.annotation.EnableArangoRepositories;
+import com.arangodb.springframework.config.ArangoConfiguration;
+import com.arangodb.springframework.core.mapping.CustomMappingTest;
+import com.arangodb.springframework.testdata.Person;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.AuditorAware;
 
-import com.arangodb.ArangoDB;
-import com.arangodb.springframework.annotation.EnableArangoAuditing;
-import com.arangodb.springframework.annotation.EnableArangoRepositories;
-import com.arangodb.springframework.config.ArangoConfiguration;
-import com.arangodb.springframework.core.mapping.CustomMappingTest;
-import com.arangodb.springframework.testdata.Person;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  *
@@ -56,7 +55,7 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 
 	@Override
 	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder().serializer(new VelocyJack());
+		return new ArangoDB.Builder().serializer(new ArangoJack());
 	}
 
 	@Override

@@ -261,7 +261,7 @@
 		<dependency>
 			<groupId>com.arangodb</groupId>
 			<artifactId>jackson-dataformat-velocypack</artifactId>
-			<version>0.4.0</version>
+			<version>1.0.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -283,7 +283,7 @@
 			<dependency>
 				<groupId>com.arangodb</groupId>
 				<artifactId>arangodb-java-driver</artifactId>
-				<version>6.8.2</version>
+				<version>6.9.0</version>
 			</dependency>
 			<dependency>
 				<groupId>com.arangodb</groupId>
