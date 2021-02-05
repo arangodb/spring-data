@@ -36,7 +36,6 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 
 import com.arangodb.velocypack.internal.util.DateUtil;
-import com.arangodb.velocypack.module.jdk8.internal.util.JavaTimeUtil;
 
 /**
  * These date and java.time converters are necessary to override (possibly existing) Spring converters.

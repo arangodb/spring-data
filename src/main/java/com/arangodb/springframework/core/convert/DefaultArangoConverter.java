@@ -22,7 +22,12 @@ package com.arangodb.springframework.core.convert;
 
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.entity.BaseEdgeDocument;
-import com.arangodb.springframework.annotation.*;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
+import com.arangodb.springframework.annotation.From;
+import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
+import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.convert.resolver.LazyLoadingProxy;
 import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
 import com.arangodb.springframework.core.convert.resolver.RelationResolver;
@@ -35,7 +40,6 @@ import com.arangodb.velocypack.VPackBuilder;
 import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.ValueType;
 import com.arangodb.velocypack.internal.util.DateUtil;
-import com.arangodb.velocypack.module.jdk8.internal.util.JavaTimeUtil;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -61,9 +65,20 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.text.ParseException;
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 /**
  * @author Mark Vollmary

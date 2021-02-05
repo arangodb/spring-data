@@ -205,14 +205,6 @@
 			<artifactId>arangodb-java-driver</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.arangodb</groupId>
-			<artifactId>velocypack-module-jdk8</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.arangodb</groupId>
-			<artifactId>velocypack-module-joda</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 			<version>${jodatime}</version>
@@ -284,16 +276,6 @@
 				<groupId>com.arangodb</groupId>
 				<artifactId>arangodb-java-driver</artifactId>
 				<version>6.9.0</version>
-			</dependency>
-			<dependency>
-				<groupId>com.arangodb</groupId>
-				<artifactId>velocypack-module-jdk8</artifactId>
-				<version>1.1.1</version>
-			</dependency>
-			<dependency>
-				<groupId>com.arangodb</groupId>
-				<artifactId>velocypack-module-joda</artifactId>
-				<version>1.1.2</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mockito</groupId>

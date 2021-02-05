@@ -20,11 +20,6 @@
 
 package com.arangodb.springframework.core.convert;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import org.joda.time.DateTime;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
@@ -34,11 +29,14 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.util.ClassUtils;
 
-import com.arangodb.velocypack.module.joda.internal.util.JodaTimeUtil;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 
 /**
  * @author Mark Vollmary
- *
  */
 public class JodaTimeStringConverters {
 
