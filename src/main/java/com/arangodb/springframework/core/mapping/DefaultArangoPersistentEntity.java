@@ -78,6 +78,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private ArangoPersistentProperty arangoIdProperty;
 	private ArangoPersistentProperty revProperty;
+	private ArangoPersistentProperty ttlIndexedProperty;
 	private final Collection<ArangoPersistentProperty> hashIndexedProperties;
 	private final Collection<ArangoPersistentProperty> skiplistIndexedProperties;
 	private final Collection<ArangoPersistentProperty> persistentIndexedProperties;
@@ -192,6 +193,9 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		if (property.isRevProperty()) {
 			revProperty = property;
 		}
+		if (property.getTtlIndexed().isPresent()) {
+			ttlIndexedProperty = property;
+		}
 		property.getHashIndexed().ifPresent(i -> hashIndexedProperties.add(property));
 		property.getSkiplistIndexed().ifPresent(i -> skiplistIndexedProperties.add(property));
 		property.getPersistentIndexed().ifPresent(i -> persistentIndexedProperties.add(property));
@@ -281,6 +285,11 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	@Override
 	public Collection<ArangoPersistentProperty> getFulltextIndexedProperties() {
 		return fulltextIndexedProperties;
+	}
+
+	@Override
+	public Optional<ArangoPersistentProperty> getTtlIndexedProperty() {
+		return Optional.ofNullable(ttlIndexedProperty);
 	}
 
 	@SuppressWarnings("unchecked")

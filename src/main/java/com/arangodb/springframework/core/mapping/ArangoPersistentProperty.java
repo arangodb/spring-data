@@ -33,6 +33,7 @@ import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.To;
+import com.arangodb.springframework.annotation.TtlIndexed;
 
 /**
  * @author Mark Vollmary
@@ -64,4 +65,5 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 
 	Optional<FulltextIndexed> getFulltextIndexed();
 
+	Optional<TtlIndexed> getTtlIndexed();
 }

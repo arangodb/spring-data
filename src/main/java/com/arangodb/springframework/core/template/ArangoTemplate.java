@@ -69,6 +69,7 @@ import com.arangodb.model.GeoIndexOptions;
 import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
 import com.arangodb.model.SkiplistIndexOptions;
+import com.arangodb.model.TtlIndexOptions;
 import com.arangodb.springframework.annotation.FulltextIndex;
 import com.arangodb.springframework.annotation.GeoIndex;
 import com.arangodb.springframework.annotation.HashIndex;
@@ -213,6 +214,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		persistentEntity.getGeoIndexedProperties().stream().forEach(p -> ensureGeoIndex(collection, p));
 		persistentEntity.getFulltextIndexes().stream().forEach(index -> ensureFulltextIndex(collection, index));
 		persistentEntity.getFulltextIndexedProperties().stream().forEach(p -> ensureFulltextIndex(collection, p));
+		persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p));
 	}
 
 	private static void ensureHashIndex(final CollectionOperations collection, final HashIndex annotation) {
@@ -273,6 +275,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final FulltextIndexOptions options = new FulltextIndexOptions();
 		value.getFulltextIndexed().ifPresent(i -> options.minLength(i.minLength() > -1 ? i.minLength() : null));
 		collection.ensureFulltextIndex(Collections.singleton(value.getFieldName()), options);
+	}
+
+	private static void ensureTtlIndex(final CollectionOperations collection, final ArangoPersistentProperty value) {
+		final TtlIndexOptions options = new TtlIndexOptions();
+		value.getTtlIndexed().ifPresent(i -> options.expireAfter(i.expireAfter()));
+		collection.ensureTtlIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
 	private Optional<String> determineCollectionFromId(final Object id) {

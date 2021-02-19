@@ -70,6 +70,8 @@ public interface ArangoPersistentEntity<T>
 
 	Collection<ArangoPersistentProperty> getFulltextIndexedProperties();
 
+	Optional<ArangoPersistentProperty> getTtlIndexedProperty();
+
 	IdentifierAccessor getArangoIdAccessor(Object bean);
 
 }

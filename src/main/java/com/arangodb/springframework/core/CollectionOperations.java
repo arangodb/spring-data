@@ -32,6 +32,7 @@ import com.arangodb.model.GeoIndexOptions;
 import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
 import com.arangodb.model.SkiplistIndexOptions;
+import com.arangodb.model.TtlIndexOptions;
 
 /**
  * Interface that specifies a basic set of ArangoDB operations on collection
@@ -147,6 +148,18 @@ public interface CollectionOperations {
 	 * @throws DataAccessException
 	 */
 	IndexEntity ensureFulltextIndex(Iterable<String> fields, FulltextIndexOptions options) throws DataAccessException;
+
+	/**
+	 * Creates a ttl index for the collection, if it does not already exist.
+	 *
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensureTtlIndex(Iterable<String> fields, TtlIndexOptions options) throws DataAccessException;
 
 	/**
 	 * Deletes the index with the given {@code id} from the collection.

@@ -46,6 +46,7 @@ import com.arangodb.springframework.annotation.PersistentIndexes;
 import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.SkiplistIndexes;
+import com.arangodb.springframework.annotation.TtlIndexed;
 
 /**
  * @author Mark Vollmary
@@ -504,17 +505,18 @@ public class ArangoIndexTest extends AbstractArangoTest {
 		@PersistentIndexed
 		@GeoIndexed
 		@FulltextIndexed
+		@TtlIndexed
 		private String a;
 	}
 
 	@Test
 	public void differentIndexedAnnotationsSameField() {
-		assertThat(template.collection(DifferentIndexedAnnotations.class).getIndexes().size(), is(6));
+		assertThat(template.collection(DifferentIndexedAnnotations.class).getIndexes().size(), is(7));
 		assertThat(
 			template.collection(DifferentIndexedAnnotations.class).getIndexes().stream().map(i -> i.getType())
 					.collect(Collectors.toList()),
 			hasItems(IndexType.primary, IndexType.hash, IndexType.skiplist, IndexType.persistent, geo1(),
-				IndexType.fulltext));
+				IndexType.fulltext, IndexType.ttl));
 	}
 
 	@HashIndex(fields = { "a" })
@@ -586,4 +588,19 @@ public class ArangoIndexTest extends AbstractArangoTest {
 			is(1 + 3));
 	}
 
+	public static class TtlIndexedSingleFieldTestEntity {
+		@TtlIndexed
+		private String a;
+	}
+
+	@Test
+	public void singleFieldTtlIndexed() {
+		assertThat(template.collection(TtlIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
+		assertThat(template.collection(TtlIndexedSingleFieldTestEntity.class).getIndexes().stream()
+						.map(i -> i.getType()).collect(Collectors.toList()),
+				hasItems(IndexType.primary, IndexType.ttl));
+		assertThat(template.collection(TtlIndexedSingleFieldTestEntity.class).getIndexes().stream()
+						.filter(i -> i.getType() == IndexType.ttl).findFirst().get().getFields(),
+				hasItems("a"));
+	}
 }
