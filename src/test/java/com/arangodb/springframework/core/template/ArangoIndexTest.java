@@ -39,6 +39,7 @@ import com.arangodb.springframework.annotation.PersistentIndexes;
 import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.SkiplistIndexes;
+import com.arangodb.springframework.annotation.TtlIndex;
 import com.arangodb.springframework.annotation.TtlIndexed;
 import org.junit.Test;
 import org.springframework.data.mapping.MappingException;
@@ -640,6 +641,22 @@ public class ArangoIndexTest extends AbstractArangoTest {
 		} catch (MappingException e) {
 			assertThat(e.getMessage(), containsString("Found multiple ttl indexed properties!"));
 		}
+	}
+
+	@TtlIndex(field = "a",expireAfter = 3600)
+	public static class TtlIndexTestEntity {
+	}
+
+	@Test
+	public void ttlIndex() {
+		Collection<IndexEntity> indexes = template.collection(TtlIndexTestEntity.class).getIndexes();
+		assertThat(indexes, hasSize(2));
+		assertThat(indexes.stream().map(IndexEntity::getType).collect(Collectors.toList()),
+				hasItems(IndexType.primary, IndexType.ttl));
+		IndexEntity ttlIdx = indexes.stream().filter(i -> i.getType() == IndexType.ttl).findFirst().get();
+		assertThat(ttlIdx.getFields(), hasSize(1));
+		assertThat(ttlIdx.getFields(), hasItems("a"));
+		assertThat(ttlIdx.getExpireAfter(), is(3600));
 	}
 
 }

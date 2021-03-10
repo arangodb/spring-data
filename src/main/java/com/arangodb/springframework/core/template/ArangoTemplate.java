@@ -20,34 +20,6 @@
 
 package com.arangodb.springframework.core.template;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.expression.BeanFactoryAccessor;
-import org.springframework.context.expression.BeanFactoryResolver;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.support.PersistenceExceptionTranslator;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ParserContext;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
@@ -75,6 +47,7 @@ import com.arangodb.springframework.annotation.GeoIndex;
 import com.arangodb.springframework.annotation.HashIndex;
 import com.arangodb.springframework.annotation.PersistentIndex;
 import com.arangodb.springframework.annotation.SkiplistIndex;
+import com.arangodb.springframework.annotation.TtlIndex;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.CollectionOperations;
 import com.arangodb.springframework.core.UserOperations;
@@ -93,6 +66,33 @@ import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.springframework.core.util.MetadataUtils;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.expression.BeanFactoryAccessor;
+import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Mark Vollmary
@@ -214,6 +214,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		persistentEntity.getGeoIndexedProperties().stream().forEach(p -> ensureGeoIndex(collection, p));
 		persistentEntity.getFulltextIndexes().stream().forEach(index -> ensureFulltextIndex(collection, index));
 		persistentEntity.getFulltextIndexedProperties().stream().forEach(p -> ensureFulltextIndex(collection, p));
+		persistentEntity.getTtlIndex().ifPresent(index -> ensureTtlIndex(collection, index));
 		persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p));
 	}
 
@@ -271,10 +272,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	private static void ensureFulltextIndex(final CollectionOperations collection,
-			final ArangoPersistentProperty value) {
+											final ArangoPersistentProperty value) {
 		final FulltextIndexOptions options = new FulltextIndexOptions();
 		value.getFulltextIndexed().ifPresent(i -> options.minLength(i.minLength() > -1 ? i.minLength() : null));
 		collection.ensureFulltextIndex(Collections.singleton(value.getFieldName()), options);
+	}
+
+	private static void ensureTtlIndex(final CollectionOperations collection, final TtlIndex annotation) {
+		collection.ensureTtlIndex(Collections.singleton(annotation.field()),
+				new TtlIndexOptions().expireAfter(annotation.expireAfter()));
 	}
 
 	private static void ensureTtlIndex(final CollectionOperations collection, final ArangoPersistentProperty value) {

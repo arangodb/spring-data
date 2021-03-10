@@ -34,6 +34,7 @@ import com.arangodb.springframework.annotation.PersistentIndex;
 import com.arangodb.springframework.annotation.PersistentIndexes;
 import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.annotation.SkiplistIndexes;
+import com.arangodb.springframework.annotation.TtlIndex;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryAccessor;
@@ -263,6 +264,15 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		Optional.ofNullable(findAnnotation(FulltextIndexes.class))
 				.ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
 		return indexes;
+	}
+
+	@Override
+	public Optional<TtlIndex> getTtlIndex() {
+		return getIndex(TtlIndex.class);
+	}
+
+	private <A extends Annotation> Optional<A> getIndex(final Class<A> annotation) {
+		return Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(getType(), annotation));
 	}
 
 	public <A extends Annotation> Collection<A> getIndexes(final Class<A> annotation) {
