@@ -20,33 +20,6 @@
 
 package com.arangodb.springframework.core.mapping;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.expression.BeanFactoryAccessor;
-import org.springframework.context.expression.BeanFactoryResolver;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.data.mapping.IdentifierAccessor;
-import org.springframework.data.mapping.TargetAwareIdentifierAccessor;
-import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.util.TypeInformation;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ParserContext;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.lang.Nullable;
-import org.springframework.util.StringUtils;
-
 import com.arangodb.entity.CollectionType;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.springframework.annotation.Document;
@@ -61,6 +34,33 @@ import com.arangodb.springframework.annotation.PersistentIndex;
 import com.arangodb.springframework.annotation.PersistentIndexes;
 import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.annotation.SkiplistIndexes;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.expression.BeanFactoryAccessor;
+import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.data.mapping.IdentifierAccessor;
+import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.TargetAwareIdentifierAccessor;
+import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
+
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Mark Vollmary
@@ -188,12 +188,21 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	public void addPersistentProperty(final ArangoPersistentProperty property) {
 		super.addPersistentProperty(property);
 		if (property.isArangoIdProperty()) {
+			if (arangoIdProperty != null) {
+				throw new MappingException("Found multiple id indexed properties!");
+			}
 			arangoIdProperty = property;
 		}
 		if (property.isRevProperty()) {
+			if (revProperty != null) {
+				throw new MappingException("Found multiple rev indexed properties!");
+			}
 			revProperty = property;
 		}
 		if (property.getTtlIndexed().isPresent()) {
+			if (ttlIndexedProperty != null) {
+				throw new MappingException("Found multiple ttl indexed properties!");
+			}
 			ttlIndexedProperty = property;
 		}
 		property.getHashIndexed().ifPresent(i -> hashIndexedProperties.add(property));

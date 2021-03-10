@@ -20,14 +20,7 @@
 
 package com.arangodb.springframework.core.template;
 
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.util.stream.Collectors;
-
-import org.junit.Test;
-
+import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.IndexType;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.annotation.Document;
@@ -47,6 +40,15 @@ import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.SkiplistIndexes;
 import com.arangodb.springframework.annotation.TtlIndexed;
+import org.junit.Test;
+import org.springframework.data.mapping.MappingException;
+
+import java.util.Collection;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.fail;
 
 /**
  * @author Mark Vollmary
@@ -595,12 +597,49 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
 	@Test
 	public void singleFieldTtlIndexed() {
-		assertThat(template.collection(TtlIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
-		assertThat(template.collection(TtlIndexedSingleFieldTestEntity.class).getIndexes().stream()
-						.map(i -> i.getType()).collect(Collectors.toList()),
+		Collection<IndexEntity> indexes = template.collection(TtlIndexedSingleFieldTestEntity.class).getIndexes();
+		assertThat(indexes, hasSize(2));
+		assertThat(indexes.stream().map(IndexEntity::getType).collect(Collectors.toList()),
 				hasItems(IndexType.primary, IndexType.ttl));
-		assertThat(template.collection(TtlIndexedSingleFieldTestEntity.class).getIndexes().stream()
-						.filter(i -> i.getType() == IndexType.ttl).findFirst().get().getFields(),
-				hasItems("a"));
+		IndexEntity ttlIdx = indexes.stream().filter(i -> i.getType() == IndexType.ttl).findFirst().get();
+		assertThat(ttlIdx.getFields(), hasSize(1));
+		assertThat(ttlIdx.getFields(), hasItems("a"));
+		assertThat(ttlIdx.getExpireAfter(), is(0));
 	}
+
+	public static class TtlIndexedExpireAfterTestEntity {
+		@TtlIndexed(expireAfter = 3600)
+		private String a;
+	}
+
+	@Test
+	public void expireAfterTtlIndexed() {
+		Collection<IndexEntity> indexes = template.collection(TtlIndexedExpireAfterTestEntity.class).getIndexes();
+		assertThat(indexes, hasSize(2));
+		assertThat(indexes.stream().map(IndexEntity::getType).collect(Collectors.toList()),
+				hasItems(IndexType.primary, IndexType.ttl));
+		IndexEntity ttlIdx = indexes.stream().filter(i -> i.getType() == IndexType.ttl).findFirst().get();
+		assertThat(ttlIdx.getFields(), hasSize(1));
+		assertThat(ttlIdx.getFields(), hasItems("a"));
+		assertThat(ttlIdx.getExpireAfter(), is(3600));
+	}
+
+	public static class MultipleTtlIndexedTestEntity {
+		@TtlIndexed
+		private String a;
+
+		@TtlIndexed
+		private String b;
+	}
+
+	@Test
+	public void multipleTtlIndexedShouldThrow() {
+		try {
+			template.collection(MultipleTtlIndexedTestEntity.class).getIndexes();
+			fail("did not throw");
+		} catch (MappingException e) {
+			assertThat(e.getMessage(), containsString("Found multiple ttl indexed properties!"));
+		}
+	}
+
 }

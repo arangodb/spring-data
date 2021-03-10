@@ -6,8 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to mark a field to be indexed using ArangoDB's Ttl
- * index.
+ * Annotation to mark a field to be indexed using ArangoDB's Ttl index.
  *
  * @author Dmitry Krasaev
  */
@@ -16,8 +15,9 @@ import java.lang.annotation.Target;
 public @interface TtlIndexed {
 
     /**
-     * The time (in seconds) after a document’s creation after which the documents count as "expired"
-     * Default is 0, means immediately when wall clock time reaches the value specified in a field
+     * The time interval (in seconds) from the point in time of the value of the annotated field after which the
+     * documents count as expired. Default is 0, which means that the documents expire as soon as the server time passes
+     * the point in time stored in the document attribute.
      */
     int expireAfter() default 0;
 
