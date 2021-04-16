@@ -36,6 +36,7 @@ import com.arangodb.model.GeoIndexOptions;
 import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
 import com.arangodb.model.SkiplistIndexOptions;
+import com.arangodb.model.TtlIndexOptions;
 import com.arangodb.springframework.core.CollectionOperations;
 
 /**
@@ -157,6 +158,15 @@ public class DefaultCollectionOperations implements CollectionOperations {
 			throws DataAccessException {
 		try {
 			return collection.ensureFulltextIndex(fields, options);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+	}
+
+	@Override
+	public IndexEntity ensureTtlIndex(Iterable<String> fields, TtlIndexOptions options) throws DataAccessException {
+		try {
+			return collection.ensureTtlIndex(fields, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}

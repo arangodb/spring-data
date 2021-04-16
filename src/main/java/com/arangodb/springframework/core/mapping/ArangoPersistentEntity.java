@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.mapping;
 import java.util.Collection;
 import java.util.Optional;
 
+import com.arangodb.springframework.annotation.TtlIndex;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentEntity;
@@ -60,6 +61,8 @@ public interface ArangoPersistentEntity<T>
 
 	Collection<FulltextIndex> getFulltextIndexes();
 
+	Optional<TtlIndex> getTtlIndex();
+
 	Collection<ArangoPersistentProperty> getHashIndexedProperties();
 
 	Collection<ArangoPersistentProperty> getSkiplistIndexedProperties();
@@ -69,6 +72,8 @@ public interface ArangoPersistentEntity<T>
 	Collection<ArangoPersistentProperty> getGeoIndexedProperties();
 
 	Collection<ArangoPersistentProperty> getFulltextIndexedProperties();
+
+	Optional<ArangoPersistentProperty> getTtlIndexedProperty();
 
 	IdentifierAccessor getArangoIdAccessor(Object bean);
 

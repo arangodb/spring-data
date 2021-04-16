@@ -43,6 +43,7 @@ import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
 import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.To;
+import com.arangodb.springframework.annotation.TtlIndexed;
 
 /**
  * @author Mark Vollmary
@@ -143,6 +144,11 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	@Override
 	public Optional<FulltextIndexed> getFulltextIndexed() {
 		return Optional.ofNullable(findAnnotation(FulltextIndexed.class));
+	}
+
+	@Override
+	public Optional<TtlIndexed> getTtlIndexed() {
+		return Optional.ofNullable(findAnnotation(TtlIndexed.class));
 	}
 
 }
