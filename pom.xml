@@ -4,14 +4,14 @@
 
 	<groupId>com.arangodb</groupId>
 	<artifactId>arangodb-spring-data</artifactId>
-	<version>3.4.1</version>
+	<version>3.5.0</version>
 	<inceptionYear>2017</inceptionYear>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>2.4.1</version>
+		<version>2.4.5</version>
 	</parent>
 
 	<name>arangodb-spring-data</name>

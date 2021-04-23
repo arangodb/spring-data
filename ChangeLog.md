@@ -6,8 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.5.0] - 2021-04-23
+
+- added annotations to ttl indexes (`@TtlIndex` and `@TtlIndexed`)
 - removed dependencies on `velocypack-module-jdk8` and `velocypack-module-joda`
-- upgraded dependency `com.arangodb:arangodb-java-driver:6.9.0`
+- upgraded dependency `com.arangodb:arangodb-java-driver:6.11.1`
+- upgraded dependency `com.arangodb:velocypack:2.5.3`
 
 ## [3.4.1] - 2021-01-26
 
