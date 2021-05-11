@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
+import com.arangodb.springframework.annotation.Document;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -584,7 +585,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}).map(type -> {
 			return context.getPersistentEntity(type);
 		}).filter(entity -> {
-			return entity != null;
+			return entity != null && entity.isAnnotationPresent(Document.class);
 		}).map(entity -> {
 			return AqlUtils.buildCollectionName(entity.getCollection());
 		}).forEach(withCollections::add);
