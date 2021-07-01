@@ -77,6 +77,4 @@ public interface ArangoPersistentEntity<T>
 
 	IdentifierAccessor getArangoIdAccessor(Object bean);
 
-	boolean hasPersistenceAnnotation();
-
 }

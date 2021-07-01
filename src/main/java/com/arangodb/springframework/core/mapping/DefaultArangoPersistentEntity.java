@@ -90,9 +90,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private final Map<Class<? extends Annotation>, Set<? extends Annotation>> repeatableAnnotationCache;
 
-	private final Document documentAnnotation;
-	private final Edge edgeAnnotation;
-
 	public DefaultArangoPersistentEntity(final TypeInformation<T> information) {
 		super(information);
 		collection = StringUtils.uncapitalize(information.getType().getSimpleName());
@@ -103,14 +100,14 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		geoIndexedProperties = new ArrayList<>();
 		fulltextIndexedProperties = new ArrayList<>();
 		repeatableAnnotationCache = new HashMap<>();
-		documentAnnotation = findAnnotation(Document.class);
-		edgeAnnotation = findAnnotation(Edge.class);
-		if (edgeAnnotation != null) {
-			collection = StringUtils.hasText(edgeAnnotation.value()) ? edgeAnnotation.value() : collection;
-			collectionOptions = createCollectionOptions(edgeAnnotation);
-		} else if (documentAnnotation != null) {
-			collection = StringUtils.hasText(documentAnnotation.value()) ? documentAnnotation.value() : collection;
-			collectionOptions = createCollectionOptions(documentAnnotation);
+		final Document document = findAnnotation(Document.class);
+		final Edge edge = findAnnotation(Edge.class);
+		if (edge != null) {
+			collection = StringUtils.hasText(edge.value()) ? edge.value() : collection;
+			collectionOptions = createCollectionOptions(edge);
+		} else if (document != null) {
+			collection = StringUtils.hasText(document.value()) ? document.value() : collection;
+			collectionOptions = createCollectionOptions(document);
 		} else {
 			collectionOptions = new CollectionCreateOptions().type(CollectionType.DOCUMENT);
 		}
@@ -142,8 +139,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		}
 		if (annotation.allowUserKeys()) {
 			options.keyOptions(annotation.allowUserKeys(), annotation.keyType(),
-				annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
-				annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
+					annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
+					annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
 		}
 		return options;
 	}
@@ -170,8 +167,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		}
 		if (annotation.allowUserKeys()) {
 			options.keyOptions(annotation.allowUserKeys(), annotation.keyType(),
-				annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
-				annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
+					annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
+					annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
 		}
 		return options;
 	}
@@ -317,7 +314,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	@SuppressWarnings("unchecked")
 	public <A extends Annotation> Set<A> findAnnotations(final Class<A> annotationType) {
 		return (Set<A>) repeatableAnnotationCache.computeIfAbsent(annotationType,
-			it -> AnnotatedElementUtils.findMergedRepeatableAnnotations(getType(), it));
+				it -> AnnotatedElementUtils.findMergedRepeatableAnnotations(getType(), it));
 	}
 
 	private static class AbsentAccessor extends TargetAwareIdentifierAccessor {
@@ -337,11 +334,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	public IdentifierAccessor getArangoIdAccessor(final Object bean) {
 		return getArangoIdProperty().isPresent() ? new ArangoIdPropertyIdentifierAccessor(this, bean)
 				: new AbsentAccessor(bean);
-	}
-
-	@Override
-	public boolean hasPersistenceAnnotation() {
-		return documentAnnotation != null || edgeAnnotation != null;
 	}
 
 }
