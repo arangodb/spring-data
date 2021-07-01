@@ -20,17 +20,14 @@
 
 package com.arangodb.springframework.testdata;
 
+import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
-
-import com.arangodb.springframework.annotation.Field;
-import com.arangodb.springframework.annotation.GeoIndex;
-import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.annotation.Rev;
 
 /**
  * @author Mark Vollmary
  *
  */
+@Document
 @GeoIndex(fields = { "location" })
 public class Product {
 

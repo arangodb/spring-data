@@ -1,5 +1,6 @@
 package com.arangodb.springframework.testdata;
 
+import com.arangodb.springframework.annotation.Document;
 import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.annotation.Rev;
@@ -7,6 +8,7 @@ import com.arangodb.springframework.annotation.Rev;
 /**
  * Created by markmccormick on 24/08/2017.
  */
+@Document
 public class Material {
 
 	@Id

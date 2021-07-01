@@ -584,7 +584,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		}).map(type -> {
 			return context.getPersistentEntity(type);
 		}).filter(entity -> {
-			return entity != null;
+			return entity != null && entity.hasPersistenceAnnotation();
 		}).map(entity -> {
 			return AqlUtils.buildCollectionName(entity.getCollection());
 		}).forEach(withCollections::add);
