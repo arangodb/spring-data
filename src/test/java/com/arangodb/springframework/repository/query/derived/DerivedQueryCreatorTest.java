@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import com.arangodb.springframework.testdata.*;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
@@ -32,13 +33,6 @@ import org.springframework.data.geo.Polygon;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
-import com.arangodb.springframework.testdata.Contains;
-import com.arangodb.springframework.testdata.Customer;
-import com.arangodb.springframework.testdata.IncompleteCustomer;
-import com.arangodb.springframework.testdata.Material;
-import com.arangodb.springframework.testdata.Owns;
-import com.arangodb.springframework.testdata.Product;
-import com.arangodb.springframework.testdata.ShoppingCart;
 
 /**
  * Created by N675515 on 27/07/2017.
@@ -601,6 +595,17 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(toBeRetrieved);
 		repository.save(bob);
 		final List<Customer> retrieved = repository.findByNestedCustomerName("Bob");
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void notPersistentNestedPropertyTest() {
+		john.setNickname(new Nickname("Johnny"));
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(john);
+		repository.saveAll(toBeRetrieved);
+		repository.save(bob);
+		final List<Customer> retrieved = repository.findByNicknameValue("Johnny");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 

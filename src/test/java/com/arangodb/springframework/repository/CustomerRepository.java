@@ -184,6 +184,8 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	List<Customer> findByNestedCustomerName(String name);
 
+	List<Customer> findByNicknameValue(String value);
+
 	// REFERENCES
 
 	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(

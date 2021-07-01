@@ -57,6 +57,7 @@ public class Customer {
 	private Iterable<String> stringList;
 	private Customer nestedCustomer;
 	private Iterable<Customer> nestedCustomers;
+    private Nickname nickname;
 
 	@Ref
 	private ShoppingCart shoppingCart;
@@ -225,7 +226,15 @@ public class Customer {
 		this.nestedCustomers = nestedCustomers;
 	}
 
-	public Iterable<String> getStringList() {
+    public Nickname getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(final Nickname nickname) {
+        this.nickname = nickname;
+    }
+
+    public Iterable<String> getStringList() {
 		return stringList;
 	}
 
@@ -256,3 +265,4 @@ public class Customer {
 	}
 
 }
+

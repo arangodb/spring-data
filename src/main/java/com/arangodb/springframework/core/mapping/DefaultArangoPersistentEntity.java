@@ -139,8 +139,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		}
 		if (annotation.allowUserKeys()) {
 			options.keyOptions(annotation.allowUserKeys(), annotation.keyType(),
-				annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
-				annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
+					annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
+					annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
 		}
 		return options;
 	}
@@ -167,8 +167,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		}
 		if (annotation.allowUserKeys()) {
 			options.keyOptions(annotation.allowUserKeys(), annotation.keyType(),
-				annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
-				annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
+					annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
+					annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
 		}
 		return options;
 	}
@@ -314,7 +314,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	@SuppressWarnings("unchecked")
 	public <A extends Annotation> Set<A> findAnnotations(final Class<A> annotationType) {
 		return (Set<A>) repeatableAnnotationCache.computeIfAbsent(annotationType,
-			it -> AnnotatedElementUtils.findMergedRepeatableAnnotations(getType(), it));
+				it -> AnnotatedElementUtils.findMergedRepeatableAnnotations(getType(), it));
 	}
 
 	private static class AbsentAccessor extends TargetAwareIdentifierAccessor {

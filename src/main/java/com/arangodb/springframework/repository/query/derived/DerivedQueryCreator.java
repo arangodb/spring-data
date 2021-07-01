@@ -20,13 +20,10 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.arangodb.springframework.annotation.Ref;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -578,16 +575,21 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	}
 
 	private void collectWithCollections(final PropertyPath propertyPath) {
-		propertyPath.stream().map(property -> {
-			return property.isCollection() ? property.getTypeInformation().getComponentType()
-					: property.getTypeInformation();
-		}).map(type -> {
-			return context.getPersistentEntity(type);
-		}).filter(entity -> {
-			return entity != null;
-		}).map(entity -> {
-			return AqlUtils.buildCollectionName(entity.getCollection());
-		}).forEach(withCollections::add);
+		propertyPath.stream()
+				.filter(property -> {
+					ArangoPersistentProperty p = context.getPersistentPropertyPath(property).getBaseProperty();
+					if (p == null) return false;
+					Optional<Ref> ref = p.getRef();
+					Optional<Relations> rels = p.getRelations();
+					return ref.isPresent() || rels.isPresent();
+				})
+				.map(property -> property.isCollection() ? property.getTypeInformation().getComponentType()
+						: property.getTypeInformation())
+				.filter(Objects::nonNull)
+				.map(context::getPersistentEntity)
+				.filter(Objects::nonNull)
+				.map(entity -> AqlUtils.buildCollectionName(entity.getCollection()))
+				.forEach(withCollections::add);
 	}
 
 	private String format(final String format, final Object... args) {
