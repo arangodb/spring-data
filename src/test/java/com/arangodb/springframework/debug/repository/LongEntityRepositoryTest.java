@@ -49,6 +49,7 @@ public class LongEntityRepositoryTest extends AbstractArangoTest {
 
 		assertThat(saved, is(entity));
 		assertThat(fetched.isPresent(), is(true));
-		assertThat(fetched.get(), is(entity));
+		assertThat(fetched.get().getId(), is(entity.getId()));
+		assertThat(fetched.get().getValue(), is(entity.getValue()));
 	}
 }
