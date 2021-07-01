@@ -27,7 +27,6 @@ import org.springframework.data.annotation.Id;
  * @author Mark Vollmary
  *
  */
-@Document
 @GeoIndex(fields = { "location" })
 public class Product {
 
