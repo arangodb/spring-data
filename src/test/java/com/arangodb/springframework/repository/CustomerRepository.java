@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.arangodb.springframework.annotation.SpelParam;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -31,7 +32,7 @@ import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.CustomerNameProjection;
 
 /**
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -39,7 +40,10 @@ import com.arangodb.springframework.testdata.CustomerNameProjection;
  */
 public interface CustomerRepository extends ArangoRepository<Customer, String>, ImportedQueryRepository{
 
-	@Query("FOR c IN customer FILTER c._key == @id RETURN c")
+	@Query("FOR c IN #collection FILTER #{filterGenerator.allEqual('c', #kv)} RETURN c")
+	List<Customer> findByAllEqual(@SpelParam("kv") Map<String, Object> kv);
+
+	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")
 	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
 	@Query("FOR c IN #collection FILTER c.name == @1 AND c._key == @0 RETURN c")

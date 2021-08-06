@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import com.arangodb.springframework.annotation.SpelParam;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
@@ -40,7 +41,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.BindVars;
 
 /**
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -148,7 +149,7 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 
 		@Override
 		public boolean isSpecialParameter() {
-			return super.isSpecialParameter() || isQueryOptions() || isBindVars();
+			return super.isSpecialParameter() || isQueryOptions() || isBindVars() || isSpelParam();
 		}
 
 		public boolean isQueryOptions() {
@@ -158,6 +159,18 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		public boolean isBindVars() {
 			return parameter.hasParameterAnnotation(BindVars.class);
 		}
+
+		public boolean isSpelParam() {
+			return parameter.hasParameterAnnotation(SpelParam.class);
+		}
+
+        @Override
+        public Optional<String> getName() {
+            if (isSpelParam())
+                return Optional.of(parameter.getParameterAnnotation(SpelParam.class).value());
+            else
+                return super.getName();
+        }
 
 		@Override
 		public String getPlaceholder() {
