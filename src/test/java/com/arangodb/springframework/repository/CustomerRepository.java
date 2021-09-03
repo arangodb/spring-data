@@ -40,7 +40,7 @@ import com.arangodb.springframework.testdata.CustomerNameProjection;
  */
 public interface CustomerRepository extends ArangoRepository<Customer, String>, ImportedQueryRepository{
 
-	@Query("FOR c IN #collection FILTER #{filterGenerator.allEqual('c', #kv)} RETURN c")
+	@Query("FOR c IN #{#collection} FILTER #{filterGenerator.allEqual('c', #kv)} RETURN c")
 	List<Customer> findByAllEqual(@SpelParam("kv") Map<String, Object> kv);
 
 	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")

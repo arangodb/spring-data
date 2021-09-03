@@ -24,7 +24,7 @@ import java.lang.annotation.*;
 
 /**
  * Annotation to mark a method parameter of a repository method annotated with {@code @Query} to be used as SPEL's
- * variable in the query expression.
+ * variable in the query expression. The expression prefix is "#{" and the expression suffix is "}".
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

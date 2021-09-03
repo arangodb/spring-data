@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.arangodb.springframework.component.FilterGenerator;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -44,9 +43,6 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Autowired
 	protected OverriddenCrudMethodsRepository overriddenRepository;
 
-	@Autowired
-	FilterGenerator filterGenerator;
-
     @Test
     public void dynamicFilter() {
         repository.saveAll(customers);
@@ -58,6 +54,10 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		List<Customer> retrieved = repository.findByAllEqual(filters);
 		assertThat(retrieved, hasSize(1));
 		assertEquals(john, retrieved.get(0));
+
+		filters.put("age", 21);
+		retrieved = repository.findByAllEqual(filters);
+		assertThat(retrieved, hasSize(0));
 	}
 
 	@Test

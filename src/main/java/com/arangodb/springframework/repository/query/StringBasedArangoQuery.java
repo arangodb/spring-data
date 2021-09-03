@@ -41,11 +41,12 @@ import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameters.ArangoParameter;
 
 /**
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
+ * @author Michele Rastelli
  */
 public class StringBasedArangoQuery extends AbstractArangoQuery {
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -64,6 +65,7 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 	private final StandardEvaluationContext context;
 	private final String query;
+	private	final String collectionName;
 	private final Expression queryExpression;
 	private final Set<String> queryBindParams;
 
@@ -78,6 +80,7 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 		Assert.notNull(query, "Query must not be null!");
 
 		this.query = query;
+		collectionName = AqlUtils.buildCollectionName(operations.collection(domainClass).name());
 
 		assertSinglePageablePlaceholder();
 		assertSingleSortPlaceholder();
@@ -89,7 +92,8 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 		context.setRootObject(applicationContext);
 		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		context.addPropertyAccessor(new BeanFactoryAccessor());
-	}
+        context.setVariable("collection", collectionName);
+    }
 
 	@Override
 	protected String createQuery(
@@ -119,7 +123,6 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 		final Matcher collectionMatcher = COLLECTION_PLACEHOLDER_PATTERN.matcher(preparedQuery);
 		if (collectionMatcher.find()) {
-			final String collectionName = AqlUtils.buildCollectionName(operations.collection(domainClass).name());
 			preparedQuery = collectionMatcher.replaceAll(collectionName);
 		}
 
