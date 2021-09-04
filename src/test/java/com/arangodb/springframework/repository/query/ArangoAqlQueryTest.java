@@ -1,8 +1,7 @@
 package com.arangodb.springframework.repository.query;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsIn.isOneOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -33,7 +32,7 @@ import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.CustomerNameProjection;
 
 /**
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -43,6 +42,23 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Autowired
 	protected OverriddenCrudMethodsRepository overriddenRepository;
+
+    @Test
+    public void dynamicFilter() {
+        repository.saveAll(customers);
+
+		Map<String, Object> filters = new HashMap<>();
+		filters.put("name", "John");
+		filters.put("surname", "Smith");
+		filters.put("age", 20);
+		List<Customer> retrieved = repository.findByAllEqual(filters);
+		assertThat(retrieved, hasSize(1));
+		assertEquals(john, retrieved.get(0));
+
+		filters.put("age", 21);
+		retrieved = repository.findByAllEqual(filters);
+		assertThat(retrieved, hasSize(0));
+	}
 
 	@Test
 	public void findOneByIdAqlWithNamedParameterTest() {
@@ -151,7 +167,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
 
 	}
-	
+
 
 	@Test
 	public void findManyBySurnameOnImportedQueryTest() {

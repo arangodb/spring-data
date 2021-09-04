@@ -38,4 +38,6 @@ public interface ArangoParameterAccessor extends ParameterAccessor {
 
 	Map<String, Object> getBindVars();
 
+	Map<String, Object> getSpelVars();
+
 }

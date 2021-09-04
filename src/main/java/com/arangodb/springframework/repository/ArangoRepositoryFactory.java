@@ -23,6 +23,7 @@ package com.arangodb.springframework.repository;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -57,10 +58,12 @@ import com.arangodb.springframework.repository.query.StringBasedArangoQuery;
 public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final ArangoOperations arangoOperations;
+	private final ApplicationContext applicationContext;
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
-	public ArangoRepositoryFactory(final ArangoOperations arangoOperations) {
+	public ArangoRepositoryFactory(final ArangoOperations arangoOperations, final ApplicationContext applicationContext) {
 		this.arangoOperations = arangoOperations;
+		this.applicationContext = applicationContext;
 		this.context = arangoOperations.getConverter().getMappingContext();
 	}
 
@@ -98,7 +101,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 		QueryLookupStrategy strategy = null;
 		switch (key) {
 		case CREATE_IF_NOT_FOUND:
-			strategy = new DefaultArangoQueryLookupStrategy(arangoOperations);
+			strategy = new DefaultArangoQueryLookupStrategy(arangoOperations, applicationContext);
 			break;
 		case CREATE:
 			break;
@@ -111,9 +114,12 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	static class DefaultArangoQueryLookupStrategy implements QueryLookupStrategy {
 
 		private final ArangoOperations operations;
+		private final ApplicationContext applicationContext;
 
-		public DefaultArangoQueryLookupStrategy(final ArangoOperations operations) {
+		public DefaultArangoQueryLookupStrategy(final ArangoOperations operations,
+												final ApplicationContext applicationContext) {
 			this.operations = operations;
+			this.applicationContext = applicationContext;
 		}
 
 		@Override
@@ -128,9 +134,9 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				final String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedArangoQuery(namedQuery, queryMethod, operations);
+				return new StringBasedArangoQuery(namedQuery, queryMethod, operations, applicationContext);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedArangoQuery(queryMethod, operations);
+				return new StringBasedArangoQuery(queryMethod, operations, applicationContext);
 			} else {
 				return new DerivedArangoQuery(queryMethod, operations);
 			}

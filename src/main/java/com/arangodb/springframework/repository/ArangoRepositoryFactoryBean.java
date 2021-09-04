@@ -20,7 +20,10 @@
 
 package com.arangodb.springframework.repository;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
@@ -32,9 +35,10 @@ import com.arangodb.springframework.core.ArangoOperations;
  * Created by F625633 on 07/07/2017.
  */
 public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
-		extends RepositoryFactoryBeanSupport<T, S, ID> {
+		extends RepositoryFactoryBeanSupport<T, S, ID>  implements ApplicationContextAware {
 
 	private ArangoOperations arangoOperations;
+	private ApplicationContext applicationContext;
 
 	@Autowired
 	public ArangoRepositoryFactoryBean(final Class<? extends T> repositoryInterface) {
@@ -49,6 +53,11 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
 		Assert.notNull(arangoOperations, "arangoOperations not configured");
-		return new ArangoRepositoryFactory(arangoOperations);
+		return new ArangoRepositoryFactory(arangoOperations, applicationContext);
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 }

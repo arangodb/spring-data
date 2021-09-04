@@ -26,6 +26,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.expression.BeanFactoryAccessor;
+import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
 import com.arangodb.model.AqlQueryOptions;
@@ -34,13 +41,15 @@ import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameters.ArangoParameter;
 
 /**
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
  * @author Christian Lechner
+ * @author Michele Rastelli
  */
 public class StringBasedArangoQuery extends AbstractArangoQuery {
+	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private static final String PAGEABLE_PLACEHOLDER = "#pageable";
 	private static final Pattern PAGEABLE_PLACEHOLDER_PATTERN = Pattern.compile(Pattern.quote(PAGEABLE_PLACEHOLDER));
@@ -54,25 +63,37 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 	private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("@(@?[A-Za-z0-9][A-Za-z0-9_]*)");
 
+	private final StandardEvaluationContext context;
 	private final String query;
+	private	final String collectionName;
+	private final Expression queryExpression;
 	private final Set<String> queryBindParams;
 
-	public StringBasedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
-		this(method.getAnnotatedQuery(), method, operations);
+	public StringBasedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations,
+								  final ApplicationContext applicationContext) {
+		this(method.getAnnotatedQuery(), method, operations, applicationContext);
 	}
 
 	public StringBasedArangoQuery(final String query, final ArangoQueryMethod method,
-		final ArangoOperations operations) {
+		final ArangoOperations operations, final ApplicationContext applicationContext) {
 		super(method, operations);
 		Assert.notNull(query, "Query must not be null!");
 
 		this.query = query;
+		collectionName = AqlUtils.buildCollectionName(operations.collection(domainClass).name());
 
 		assertSinglePageablePlaceholder();
 		assertSingleSortPlaceholder();
 
 		this.queryBindParams = getBindParamsInQuery();
-	}
+		queryExpression = PARSER.parseExpression(query, ParserContext.TEMPLATE_EXPRESSION);
+
+		context = new StandardEvaluationContext();
+		context.setRootObject(applicationContext);
+		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
+		context.addPropertyAccessor(new BeanFactoryAccessor());
+        context.setVariable("collection", collectionName);
+    }
 
 	@Override
 	protected String createQuery(
@@ -96,11 +117,12 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	}
 
 	private String prepareQuery(final ArangoParameterAccessor accessor) {
-		String preparedQuery = query;
+		context.setVariables(accessor.getSpelVars());
+
+		String preparedQuery = queryExpression.getValue(context, String.class);
 
 		final Matcher collectionMatcher = COLLECTION_PLACEHOLDER_PATTERN.matcher(preparedQuery);
 		if (collectionMatcher.find()) {
-			final String collectionName = AqlUtils.buildCollectionName(operations.collection(domainClass).name());
 			preparedQuery = collectionMatcher.replaceAll(collectionName);
 		}
 
