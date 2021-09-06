@@ -43,6 +43,7 @@ public class ArangoCustomConversions extends CustomConversions {
 		storeConverters.addAll(TimeStringConverters.getConvertersToRegister());
 		storeConverters.addAll(JodaTimeStringConverters.getConvertersToRegister());
 		storeConverters.addAll(ArangoConverters.getConvertersToRegister());
+		storeConverters.addAll(GeoConverters.getConvertersToRegister());
 
 		STORE_CONVERSIONS = StoreConversions.of(ArangoSimpleTypes.HOLDER,
 			Collections.unmodifiableCollection(storeConverters));
