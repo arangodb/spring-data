@@ -31,8 +31,7 @@ import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.core.convert.ArangoConverter;
-import com.arangodb.springframework.core.geo.GeoJson;
-import com.arangodb.springframework.core.geo.GeoJsonPoint;
+import com.arangodb.springframework.core.geo.*;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
 import com.arangodb.springframework.testdata.Actor;
 import com.arangodb.springframework.testdata.Movie;
@@ -45,6 +44,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.*;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -161,9 +161,18 @@ public class GeneralMappingTest extends AbstractArangoTest {
     }
 
     public static class GeoTestEntity extends BasicTestEntity {
+        private GeoJson<?> geoJson;
         private Point point;
         private GeoJsonPoint geoJsonPoint;
-        private GeoJson<?> geoJson;
+
+        // TODO:
+        private GeoJsonMultiPoint geoJsonMultiPoint;
+        private GeoJsonLineString geoJsonLineString;
+        private GeoJsonMultiLineString geoJsonMultiLineString;
+//
+//        private Polygon polygon;
+//        private GeoJsonPolygon geoJsonPolygon;
+
     }
 
     @Test
@@ -171,18 +180,40 @@ public class GeneralMappingTest extends AbstractArangoTest {
         ArangoConverter converter = template.getConverter();
 
         GeoTestEntity entity = new GeoTestEntity();
+        entity.geoJson = new GeoJsonPoint(1.1, 2.2);
         entity.point = new Point(1.1, 2.2);
-        entity.geoJsonPoint = new GeoJsonPoint(3.3, 4.4);
-        entity.geoJson = new GeoJsonPoint(5.5, 6.6);
+        entity.geoJsonPoint = new GeoJsonPoint(1.1, 2.2);
+        entity.geoJsonMultiPoint = new GeoJsonMultiPoint(
+                new Point(1.1, 2.2),
+                new Point(3.3, 4.4)
+        );
+        entity.geoJsonLineString = new GeoJsonLineString(
+                new Point(1.1, 2.2),
+                new Point(3.3, 4.4)
+        );
+        entity.geoJsonMultiLineString = new GeoJsonMultiLineString(
+                Arrays.asList(
+                        new Point(1.1, 2.2),
+                        new Point(3.3, 4.4)
+                ),
+                Arrays.asList(
+                        new Point(5.5, 6.6),
+                        new Point(7.7, 8.8)
+                )
+        );
+
         VPackSlice written = converter.write(entity);
 
 //        DBDocumentEntity dbe = converter.read(DBDocumentEntity.class, written);
         // TODO: assert dbe is valid geoJson
 
         GeoTestEntity read = converter.read(GeoTestEntity.class, written);
+        assertThat(read.geoJson, is(entity.geoJson));
         assertThat(read.point, is(entity.point));
         assertThat(read.geoJsonPoint, is(entity.geoJsonPoint));
-        assertThat(read.geoJson, is(entity.geoJson));
+        assertThat(read.geoJsonMultiPoint, is(entity.geoJsonMultiPoint));
+        assertThat(read.geoJsonLineString, is(entity.geoJsonLineString));
+        assertThat(read.geoJsonMultiLineString, is(entity.geoJsonMultiLineString));
     }
 
     public static class JodaTestEntity extends BasicTestEntity {
