@@ -169,9 +169,8 @@ public class GeneralMappingTest extends AbstractArangoTest {
         private GeoJsonMultiPoint geoJsonMultiPoint;
         private GeoJsonLineString geoJsonLineString;
         private GeoJsonMultiLineString geoJsonMultiLineString;
-//
-//        private Polygon polygon;
-//        private GeoJsonPolygon geoJsonPolygon;
+        private Polygon polygon;
+        private GeoJsonPolygon geoJsonPolygon;
 
     }
 
@@ -201,12 +200,22 @@ public class GeneralMappingTest extends AbstractArangoTest {
                         new Point(7.7, 8.8)
                 )
         );
+        entity.polygon = new Polygon(Arrays.asList(
+                new Point(1.1, 1.2),
+                new Point(1.3, 1.4),
+                new Point(1.5, 1.6)
+        ));
+        entity.geoJsonPolygon = new GeoJsonPolygon(Arrays.asList(
+                new Point(1.1, 1.2),
+                new Point(1.3, 1.4),
+                new Point(1.5, 1.6)
+        )).withInnerRing(Arrays.asList(
+                new Point(0.1, 0.2),
+                new Point(0.3, 0.4),
+                new Point(0.5, 0.6)
+        ));
 
         VPackSlice written = converter.write(entity);
-
-//        DBDocumentEntity dbe = converter.read(DBDocumentEntity.class, written);
-        // TODO: assert dbe is valid geoJson
-
         GeoTestEntity read = converter.read(GeoTestEntity.class, written);
         assertThat(read.geoJson, is(entity.geoJson));
         assertThat(read.point, is(entity.point));
@@ -214,6 +223,8 @@ public class GeneralMappingTest extends AbstractArangoTest {
         assertThat(read.geoJsonMultiPoint, is(entity.geoJsonMultiPoint));
         assertThat(read.geoJsonLineString, is(entity.geoJsonLineString));
         assertThat(read.geoJsonMultiLineString, is(entity.geoJsonMultiLineString));
+        assertThat(read.polygon, is(entity.polygon));
+        assertThat(read.geoJsonPolygon, is(entity.geoJsonPolygon));
     }
 
     public static class JodaTestEntity extends BasicTestEntity {

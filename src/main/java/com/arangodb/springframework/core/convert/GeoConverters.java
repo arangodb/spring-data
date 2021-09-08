@@ -11,11 +11,10 @@ import java.util.*;
 import java.util.function.Function;
 
 
-// TODO:
-// - test @GeoIndex and @GeoIndexed on GeoJson fields (geoJson=true)
-// - query derivation with geo and geoJson types
-
 public class GeoConverters {
+
+    private static final String TYPE = "type";
+    private static final String COORDS = "coordinates";
 
     private static final Map<String, Function<DBDocumentEntity, GeoJson<?>>> toGeoJsonConverters = new HashMap<>();
 
@@ -24,7 +23,7 @@ public class GeoConverters {
         toGeoJsonConverters.put("MultiPoint", DBDocumentEntityToGeoJsonMultiPointConverter.INSTANCE::convert);
         toGeoJsonConverters.put("LineString", DBDocumentEntityToGeoJsonLineStringConverter.INSTANCE::convert);
         toGeoJsonConverters.put("MultiLineString", DBDocumentEntityToGeoJsonMultiLineStringConverter.INSTANCE::convert);
-//        toGeoJsonConverters.put("Polygon", DBDocumentEntityToGeoJsonPolygonConverter.INSTANCE::convert);
+        toGeoJsonConverters.put("Polygon", DBDocumentEntityToGeoJsonPolygonConverter.INSTANCE::convert);
     }
 
     public static Collection<Converter<?, ?>> getConvertersToRegister() {
@@ -35,6 +34,8 @@ public class GeoConverters {
                 GeoJsonMultiPointToDBDocumentEntityConverter.INSTANCE,
                 GeoJsonLineStringToDBDocumentEntityConverter.INSTANCE,
                 GeoJsonMultiLineStringToDBDocumentEntityConverter.INSTANCE,
+                PolygonToDBDocumentEntityConverter.INSTANCE,
+                GeoJsonPolygonToDBDocumentEntityConverter.INSTANCE,
 
                 // reading converters
                 DBDocumentEntityToGeoJsonConverter.INSTANCE,
@@ -42,7 +43,9 @@ public class GeoConverters {
                 DBDocumentEntityToGeoJsonPointConverter.INSTANCE,
                 DBDocumentEntityToGeoJsonMultiPointConverter.INSTANCE,
                 DBDocumentEntityToGeoJsonLineStringConverter.INSTANCE,
-                DBDocumentEntityToGeoJsonMultiLineStringConverter.INSTANCE
+                DBDocumentEntityToGeoJsonMultiLineStringConverter.INSTANCE,
+                DBDocumentEntityToPolygonConverter.INSTANCE,
+                DBDocumentEntityToGeoJsonPolygonConverter.INSTANCE
         );
     }
 
@@ -68,8 +71,8 @@ public class GeoConverters {
         @Override
         public DBDocumentEntity convert(GeoJsonPoint source) {
             DBDocumentEntity d = new DBDocumentEntity();
-            d.put("type", source.getType());
-            d.put("coordinates", source.getCoordinates());
+            d.put(TYPE, source.getType());
+            d.put(COORDS, source.getCoordinates());
             return d;
         }
     }
@@ -82,8 +85,8 @@ public class GeoConverters {
         @Override
         public DBDocumentEntity convert(GeoJsonMultiPoint source) {
             DBDocumentEntity d = new DBDocumentEntity();
-            d.put("type", source.getType());
-            d.put("coordinates", pointsToList(source.getCoordinates()));
+            d.put(TYPE, source.getType());
+            d.put(COORDS, pointsToList(source.getCoordinates()));
             return d;
         }
     }
@@ -96,8 +99,8 @@ public class GeoConverters {
         @Override
         public DBDocumentEntity convert(GeoJsonLineString source) {
             DBDocumentEntity d = new DBDocumentEntity();
-            d.put("type", source.getType());
-            d.put("coordinates", pointsToList(source.getCoordinates()));
+            d.put(TYPE, source.getType());
+            d.put(COORDS, pointsToList(source.getCoordinates()));
             return d;
         }
     }
@@ -110,8 +113,33 @@ public class GeoConverters {
         @Override
         public DBDocumentEntity convert(GeoJsonMultiLineString source) {
             DBDocumentEntity d = new DBDocumentEntity();
-            d.put("type", source.getType());
-            d.put("coordinates", lineStringsToList(source.getCoordinates()));
+            d.put(TYPE, source.getType());
+            d.put(COORDS, lineStringsToList(source.getCoordinates()));
+            return d;
+        }
+    }
+
+    @WritingConverter
+    enum PolygonToDBDocumentEntityConverter implements Converter<Polygon, DBDocumentEntity> {
+
+        INSTANCE;
+
+        @Override
+        public DBDocumentEntity convert(Polygon source) {
+            return GeoJsonPolygonToDBDocumentEntityConverter.INSTANCE.convert(new GeoJsonPolygon(source.getPoints()));
+        }
+    }
+
+    @WritingConverter
+    enum GeoJsonPolygonToDBDocumentEntityConverter implements Converter<GeoJsonPolygon, DBDocumentEntity> {
+
+        INSTANCE;
+
+        @Override
+        public DBDocumentEntity convert(GeoJsonPolygon source) {
+            DBDocumentEntity d = new DBDocumentEntity();
+            d.put(TYPE, source.getType());
+            d.put(COORDS, lineStringsToList(source.getCoordinates()));
             return d;
         }
     }
@@ -123,7 +151,7 @@ public class GeoConverters {
 
         @Override
         public GeoJson<?> convert(DBDocumentEntity source) {
-            String type = (String) source.get("type");
+            String type = (String) source.get(TYPE);
             return toGeoJsonConverters.get(type).apply(source);
         }
     }
@@ -147,8 +175,8 @@ public class GeoConverters {
         @Override
         @SuppressWarnings("unchecked")
         public GeoJsonPoint convert(DBDocumentEntity source) {
-            Assert.isTrue("Point".equals(source.get("type")), "source type must be 'Point'");
-            return toPoint((List<Number>) source.get("coordinates"));
+            Assert.isTrue("Point".equals(source.get(TYPE)), "source type must be 'Point'");
+            return toPoint((List<Number>) source.get(COORDS));
         }
     }
 
@@ -160,9 +188,9 @@ public class GeoConverters {
         @Override
         @SuppressWarnings("unchecked")
         public GeoJsonMultiPoint convert(DBDocumentEntity source) {
-            Assert.isTrue("MultiPoint".equals(source.get("type")), "source type must be 'MultiPoint'");
-            Iterable<Iterable<Number>> coords = (Iterable<Iterable<Number>>) source.get("coordinates");
-            return new GeoJsonMultiPoint(toListOfPoint(coords));
+            Assert.isTrue("MultiPoint".equals(source.get(TYPE)), "source type must be 'MultiPoint'");
+            Iterable<Iterable<Number>> coords = (Iterable<Iterable<Number>>) source.get(COORDS);
+            return new GeoJsonMultiPoint(toListOfPoints(coords));
         }
     }
 
@@ -174,9 +202,9 @@ public class GeoConverters {
         @Override
         @SuppressWarnings("unchecked")
         public GeoJsonLineString convert(DBDocumentEntity source) {
-            Assert.isTrue("LineString".equals(source.get("type")), "source type must be 'LineString'");
-            Iterable<Iterable<Number>> coords = (Iterable<Iterable<Number>>) source.get("coordinates");
-            return new GeoJsonLineString(toListOfPoint(coords));
+            Assert.isTrue("LineString".equals(source.get(TYPE)), "source type must be 'LineString'");
+            Iterable<Iterable<Number>> coords = (Iterable<Iterable<Number>>) source.get(COORDS);
+            return new GeoJsonLineString(toListOfPoints(coords));
         }
     }
 
@@ -188,9 +216,39 @@ public class GeoConverters {
         @Override
         @SuppressWarnings("unchecked")
         public GeoJsonMultiLineString convert(DBDocumentEntity source) {
-            Assert.isTrue("MultiLineString".equals(source.get("type")), "source type must be 'MultiLineString'");
-            Iterable<Iterable<Iterable<Number>>> coords = (Iterable<Iterable<Iterable<Number>>>) source.get("coordinates");
+            Assert.isTrue("MultiLineString".equals(source.get(TYPE)), "source type must be 'MultiLineString'");
+            Iterable<Iterable<Iterable<Number>>> coords = (Iterable<Iterable<Iterable<Number>>>) source.get(COORDS);
             return new GeoJsonMultiLineString(toListOfLineStrings(coords));
+        }
+    }
+
+    @ReadingConverter
+    enum DBDocumentEntityToPolygonConverter implements Converter<DBDocumentEntity, Polygon> {
+
+        INSTANCE;
+
+        @Override
+        public Polygon convert(DBDocumentEntity source) {
+            return DBDocumentEntityToGeoJsonPolygonConverter.INSTANCE.convert(source);
+        }
+    }
+
+    @ReadingConverter
+    enum DBDocumentEntityToGeoJsonPolygonConverter implements Converter<DBDocumentEntity, GeoJsonPolygon> {
+
+        INSTANCE;
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public GeoJsonPolygon convert(DBDocumentEntity source) {
+            Assert.isTrue("Polygon".equals(source.get(TYPE)), "source type must be 'Polygon'");
+            Iterable<Iterable<Iterable<Number>>> coords = (Iterable<Iterable<Iterable<Number>>>) source.get(COORDS);
+            Iterator<Iterable<Iterable<Number>>> it = coords.iterator();
+            GeoJsonPolygon p = new GeoJsonPolygon(toListOfPoints(it.next()));
+            while (it.hasNext()){
+                p = p.withInnerRing(toListOfPoints(it.next()));
+            }
+            return p;
         }
     }
 
@@ -222,7 +280,7 @@ public class GeoConverters {
         return new GeoJsonPoint(x, y);
     }
 
-    private static List<Point> toListOfPoint(Iterable<Iterable<Number>> coords) {
+    private static List<Point> toListOfPoints(Iterable<Iterable<Number>> coords) {
         List<Point> points = new ArrayList<>();
         for (Iterable<Number> point : coords) {
             points.add(toPoint(point));
@@ -233,7 +291,7 @@ public class GeoConverters {
     private static List<GeoJsonLineString> toListOfLineStrings(Iterable<Iterable<Iterable<Number>>> coords) {
         List<GeoJsonLineString> lineStrings = new ArrayList<>();
         for (Iterable<Iterable<Number>> c : coords) {
-            lineStrings.add(new GeoJsonLineString(toListOfPoint(c)));
+            lineStrings.add(new GeoJsonLineString(toListOfPoints(c)));
         }
         return lineStrings;
     }
