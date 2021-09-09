@@ -38,9 +38,13 @@ import com.arangodb.springframework.testdata.Movie;
 import com.arangodb.springframework.testdata.Person;
 import com.arangodb.springframework.testdata.Role;
 import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackParser;
 import com.arangodb.velocypack.VPackSlice;
 import org.joda.time.DateTimeZone;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.*;
 import org.springframework.data.geo.Point;
@@ -164,8 +168,6 @@ public class GeneralMappingTest extends AbstractArangoTest {
         private GeoJson<?> geoJson;
         private Point point;
         private GeoJsonPoint geoJsonPoint;
-
-        // TODO:
         private GeoJsonMultiPoint geoJsonMultiPoint;
         private GeoJsonLineString geoJsonLineString;
         private GeoJsonMultiLineString geoJsonMultiLineString;
@@ -175,7 +177,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
     }
 
     @Test
-    public void geoMapping() {
+    public void geoMapping() throws JSONException {
         ArangoConverter converter = template.getConverter();
 
         GeoTestEntity entity = new GeoTestEntity();
@@ -216,15 +218,57 @@ public class GeneralMappingTest extends AbstractArangoTest {
         ));
 
         VPackSlice written = converter.write(entity);
+        JSONObject json = new JSONObject(new VPackParser.Builder().build().toJson(written));
+
         GeoTestEntity read = converter.read(GeoTestEntity.class, written);
         assertThat(read.geoJson, is(entity.geoJson));
+        JSONAssert.assertEquals(
+                "{ type: Point, coordinates: [1.1, 2.2] }",
+                json.getJSONObject("geoJson"),
+                false);
         assertThat(read.point, is(entity.point));
+        JSONAssert.assertEquals(
+                "{ type: Point, coordinates: [1.1, 2.2] }",
+                json.getJSONObject("point"),
+                false);
         assertThat(read.geoJsonPoint, is(entity.geoJsonPoint));
+        JSONAssert.assertEquals(
+                "{ type: Point, coordinates: [1.1, 2.2] }",
+                json.getJSONObject("geoJsonPoint"),
+                false);
         assertThat(read.geoJsonMultiPoint, is(entity.geoJsonMultiPoint));
+        JSONAssert.assertEquals(
+                "{ type: MultiPoint, coordinates: [[1.1, 2.2], [3.3, 4.4]] }",
+                json.getJSONObject("geoJsonMultiPoint"),
+                false);
         assertThat(read.geoJsonLineString, is(entity.geoJsonLineString));
+        JSONAssert.assertEquals(
+                "{ type: LineString, coordinates: [[1.1, 2.2], [3.3, 4.4]] }",
+                json.getJSONObject("geoJsonLineString"),
+                false);
         assertThat(read.geoJsonMultiLineString, is(entity.geoJsonMultiLineString));
+        JSONAssert.assertEquals(
+                "{ type: MultiLineString, coordinates: [" +
+                        "[[1.1, 2.2], [3.3, 4.4]], " +
+                        "[[5.5, 6.6], [7.7, 8.8]]" +
+                        "] }",
+                json.getJSONObject("geoJsonMultiLineString"),
+                false);
         assertThat(read.polygon, is(entity.polygon));
+        JSONAssert.assertEquals(
+                "{ type: Polygon, coordinates: [" +
+                        "[[1.1, 1.2], [1.3, 1.4], [1.5, 1.6]]" +
+                        "] }",
+                json.getJSONObject("polygon"),
+                false);
         assertThat(read.geoJsonPolygon, is(entity.geoJsonPolygon));
+        JSONAssert.assertEquals(
+                "{ type: Polygon, coordinates: [" +
+                        "[[1.1, 1.2], [1.3, 1.4], [1.5, 1.6]], " +
+                        "[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]" +
+                        "] }",
+                json.getJSONObject("geoJsonPolygon"),
+                false);
     }
 
     public static class JodaTestEntity extends BasicTestEntity {
