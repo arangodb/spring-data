@@ -244,8 +244,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		john.setLocation(new int[] { 2, 2 });
 		bob.setLocation(new int[] { 50, 45 });
 		repository.saveAll(customers);
-		final Customer[] retrieved = repository.findByLocationNear(new Point(10, 20));
-		final Customer[] check = { john, bob };
+		final Customer[] retrieved = repository.findByLocationNear(new Point(51, 46));
+		final Customer[] check = { bob, john };
 		assertTrue(equals(check, retrieved, cmp, eq, true));
 	}
 

@@ -352,8 +352,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(uniquePoint == null || uniquePoint.equals(point),
 				"Different Points are used - Distance is ambiguous");
-			uniquePoint = point;
 		}
+		uniquePoint = point;
 	}
 
 	/**
@@ -457,10 +457,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			}
 			Assert.isTrue(iterator.hasNext(), "Too few arguments passed");
 			final Object nearValue = iterator.next();
-			final Class<? extends Object> nearClazz = nearValue.getClass();
-			if (nearClazz != Point.class) {
+			if (nearValue instanceof Point) {
+				checkUniquePoint((Point) nearValue);
+			} else {
 				bindingCounter = binding.bind(nearValue, shouldIgnoreCase(part), null, point -> checkUniquePoint(point),
-					bindingCounter);
+						bindingCounter);
 			}
 			criteria = null;
 			break;
