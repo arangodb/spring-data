@@ -122,6 +122,8 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	Customer[] findByLocationNear(Point location);
 
+	Customer[] findByPositionNear(Point location);
+
 	List<Customer> findByLocationWithinAndName(Point location, Range<Double> distanceRange, String name);
 
 	Iterable<Customer> findByLocationWithinOrNameAndLocationNear(Circle circle, String name, Point location2);

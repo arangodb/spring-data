@@ -11,4 +11,8 @@
   <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
+
+  <logger name="com.arangodb.internal.velocystream.internal.MessageStore" level="debug" />
+  <logger name="com.arangodb.internal.velocystream.VstCommunicationSync" level="debug" />
+
 </configuration>

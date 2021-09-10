@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.core.geo.GeoJson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -74,6 +75,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private final Set<String> withCollections;
 	private final BindParameterBinding binding;
 
+	// whether the field type is a type encoded as geoJson
+	private boolean isGeoJsonType = false;
 	private Point uniquePoint = null;
 	private String uniqueLocation = null;
 	private Boolean isUnique = null;
@@ -145,8 +148,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
 
-			final String distanceSortKey = " SORT " + Criteria
-					.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1])).getPredicate();
+			String distanceSortKey = " SORT ";
+			if (isGeoJsonType) {
+				distanceSortKey += Criteria
+						.geoDistance(uniqueLocation, bind(uniquePoint)).getPredicate();
+			} else {
+				distanceSortKey += Criteria
+						.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1])).getPredicate();
+			}
 			if (sort.isUnsorted()) {
 				sortString = distanceSortKey;
 			} else {
@@ -378,6 +387,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		final String property = templateAndProperty[1];
 		Criteria criteria = null;
 		final boolean checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
+		Class<?> type = part.getProperty().getType();
+		isGeoJsonType = Point.class.isAssignableFrom(type) ||
+				Polygon.class.isAssignableFrom(type) ||
+				GeoJson.class.isAssignableFrom(type);
+
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:
 			criteria = Criteria.eql(ignorePropertyCase(part, property), bind(part, iterator));

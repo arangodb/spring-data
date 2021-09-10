@@ -250,6 +250,16 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void findNearGeoJsonTest() {
+		john.setPosition(new Point(2, 2 ));
+		bob.setPosition(new Point( 50, 45 ));
+		repository.saveAll(customers);
+		final Customer[] retrieved = repository.findByPositionNear(new Point(51, 46));
+		final Customer[] check = { bob, john };
+		assertTrue(equals(check, retrieved, cmp, eq, true));
+	}
+
+	@Test
 	public void findWithinTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("", "", 0);
