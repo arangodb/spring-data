@@ -183,9 +183,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			if (this.geoFields.isEmpty()) {
 				query.append("e");
 			} else {
-				query.append(format("MERGE(e, { '_distance': %s })",
-					Criteria.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1]))
-							.getPredicate()));
+				if (hasGeoJsonType) {
+					query.append(format("MERGE(e, { '_distance': %s })",
+							Criteria.geoDistance(uniqueLocation, bind(getUniqueGeoJsonPoint())).getPredicate()));
+				} else {
+					query.append(format("MERGE(e, { '_distance': %s })",
+							Criteria.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1]))
+									.getPredicate()));
+				}
 			}
 		}
 		return query.toString();

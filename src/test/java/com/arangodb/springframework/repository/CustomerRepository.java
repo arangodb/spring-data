@@ -200,6 +200,8 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	GeoResult<Customer> queryByLocationWithin(Point location, double distance);
 
+	GeoResult<Customer> queryByPositionWithin(Point location, double distance);
+
 	GeoResults<Customer> findByLocationWithin(Point location, Range<Double> distanceRange);
 
 	GeoPage<Customer> findByLocationNear(Point location, Pageable pageable);

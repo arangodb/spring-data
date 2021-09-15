@@ -634,6 +634,23 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void geoJsonGeoResultTest() {
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point( 5, 7 ));
+		repository.save(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point( 50, 70 ));
+		repository.save(customer2);
+		final double distance = convertAngleToDistance(10);
+		final GeoResult<Customer> retrieved = repository.queryByPositionWithin(new Point(1, 2), distance);
+		final double expectedDistanceInMeters = getDistanceBetweenPoints(new Point(5, 7), new Point(1, 2));
+		final double expectedNormalizedDistance = expectedDistanceInMeters / 1000.0
+				/ Metrics.KILOMETERS.getMultiplier();
+		assertEquals(customer1, retrieved.getContent());
+		assertEquals(expectedNormalizedDistance, retrieved.getDistance().getNormalizedValue(), 0.000000001);
+	}
+
+	@Test
 	public void geoResultsTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("", "", 0);
