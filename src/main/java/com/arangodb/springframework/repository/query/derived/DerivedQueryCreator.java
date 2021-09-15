@@ -544,7 +544,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
                     break;
                 } else {
 					if (clazz == Circle.class) {
-						bindCircle(part, value);
+						bindCircle(part, value, isGeoJsonType);
 						break;
 					} else if (clazz == Point.class) {
 						if(isGeoJsonType) {
@@ -559,8 +559,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 				}
 			}
 			if (criteria == null) {
-				criteria = Criteria.lte(
-					Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(), index + 2);
+				if(isGeoJsonType) {
+					criteria = Criteria.lte(
+							Criteria.geoDistance(ignorePropertyCase(part, property), index).getPredicate(), index + 1);
+				} else {
+					criteria = Criteria.lte(
+							Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(), index + 2);
+				}
 			}
 			break;
 		default:
@@ -599,9 +604,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			bindingCounter);
 	}
 
-	private void bindCircle(final Part part, final Object value) {
+	private void bindCircle(final Part part, final Object value, final boolean toGeoJson) {
 		bindingCounter = binding.bindCircle(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
-			bindingCounter);
+			bindingCounter, toGeoJson);
 	}
 
 	private void bindRange(final Part part, final Object value) {

@@ -126,13 +126,19 @@ public class BindParameterBinding {
 		final Object value,
 		final boolean shouldIgnoreCase,
 		final UniqueCheck uniqueCheck,
-		final int startIndex) {
+		final int startIndex,
+		final boolean toGeoJson
+	) {
 		int index = startIndex;
 		final Circle circle = (Circle) ignoreArgumentCase(value, shouldIgnoreCase);
 		final Point center = circle.getCenter();
 		uniqueCheck.check(center);
-		bind(index++, center.getY());
-		bind(index++, center.getX());
+		if (toGeoJson) {
+			bind(index++, center);
+		} else {
+			bind(index++, center.getY());
+			bind(index++, center.getX());
+		}
 		bind(index++, convertDistanceToMeters(circle.getRadius()));
 		return index;
 	}

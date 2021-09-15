@@ -333,6 +333,27 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void geoJsonFindWithinOrNearTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("---", "", 0);
+		customer1.setPosition(new Point( 2, 45 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("+++", "", 0);
+		customer2.setPosition(new Point( 1, 60 ));
+		toBeRetrieved.add(customer2);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer3 = new Customer("---", "", 0);
+		customer3.setPosition(new Point( 180, 0 ));
+		repository.save(customer3);
+		final double distanceInMeters = convertAngleToDistance(30);
+		final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
+		final Circle circle = new Circle(new Point(0, 20), distance);
+		final Iterable<Customer> retrieved = repository.findByPositionWithinOrNameAndPositionNear(circle, "+++",
+				new Point(0, 0));
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
 	public void findByLocationWithinBoxTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("", "", 0);
