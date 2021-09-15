@@ -36,6 +36,7 @@ public class GeoConverters {
                 GeoJsonMultiLineStringToDBDocumentEntityConverter.INSTANCE,
                 PolygonToDBDocumentEntityConverter.INSTANCE,
                 GeoJsonPolygonToDBDocumentEntityConverter.INSTANCE,
+                BoxToDBDocumentEntityConverter.INSTANCE,
 
                 // reading converters
                 DBDocumentEntityToGeoJsonConverter.INSTANCE,
@@ -141,6 +142,26 @@ public class GeoConverters {
             d.put(TYPE, source.getType());
             d.put(COORDS, lineStringsToList(source.getCoordinates()));
             return d;
+        }
+    }
+
+    @WritingConverter
+    enum BoxToDBDocumentEntityConverter implements Converter<Box, DBDocumentEntity> {
+
+        INSTANCE;
+
+        @Override
+        public DBDocumentEntity convert(Box source) {
+            Point a = source.getFirst();
+            Point b = source.getSecond();
+            Polygon p = new Polygon(
+                    new Point(a.getX(), a.getY()),
+                    new Point(a.getX(), b.getY()),
+                    new Point(b.getX(), b.getY()),
+                    new Point(b.getX(), a.getY()),
+                    new Point(a.getX(), a.getY())
+            );
+            return PolygonToDBDocumentEntityConverter.INSTANCE.convert(p);
         }
     }
 

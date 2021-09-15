@@ -130,6 +130,8 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	List<Customer> findByLocationWithin(Box box);
 
+	List<Customer> findByPositionWithin(Box box);
+
 	Collection<Customer> findByLocationWithinAndLocationWithinOrName(
 		Point location,
 		int distance,

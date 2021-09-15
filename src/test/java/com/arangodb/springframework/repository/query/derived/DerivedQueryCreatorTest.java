@@ -311,8 +311,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("", "", 0);
 		customer1.setLocation(new int[] { 10, 10 });
-		toBeRetrieved.add(customer1);
-		repository.saveAll(toBeRetrieved);
+		repository.save(customer1);
 		final Customer customer2 = new Customer("", "", 0);
 		customer2.setLocation(new int[] { 0, 0 });
 		repository.save(customer2);
@@ -337,7 +336,45 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer9 = new Customer("", "", 0);
 		customer9.setLocation(new int[] { 20, 20 });
 		repository.save(customer9);
-		final List<Customer> retrieved = repository.findByLocationWithin(new Box(new Point(5, 5), new Point(15, 15)));
+
+		toBeRetrieved.add(customer3);
+		final List<Customer> retrieved = repository.findByLocationWithin(new Box(new Point(9, -1), new Point(11, 1)));
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void findByGeoJsonPositionWithinBoxTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point( 10, 10 ));
+		repository.save(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point( 0, 0 ));
+		repository.save(customer2);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point( 10, 0 ));
+		repository.save(customer3);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point( 20, 0 ));
+		repository.save(customer4);
+		final Customer customer5 = new Customer("", "", 0);
+		customer5.setPosition(new Point( 0, 10 ));
+		repository.save(customer5);
+		final Customer customer6 = new Customer("", "", 0);
+		customer6.setPosition(new Point( 20, 10 ));
+		repository.save(customer6);
+		final Customer customer7 = new Customer("", "", 0);
+		customer7.setPosition(new Point( 0, 20 ));
+		repository.save(customer7);
+		final Customer customer8 = new Customer("", "", 0);
+		customer8.setPosition(new Point( 10, 20 ));
+		repository.save(customer8);
+		final Customer customer9 = new Customer("", "", 0);
+		customer9.setPosition(new Point( 20, 20 ));
+		repository.save(customer9);
+
+		toBeRetrieved.add(customer3);
+		final List<Customer> retrieved = repository.findByPositionWithin(new Box(new Point(9, -1), new Point(11, 1)));
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 

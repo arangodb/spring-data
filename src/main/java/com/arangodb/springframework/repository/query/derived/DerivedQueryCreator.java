@@ -511,11 +511,15 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					}
 					break;
 				} else if (clazz == Box.class) {
-					criteria = Criteria.lte(index, ignorePropertyCase(part, property) + "[0]")
-							.and(Criteria.lte(ignorePropertyCase(part, property) + "[0]", index + 1))
-							.and(Criteria.lte(index + 2, ignorePropertyCase(part, property) + "[1]"))
-							.and(Criteria.lte(ignorePropertyCase(part, property) + "[1]", index + 3));
-					bindBox(part, value);
+					if (isGeoJsonType) {
+						criteria = Criteria.geoContains(bind(part, value, null), ignorePropertyCase(part, property));
+					} else {
+						criteria = Criteria.lte(index, ignorePropertyCase(part, property) + "[0]")
+								.and(Criteria.lte(ignorePropertyCase(part, property) + "[0]", index + 1))
+								.and(Criteria.lte(index + 2, ignorePropertyCase(part, property) + "[1]"))
+								.and(Criteria.lte(ignorePropertyCase(part, property) + "[1]", index + 3));
+						bindBox(part, value);
+					}
 					break;
                 } else if (clazz == Polygon.class) {
                     if (isGeoJsonType) {
