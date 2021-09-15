@@ -75,8 +75,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private final Set<String> withCollections;
 	private final BindParameterBinding binding;
 
-	// whether the field type is a type encoded as geoJson
+	// whether the current field type is a type encoded as geoJson
 	private boolean isGeoJsonType = false;
+	// whether any query field type is a type encoded as geoJson, only considered if isUnique == true
+	private boolean hasGeoJsonType  = false;
 	private Point uniquePoint = null;
 	private String uniqueLocation = null;
 	private Boolean isUnique = null;
@@ -149,7 +151,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 				&& !tree.isExistsProjection()) {
 
 			String distanceSortKey = " SORT ";
-			if (isGeoJsonType) {
+			if (hasGeoJsonType) {
 				distanceSortKey += Criteria
 						.geoDistance(uniqueLocation, bind(getUniqueGeoJsonPoint())).getPredicate();
 			} else {
@@ -398,6 +400,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		isGeoJsonType = Point.class.isAssignableFrom(type) ||
 				Polygon.class.isAssignableFrom(type) ||
 				GeoJson.class.isAssignableFrom(type);
+		if (isGeoJsonType) {
+			hasGeoJsonType = true;
+		}
 
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:
@@ -498,12 +503,21 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					if (checkUnique) {
 						checkUniqueLocation(part);
 					}
-					criteria = Criteria
-							.lte(index + 2,
-								Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate())
-							.and(Criteria.lte(
-								Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(),
-								index + 3));
+					if (isGeoJsonType) {
+						criteria = Criteria
+								.lte(index + 1,
+										Criteria.geoDistance(ignorePropertyCase(part, property), index).getPredicate())
+								.and(Criteria.lte(
+										Criteria.geoDistance(ignorePropertyCase(part, property), index).getPredicate(),
+										index + 2));
+					} else {
+						criteria = Criteria
+								.lte(index + 2,
+										Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate())
+								.and(Criteria.lte(
+										Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(),
+										index + 3));
+					}
 					if (clazz == Range.class) {
 						bindRange(part, value);
 					} else {
@@ -533,7 +547,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 						bindCircle(part, value);
 						break;
 					} else if (clazz == Point.class) {
-						bindPoint(part, value);
+						if(isGeoJsonType) {
+							checkUniquePoint((Point) value);
+							bind(part, value, null);
+						} else {
+							bindPoint(part, value);
+						}
 					} else {
 						bind(part, value, null);
 					}

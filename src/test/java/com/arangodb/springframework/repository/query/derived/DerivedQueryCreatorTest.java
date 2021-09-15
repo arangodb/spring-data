@@ -280,8 +280,34 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(customer5);
 		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(10));
 		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
-		final List<Customer> retrieved = repository.findByLocationWithinAndName(new Point(0, 0),
-			Range.of(lowerBound, upperBound), "");
+		final List<Customer> retrieved = repository.findByLocationWithinAndName(new Point(0.11, 0.11),
+				Range.of(lowerBound, upperBound), "");
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void findWithinGeoJsonTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point( 0, 11 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point( 10, 10 ));
+		toBeRetrieved.add(customer2);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point( 50, 0 ));
+		toBeRetrieved.add(customer3);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point( 0, 0 ));
+		repository.save(customer4);
+		final Customer customer5 = new Customer("---", "", 0);
+		customer5.setPosition(new Point( 10, 10 ));
+		repository.save(customer5);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(10));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
+		final List<Customer> retrieved = repository.findByPositionWithinAndName(new Point(0.11, 0.11),
+				Range.of(lowerBound, upperBound), "");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
