@@ -521,7 +521,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					if (clazz == Range.class) {
 						bindRange(part, value);
 					} else {
-						bindRing(part, value);
+						bindRing(part, value, isGeoJsonType);
 					}
 					break;
 				} else if (clazz == Box.class) {
@@ -613,9 +613,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		bindingCounter = binding.bindRange(value, shouldIgnoreCase(part), bindingCounter);
 	}
 
-	private void bindRing(final Part part, final Object value) {
+	private void bindRing(final Part part, final Object value, final boolean toGeoJson) {
 		bindingCounter = binding.bindRing(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
-			bindingCounter);
+			bindingCounter, toGeoJson);
 	}
 
 	private void bindBox(final Part part, final Object value) {
