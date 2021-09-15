@@ -732,6 +732,31 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void geoJsonGeoPageTest() {
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point ( 0, 2 ));
+		repository.save(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point ( 0, 3 ));
+		repository.save(customer2);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point ( 0, 4 ));
+		repository.save(customer3);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point ( 0, 6 ));
+		repository.save(customer4);
+		final GeoPage<Customer> retrieved = repository.findByPositionNear(new Point(0.11, 0.11), PageRequest.of(1, 2));
+		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+		expectedGeoResults.add(new GeoResult<>(customer3,
+				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 4)) / 1000, Metrics.KILOMETERS)));
+		expectedGeoResults.add(new GeoResult<>(customer4,
+				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 6)) / 1000, Metrics.KILOMETERS)));
+		assertEquals(4, retrieved.getTotalElements());
+		assertEquals(2, retrieved.getTotalPages());
+		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, true));
+	}
+
+	@Test
 	public void buildPredicateWithDistanceTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("+", "", 0);

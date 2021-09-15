@@ -208,6 +208,8 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	GeoPage<Customer> findByLocationNear(Point location, Pageable pageable);
 
+	GeoPage<Customer> findByPositionNear(Point location, Pageable pageable);
+
 	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(
 		String name,
 		String surname,
