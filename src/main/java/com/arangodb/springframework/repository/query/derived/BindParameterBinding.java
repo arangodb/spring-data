@@ -80,12 +80,7 @@ public class BindParameterBinding {
 		int index = startIndex;
 		final Ring<?> ring = (Ring<?>) ignoreArgumentCase(value, shouldIgnoreCase);
 		final Point point = ring.getPoint();
-		if(toGeoJson) {
-			uniqueCheck.check(point);
-			bind(index++, point);
-		} else {
-			index = bindPoint(point, uniqueCheck, index);
-		}
+		index = bindPoint(point, uniqueCheck, index, toGeoJson);
 		final Range<?> range = ring.getRange();
 		index = bindRange(range, index);
 		return index;
@@ -117,15 +112,21 @@ public class BindParameterBinding {
 		final Object value,
 		final boolean shouldIgnoreCase,
 		final UniqueCheck uniqueCheck,
-		final int startIndex) {
-		return bindPoint((Point) ignoreArgumentCase(value, shouldIgnoreCase), uniqueCheck, startIndex);
+		final int startIndex,
+		final boolean toGeoJson
+	) {
+		return bindPoint((Point) ignoreArgumentCase(value, shouldIgnoreCase), uniqueCheck, startIndex, toGeoJson);
 	}
 
-	private int bindPoint(final Point point, final UniqueCheck uniqueCheck, final int startIndex) {
+	private int bindPoint(final Point point, final UniqueCheck uniqueCheck, final int startIndex, final boolean toGeoJson) {
 		uniqueCheck.check(point);
 		int index = startIndex;
-		bind(index++, point.getY());
-		bind(index++, point.getX());
+		if(toGeoJson) {
+			bind(index++, point);
+		} else {
+			bind(index++, point.getY());
+			bind(index++, point.getX());
+		}
 		return index;
 	}
 
