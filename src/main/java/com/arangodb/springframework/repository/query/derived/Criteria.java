@@ -143,6 +143,10 @@ public class Criteria {
 		return new Criteria("IS_IN_POLYGON(@" + index + ", " + property + "[0], " + property + "[1])");
 	}
 
+	public static Criteria geoContains(final int index, final String property) {
+		return new Criteria("GEO_CONTAINS(@" + index + ", " + property + ")");
+	}
+
 	@Override
 	public String toString() {
 		return predicate.toString();

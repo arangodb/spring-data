@@ -151,7 +151,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			String distanceSortKey = " SORT ";
 			if (isGeoJsonType) {
 				distanceSortKey += Criteria
-						.geoDistance(uniqueLocation, bind(uniquePoint)).getPredicate();
+						.geoDistance(uniqueLocation, bind(getUniqueGeoJsonPoint())).getPredicate();
 			} else {
 				distanceSortKey += Criteria
 						.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1])).getPredicate();
@@ -194,6 +194,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			return new double[2];
 		}
 		return new double[] { uniquePoint.getY(), uniquePoint.getX() };
+	}
+
+	public Point getUniqueGeoJsonPoint() {
+		if (uniquePoint == null) {
+			return new Point(0,0);
+		}
+		return uniquePoint;
 	}
 
 	private String ignorePropertyCase(final Part part) {
@@ -510,10 +517,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 							.and(Criteria.lte(ignorePropertyCase(part, property) + "[1]", index + 3));
 					bindBox(part, value);
 					break;
-				} else if (clazz == Polygon.class) {
-					criteria = Criteria.isInPolygon(bindPolygon(part, value), ignorePropertyCase(part, property));
-					break;
-				} else {
+                } else if (clazz == Polygon.class) {
+                    if (isGeoJsonType) {
+						criteria = Criteria.geoContains(bind(part, value, null), ignorePropertyCase(part, property));
+                    } else {
+                        criteria = Criteria.isInPolygon(bindPolygon(part, value), ignorePropertyCase(part, property));
+                    }
+                    break;
+                } else {
 					if (clazz == Circle.class) {
 						bindCircle(part, value);
 						break;

@@ -251,8 +251,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findNearGeoJsonTest() {
-		john.setPosition(new Point(2, 2 ));
-		bob.setPosition(new Point( 50, 45 ));
+		john.setPosition(new Point(2, 2));
+		bob.setPosition(new Point(45, 50));
 		repository.saveAll(customers);
 		final Customer[] retrieved = repository.findByPositionNear(new Point(51, 46));
 		final Customer[] check = { bob, john };
@@ -594,6 +594,26 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10),
 				new Point(30, 20));
 		final List<Customer> retrieved = repository.findByLocationWithin(polygon);
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void geoJsonPolygonTest() {
+		final int[][] locations = { { 11, 31 }, { 20, 20 }, { 20, 40 }, { 70, 30 }, { 40, 10 }, { -10, -10 },
+				{ -10, 20 }, { -10, 60 }, { 30, 50 }, { 10, 20 }, { 5, 30 } };
+		final Customer[] customers = new Customer[11];
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		for (int i = 0; i < customers.length; ++i) {
+			customers[i] = new Customer("", "", 0);
+			customers[i].setPosition(new Point(locations[i][1], locations[i][0]));
+			repository.save(customers[i]);
+			if (i < 3) {
+				toBeRetrieved.add(customers[i]);
+			}
+		}
+		final Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10),
+				new Point(30, 20), new Point(0, 0));
+		final List<Customer> retrieved = repository.findByPositionWithin(polygon);
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 

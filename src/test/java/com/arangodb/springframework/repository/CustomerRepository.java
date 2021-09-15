@@ -138,6 +138,8 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	List<Customer> findByLocationWithin(Polygon polygon);
 
+	List<Customer> findByPositionWithin(Polygon polygon);
+
 	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
 		String name1,
 		Point location1,
