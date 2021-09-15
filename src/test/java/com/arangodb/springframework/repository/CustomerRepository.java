@@ -137,26 +137,44 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 	List<Customer> findByPositionWithin(Box box);
 
 	Collection<Customer> findByLocationWithinAndLocationWithinOrName(
-		Point location,
-		int distance,
-		Ring<?> ring,
-		String name);
+			Point location,
+			int distance,
+			Ring<?> ring,
+			String name);
+
+	Collection<Customer> findByPositionWithinAndPositionWithinOrName(
+			Point location,
+			int distance,
+			Ring<?> ring,
+			String name);
 
 	List<Customer> findByLocationWithin(Polygon polygon);
 
 	List<Customer> findByPositionWithin(Polygon polygon);
 
 	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
-		String name1,
-		Point location1,
-		double distance,
-		String name2,
-		String surname1,
-		String name3,
-		Point location2,
-		String surname2,
-		Point location3,
-		Range<Double> distanceRange);
+			String name1,
+			Point location1,
+			double distance,
+			String name2,
+			String surname1,
+			String name3,
+			Point location2,
+			String surname2,
+			Point location3,
+			Range<Double> distanceRange);
+
+	List<Customer> findByNameOrPositionWithinOrNameAndSurnameOrNameAndPositionNearAndSurnameAndPositionWithin(
+			String name1,
+			Point location1,
+			double distance,
+			String name2,
+			String surname1,
+			String name3,
+			Point location2,
+			String surname2,
+			Point location3,
+			Range<Double> distanceRange);
 
 	// EXISTS
 

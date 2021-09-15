@@ -453,6 +453,33 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void geoJsonFindWithinAndWithinTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("+++", "", 0);
+		customer1.setPosition(new Point ( 0, 80 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("vvv", "", 0);
+		customer2.setPosition(new Point ( 0, 10 ));
+		toBeRetrieved.add(customer2);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer3 = new Customer("--d", "", 0);
+		customer3.setPosition(new Point ( 0, 19 ));
+		repository.save(customer3);
+		final Customer customer4 = new Customer("--r", "", 0);
+		customer4.setPosition(new Point ( 0, 6 ));
+		repository.save(customer4);
+		final Customer customer5 = new Customer("-!r", "", 0);
+		customer5.setPosition(new Point ( 0, 0 ));
+		repository.save(customer5);
+		final int distance = (int) convertAngleToDistance(11);
+		final Bound<Integer> lowerBound = Bound.inclusive((int) convertAngleToDistance(5));
+		final Bound<Integer> upperBound = Bound.inclusive((int) convertAngleToDistance(15));
+		final Collection<Customer> retrieved = repository.findByPositionWithinAndPositionWithinOrName(new Point(0, 20),
+				distance, new Ring<>(new Point(0, 0), Range.of(lowerBound, upperBound)), "+++");
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
 	public void findByMultipleLocationsAndMultipleRegularFieldsTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("John", "", 0);
@@ -491,6 +518,48 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				.findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin("John",
 					new Point(0, 0), distance, "Peter", "Pen", "Jack", new Point(47, 63), "Sparrow", new Point(10, 60),
 					distanceRange);
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void geoJsonFindByMultipleLocationsAndMultipleRegularFieldsTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("John", "", 0);
+		customer1.setPosition(new Point ( 0, 89 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("Bob", "", 0);
+		customer2.setPosition(new Point ( 5, 0 ));
+		toBeRetrieved.add(customer2);
+		final Customer customer3 = new Customer("Peter", "Pen", 0);
+		customer3.setPosition(new Point ( 89, 0 ));
+		toBeRetrieved.add(customer3);
+		final Customer customer4 = new Customer("Jack", "Sparrow", 0);
+		customer4.setPosition(new Point ( 20, 70 ));
+		toBeRetrieved.add(customer4);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer5 = new Customer("Peter", "The Great", 0);
+		customer5.setPosition(new Point ( 89, 0 ));
+		repository.save(customer5);
+		final Customer customer6 = new Customer("Ballpoint", "Pen", 0);
+		customer6.setPosition(new Point ( 89, 0 ));
+		repository.save(customer6);
+		final Customer customer7 = new Customer("Jack", "Reacher", 0);
+		customer7.setPosition(new Point ( 20, 70 ));
+		repository.save(customer7);
+		final Customer customer8 = new Customer("Jack", "Sparrow", 0);
+		customer8.setPosition(new Point ( 65, 15 ));
+		repository.save(customer8);
+		final Customer customer9 = new Customer("Jack", "Sparrow", 0);
+		customer9.setPosition(new Point ( 75, 25 ));
+		repository.save(customer9);
+		final double distance = convertAngleToDistance(10);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(10));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(20));
+		final Range<Double> distanceRange = Range.of(lowerBound, upperBound);
+		final List<Customer> retrieved = repository
+				.findByNameOrPositionWithinOrNameAndSurnameOrNameAndPositionNearAndSurnameAndPositionWithin("John",
+						new Point(0, 0), distance, "Peter", "Pen", "Jack", new Point(47, 63), "Sparrow", new Point(10, 60),
+						distanceRange);
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
