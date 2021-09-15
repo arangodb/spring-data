@@ -75,8 +75,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private final Set<String> withCollections;
 	private final BindParameterBinding binding;
 
-	// whether the current field type is a type encoded as geoJson
-	private boolean isGeoJsonType = false;
 	// whether any query field type is a type encoded as geoJson, only considered if isUnique == true
 	private boolean hasGeoJsonType  = false;
 	private Point uniquePoint = null;
@@ -402,7 +400,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		Criteria criteria = null;
 		final boolean checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
 		Class<?> type = part.getProperty().getType();
-		isGeoJsonType = Point.class.isAssignableFrom(type) ||
+
+		// whether the current field type is a type encoded as geoJson
+		final boolean isGeoJsonType = Point.class.isAssignableFrom(type) ||
 				Polygon.class.isAssignableFrom(type) ||
 				GeoJson.class.isAssignableFrom(type);
 		if (isGeoJsonType) {
@@ -503,8 +503,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			final int index = bindingCounter;
 			for (int i = 0; iterator.hasNext() && i < 2; i++) {
 				final Object value = iterator.next();
-				final Class<? extends Object> clazz = value.getClass();
-				if (clazz == Range.class || clazz == Ring.class) {
+				if (value instanceof Range || value instanceof Ring) {
 					if (checkUnique) {
 						checkUniqueLocation(part);
 					}
@@ -523,13 +522,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 										Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(),
 										index + 3));
 					}
-					if (clazz == Range.class) {
+					if (value instanceof Range) {
 						bindRange(part, value);
 					} else {
 						bindRing(part, value, isGeoJsonType);
 					}
 					break;
-				} else if (clazz == Box.class) {
+				} else if (value instanceof Box) {
 					if (isGeoJsonType) {
 						criteria = Criteria.geoContains(bind(part, value, null), ignorePropertyCase(part, property));
 					} else {
@@ -540,7 +539,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 						bindBox(part, value);
 					}
 					break;
-                } else if (clazz == Polygon.class) {
+                } else if (value instanceof Polygon) {
                     if (isGeoJsonType) {
 						criteria = Criteria.geoContains(bind(part, value, null), ignorePropertyCase(part, property));
                     } else {
@@ -548,10 +547,10 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
                     }
                     break;
                 } else {
-					if (clazz == Circle.class) {
+					if (value instanceof Circle) {
 						bindCircle(part, value, isGeoJsonType);
 						break;
-					} else if (clazz == Point.class) {
+					} else if (value instanceof Point) {
 						bindPoint(part, value, isGeoJsonType);
 					} else {
 						bind(part, value, null);
