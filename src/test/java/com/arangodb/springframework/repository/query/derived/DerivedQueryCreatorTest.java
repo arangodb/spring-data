@@ -669,7 +669,35 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(30));
 		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
 		final GeoResults<Customer> retrieved = repository.findByLocationWithin(new Point(1, 0),
-			Range.of(lowerBound, upperBound));
+				Range.of(lowerBound, upperBound));
+		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+		expectedGeoResults.add(new GeoResult<>(customer1,
+				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(21, 43)) / 1000, Metrics.KILOMETERS)));
+		expectedGeoResults.add(new GeoResult<>(customer2,
+				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(43, 21)) / 1000, Metrics.KILOMETERS)));
+		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+	}
+
+	@Test
+	public void geoJsonGeoResultsTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point ( 21, 43 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point ( 43, 21 ));
+		toBeRetrieved.add(customer2);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point ( 50, 70 ));
+		repository.save(customer3);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point ( 2, 3 ));
+		repository.save(customer4);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(30));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
+		final GeoResults<Customer> retrieved = repository.findByPositionWithin(new Point(1, 0),
+				Range.of(lowerBound, upperBound));
 		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
 		expectedGeoResults.add(new GeoResult<>(customer1,
 				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(21, 43)) / 1000, Metrics.KILOMETERS)));
