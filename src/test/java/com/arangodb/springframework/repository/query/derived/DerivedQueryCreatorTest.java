@@ -794,6 +794,43 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void geoJsonBuildPredicateWithDistanceTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("+", "", 0);
+		customer1.setPosition(new Point ( 89, 89 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("", "+", 0);
+		customer2.setPosition(new Point ( 0, 5 ));
+		toBeRetrieved.add(customer2);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point ( 25, 0 ));
+		toBeRetrieved.add(customer3);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point ( 0, 15 ));
+		repository.save(customer4);
+		final Customer customer5 = new Customer("", "", 0);
+		customer5.setPosition(new Point ( 35, 0 ));
+		repository.save(customer5);
+		final double distanceInMeters = convertAngleToDistance(10);
+		final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
+		final Range<Distance> distanceRange = Range.of(
+				Bound.inclusive(new Distance(convertAngleToDistance(20) / 1000, Metrics.KILOMETERS)),
+				Bound.inclusive(new Distance(convertAngleToDistance(30) / 1000, Metrics.KILOMETERS)));
+		final Point location = new Point(0.11, 0.11);
+		final GeoResults<Customer> retrieved = repository.findByNameOrSurnameAndPositionWithinOrPositionWithin("+", "+",
+				location, distance, location, distanceRange);
+		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+		expectedGeoResults.add(new GeoResult<>(customer1,
+				new Distance(getDistanceBetweenPoints(location, new Point(89, 89)) / 1000, Metrics.KILOMETERS)));
+		expectedGeoResults.add(new GeoResult<>(customer2,
+				new Distance(getDistanceBetweenPoints(location, new Point(0, 5)) / 1000, Metrics.KILOMETERS)));
+		expectedGeoResults.add(new GeoResult<>(customer3,
+				new Distance(getDistanceBetweenPoints(location, new Point(25, 0)) / 1000, Metrics.KILOMETERS)));
+		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+	}
+
+	@Test
 	public void existsTest() {
 		repository.save(john);
 		assertTrue(repository.existsByName("John"));

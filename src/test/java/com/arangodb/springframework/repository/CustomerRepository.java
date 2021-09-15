@@ -211,12 +211,20 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 	GeoPage<Customer> findByPositionNear(Point location, Pageable pageable);
 
 	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(
-		String name,
-		String surname,
-		Point location1,
-		Distance distance,
-		Point location2,
-		Range<Distance> distanceRange);
+			String name,
+			String surname,
+			Point location1,
+			Distance distance,
+			Point location2,
+			Range<Distance> distanceRange);
+
+	GeoResults<Customer> findByNameOrSurnameAndPositionWithinOrPositionWithin(
+			String name,
+			String surname,
+			Point location1,
+			Distance distance,
+			Point location2,
+			Range<Distance> distanceRange);
 
 	// NESTED PROPERTIES
 
