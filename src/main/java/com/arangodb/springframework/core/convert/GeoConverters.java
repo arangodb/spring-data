@@ -24,6 +24,7 @@ public class GeoConverters {
         toGeoJsonConverters.put("LineString", DBDocumentEntityToGeoJsonLineStringConverter.INSTANCE::convert);
         toGeoJsonConverters.put("MultiLineString", DBDocumentEntityToGeoJsonMultiLineStringConverter.INSTANCE::convert);
         toGeoJsonConverters.put("Polygon", DBDocumentEntityToGeoJsonPolygonConverter.INSTANCE::convert);
+        toGeoJsonConverters.put("MultiPolygon", DBDocumentEntityToGeoJsonMultiPolygonConverter.INSTANCE::convert);
     }
 
     public static Collection<Converter<?, ?>> getConvertersToRegister() {
@@ -36,6 +37,7 @@ public class GeoConverters {
                 GeoJsonMultiLineStringToDBDocumentEntityConverter.INSTANCE,
                 PolygonToDBDocumentEntityConverter.INSTANCE,
                 GeoJsonPolygonToDBDocumentEntityConverter.INSTANCE,
+                GeoJsonMultiPolygonToDBDocumentEntityConverter.INSTANCE,
                 BoxToDBDocumentEntityConverter.INSTANCE,
 
                 // reading converters
@@ -46,7 +48,8 @@ public class GeoConverters {
                 DBDocumentEntityToGeoJsonLineStringConverter.INSTANCE,
                 DBDocumentEntityToGeoJsonMultiLineStringConverter.INSTANCE,
                 DBDocumentEntityToPolygonConverter.INSTANCE,
-                DBDocumentEntityToGeoJsonPolygonConverter.INSTANCE
+                DBDocumentEntityToGeoJsonPolygonConverter.INSTANCE,
+                DBDocumentEntityToGeoJsonMultiPolygonConverter.INSTANCE
         );
     }
 
@@ -141,6 +144,20 @@ public class GeoConverters {
             DBDocumentEntity d = new DBDocumentEntity();
             d.put(TYPE, source.getType());
             d.put(COORDS, lineStringsToList(source.getCoordinates()));
+            return d;
+        }
+    }
+
+    @WritingConverter
+    enum GeoJsonMultiPolygonToDBDocumentEntityConverter implements Converter<GeoJsonMultiPolygon, DBDocumentEntity> {
+
+        INSTANCE;
+
+        @Override
+        public DBDocumentEntity convert(GeoJsonMultiPolygon source) {
+            DBDocumentEntity d = new DBDocumentEntity();
+            d.put(TYPE, source.getType());
+            d.put(COORDS, polygonsToList(source.getCoordinates()));
             return d;
         }
     }
@@ -263,16 +280,30 @@ public class GeoConverters {
         @SuppressWarnings("unchecked")
         public GeoJsonPolygon convert(DBDocumentEntity source) {
             Assert.isTrue("Polygon".equals(source.get(TYPE)), "source type must be 'Polygon'");
-            Iterable<Iterable<Iterable<Number>>> coords = (Iterable<Iterable<Iterable<Number>>>) source.get(COORDS);
-            Iterator<Iterable<Iterable<Number>>> it = coords.iterator();
-            GeoJsonPolygon p = new GeoJsonPolygon(toListOfPoints(it.next()));
-            while (it.hasNext()){
-                p = p.withInnerRing(toListOfPoints(it.next()));
-            }
-            return p;
+            return toPolygon((Iterable<Iterable<Iterable<Number>>>) source.get(COORDS));
         }
     }
 
+    @ReadingConverter
+    enum DBDocumentEntityToGeoJsonMultiPolygonConverter implements Converter<DBDocumentEntity, GeoJsonMultiPolygon> {
+
+        INSTANCE;
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public GeoJsonMultiPolygon convert(DBDocumentEntity source) {
+            Assert.isTrue("MultiPolygon".equals(source.get(TYPE)), "source type must be 'MultiPolygon'");
+            Iterable<Iterable<Iterable<Iterable<Number>>>> coords =
+                    (Iterable<Iterable<Iterable<Iterable<Number>>>>) source.get(COORDS);
+            Iterator<Iterable<Iterable<Iterable<Number>>>> it = coords.iterator();
+
+            List<GeoJsonPolygon> polygons = new ArrayList<>();
+            while (it.hasNext()) {
+                polygons.add(toPolygon(it.next()));
+            }
+            return new GeoJsonMultiPolygon(polygons);
+        }
+    }
 
     private static List<Double> pointToList(Point point) {
         return Arrays.asList(point.getX(), point.getY());
@@ -290,6 +321,14 @@ public class GeoConverters {
         List<List<List<Double>>> l = new ArrayList<>();
         for (GeoJsonLineString ls : lineStrings) {
             l.add(pointsToList(ls.getCoordinates()));
+        }
+        return l;
+    }
+
+    private static List<List<List<List<Double>>>> polygonsToList(Iterable<GeoJsonPolygon> polygons) {
+        List<List<List<List<Double>>>> l = new ArrayList<>();
+        for (GeoJsonPolygon p : polygons) {
+            l.add(lineStringsToList(p.getCoordinates()));
         }
         return l;
     }
@@ -315,6 +354,15 @@ public class GeoConverters {
             lineStrings.add(new GeoJsonLineString(toListOfPoints(c)));
         }
         return lineStrings;
+    }
+
+    private static GeoJsonPolygon toPolygon(Iterable<Iterable<Iterable<Number>>> coords){
+        Iterator<Iterable<Iterable<Number>>> it = coords.iterator();
+        GeoJsonPolygon p = new GeoJsonPolygon(toListOfPoints(it.next()));
+        while (it.hasNext()){
+            p = p.withInnerRing(toListOfPoints(it.next()));
+        }
+        return p;
     }
 
 }

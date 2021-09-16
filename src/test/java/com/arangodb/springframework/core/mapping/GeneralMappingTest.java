@@ -173,7 +173,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
         private GeoJsonMultiLineString geoJsonMultiLineString;
         private Polygon polygon;
         private GeoJsonPolygon geoJsonPolygon;
-
+        private GeoJsonMultiPolygon geoJsonMultiPolygon;
     }
 
     @Test
@@ -215,6 +215,23 @@ public class GeneralMappingTest extends AbstractArangoTest {
                 new Point(0.1, 0.2),
                 new Point(0.3, 0.4),
                 new Point(0.5, 0.6)
+        ));
+
+        entity.geoJsonMultiPolygon = new GeoJsonMultiPolygon(Arrays.asList(
+                new GeoJsonPolygon(Arrays.asList(
+                        new Point(10.1, 10.2),
+                        new Point(10.3, 10.4),
+                        new Point(10.5, 10.6)
+                )),
+                new GeoJsonPolygon(Arrays.asList(
+                        new Point(1.1, 1.2),
+                        new Point(1.3, 1.4),
+                        new Point(1.5, 1.6)
+                )).withInnerRing(Arrays.asList(
+                        new Point(0.1, 0.2),
+                        new Point(0.3, 0.4),
+                        new Point(0.5, 0.6)
+                ))
         ));
 
         VPackSlice written = converter.write(entity);
@@ -268,6 +285,19 @@ public class GeneralMappingTest extends AbstractArangoTest {
                         "[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]" +
                         "] }",
                 json.getJSONObject("geoJsonPolygon"),
+                false);
+        assertThat(read.geoJsonMultiPolygon, is(entity.geoJsonMultiPolygon));
+        JSONAssert.assertEquals(
+                "{ type: MultiPolygon, coordinates: [" +
+                        "   [" +
+                        "      [[1.1, 1.2], [1.3, 1.4], [1.5, 1.6]], " +
+                        "      [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]" +
+                        "   ]," +
+                        "   [" +
+                        "      [[10.1, 10.2], [10.3, 10.4], [10.5, 10.6]] " +
+                        "   ]" +
+                        "] }",
+                json.getJSONObject("geoJsonMultiPolygon"),
                 false);
     }
 
