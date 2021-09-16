@@ -122,31 +122,59 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	Customer[] findByLocationNear(Point location);
 
+	Customer[] findByPositionNear(Point location);
+
 	List<Customer> findByLocationWithinAndName(Point location, Range<Double> distanceRange, String name);
+
+	List<Customer> findByPositionWithinAndName(Point location, Range<Double> distanceRange, String name);
 
 	Iterable<Customer> findByLocationWithinOrNameAndLocationNear(Circle circle, String name, Point location2);
 
+	Iterable<Customer> findByPositionWithinOrNameAndPositionNear(Circle circle, String name, Point location2);
+
 	List<Customer> findByLocationWithin(Box box);
 
+	List<Customer> findByPositionWithin(Box box);
+
 	Collection<Customer> findByLocationWithinAndLocationWithinOrName(
-		Point location,
-		int distance,
-		Ring<?> ring,
-		String name);
+			Point location,
+			int distance,
+			Ring<?> ring,
+			String name);
+
+	Collection<Customer> findByPositionWithinAndPositionWithinOrName(
+			Point location,
+			int distance,
+			Ring<?> ring,
+			String name);
 
 	List<Customer> findByLocationWithin(Polygon polygon);
 
+	List<Customer> findByPositionWithin(Polygon polygon);
+
 	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
-		String name1,
-		Point location1,
-		double distance,
-		String name2,
-		String surname1,
-		String name3,
-		Point location2,
-		String surname2,
-		Point location3,
-		Range<Double> distanceRange);
+			String name1,
+			Point location1,
+			double distance,
+			String name2,
+			String surname1,
+			String name3,
+			Point location2,
+			String surname2,
+			Point location3,
+			Range<Double> distanceRange);
+
+	List<Customer> findByNameOrPositionWithinOrNameAndSurnameOrNameAndPositionNearAndSurnameAndPositionWithin(
+			String name1,
+			Point location1,
+			double distance,
+			String name2,
+			String surname1,
+			String name3,
+			Point location2,
+			String surname2,
+			Point location3,
+			Range<Double> distanceRange);
 
 	// EXISTS
 
@@ -172,17 +200,31 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	GeoResult<Customer> queryByLocationWithin(Point location, double distance);
 
+	GeoResult<Customer> queryByPositionWithin(Point location, double distance);
+
 	GeoResults<Customer> findByLocationWithin(Point location, Range<Double> distanceRange);
+
+	GeoResults<Customer> findByPositionWithin(Point location, Range<Double> distanceRange);
 
 	GeoPage<Customer> findByLocationNear(Point location, Pageable pageable);
 
+	GeoPage<Customer> findByPositionNear(Point location, Pageable pageable);
+
 	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(
-		String name,
-		String surname,
-		Point location1,
-		Distance distance,
-		Point location2,
-		Range<Distance> distanceRange);
+			String name,
+			String surname,
+			Point location1,
+			Distance distance,
+			Point location2,
+			Range<Distance> distanceRange);
+
+	GeoResults<Customer> findByNameOrSurnameAndPositionWithinOrPositionWithin(
+			String name,
+			String surname,
+			Point location1,
+			Distance distance,
+			Point location2,
+			Range<Distance> distanceRange);
 
 	// NESTED PROPERTIES
 

@@ -41,6 +41,7 @@ import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.SkiplistIndexes;
 import com.arangodb.springframework.annotation.TtlIndex;
 import com.arangodb.springframework.annotation.TtlIndexed;
+import com.arangodb.springframework.core.geo.GeoJsonPoint;
 import org.junit.Test;
 import org.springframework.data.mapping.MappingException;
 
@@ -350,11 +351,27 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	public void singleFieldGeoIndexed() {
 		assertThat(template.collection(GeoIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
 		assertThat(template.collection(GeoIndexedSingleFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, geo1()));
+						.map(i -> i.getType()).collect(Collectors.toList()),
+				hasItems(IndexType.primary, geo1()));
 		assertThat(template.collection(GeoIndexedSingleFieldTestEntity.class).getIndexes().stream()
-				.filter(i -> i.getType() == geo1()).findFirst().get().getFields(),
-			hasItems("a"));
+						.filter(i -> i.getType() == geo1()).findFirst().get().getFields(),
+				hasItems("a"));
+	}
+
+	public static class GeoIndexedGeoJsonFieldTestEntity {
+		@GeoIndexed(geoJson = true)
+		private GeoJsonPoint a;
+	}
+
+	@Test
+	public void geoJsonFieldGeoIndexed() {
+		assertThat(template.collection(GeoIndexedGeoJsonFieldTestEntity.class).getIndexes().size(), is(2));
+		assertThat(template.collection(GeoIndexedGeoJsonFieldTestEntity.class).getIndexes().stream()
+						.map(i -> i.getType()).collect(Collectors.toList()),
+				hasItems(IndexType.primary, geo1()));
+		assertThat(template.collection(GeoIndexedGeoJsonFieldTestEntity.class).getIndexes().stream()
+						.filter(i -> i.getType() == geo1()).findFirst().get().getFields(),
+				hasItems("a"));
 	}
 
 	public static class GeoIndexedMultipleSingleFieldTestEntity {

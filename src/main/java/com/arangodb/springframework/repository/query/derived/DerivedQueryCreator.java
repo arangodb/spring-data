@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.core.geo.GeoJson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -74,6 +75,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private final Set<String> withCollections;
 	private final BindParameterBinding binding;
 
+	// whether any query field type is a type encoded as geoJson, only considered if isUnique == true
+	private boolean hasGeoJsonType  = false;
 	private Point uniquePoint = null;
 	private String uniqueLocation = null;
 	private Boolean isUnique = null;
@@ -145,8 +148,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
 
-			final String distanceSortKey = " SORT " + Criteria
-					.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1])).getPredicate();
+			String distanceSortKey = " SORT ";
+			if (hasGeoJsonType) {
+				distanceSortKey += Criteria
+						.geoDistance(uniqueLocation, bind(getUniqueGeoJsonPoint())).getPredicate();
+			} else {
+				distanceSortKey += Criteria
+						.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1])).getPredicate();
+			}
 			if (sort.isUnsorted()) {
 				sortString = distanceSortKey;
 			} else {
@@ -172,9 +181,14 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			if (this.geoFields.isEmpty()) {
 				query.append("e");
 			} else {
-				query.append(format("MERGE(e, { '_distance': %s })",
-					Criteria.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1]))
-							.getPredicate()));
+				if (hasGeoJsonType) {
+					query.append(format("MERGE(e, { '_distance': %s })",
+							Criteria.geoDistance(uniqueLocation, bind(getUniqueGeoJsonPoint())).getPredicate()));
+				} else {
+					query.append(format("MERGE(e, { '_distance': %s })",
+							Criteria.distance(uniqueLocation, bind(getUniquePoint()[0]), bind(getUniquePoint()[1]))
+									.getPredicate()));
+				}
 			}
 		}
 		return query.toString();
@@ -185,6 +199,13 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			return new double[2];
 		}
 		return new double[] { uniquePoint.getY(), uniquePoint.getX() };
+	}
+
+	public Point getUniqueGeoJsonPoint() {
+		if (uniquePoint == null) {
+			return new Point(0,0);
+		}
+		return uniquePoint;
 	}
 
 	private String ignorePropertyCase(final Part part) {
@@ -352,8 +373,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(uniquePoint == null || uniquePoint.equals(point),
 				"Different Points are used - Distance is ambiguous");
-			uniquePoint = point;
 		}
+		uniquePoint = point;
 	}
 
 	/**
@@ -378,6 +399,16 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		final String property = templateAndProperty[1];
 		Criteria criteria = null;
 		final boolean checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
+		Class<?> type = part.getProperty().getType();
+
+		// whether the current field type is a type encoded as geoJson
+		final boolean isGeoJsonType = Point.class.isAssignableFrom(type) ||
+				Polygon.class.isAssignableFrom(type) ||
+				GeoJson.class.isAssignableFrom(type);
+		if (isGeoJsonType) {
+			hasGeoJsonType = true;
+		}
+
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:
 			criteria = Criteria.eql(ignorePropertyCase(part, property), bind(part, iterator));
@@ -457,10 +488,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			}
 			Assert.isTrue(iterator.hasNext(), "Too few arguments passed");
 			final Object nearValue = iterator.next();
-			final Class<? extends Object> nearClazz = nearValue.getClass();
-			if (nearClazz != Point.class) {
+			if (nearValue instanceof Point) {
+				checkUniquePoint((Point) nearValue);
+			} else {
 				bindingCounter = binding.bind(nearValue, shouldIgnoreCase(part), null, point -> checkUniquePoint(point),
-					bindingCounter);
+						bindingCounter);
 			}
 			criteria = null;
 			break;
@@ -471,47 +503,68 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			final int index = bindingCounter;
 			for (int i = 0; iterator.hasNext() && i < 2; i++) {
 				final Object value = iterator.next();
-				final Class<? extends Object> clazz = value.getClass();
-				if (clazz == Range.class || clazz == Ring.class) {
+				if (value instanceof Range || value instanceof Ring) {
 					if (checkUnique) {
 						checkUniqueLocation(part);
 					}
-					criteria = Criteria
-							.lte(index + 2,
-								Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate())
-							.and(Criteria.lte(
-								Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(),
-								index + 3));
-					if (clazz == Range.class) {
+					if (isGeoJsonType) {
+						criteria = Criteria
+								.lte(index + 1,
+										Criteria.geoDistance(ignorePropertyCase(part, property), index).getPredicate())
+								.and(Criteria.lte(
+										Criteria.geoDistance(ignorePropertyCase(part, property), index).getPredicate(),
+										index + 2));
+					} else {
+						criteria = Criteria
+								.lte(index + 2,
+										Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate())
+								.and(Criteria.lte(
+										Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(),
+										index + 3));
+					}
+					if (value instanceof Range) {
 						bindRange(part, value);
 					} else {
-						bindRing(part, value);
+						bindRing(part, value, isGeoJsonType);
 					}
 					break;
-				} else if (clazz == Box.class) {
-					criteria = Criteria.lte(index, ignorePropertyCase(part, property) + "[0]")
-							.and(Criteria.lte(ignorePropertyCase(part, property) + "[0]", index + 1))
-							.and(Criteria.lte(index + 2, ignorePropertyCase(part, property) + "[1]"))
-							.and(Criteria.lte(ignorePropertyCase(part, property) + "[1]", index + 3));
-					bindBox(part, value);
+				} else if (value instanceof Box) {
+					if (isGeoJsonType) {
+						criteria = Criteria.geoContains(bind(part, value, null), ignorePropertyCase(part, property));
+					} else {
+						criteria = Criteria.lte(index, ignorePropertyCase(part, property) + "[0]")
+								.and(Criteria.lte(ignorePropertyCase(part, property) + "[0]", index + 1))
+								.and(Criteria.lte(index + 2, ignorePropertyCase(part, property) + "[1]"))
+								.and(Criteria.lte(ignorePropertyCase(part, property) + "[1]", index + 3));
+						bindBox(part, value);
+					}
 					break;
-				} else if (clazz == Polygon.class) {
-					criteria = Criteria.isInPolygon(bindPolygon(part, value), ignorePropertyCase(part, property));
-					break;
-				} else {
-					if (clazz == Circle.class) {
-						bindCircle(part, value);
+                } else if (value instanceof Polygon) {
+                    if (isGeoJsonType) {
+						criteria = Criteria.geoContains(bind(part, value, null), ignorePropertyCase(part, property));
+                    } else {
+                        criteria = Criteria.isInPolygon(bindPolygon(part, value), ignorePropertyCase(part, property));
+                    }
+                    break;
+                } else {
+					if (value instanceof Circle) {
+						bindCircle(part, value, isGeoJsonType);
 						break;
-					} else if (clazz == Point.class) {
-						bindPoint(part, value);
+					} else if (value instanceof Point) {
+						bindPoint(part, value, isGeoJsonType);
 					} else {
 						bind(part, value, null);
 					}
 				}
 			}
 			if (criteria == null) {
-				criteria = Criteria.lte(
-					Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(), index + 2);
+				if(isGeoJsonType) {
+					criteria = Criteria.lte(
+							Criteria.geoDistance(ignorePropertyCase(part, property), index).getPredicate(), index + 1);
+				} else {
+					criteria = Criteria.lte(
+							Criteria.distance(ignorePropertyCase(part, property), index, index + 1).getPredicate(), index + 2);
+				}
 			}
 			break;
 		default:
@@ -545,23 +598,23 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		return index;
 	}
 
-	private void bindPoint(final Part part, final Object value) {
+	private void bindPoint(final Part part, final Object value, final boolean toGeoJson) {
 		bindingCounter = binding.bindPoint(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
-			bindingCounter);
+			bindingCounter, toGeoJson);
 	}
 
-	private void bindCircle(final Part part, final Object value) {
+	private void bindCircle(final Part part, final Object value, final boolean toGeoJson) {
 		bindingCounter = binding.bindCircle(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
-			bindingCounter);
+			bindingCounter, toGeoJson);
 	}
 
 	private void bindRange(final Part part, final Object value) {
 		bindingCounter = binding.bindRange(value, shouldIgnoreCase(part), bindingCounter);
 	}
 
-	private void bindRing(final Part part, final Object value) {
+	private void bindRing(final Part part, final Object value, final boolean toGeoJson) {
 		bindingCounter = binding.bindRing(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
-			bindingCounter);
+			bindingCounter, toGeoJson);
 	}
 
 	private void bindBox(final Part part, final Object value) {

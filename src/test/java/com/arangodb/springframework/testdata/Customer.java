@@ -30,6 +30,7 @@ import com.arangodb.springframework.annotation.GeoIndexed;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
+import org.springframework.data.geo.Point;
 
 /**
  * @author Mark Vollmary
@@ -52,6 +53,8 @@ public class Customer {
 	private boolean alive;
 	@GeoIndexed
 	private int[] location;
+	@GeoIndexed(geoJson = true)
+	private Point position;
 	private Iterable<Integer> integerList;
 	private String[] stringArray;
 	private Iterable<String> stringList;
@@ -188,6 +191,14 @@ public class Customer {
 
 	public void setLocation(final int[] location) {
 		this.location = location;
+	}
+
+	public Point getPosition() {
+		return position;
+	}
+
+	public void setPosition(Point position) {
+		this.position = position;
 	}
 
 	public Iterable<Integer> getIntegerList() {

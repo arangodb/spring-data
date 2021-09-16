@@ -244,8 +244,18 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		john.setLocation(new int[] { 2, 2 });
 		bob.setLocation(new int[] { 50, 45 });
 		repository.saveAll(customers);
-		final Customer[] retrieved = repository.findByLocationNear(new Point(10, 20));
-		final Customer[] check = { john, bob };
+		final Customer[] retrieved = repository.findByLocationNear(new Point(51, 46));
+		final Customer[] check = { bob, john };
+		assertTrue(equals(check, retrieved, cmp, eq, true));
+	}
+
+	@Test
+	public void findNearGeoJsonTest() {
+		john.setPosition(new Point(2, 2));
+		bob.setPosition(new Point(45, 50));
+		repository.saveAll(customers);
+		final Customer[] retrieved = repository.findByPositionNear(new Point(51, 46));
+		final Customer[] check = { bob, john };
 		assertTrue(equals(check, retrieved, cmp, eq, true));
 	}
 
@@ -270,8 +280,34 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(customer5);
 		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(10));
 		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
-		final List<Customer> retrieved = repository.findByLocationWithinAndName(new Point(0, 0),
-			Range.of(lowerBound, upperBound), "");
+		final List<Customer> retrieved = repository.findByLocationWithinAndName(new Point(0.11, 0.11),
+				Range.of(lowerBound, upperBound), "");
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void findWithinGeoJsonTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point( 0, 11 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point( 10, 10 ));
+		toBeRetrieved.add(customer2);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point( 50, 0 ));
+		toBeRetrieved.add(customer3);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point( 0, 0 ));
+		repository.save(customer4);
+		final Customer customer5 = new Customer("---", "", 0);
+		customer5.setPosition(new Point( 10, 10 ));
+		repository.save(customer5);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(10));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
+		final List<Customer> retrieved = repository.findByPositionWithinAndName(new Point(0.11, 0.11),
+				Range.of(lowerBound, upperBound), "");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
@@ -297,12 +333,32 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void geoJsonFindWithinOrNearTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("---", "", 0);
+		customer1.setPosition(new Point( 2, 45 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("+++", "", 0);
+		customer2.setPosition(new Point( 1, 60 ));
+		toBeRetrieved.add(customer2);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer3 = new Customer("---", "", 0);
+		customer3.setPosition(new Point( 180, 0 ));
+		repository.save(customer3);
+		final double distanceInMeters = convertAngleToDistance(30);
+		final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
+		final Circle circle = new Circle(new Point(0, 20), distance);
+		final Iterable<Customer> retrieved = repository.findByPositionWithinOrNameAndPositionNear(circle, "+++",
+				new Point(0, 0));
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
 	public void findByLocationWithinBoxTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("", "", 0);
 		customer1.setLocation(new int[] { 10, 10 });
-		toBeRetrieved.add(customer1);
-		repository.saveAll(toBeRetrieved);
+		repository.save(customer1);
 		final Customer customer2 = new Customer("", "", 0);
 		customer2.setLocation(new int[] { 0, 0 });
 		repository.save(customer2);
@@ -327,7 +383,45 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer customer9 = new Customer("", "", 0);
 		customer9.setLocation(new int[] { 20, 20 });
 		repository.save(customer9);
-		final List<Customer> retrieved = repository.findByLocationWithin(new Box(new Point(5, 5), new Point(15, 15)));
+
+		toBeRetrieved.add(customer3);
+		final List<Customer> retrieved = repository.findByLocationWithin(new Box(new Point(9, -1), new Point(11, 1)));
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void findByGeoJsonPositionWithinBoxTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point( 10, 10 ));
+		repository.save(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point( 0, 0 ));
+		repository.save(customer2);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point( 10, 0 ));
+		repository.save(customer3);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point( 20, 0 ));
+		repository.save(customer4);
+		final Customer customer5 = new Customer("", "", 0);
+		customer5.setPosition(new Point( 0, 10 ));
+		repository.save(customer5);
+		final Customer customer6 = new Customer("", "", 0);
+		customer6.setPosition(new Point( 20, 10 ));
+		repository.save(customer6);
+		final Customer customer7 = new Customer("", "", 0);
+		customer7.setPosition(new Point( 0, 20 ));
+		repository.save(customer7);
+		final Customer customer8 = new Customer("", "", 0);
+		customer8.setPosition(new Point( 10, 20 ));
+		repository.save(customer8);
+		final Customer customer9 = new Customer("", "", 0);
+		customer9.setPosition(new Point( 20, 20 ));
+		repository.save(customer9);
+
+		toBeRetrieved.add(customer3);
+		final List<Customer> retrieved = repository.findByPositionWithin(new Box(new Point(9, -1), new Point(11, 1)));
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
@@ -355,6 +449,33 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Bound<Integer> upperBound = Bound.inclusive((int) convertAngleToDistance(15));
 		final Collection<Customer> retrieved = repository.findByLocationWithinAndLocationWithinOrName(new Point(0, 20),
 			distance, new Ring<>(new Point(0, 0), Range.of(lowerBound, upperBound)), "+++");
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void geoJsonFindWithinAndWithinTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("+++", "", 0);
+		customer1.setPosition(new Point ( 0, 80 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("vvv", "", 0);
+		customer2.setPosition(new Point ( 0, 10 ));
+		toBeRetrieved.add(customer2);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer3 = new Customer("--d", "", 0);
+		customer3.setPosition(new Point ( 0, 19 ));
+		repository.save(customer3);
+		final Customer customer4 = new Customer("--r", "", 0);
+		customer4.setPosition(new Point ( 0, 6 ));
+		repository.save(customer4);
+		final Customer customer5 = new Customer("-!r", "", 0);
+		customer5.setPosition(new Point ( 0, 0 ));
+		repository.save(customer5);
+		final int distance = (int) convertAngleToDistance(11);
+		final Bound<Integer> lowerBound = Bound.inclusive((int) convertAngleToDistance(5));
+		final Bound<Integer> upperBound = Bound.inclusive((int) convertAngleToDistance(15));
+		final Collection<Customer> retrieved = repository.findByPositionWithinAndPositionWithinOrName(new Point(0, 20),
+				distance, new Ring<>(new Point(0, 0), Range.of(lowerBound, upperBound)), "+++");
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
@@ -397,6 +518,48 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				.findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin("John",
 					new Point(0, 0), distance, "Peter", "Pen", "Jack", new Point(47, 63), "Sparrow", new Point(10, 60),
 					distanceRange);
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void geoJsonFindByMultipleLocationsAndMultipleRegularFieldsTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("John", "", 0);
+		customer1.setPosition(new Point ( 0, 89 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("Bob", "", 0);
+		customer2.setPosition(new Point ( 5, 0 ));
+		toBeRetrieved.add(customer2);
+		final Customer customer3 = new Customer("Peter", "Pen", 0);
+		customer3.setPosition(new Point ( 89, 0 ));
+		toBeRetrieved.add(customer3);
+		final Customer customer4 = new Customer("Jack", "Sparrow", 0);
+		customer4.setPosition(new Point ( 20, 70 ));
+		toBeRetrieved.add(customer4);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer5 = new Customer("Peter", "The Great", 0);
+		customer5.setPosition(new Point ( 89, 0 ));
+		repository.save(customer5);
+		final Customer customer6 = new Customer("Ballpoint", "Pen", 0);
+		customer6.setPosition(new Point ( 89, 0 ));
+		repository.save(customer6);
+		final Customer customer7 = new Customer("Jack", "Reacher", 0);
+		customer7.setPosition(new Point ( 20, 70 ));
+		repository.save(customer7);
+		final Customer customer8 = new Customer("Jack", "Sparrow", 0);
+		customer8.setPosition(new Point ( 65, 15 ));
+		repository.save(customer8);
+		final Customer customer9 = new Customer("Jack", "Sparrow", 0);
+		customer9.setPosition(new Point ( 75, 25 ));
+		repository.save(customer9);
+		final double distance = convertAngleToDistance(10);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(10));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(20));
+		final Range<Double> distanceRange = Range.of(lowerBound, upperBound);
+		final List<Customer> retrieved = repository
+				.findByNameOrPositionWithinOrNameAndSurnameOrNameAndPositionNearAndSurnameAndPositionWithin("John",
+						new Point(0, 0), distance, "Peter", "Pen", "Jack", new Point(47, 63), "Sparrow", new Point(10, 60),
+						distanceRange);
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
@@ -471,6 +634,23 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void geoJsonGeoResultTest() {
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point( 5, 7 ));
+		repository.save(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point( 50, 70 ));
+		repository.save(customer2);
+		final double distance = convertAngleToDistance(10);
+		final GeoResult<Customer> retrieved = repository.queryByPositionWithin(new Point(1, 2), distance);
+		final double expectedDistanceInMeters = getDistanceBetweenPoints(new Point(5, 7), new Point(1, 2));
+		final double expectedNormalizedDistance = expectedDistanceInMeters / 1000.0
+				/ Metrics.KILOMETERS.getMultiplier();
+		assertEquals(customer1, retrieved.getContent());
+		assertEquals(expectedNormalizedDistance, retrieved.getDistance().getNormalizedValue(), 0.000000001);
+	}
+
+	@Test
 	public void geoResultsTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("", "", 0);
@@ -489,7 +669,35 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(30));
 		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
 		final GeoResults<Customer> retrieved = repository.findByLocationWithin(new Point(1, 0),
-			Range.of(lowerBound, upperBound));
+				Range.of(lowerBound, upperBound));
+		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+		expectedGeoResults.add(new GeoResult<>(customer1,
+				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(21, 43)) / 1000, Metrics.KILOMETERS)));
+		expectedGeoResults.add(new GeoResult<>(customer2,
+				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(43, 21)) / 1000, Metrics.KILOMETERS)));
+		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+	}
+
+	@Test
+	public void geoJsonGeoResultsTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point ( 21, 43 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point ( 43, 21 ));
+		toBeRetrieved.add(customer2);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point ( 50, 70 ));
+		repository.save(customer3);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point ( 2, 3 ));
+		repository.save(customer4);
+		final Bound<Double> lowerBound = Bound.inclusive(convertAngleToDistance(30));
+		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
+		final GeoResults<Customer> retrieved = repository.findByPositionWithin(new Point(1, 0),
+				Range.of(lowerBound, upperBound));
 		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
 		expectedGeoResults.add(new GeoResult<>(customer1,
 				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(21, 43)) / 1000, Metrics.KILOMETERS)));
@@ -513,6 +721,31 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		customer4.setLocation(new int[] { 6, 0 });
 		repository.save(customer4);
 		final GeoPage<Customer> retrieved = repository.findByLocationNear(new Point(0, 0), PageRequest.of(1, 2));
+		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+		expectedGeoResults.add(new GeoResult<>(customer3,
+				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 4)) / 1000, Metrics.KILOMETERS)));
+		expectedGeoResults.add(new GeoResult<>(customer4,
+				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 6)) / 1000, Metrics.KILOMETERS)));
+		assertEquals(4, retrieved.getTotalElements());
+		assertEquals(2, retrieved.getTotalPages());
+		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, true));
+	}
+
+	@Test
+	public void geoJsonGeoPageTest() {
+		final Customer customer1 = new Customer("", "", 0);
+		customer1.setPosition(new Point ( 0, 2 ));
+		repository.save(customer1);
+		final Customer customer2 = new Customer("", "", 0);
+		customer2.setPosition(new Point ( 0, 3 ));
+		repository.save(customer2);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point ( 0, 4 ));
+		repository.save(customer3);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point ( 0, 6 ));
+		repository.save(customer4);
+		final GeoPage<Customer> retrieved = repository.findByPositionNear(new Point(0.11, 0.11), PageRequest.of(1, 2));
 		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
 		expectedGeoResults.add(new GeoResult<>(customer3,
 				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 4)) / 1000, Metrics.KILOMETERS)));
@@ -561,6 +794,43 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void geoJsonBuildPredicateWithDistanceTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		final Customer customer1 = new Customer("+", "", 0);
+		customer1.setPosition(new Point ( 89, 89 ));
+		toBeRetrieved.add(customer1);
+		final Customer customer2 = new Customer("", "+", 0);
+		customer2.setPosition(new Point ( 0, 5 ));
+		toBeRetrieved.add(customer2);
+		final Customer customer3 = new Customer("", "", 0);
+		customer3.setPosition(new Point ( 25, 0 ));
+		toBeRetrieved.add(customer3);
+		repository.saveAll(toBeRetrieved);
+		final Customer customer4 = new Customer("", "", 0);
+		customer4.setPosition(new Point ( 0, 15 ));
+		repository.save(customer4);
+		final Customer customer5 = new Customer("", "", 0);
+		customer5.setPosition(new Point ( 35, 0 ));
+		repository.save(customer5);
+		final double distanceInMeters = convertAngleToDistance(10);
+		final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
+		final Range<Distance> distanceRange = Range.of(
+				Bound.inclusive(new Distance(convertAngleToDistance(20) / 1000, Metrics.KILOMETERS)),
+				Bound.inclusive(new Distance(convertAngleToDistance(30) / 1000, Metrics.KILOMETERS)));
+		final Point location = new Point(0.11, 0.11);
+		final GeoResults<Customer> retrieved = repository.findByNameOrSurnameAndPositionWithinOrPositionWithin("+", "+",
+				location, distance, location, distanceRange);
+		final List<GeoResult<Customer>> expectedGeoResults = new LinkedList<>();
+		expectedGeoResults.add(new GeoResult<>(customer1,
+				new Distance(getDistanceBetweenPoints(location, new Point(89, 89)) / 1000, Metrics.KILOMETERS)));
+		expectedGeoResults.add(new GeoResult<>(customer2,
+				new Distance(getDistanceBetweenPoints(location, new Point(0, 5)) / 1000, Metrics.KILOMETERS)));
+		expectedGeoResults.add(new GeoResult<>(customer3,
+				new Distance(getDistanceBetweenPoints(location, new Point(25, 0)) / 1000, Metrics.KILOMETERS)));
+		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+	}
+
+	@Test
 	public void existsTest() {
 		repository.save(john);
 		assertTrue(repository.existsByName("John"));
@@ -584,6 +854,26 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10),
 				new Point(30, 20));
 		final List<Customer> retrieved = repository.findByLocationWithin(polygon);
+		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+	}
+
+	@Test
+	public void geoJsonPolygonTest() {
+		final int[][] locations = { { 11, 31 }, { 20, 20 }, { 20, 40 }, { 70, 30 }, { 40, 10 }, { -10, -10 },
+				{ -10, 20 }, { -10, 60 }, { 30, 50 }, { 10, 20 }, { 5, 30 } };
+		final Customer[] customers = new Customer[11];
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		for (int i = 0; i < customers.length; ++i) {
+			customers[i] = new Customer("", "", 0);
+			customers[i].setPosition(new Point(locations[i][1], locations[i][0]));
+			repository.save(customers[i]);
+			if (i < 3) {
+				toBeRetrieved.add(customers[i]);
+			}
+		}
+		final Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10),
+				new Point(30, 20), new Point(0, 0));
+		final List<Customer> retrieved = repository.findByPositionWithin(polygon);
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
 
