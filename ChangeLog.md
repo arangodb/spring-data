@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
-- Added SPEL support to custom AQL query on repository methods (#221)
+- added SPEL support to custom AQL query on repository methods (#221)
+- added support to geoJSON types and Spring Data geo types (#222)
+- fixed binding Point parameter in query derivation (#223)
+- fixed query derivation for not persistent nested attribute (#216)
+- fixed missing `META-INF/spring.factories` (#155)
 
 ## [3.5.0] - 2021-04-23
 
