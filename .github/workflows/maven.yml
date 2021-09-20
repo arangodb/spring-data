@@ -4,9 +4,13 @@ on:
   pull_request:
     branches:
       - master
+      - test/spring-data-2.4
+      - test/spring-data-2.3
   push:
     branches:
       - master
+      - test/spring-data-2.4
+      - test/spring-data-2.3
 
 jobs:
   package:
