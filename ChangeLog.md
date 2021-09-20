@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- implemented support to Spring Data Commons 2.5
 - added SPEL support to custom AQL query on repository methods (#221)
 - added support to geoJSON types and Spring Data geo types (#222)
 - fixed binding Point parameter in query derivation (#223)
