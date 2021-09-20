@@ -6,12 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
-- implemented support to Spring Data Commons 2.5
-- added SPEL support to custom AQL query on repository methods (#221)
-- added support to geoJSON types and Spring Data geo types (#222)
+## [3.6.0] - 2021-09-20
+
+- updated support of spring-data to `2.5.x`
+- upgraded dependency `com.arangodb:arangodb-java-driver:6.13.0`
+- upgraded dependency `com.arangodb:velocypack:2.5.4`
 - fixed binding Point parameter in query derivation (#223)
-- fixed query derivation for not persistent nested attribute (#216)
+- added support to geoJSON types and Spring Data geo types (#222)
+- added SPEL support to custom AQL query on repository methods (#221)
 - fixed missing `META-INF/spring.factories` (#155)
+- fixed query derivation for not persistent nested attribute (#216)
 
 ## [3.5.0] - 2021-04-23
 
