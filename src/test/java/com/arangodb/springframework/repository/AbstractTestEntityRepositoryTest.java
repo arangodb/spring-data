@@ -66,6 +66,17 @@ public abstract class AbstractTestEntityRepositoryTest<ID> extends AbstractArang
 	}
 
 	@Test
+	public void deleteAllById() {
+		final IdTestEntity<ID> e1 = new IdTestEntity<>();
+		final IdTestEntity<ID> e2 = new IdTestEntity<>();
+		repository.save(e1);
+		repository.save(e2);
+		assertThat(repository.count(), is(2L));
+		repository.deleteAllById(Arrays.asList(e1.getId(), e2.getId()));
+		assertThat(repository.count(), is(0L));
+	}
+
+	@Test
 	public void existsById() {
 		final IdTestEntity<ID> entity = new IdTestEntity<>();
 		repository.save(entity);

@@ -99,6 +99,16 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void deleteAllByIdTest() {
+		repository.saveAll(customers);
+		final String johnId = john.getId();
+		final String bobId = bob.getId();
+		repository.deleteAllById(Arrays.asList(johnId, bobId));
+		assertFalse(repository.existsById(bobId));
+		assertFalse(repository.existsById(johnId));
+	}
+
+	@Test
 	public void deleteByIterableTest() {
 		repository.saveAll(customers);
 		final List<Customer> toDelete = new ArrayList<>();
