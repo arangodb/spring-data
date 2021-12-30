@@ -328,6 +328,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
         private java.time.Instant value1;
         private java.time.LocalDate value2;
         private java.time.LocalDateTime value3;
+        private java.time.LocalTime value4;
     }
 
     @Test
@@ -336,12 +337,14 @@ public class GeneralMappingTest extends AbstractArangoTest {
         entity.value1 = java.time.Instant.now();
         entity.value2 = java.time.LocalDate.now();
         entity.value3 = java.time.LocalDateTime.now();
+        entity.value4 = java.time.LocalTime.now();
         template.insert(entity);
         final Java8TimeTestEntity document = template.find(entity.getId(), Java8TimeTestEntity.class).get();
         assertThat(document, is(notNullValue()));
         assertThat(document.value1, is(entity.value1));
         assertThat(document.value2, is(entity.value2));
         assertThat(document.value3, is(entity.value3));
+        assertThat(document.value4, is(entity.value4));
     }
 
     public class SimpleTypesTestEntity extends BasicTestEntity {
