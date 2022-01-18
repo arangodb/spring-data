@@ -20,11 +20,7 @@
 
 package com.arangodb.springframework.core.convert;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -53,6 +49,10 @@ public class JavaTimeUtil {
 		return DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(source);
 	}
 
+	public static String format(final LocalTime source) {
+		return DateTimeFormatter.ISO_LOCAL_TIME.format(source);
+	}
+
 	public static String format(final ZonedDateTime source) {
 		return DateTimeFormatter.ISO_ZONED_DATE_TIME.format(source);
 	}
@@ -67,6 +67,10 @@ public class JavaTimeUtil {
 
 	public static LocalDateTime parseLocalDateTime(final CharSequence source) {
 		return LocalDateTime.parse(source);
+	}
+
+	public static LocalTime parseLocalTime(final CharSequence source) {
+		return LocalTime.parse(source);
 	}
 
 	public static OffsetDateTime parseOffsetDateTime(final CharSequence source) {

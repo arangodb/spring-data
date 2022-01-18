@@ -21,11 +21,7 @@
 package com.arangodb.springframework.core.convert;
 
 import java.text.ParseException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -51,6 +47,7 @@ public class TimeStringConverters {
 		converters.add(InstantToStringConverter.INSTANCE);
 		converters.add(LocalDateToStringConverter.INSTANCE);
 		converters.add(LocalDateTimeToStringConverter.INSTANCE);
+		converters.add(LocalTimeToStringConverter.INSTANCE);
 		converters.add(OffsetDateTimeToStringConverter.INSTANCE);
 		converters.add(ZonedDateTimeToStringConverter.INSTANCE);
 
@@ -58,6 +55,7 @@ public class TimeStringConverters {
 		converters.add(StringToInstantConverter.INSTANCE);
 		converters.add(StringToLocalDateConverter.INSTANCE);
 		converters.add(StringToLocalDateTimeConverter.INSTANCE);
+		converters.add(StringToLocalTimeConverter.INSTANCE);
 		converters.add(StringToOffsetDateTimeConverter.INSTANCE);
 		converters.add(StringToZonedDateTimeConverter.INSTANCE);
 		return converters;
@@ -122,6 +120,16 @@ public class TimeStringConverters {
 	}
 
 	@WritingConverter
+	public static enum LocalTimeToStringConverter implements Converter<LocalTime, String> {
+		INSTANCE;
+
+		@Override
+		public String convert(final LocalTime source) {
+			return source == null ? null : JavaTimeUtil.format(source);
+		}
+	}
+
+	@WritingConverter
 	public static enum OffsetDateTimeToStringConverter implements Converter<OffsetDateTime, String> {
 		INSTANCE;
 
@@ -168,6 +176,16 @@ public class TimeStringConverters {
 		@Override
 		public LocalDateTime convert(final String source) {
 			return source == null ? null : JavaTimeUtil.parseLocalDateTime(source);
+		}
+	}
+
+	@ReadingConverter
+	public static enum StringToLocalTimeConverter implements Converter<String, LocalTime> {
+		INSTANCE;
+
+		@Override
+		public LocalTime convert(final String source) {
+			return source == null ? null : JavaTimeUtil.parseLocalTime(source);
 		}
 	}
 
