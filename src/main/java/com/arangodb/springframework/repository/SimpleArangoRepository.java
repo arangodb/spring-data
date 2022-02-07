@@ -308,10 +308,10 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public <S extends T> long count(final Example<S> example) {
 		final Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@col", getCollectionName());
 		final String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
 		final String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
-		final String query = String.format("FOR e IN %s%s COLLECT WITH COUNT INTO length RETURN length",
-				getCollectionName(), filter);
+		final String query = String.format("FOR e IN @@col %s COLLECT WITH COUNT INTO length RETURN length", filter);
 		arangoOperations.collection(domainClass);
 		final ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
 		return cursor.next();
@@ -331,7 +331,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 	private <S extends T> ArangoCursor<T> findAllInternal(final Sort sort, @Nullable final Example<S> example,
 			final Map<String, Object> bindVars) {
-		final String query = String.format("FOR e IN %s %s %s RETURN e", getCollectionName(),
+		bindVars.put("@col", getCollectionName());
+		final String query = String.format("FOR e IN @@col %s %s RETURN e",
 				buildFilterClause(example, bindVars), buildSortClause(sort, "e"));
 		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars, null, domainClass);
@@ -339,7 +340,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 	private <S extends T> ArangoCursor<T> findAllInternal(final Pageable pageable, @Nullable final Example<S> example,
 			final Map<String, Object> bindVars) {
-		final String query = String.format("FOR e IN %s %s %s RETURN e", getCollectionName(),
+		bindVars.put("@col", getCollectionName());
+		final String query = String.format("FOR e IN @@col %s %s RETURN e",
 				buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
 		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars,

@@ -100,7 +100,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	@Test
 	public void insertDocumentWithCollName() {
-		final DocumentEntity res = template.insert("customer", new Customer("John", "Doe", 30));
+		final DocumentEntity res = template.insert("test-customer", new Customer("John", "Doe", 30));
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getId(), is(notNullValue()));
 	}
@@ -296,7 +296,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public void query() {
 		template.insert(new Customer("John", "Doe", 30));
 		final ArangoCursor<Customer> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
-			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(), Customer.class);
+			new MapBuilder().put("@coll", "test-customer").put("name", "John").get(), new AqlQueryOptions(), Customer.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<Customer> customers = cursor.asListRemaining();
 		assertThat(customers.size(), is(1));
@@ -308,7 +308,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void queryWithoutBindParams() {
 		template.insert(new Customer("John", "Doe", 30));
-		final ArangoCursor<Customer> cursor = template.query("FOR c IN customer FILTER c.name == 'John' RETURN c", null,
+		final ArangoCursor<Customer> cursor = template.query("FOR c IN `test-customer` FILTER c.name == 'John' RETURN c", null,
 			new AqlQueryOptions(), Customer.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<Customer> customers = cursor.asListRemaining();
@@ -323,7 +323,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public void queryMap() {
 		template.insert(new Customer("John", "Doe", 30));
 		final ArangoCursor<Map> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
-			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(), Map.class);
+			new MapBuilder().put("@coll", "test-customer").put("name", "John").get(), new AqlQueryOptions(), Map.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<Map> customers = cursor.asListRemaining();
 		assertThat(customers.size(), is(1));
@@ -336,7 +336,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public void queryBaseDocument() {
 		template.insert(new Customer("John", "Doe", 30));
 		final ArangoCursor<BaseDocument> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
-			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(),
+			new MapBuilder().put("@coll", "test-customer").put("name", "John").get(), new AqlQueryOptions(),
 			BaseDocument.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<BaseDocument> customers = cursor.asListRemaining();
@@ -350,7 +350,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public void queryVPackSlice() {
 		template.insert(new Customer("John", "Doe", 30));
 		final ArangoCursor<VPackSlice> cursor = template.query("FOR c IN @@coll FILTER c.name == @name RETURN c",
-			new MapBuilder().put("@coll", "customer").put("name", "John").get(), new AqlQueryOptions(),
+			new MapBuilder().put("@coll", "test-customer").put("name", "John").get(), new AqlQueryOptions(),
 			VPackSlice.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<VPackSlice> customers = cursor.asListRemaining();
