@@ -30,11 +30,13 @@ import java.lang.annotation.Target;
  * Annotation to define given fields to be indexed using ArangoDB's Hash index.
  *
  * @author Mark Vollmary
+ * @deprecated use {@link PersistentIndex} instead. Since ArangoDB 3.7 a hash index is an alias for a persistent index.
  *
  */
 @Repeatable(HashIndexes.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
+@Deprecated
 public @interface HashIndex {
 
 	/**

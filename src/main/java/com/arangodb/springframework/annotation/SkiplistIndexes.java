@@ -27,10 +27,13 @@ import java.lang.annotation.Target;
 
 /**
  * @author Mark Vollmary
+ * @deprecated use {@link PersistentIndexes} instead.
+ * Since ArangoDB 3.7 a hash index is an alias for a persistent index.
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
+@Deprecated
 public @interface SkiplistIndexes {
 
 	SkiplistIndex[] value();

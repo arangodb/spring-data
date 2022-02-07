@@ -97,7 +97,10 @@ public interface CollectionOperations {
 	 *            Additional options, can be null
 	 * @return information about the index
 	 * @throws DataAccessException
+	 * @deprecated use {@link #ensurePersistentIndex(Iterable, PersistentIndexOptions)} instead.
+	 * Since ArangoDB 3.7 a hash index is an alias for a persistent index.
 	 */
+	@Deprecated
 	IndexEntity ensureHashIndex(Iterable<String> fields, HashIndexOptions options) throws DataAccessException;
 
 	/**
@@ -109,7 +112,10 @@ public interface CollectionOperations {
 	 *            Additional options, can be null
 	 * @return information about the index
 	 * @throws DataAccessException
+	 * @deprecated use {@link #ensurePersistentIndex(Iterable, PersistentIndexOptions)} instead.
+	 * Since ArangoDB 3.7 a skiplist index is an alias for a persistent index.
 	 */
+	@Deprecated
 	IndexEntity ensureSkiplistIndex(Iterable<String> fields, SkiplistIndexOptions options) throws DataAccessException;
 
 	/**

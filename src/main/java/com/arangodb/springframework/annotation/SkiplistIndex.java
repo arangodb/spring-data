@@ -31,11 +31,13 @@ import java.lang.annotation.Target;
  * index.
  *
  * @author Mark Vollmary
+ * @deprecated use {@link PersistentIndex} instead. Since ArangoDB 3.7 a skiplist index is an alias for a persistent index.
  *
  */
 @Repeatable(SkiplistIndexes.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
+@Deprecated
 public @interface SkiplistIndex {
 
 	/**
