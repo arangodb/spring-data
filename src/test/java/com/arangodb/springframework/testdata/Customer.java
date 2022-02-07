@@ -36,7 +36,7 @@ import org.springframework.data.geo.Point;
  * @author Mark Vollmary
  *
  */
-@Document
+@Document("test-customer")
 public class Customer {
 
 	@ArangoId

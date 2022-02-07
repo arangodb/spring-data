@@ -28,6 +28,7 @@ import org.springframework.data.annotation.Id;
  *
  */
 @GeoIndex(fields = { "location" })
+@Document("test-product")
 public class Product {
 
 	@Id
