@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.7.0] - 2022-02-08
+
 - deprecated hash and skiplist indexes
 - fixed support for collection names containing `-` symbol (#230)
 - upgraded dependency `com.arangodb:arangodb-java-driver:6.16.0`
