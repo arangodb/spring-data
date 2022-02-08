@@ -120,7 +120,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
-		bindVars.put("0", john.getName() + "random");
+		bindVars.put("name", john.getName() + "random");
 		final Customer retrieved = repository.findOneByIdAndNameWithBindVarsAql(john.getName(), bindVars);
 		assertEquals(john, retrieved);
 	}

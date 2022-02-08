@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - upgraded dependency `com.arangodb:arangodb-java-driver:6.16.0`
 - added mapping support to `LocalTime` (#227)
 
+**NOTE:** new changes in Spring Core named parameters discovery could result in runtime exceptions when using positional
+query parameters. Using named query parameters is therefore recommended.
+
 ## [3.6.0] - 2021-09-20
 
 - updated support of spring-data to `2.5.x`

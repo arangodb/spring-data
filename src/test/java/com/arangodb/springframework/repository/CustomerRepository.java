@@ -46,9 +46,9 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")
 	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
-	@Query("FOR c IN #collection FILTER c.name == @1 AND c._key == @0 RETURN c")
+	@Query("FOR c IN #collection FILTER c.name == @name AND c._key == @id RETURN c")
 	@QueryOptions(cache = true, ttl = 128)
-	BaseDocument findOneByIdAndNameAql(String id, String name);
+	BaseDocument findOneByIdAndNameAql(@Param("id") String id, @Param("name") String name);
 
 	@QueryOptions(maxPlans = 1000, ttl = 128)
 	@Query("FOR c IN #collection FILTER c._key == @id AND c.name == @name RETURN c")
@@ -57,8 +57,8 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 	@Query("FOR c IN #collection FILTER c._key == @id AND c.name == @name RETURN c")
 	Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN #collection FILTER c._key == @id AND c.name == @0 RETURN c")
-	Customer findOneByIdAndNameWithBindVarsAql(String name, @BindVars Map<String, Object> bindVars);
+	@Query("FOR c IN #collection FILTER c._key == @id AND c.name == @name RETURN c")
+	Customer findOneByIdAndNameWithBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
 
 	@Query("FOR c IN @@0 FILTER \"@1\" != '@2' AND c._id == @1 RETURN c")
 	Customer findOneByIdInCollectionAqlWithUnusedParam(String collection, String id, String id2);
@@ -78,8 +78,8 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 	@Query("FOR c IN @collection FILTER c._id == @id RETURN c")
 	Customer findOneByIdInNamedCollectionAqlRejected(@Param("collection") String collection, @Param("id") String id);
 
-	@Query("FOR c in #collection FILTER c.surname == @0 RETURN c")
-	List<Customer> findManyBySurname(String surname);
+	@Query("FOR c in #collection FILTER c.surname == @surname RETURN c")
+	List<Customer> findManyBySurname(@Param("surname") String surname);
 
 	Set<Customer> findDistinctByNameAfter(String name);
 
@@ -186,15 +186,15 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	Customer[] findByNameOrderBySurnameAsc(Sort sort, String name);
 
-	@Query("FOR c IN #collection FILTER c.name == @1 #sort RETURN c")
-	List<Customer> findByNameWithSort(Sort sort, String name);
+	@Query("FOR c IN #collection FILTER c.name == @name #sort RETURN c")
+	List<Customer> findByNameWithSort(Sort sort, @Param("name") String name);
 
 	// PAGEABLE
 
 	Page<Customer> readByNameAndSurname(Pageable pageable, String name, AqlQueryOptions options, String surname);
 
-	@Query("FOR c IN #collection FILTER c.name == @1 AND c.surname == @2 #pageable RETURN c")
-	Page<Customer> findByNameAndSurnameWithPageable(Pageable pageable, String name, String surname);
+	@Query("FOR c IN #collection FILTER c.name == @name AND c.surname == @surname #pageable RETURN c")
+	Page<Customer> findByNameAndSurnameWithPageable(Pageable pageable, @Param("name") String name, @Param("surname") String surname);
 
 	// GEO_RESULT, GEO_RESULTS, GEO_PAGE
 
