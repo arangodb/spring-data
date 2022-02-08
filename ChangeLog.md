@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- deprecated hash and skiplist indexes
+- fixed support for collection names containing `-` symbol (#230)
+- upgraded dependency `com.arangodb:arangodb-java-driver:6.16.0`
+- added mapping support to `LocalTime` (#227)
+
 ## [3.6.0] - 2021-09-20
 
 - updated support of spring-data to `2.5.x`
