@@ -871,8 +871,14 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				toBeRetrieved.add(customers[i]);
 			}
 		}
-		final Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10),
-				new Point(30, 20), new Point(0, 0));
+		final Polygon polygon = new Polygon(
+				new Point(0, 0),
+				new Point(30, 20),
+				new Point(30, 10),
+				new Point(50, 0),
+				new Point(30, 60),
+				new Point(0, 0)
+		);
 		final List<Customer> retrieved = repository.findByPositionWithin(polygon);
 		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
 	}
