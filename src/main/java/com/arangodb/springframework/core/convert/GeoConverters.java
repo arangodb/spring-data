@@ -169,14 +169,20 @@ public class GeoConverters {
 
         @Override
         public DBDocumentEntity convert(Box source) {
-            Point a = source.getFirst();
-            Point b = source.getSecond();
+            Point first = source.getFirst();
+            Point second = source.getSecond();
+
+            double minY = Math.min( first.getY(), second.getY());
+            double maxY = Math.max( first.getY(), second.getY());
+            double minX = Math.min(first.getX(), second.getX());
+            double maxX = Math.max(first.getX(), second.getX());
+
             Polygon p = new Polygon(
-                    new Point(a.getX(), a.getY()),
-                    new Point(a.getX(), b.getY()),
-                    new Point(b.getX(), b.getY()),
-                    new Point(b.getX(), a.getY()),
-                    new Point(a.getX(), a.getY())
+                    new Point(minX, minY),
+                    new Point(maxX, minY),
+                    new Point(maxX, maxY),
+                    new Point(minX, maxY),
+                    new Point(minX, minY)
             );
             return PolygonToDBDocumentEntityConverter.INSTANCE.convert(p);
         }
