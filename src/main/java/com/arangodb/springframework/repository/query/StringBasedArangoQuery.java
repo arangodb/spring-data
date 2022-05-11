@@ -20,13 +20,16 @@
 
 package com.arangodb.springframework.repository.query;
 
-import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.springframework.annotation.Document;
+import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameters.ArangoParameter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.util.Pair;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -69,13 +72,14 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	private final ApplicationContext applicationContext;
 
 	public StringBasedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations,
-								  final ApplicationContext applicationContext) {
-		this(method.getAnnotatedQuery(), method, operations, applicationContext);
+								  final QueryTransactionBridge transactionBridge, final ApplicationContext applicationContext) {
+		this(method.getAnnotatedQuery(), method, operations, transactionBridge, applicationContext);
 	}
 
 	public StringBasedArangoQuery(final String query, final ArangoQueryMethod method,
-		final ArangoOperations operations, final ApplicationContext applicationContext) {
-		super(method, operations);
+		final ArangoOperations operations, final QueryTransactionBridge transactionBridge,
+		final ApplicationContext applicationContext) {
+		super(method, operations, transactionBridge);
 		Assert.notNull(query, "Query must not be null!");
 
 		this.query = query;
@@ -90,14 +94,37 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	}
 
 	@Override
-	protected String createQuery(
-		final ArangoParameterAccessor accessor,
-		final Map<String, Object> bindVars,
-		final AqlQueryOptions options) {
+	protected Pair<String, ? extends Collection<String>> createQuery(
+            final ArangoParameterAccessor accessor,
+            final Map<String, Object> bindVars) {
 
 		extractBindVars(accessor, bindVars);
 
-		return prepareQuery(accessor);
+		return Pair.of(prepareQuery(accessor), allCollectionNames(collectionName, bindVars));
+	}
+
+	private Collection<String> allCollectionNames(String collectionName, Map<String, Object> bindVars) {
+		HashSet<String> allCollections = new HashSet<>();
+		allCollections.add(collectionName);
+		bindVars.entrySet().stream()
+				.filter(entry -> entry.getKey().startsWith("@"))
+				.map(Map.Entry::getValue)
+				.map(value -> value instanceof Class ? getCollectionName((Class<?>) value): value.toString())
+				.filter(Objects::nonNull)
+				.forEach(allCollections::add);
+		return allCollections;
+	}
+
+	private String getCollectionName(Class<?> value) {
+		Document document = AnnotationUtils.findAnnotation(value, Document.class);
+		if (document != null) {
+			return document.value();
+		}
+		Edge edge = AnnotationUtils.findAnnotation(value, Edge.class);
+		if (edge != null) {
+			return edge.value();
+		}
+		return null;
 	}
 
 	@Override

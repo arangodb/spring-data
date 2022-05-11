@@ -22,12 +22,13 @@ package com.arangodb.springframework.repository.query;
 
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.IndexType;
-import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.repository.query.derived.BindParameterBinding;
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.data.util.Pair;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,17 +45,17 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 	private final PartTree tree;
 	private final List<String> geoFields;
 
-	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
-		super(method, operations);
+	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations,
+							  final QueryTransactionBridge transactionBridge) {
+		super(method, operations, transactionBridge);
 		tree = new PartTree(method.getName(), domainClass);
 		geoFields = getGeoFields();
 	}
 
 	@Override
-	protected String createQuery(
-		final ArangoParameterAccessor accessor,
-		final Map<String, Object> bindVars,
-		final AqlQueryOptions options) {
+	protected Pair<String, ? extends Collection<String>> createQuery(
+            final ArangoParameterAccessor accessor,
+            final Map<String, Object> bindVars) {
 
 		return new DerivedQueryCreator(mappingContext, domainClass, tree, accessor, new BindParameterBinding(bindVars),
 				geoFields).createQuery();
