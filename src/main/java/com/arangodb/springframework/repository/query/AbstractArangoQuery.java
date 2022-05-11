@@ -38,7 +38,7 @@ import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 
 /**
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -58,7 +58,6 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 							   final QueryTransactionBridge transactionBridge) {
 		Assert.notNull(method, "ArangoQueryMethod must not be null!");
 		Assert.notNull(operations, "ArangoOperations must not be null!");
-		Assert.notNull(transactionBridge, "QueryTransactionBridge must not be null!");
 		this.method = method;
 		this.operations = operations;
 		mappingContext = (ArangoMappingContext) operations.getConverter().getMappingContext();
@@ -81,7 +80,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		}
 
 		final Pair<String, ? extends Collection<String>> queryAndCollection = createQuery(accessor, bindVars, options);
-		if (options.getStreamTransactionId() == null) {
+		if (options.getStreamTransactionId() == null && transactionBridge != null) {
 			options.streamTransactionId(transactionBridge.beginCurrentTransaction(queryAndCollection.getSecond()));
 		}
 
