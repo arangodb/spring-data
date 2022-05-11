@@ -39,7 +39,8 @@ class ArangoTransaction implements SmartTransactionObject {
         if (definition instanceof TransactionAttribute) {
             allCollections.addAll(((TransactionAttribute) definition).getLabels());
         }
-        StreamTransactionOptions options = new StreamTransactionOptions().allowImplicit(true)
+        StreamTransactionOptions options = new StreamTransactionOptions()
+                .allowImplicit(true)
                 .writeCollections(allCollections.toArray(new String[0]))
                 .lockTimeout(definition.getTimeout() == -1 ? 0 : definition.getTimeout());
         transaction = database.beginStreamTransaction(options);
