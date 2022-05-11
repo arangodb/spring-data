@@ -212,4 +212,8 @@ public final class AqlUtils {
 		return collection.contains("-") ? "`" + collection + "`" : collection;
 	}
 
+	public static String buildFieldName(final String field) {
+		return field.contains("-") ? "`" + field + "`" : field;
+	}
+
 }

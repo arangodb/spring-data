@@ -260,7 +260,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			--propertiesLeft;
 			final ArangoPersistentProperty property = (ArangoPersistentProperty) object;
 			if (propertiesLeft == 0) {
-				simpleProperties.append("." + property.getFieldName());
+				simpleProperties.append("." + AqlUtils.buildFieldName(property.getFieldName()));
 				break;
 			}
 			if (property.getRelations().isPresent()) {
@@ -296,7 +296,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					if (collection.split("-").length > 1) {
 						collection = "`" + collection + "`";
 					}
-					final String name = simpleProperties.toString() + "." + property.getFieldName();
+					final String name = simpleProperties.toString() + "." + AqlUtils.buildFieldName(property.getFieldName());
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
@@ -307,7 +307,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					final String TEMPLATE = "FOR %s IN TO_ARRAY(%s%s)";
 					final String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
 					final String entity = "e" + Integer.toString(++varsUsed);
-					final String name = simpleProperties.toString() + "." + property.getFieldName();
+					final String name = simpleProperties.toString() + "." + AqlUtils.buildFieldName(property.getFieldName());
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
@@ -324,7 +324,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					if (collection.split("-").length > 1) {
 						collection = "`" + collection + "`";
 					}
-					final String name = simpleProperties.toString() + "." + property.getFieldName();
+					final String name = simpleProperties.toString() + "." + AqlUtils.buildFieldName(property.getFieldName());
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
@@ -332,7 +332,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 							: format(predicateTemplate, predicate);
 				} else {
 					// simple property
-					simpleProperties.append("." + property.getFieldName());
+					simpleProperties.append("." + AqlUtils.buildFieldName(property.getFieldName()));
 				}
 			}
 		}
