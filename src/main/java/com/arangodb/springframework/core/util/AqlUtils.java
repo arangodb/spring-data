@@ -20,12 +20,16 @@
 
 package com.arangodb.springframework.core.util;
 
+import com.arangodb.springframework.core.mapping.ArangoMappingContext;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * 
@@ -82,6 +86,37 @@ public final class AqlUtils {
 
 	public static String buildSortClause(final Sort sort, @Nullable final String varName) {
 		return buildSortClause(sort, varName, new StringBuilder()).toString();
+	}
+
+	public static String buildPersistentSortClause(
+			final Sort sort,
+			final ArangoMappingContext context,
+			final Class<?> domainClass
+	) {
+		return buildPersistentSortClause(sort, null, context, domainClass);
+	}
+
+	public static String buildPersistentSortClause(
+			final Sort sort,
+			@Nullable final String varName,
+			final ArangoMappingContext context,
+			final Class<?> domainClass
+	) {
+		List<Sort.Order> orders = sort.stream()
+				.map(o -> {
+							String persistentPath = context.getPersistentPropertyPath(o.getProperty(), domainClass)
+									.stream()
+									.map(ArangoPersistentProperty::getFieldName)
+									.collect(Collectors.joining("."));
+							return new Sort.Order(
+									o.getDirection(),
+									persistentPath,
+									o.getNullHandling());
+						}
+				)
+				.collect(Collectors.toList());
+		Sort persistentSort = Sort.by(orders);
+		return buildSortClause(persistentSort, varName);
 	}
 
 	private static StringBuilder buildSortClause(

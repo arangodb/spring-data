@@ -20,12 +20,10 @@
 
 package com.arangodb.springframework.repository.query;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.util.AqlUtils;
+import com.arangodb.springframework.repository.query.ArangoParameters.ArangoParameter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
@@ -35,10 +33,11 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
-import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.util.AqlUtils;
-import com.arangodb.springframework.repository.query.ArangoParameters.ArangoParameter;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -93,7 +92,7 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		context.addPropertyAccessor(new BeanFactoryAccessor());
         context.setVariable("collection", collectionName);
-    }
+	}
 
 	@Override
 	protected String createQuery(

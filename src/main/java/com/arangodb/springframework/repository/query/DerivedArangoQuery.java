@@ -20,21 +20,17 @@
 
 package com.arangodb.springframework.repository.query;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.repository.query.parser.PartTree;
-
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.IndexType;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.repository.query.derived.BindParameterBinding;
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
+import org.springframework.data.repository.query.parser.PartTree;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -46,13 +42,11 @@ import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator
 public class DerivedArangoQuery extends AbstractArangoQuery {
 
 	private final PartTree tree;
-	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 	private final List<String> geoFields;
 
 	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
 		super(method, operations);
 		tree = new PartTree(method.getName(), domainClass);
-		context = operations.getConverter().getMappingContext();
 		geoFields = getGeoFields();
 	}
 
@@ -62,7 +56,7 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options) {
 
-		return new DerivedQueryCreator(context, domainClass, tree, accessor, new BindParameterBinding(bindVars),
+		return new DerivedQueryCreator(mappingContext, domainClass, tree, accessor, new BindParameterBinding(bindVars),
 				geoFields).createQuery();
 	}
 

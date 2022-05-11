@@ -45,6 +45,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleArangoRepository.class);
 
 	private final ArangoOperations arangoOperations;
+	private final ArangoMappingContext mappingContext;
 	private final ArangoExampleConverter exampleConverter;
 	private final Class<T> domainClass;
 
@@ -58,9 +59,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		super();
 		this.arangoOperations = arangoOperations;
 		this.domainClass = domainClass;
-		this.exampleConverter = new ArangoExampleConverter(
-				(ArangoMappingContext) arangoOperations.getConverter().getMappingContext(),
-				arangoOperations.getResolverFactory());
+		mappingContext = (ArangoMappingContext) arangoOperations.getConverter().getMappingContext();
+		exampleConverter = new ArangoExampleConverter(mappingContext, arangoOperations.getResolverFactory());
 	}
 
 	/**
@@ -362,7 +362,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	private String buildSortClause(final Sort sort, final String varName) {
-		return sort == null ? "" : AqlUtils.buildSortClause(sort, varName);
+		return sort == null ? "" : AqlUtils.buildPersistentSortClause(sort, varName, mappingContext, domainClass);
 	}
 
 }

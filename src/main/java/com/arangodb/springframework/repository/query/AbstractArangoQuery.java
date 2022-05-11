@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -48,6 +49,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 
 	protected final ArangoQueryMethod method;
 	protected final ArangoOperations operations;
+	protected final ArangoMappingContext mappingContext;
 	protected final Class<?> domainClass;
 
 	public AbstractArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
@@ -55,6 +57,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		Assert.notNull(operations, "ArangoOperations must not be null!");
 		this.method = method;
 		this.operations = operations;
+		mappingContext = (ArangoMappingContext) operations.getConverter().getMappingContext();
 		this.domainClass = method.getEntityInformation().getJavaType();
 	}
 
