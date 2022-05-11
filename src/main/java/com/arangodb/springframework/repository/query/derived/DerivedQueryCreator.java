@@ -238,7 +238,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	 */
 	private String getProperty(final Part part) {
 		return "e." + context.getPersistentPropertyPath(part.getProperty()).toPath(".",
-			ArangoPersistentProperty::getFieldName);
+				p -> AqlUtils.buildFieldName(p.getFieldName()));
 	}
 
 	/**
