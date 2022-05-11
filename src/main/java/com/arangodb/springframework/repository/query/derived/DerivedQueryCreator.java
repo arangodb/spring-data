@@ -42,6 +42,7 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
 import java.util.*;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
 /**
  * Creates a full AQL query from a PartTree and ArangoParameterAccessor
  */
-public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> {
+public class DerivedQueryCreator extends AbstractQueryCreator<Pair<String, ? extends Collection<String>>, Criteria> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DerivedQueryCreator.class);
 	private static final Set<Part.Type> UNSUPPORTED_IGNORE_CASE = new HashSet<>();
@@ -120,7 +121,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	 * @return
 	 */
 	@Override
-	protected String complete(final Criteria criteria, final Sort sort) {
+	protected Pair<String, ? extends Collection<String>> complete(final Criteria criteria, final Sort sort) {
 		if (tree.isDistinct() && !tree.isCountProjection()) {
 			LOGGER.debug("Use of 'Distinct' is meaningful only in count queries");
 		}
@@ -191,7 +192,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 				}
 			}
 		}
-		return query.toString();
+		return Pair.of(query.toString(), withCollections);
 	}
 
 	public double[] getUniquePoint() {
