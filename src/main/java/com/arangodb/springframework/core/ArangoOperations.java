@@ -54,6 +54,8 @@ public interface ArangoOperations {
 	 */
 	ArangoDBVersion getVersion() throws DataAccessException;
 
+	DbName getDatabaseName();
+
 	/**
 	 * Performs a database query using the given {@code query} and {@code bindVars}, then returns a new
 	 * {@code ArangoCursor} instance for the result list.
