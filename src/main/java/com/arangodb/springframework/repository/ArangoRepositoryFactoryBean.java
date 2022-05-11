@@ -53,7 +53,7 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 		this.arangoTemplate = arangoTemplate;
 	}
 
-	@Autowired
+	@Autowired(required = false)
 	public void setTransactionBridge(final QueryTransactionBridge transactionBridge) {
 		this.transactionBridge = transactionBridge;
 	}
