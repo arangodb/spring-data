@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
@@ -51,14 +52,18 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	protected final ArangoOperations operations;
 	protected final ArangoMappingContext mappingContext;
 	protected final Class<?> domainClass;
+	private final QueryTransactionBridge transactionBridge;
 
-	public AbstractArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
+	public AbstractArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations,
+							   final QueryTransactionBridge transactionBridge) {
 		Assert.notNull(method, "ArangoQueryMethod must not be null!");
 		Assert.notNull(operations, "ArangoOperations must not be null!");
+		Assert.notNull(transactionBridge, "QueryTransactionBridge must not be null!");
 		this.method = method;
 		this.operations = operations;
 		mappingContext = (ArangoMappingContext) operations.getConverter().getMappingContext();
 		this.domainClass = method.getEntityInformation().getJavaType();
+		this.transactionBridge = transactionBridge;
 	}
 
 	@Override
@@ -75,12 +80,16 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			options.fullCount(true);
 		}
 
-		final String query = createQuery(accessor, bindVars, options);
+		final Pair<String, ? extends Collection<String>> queryAndCollection = createQuery(accessor, bindVars, options);
+		if (options.getStreamTransactionId() == null) {
+			options.streamTransactionId(transactionBridge.beginCurrentTransaction(queryAndCollection.getSecond()));
+		}
+
 
 		final ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		final Class<?> typeToRead = getTypeToRead(processor);
 
-		final ArangoCursor<?> result = operations.query(query, bindVars, options, typeToRead);
+		final ArangoCursor<?> result = operations.query(queryAndCollection.getFirst(), bindVars, options, typeToRead);
 		logWarningsIfNecessary(result);
 		return processor.processResult(convertResult(result, accessor));
 	}
@@ -107,12 +116,12 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	 *            the binding parameter map
 	 * @param options
 	 *            contains the merged {@link com.arangodb.model.AqlQueryOptions}
-	 * @return the created AQL query
+	 * @return a pair of the created AQL query and all collection names
 	 */
-	protected abstract String createQuery(
-		ArangoParameterAccessor accessor,
-		Map<String, Object> bindVars,
-		AqlQueryOptions options);
+	protected abstract Pair<String, ? extends Collection<String>> createQuery(
+			ArangoParameterAccessor accessor,
+			Map<String, Object> bindVars,
+			AqlQueryOptions options);
 
 	protected abstract boolean isCountQuery();
 
@@ -178,6 +187,9 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			mergedOptions.allowDirtyRead(oldStatic.getAllowDirtyRead());
 		}
 
+		if (mergedOptions.getStreamTransactionId() == null) {
+			mergedOptions.streamTransactionId(oldStatic.getStreamTransactionId());
+		}
 		return mergedOptions;
 	}
 
