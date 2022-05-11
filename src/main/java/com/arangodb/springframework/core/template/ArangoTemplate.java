@@ -110,9 +110,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         version = null;
     }
 
-    private ArangoDatabase db() {
-        final String key = databaseExpression != null ? databaseExpression.getValue(context, String.class)
-                : databaseName;
+	ArangoDatabase db() {
+		final String key = getDatabaseName().get();
         return databaseCache.computeIfAbsent(key, name -> {
             final ArangoDatabase db = arango.db(name);
             if (!db.exists()) {
@@ -277,6 +276,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             throw translateException(e);
         }
     }
+
+	@Override
+	public DbName getDatabaseName() {
+		return DbName.of(databaseExpression != null ? databaseExpression.getValue(context, String.class)
+				: databaseName);
+	}
 
     @Override
     public <T> ArangoCursor<T> query(final String query, final Class<T> entityClass) throws DataAccessException {
