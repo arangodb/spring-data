@@ -46,18 +46,18 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")
 	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
-	@Query("FOR c IN #collection FILTER c.`customer-name` == @name AND c._key == @id RETURN c")
+	@Query("FOR c IN #collection FILTER c.`customerName` == @name AND c._key == @id RETURN c")
 	@QueryOptions(cache = true, ttl = 128)
 	BaseDocument findOneByIdAndNameAql(@Param("id") String id, @Param("name") String name);
 
 	@QueryOptions(maxPlans = 1000, ttl = 128)
-	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
+	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customerName` == @name RETURN c")
 	ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
+	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customerName` == @name RETURN c")
 	Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
+	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customerName` == @name RETURN c")
 	Customer findOneByIdAndNameWithBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
 
 	@Query("FOR c IN @@0 FILTER \"@1\" != '@2' AND c._id == @1 RETURN c")
@@ -186,14 +186,14 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
 	Customer[] findByNameOrderBySurnameAsc(Sort sort, String name);
 
-	@Query("FOR c IN #collection FILTER c.`customer-name` == @name #sort RETURN c")
+	@Query("FOR c IN #collection FILTER c.`customerName` == @name #sort RETURN c")
 	List<Customer> findByNameWithSort(Sort sort, @Param("name") String name);
 
 	// PAGEABLE
 
 	Page<Customer> readByNameAndSurname(Pageable pageable, String name, AqlQueryOptions options, String surname);
 
-	@Query("FOR c IN #collection FILTER c.`customer-name` == @name AND c.surname == @surname #pageable RETURN c")
+	@Query("FOR c IN #collection FILTER c.`customerName` == @name AND c.surname == @surname #pageable RETURN c")
 	Page<Customer> findByNameAndSurnameWithPageable(Pageable pageable, @Param("name") String name, @Param("surname") String surname);
 
 	// GEO_RESULT, GEO_RESULTS, GEO_PAGE

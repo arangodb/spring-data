@@ -40,7 +40,7 @@ public class Customer {
 	private String id;
 	@Rev
 	private String rev;
-	@Field("customer-name")
+	@Field("customerName")
 	private String name;
 	private String surname;
 	private int age;
