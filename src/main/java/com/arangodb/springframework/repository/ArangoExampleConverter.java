@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import com.arangodb.springframework.core.util.AqlUtils;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.mapping.AssociationHandler;
@@ -73,7 +74,7 @@ public class ArangoExampleConverter<T> {
 			if (property.getFrom().isPresent() || property.getTo().isPresent() || property.getRelations().isPresent()) {
 				return;
 			}
-			final String fullPath = path + (path.length() == 0 ? "" : ".") + property.getFieldName();
+			final String fullPath = path + (path.length() == 0 ? "" : ".") + AqlUtils.buildFieldName(property.getFieldName());
 			final String fullJavaPath = javaPath + (javaPath.length() == 0 ? "" : ".") + property.getName();
 			final Object value = accessor.getProperty(property);
 
@@ -116,7 +117,7 @@ public class ArangoExampleConverter<T> {
 		entity.doWithAssociations((AssociationHandler<ArangoPersistentProperty>) association -> {
 
 			final ArangoPersistentProperty property = association.getInverse();
-			final String fullPath = path + (path.length() == 0 ? "" : ".") + property.getFieldName();
+			final String fullPath = path + (path.length() == 0 ? "" : ".") + AqlUtils.buildFieldName(property.getFieldName());
 			final String fullJavaPath = javaPath + (javaPath.length() == 0 ? "" : ".") + property.getName();
 			final Object value = accessor.getProperty(property);
 
@@ -147,7 +148,7 @@ public class ArangoExampleConverter<T> {
 		final String binding = Integer.toString(bindVars.size());
 		String clause;
 		final ExampleMatcher.PropertySpecifier specifier = example.getMatcher().getPropertySpecifiers()
-				.getForPath(fullPath);
+				.getForPath(fullJavaPath);
 		if (specifier != null && value != null) {
 			value = specifier.transformValue(Optional.of(value)).orElse(null);
 		}

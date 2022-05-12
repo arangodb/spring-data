@@ -48,7 +48,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
         repository.saveAll(customers);
 
 		Map<String, Object> filters = new HashMap<>();
-		filters.put("name", "John");
+		filters.put("customerName", "John");
 		filters.put("surname", "Smith");
 		filters.put("age", 20);
 		List<Customer> retrieved = repository.findByAllEqual(filters);
@@ -67,7 +67,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 			new AqlQueryOptions());
 		assertThat(retrieved, hasEntry("_key", john.getId()));
 		assertThat(retrieved, hasEntry("_rev", john.getRev()));
-		assertThat(retrieved, hasEntry("name", john.getName()));
+		assertThat(retrieved, hasEntry("customerName", john.getName()));
 		assertThat(retrieved, hasEntry("surname", john.getSurname()));
 		assertThat(retrieved, hasEntry("age", (long) john.getAge()));
 		assertThat(retrieved, hasEntry("alive", john.isAlive()));
@@ -79,7 +79,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final BaseDocument retrieved = repository.findOneByIdAndNameAql(john.getId(), john.getName());
 		assertThat(retrieved.getKey(), is(john.getId()));
 		assertThat(retrieved.getRevision(), is(john.getRev()));
-		assertThat(retrieved.getAttribute("name"), is(john.getName()));
+		assertThat(retrieved.getAttribute("customerName"), is(john.getName()));
 		assertThat(retrieved.getAttribute("surname"), is(john.getSurname()));
 		assertThat(retrieved.getAttribute("age"), is((long) john.getAge()));
 		assertThat(retrieved.getAttribute("alive"), is(john.isAlive()));
@@ -201,7 +201,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdWithStaticProjectionTest() {
 		repository.saveAll(customers);
 		final CustomerNameProjection retrieved = repository.findOneByIdWithStaticProjection(john.getId());
-		assertEquals(retrieved.getName(), john.getName());
+		assertEquals(retrieved.getCustomerName(), john.getName());
 	}
 
 	@Test
@@ -209,7 +209,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final List<CustomerNameProjection> retrieved = repository.findManyLegalAgeWithStaticProjection();
 		for (final CustomerNameProjection proj : retrieved) {
-			assertThat(proj.getName(), isOneOf(john.getName(), bob.getName()));
+			assertThat(proj.getCustomerName(), isOneOf(john.getName(), bob.getName()));
 		}
 	}
 
@@ -218,7 +218,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final CustomerNameProjection retrieved = repository.findOneByIdWithDynamicProjection(john.getId(),
 			CustomerNameProjection.class);
-		assertEquals(retrieved.getName(), john.getName());
+		assertEquals(retrieved.getCustomerName(), john.getName());
 	}
 
 	@Test
@@ -227,7 +227,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final List<CustomerNameProjection> retrieved = repository
 				.findManyLegalAgeWithDynamicProjection(CustomerNameProjection.class);
 		for (final CustomerNameProjection proj : retrieved) {
-			assertThat(proj.getName(), isOneOf(john.getName(), bob.getName()));
+			assertThat(proj.getCustomerName(), isOneOf(john.getName(), bob.getName()));
 		}
 	}
 

@@ -22,14 +22,9 @@ package com.arangodb.springframework.testdata;
 
 import java.util.Collection;
 
+import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
 
-import com.arangodb.springframework.annotation.ArangoId;
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.GeoIndexed;
-import com.arangodb.springframework.annotation.Ref;
-import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.annotation.Rev;
 import org.springframework.data.geo.Point;
 
 /**
@@ -45,6 +40,7 @@ public class Customer {
 	private String id;
 	@Rev
 	private String rev;
+	@Field("customerName")
 	private String name;
 	private String surname;
 	private int age;

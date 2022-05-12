@@ -20,11 +20,14 @@
 
 package com.arangodb.springframework.repository.query.derived;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.geo.GeoJson;
+import com.arangodb.springframework.core.mapping.ArangoMappingContext;
+import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.core.util.AqlUtils;
+import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
+import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -36,18 +39,13 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
 
-import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.util.AqlUtils;
-import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
-import com.arangodb.springframework.repository.query.derived.geo.Ring;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Creates a full AQL query from a PartTree and ArangoParameterAccessor
@@ -67,7 +65,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		UNSUPPORTED_IGNORE_CASE.add(Part.Type.WITHIN);
 	}
 
-	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
+	private final ArangoMappingContext context;
+	private final Class<?> domainClass;
 	private final String collectionName;
 	private final PartTree tree;
 	private final ArangoParameterAccessor accessor;
@@ -83,11 +82,12 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	private int bindingCounter = 0;
 
 	public DerivedQueryCreator(
-		final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context,
+		final ArangoMappingContext context,
 		final Class<?> domainClass, final PartTree tree, final ArangoParameterAccessor accessor,
 		final BindParameterBinding binder, final List<String> geoFields) {
 		super(tree, accessor);
 		this.context = context;
+		this.domainClass = domainClass;
 		collectionName = AqlUtils.buildCollectionName(context.getPersistentEntity(domainClass).getCollection());
 		this.tree = tree;
 		this.accessor = accessor;
@@ -144,7 +144,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			query.append(" COLLECT WITH COUNT INTO length");
 		}
 
-		String sortString = " " + AqlUtils.buildSortClause(sort, "e");
+		String sortString = " " + AqlUtils.buildSortClause(AqlUtils.toPersistentSort(sort, context, domainClass), "e");
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
 
@@ -238,7 +238,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	 */
 	private String getProperty(final Part part) {
 		return "e." + context.getPersistentPropertyPath(part.getProperty()).toPath(".",
-			ArangoPersistentProperty::getFieldName);
+				p -> AqlUtils.buildFieldName(p.getFieldName()));
 	}
 
 	/**
@@ -260,7 +260,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			--propertiesLeft;
 			final ArangoPersistentProperty property = (ArangoPersistentProperty) object;
 			if (propertiesLeft == 0) {
-				simpleProperties.append("." + property.getFieldName());
+				simpleProperties.append("." + AqlUtils.buildFieldName(property.getFieldName()));
 				break;
 			}
 			if (property.getRelations().isPresent()) {
@@ -296,7 +296,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					if (collection.split("-").length > 1) {
 						collection = "`" + collection + "`";
 					}
-					final String name = simpleProperties.toString() + "." + property.getFieldName();
+					final String name = simpleProperties.toString() + "." + AqlUtils.buildFieldName(property.getFieldName());
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
@@ -307,7 +307,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					final String TEMPLATE = "FOR %s IN TO_ARRAY(%s%s)";
 					final String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
 					final String entity = "e" + Integer.toString(++varsUsed);
-					final String name = simpleProperties.toString() + "." + property.getFieldName();
+					final String name = simpleProperties.toString() + "." + AqlUtils.buildFieldName(property.getFieldName());
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
@@ -324,7 +324,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 					if (collection.split("-").length > 1) {
 						collection = "`" + collection + "`";
 					}
-					final String name = simpleProperties.toString() + "." + property.getFieldName();
+					final String name = simpleProperties.toString() + "." + AqlUtils.buildFieldName(property.getFieldName());
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
@@ -332,7 +332,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 							: format(predicateTemplate, predicate);
 				} else {
 					// simple property
-					simpleProperties.append("." + property.getFieldName());
+					simpleProperties.append("." + AqlUtils.buildFieldName(property.getFieldName()));
 				}
 			}
 		}
