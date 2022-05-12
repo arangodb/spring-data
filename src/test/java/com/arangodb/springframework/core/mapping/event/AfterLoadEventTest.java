@@ -99,7 +99,7 @@ public class AfterLoadEventTest extends AbstractArangoTest {
 	@Test
 	public void findByQueryAfterLoadEvent() {
 		template.insert(customers, Customer.class);
-		template.query("FOR c IN @@collection FILTER c.customerName == @name RETURN c",
+		template.query("FOR c IN @@collection FILTER c.`customer-name` == @name RETURN c",
 			new MapBuilder().put("@collection", Customer.class).put("name", john.getName()).get(), Customer.class)
 				.forEach(elem -> { // trigger conversion
 				});

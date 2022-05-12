@@ -1,7 +1,14 @@
 package com.arangodb.springframework.testdata;
 
-public interface CustomerNameProjection {
-	
-	String getCustomerName();
+import com.arangodb.springframework.annotation.Field;
+
+public class CustomerNameProjection {
+
+	@Field("customer-name")
+	private String name;
+
+	public String getName() {
+		return name;
+	}
 
 }
