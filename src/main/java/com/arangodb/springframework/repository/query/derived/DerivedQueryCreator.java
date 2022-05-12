@@ -144,7 +144,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			query.append(" COLLECT WITH COUNT INTO length");
 		}
 
-		String sortString = " " + AqlUtils.buildPersistentSortClause(sort, "e", context, domainClass);
+		String sortString = " " + AqlUtils.buildSortClause(AqlUtils.toPersistentSort(sort, context, domainClass), "e");
 		if ((!this.geoFields.isEmpty() || isUnique != null && isUnique) && !tree.isDelete() && !tree.isCountProjection()
 				&& !tree.isExistsProjection()) {
 

@@ -357,12 +357,15 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		return predicate == null ? "" : "FILTER " + predicate;
 	}
 
-	private String buildPageableClause(final Pageable pageable, final String varName) {
-		return pageable == null ? "" : AqlUtils.buildPageableClause(pageable, varName);
-	}
+    private String buildPageableClause(final Pageable pageable, final String varName) {
+        if (pageable == null) return "";
+        Sort persistentSort = AqlUtils.toPersistentSort(pageable.getSort(), mappingContext, domainClass);
+        Pageable persistentPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), persistentSort);
+        return AqlUtils.buildPageableClause(persistentPageable, varName);
+    }
 
-	private String buildSortClause(final Sort sort, final String varName) {
-		return sort == null ? "" : AqlUtils.buildPersistentSortClause(sort, varName, mappingContext, domainClass);
-	}
+    private String buildSortClause(final Sort sort, final String varName) {
+        return sort == null ? "" : AqlUtils.buildSortClause(AqlUtils.toPersistentSort(sort, mappingContext, domainClass), varName);
+    }
 
 }
