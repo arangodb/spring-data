@@ -10,21 +10,21 @@ import java.util.function.Function;
  */
 public class QueryTransactionBridge {
     private static final Function<Collection<String>, String> NO_TRANSACTION = any -> null;
-    private static final ThreadLocal<Function<Collection<String>, String>> CURRENT_TRANSACTION_BEGIN = new NamedInheritableThreadLocal<>("ArangoTransactionBegin");
+    private static final ThreadLocal<Function<Collection<String>, String>> CURRENT_TRANSACTION = new NamedInheritableThreadLocal<>("ArangoTransactionBegin");
 
     public QueryTransactionBridge() {
-        CURRENT_TRANSACTION_BEGIN.set(NO_TRANSACTION);
+        CURRENT_TRANSACTION.set(NO_TRANSACTION);
     }
 
-    public void setCurrentTransactionBegin(Function<Collection<String>, String> begin) {
-        CURRENT_TRANSACTION_BEGIN.set(begin);
+    public void setCurrentTransaction(Function<Collection<String>, String> begin) {
+        CURRENT_TRANSACTION.set(begin);
     }
 
-    public void clearCurrentTransactionBegin() {
-        CURRENT_TRANSACTION_BEGIN.set(NO_TRANSACTION);
+    public void clearCurrentTransaction() {
+        CURRENT_TRANSACTION.set(NO_TRANSACTION);
     }
 
-    public String beginCurrentTransaction(Collection<String> collections) {
-        return CURRENT_TRANSACTION_BEGIN.get().apply(collections);
+    public String getCurrentTransaction(Collection<String> collections) {
+        return CURRENT_TRANSACTION.get().apply(collections);
     }
 }

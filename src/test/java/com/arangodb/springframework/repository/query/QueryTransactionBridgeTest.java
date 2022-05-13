@@ -13,18 +13,18 @@ public class QueryTransactionBridgeTest {
     private QueryTransactionBridge underTest = new QueryTransactionBridge();
 
     @Test
-    public void beginCurrentTransactionInitiallyReturnsNull() {
-        assertThat(underTest.beginCurrentTransaction(Collections.singleton("test")), Matchers.nullValue());
+    public void getCurrentTransactionInitiallyReturnsNull() {
+        assertThat(underTest.getCurrentTransaction(Collections.singleton("test")), Matchers.nullValue());
     }
 
     @Test
-    public void setCurrentTransactionBeginIsAppliedOnBeginCurrentTransaction() {
-        underTest.setCurrentTransactionBegin(collections -> collections.iterator().next());
-        assertThat(underTest.beginCurrentTransaction(Collections.singleton("test")), Matchers.is("test"));
+    public void setCurrentTransactionIsAppliedOnGetCurrentTransaction() {
+        underTest.setCurrentTransaction(collections -> collections.iterator().next());
+        assertThat(underTest.getCurrentTransaction(Collections.singleton("test")), Matchers.is("test"));
     }
 
     @After
     public void cleanup() {
-        underTest.clearCurrentTransactionBegin();
+        underTest.clearCurrentTransaction();
     }
 }
