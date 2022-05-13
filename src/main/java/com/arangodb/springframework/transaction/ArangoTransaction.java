@@ -16,6 +16,8 @@ import java.util.Set;
 class ArangoTransaction implements SmartTransactionObject {
 
     private final ArangoDatabase database;
+
+    private final Set<String> writeCollections = new HashSet<>();
     private TransactionDefinition definition;
     private StreamTransactionEntity transaction;
 
@@ -29,19 +31,22 @@ class ArangoTransaction implements SmartTransactionObject {
 
     void configure(TransactionDefinition definition) {
         this.definition = definition;
+        if (definition instanceof TransactionAttribute) {
+            writeCollections.addAll(((TransactionAttribute) definition).getLabels());
+        }
     }
 
-    String begin(Collection<String> collections) {
+    String getOrBegin(Collection<String> collections) {
         if (transaction != null) {
-            throw new IllegalTransactionStateException("Stream transaction already started");
+            if (!writeCollections.containsAll(collections)) {
+                throw new IllegalTransactionStateException("Stream transaction already started, no additional collections allowed");
+            }
+            return transaction.getId();
         }
-        Set<String> allCollections = new HashSet<>(collections);
-        if (definition instanceof TransactionAttribute) {
-            allCollections.addAll(((TransactionAttribute) definition).getLabels());
-        }
+        writeCollections.addAll(collections);
         StreamTransactionOptions options = new StreamTransactionOptions()
                 .allowImplicit(true)
-                .writeCollections(allCollections.toArray(new String[0]))
+                .writeCollections(writeCollections.toArray(new String[0]))
                 .lockTimeout(definition.getTimeout() == -1 ? 0 : definition.getTimeout());
         transaction = database.beginStreamTransaction(options);
         return transaction.getId();

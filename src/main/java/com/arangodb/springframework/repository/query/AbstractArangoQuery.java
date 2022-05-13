@@ -81,7 +81,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 
 		final Pair<String, ? extends Collection<String>> queryAndCollection = createQuery(accessor, bindVars, options);
 		if (options.getStreamTransactionId() == null && transactionBridge != null) {
-			options.streamTransactionId(transactionBridge.beginCurrentTransaction(queryAndCollection.getSecond()));
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(queryAndCollection.getSecond()));
 		}
 
 
