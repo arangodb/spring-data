@@ -43,8 +43,8 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         }
         ArangoTransaction tx = (ArangoTransaction) transaction;
         tx.configure(definition);
-        Function<Collection<String>, String> begin = tx::begin;
-        bridge.setCurrentTransactionBegin(begin.andThen(id -> {
+        Function<Collection<String>, String> begin = tx::getOrBegin;
+        bridge.setCurrentTransaction(begin.andThen(id -> {
             if (logger.isDebugEnabled()) {
                 logger.debug("Began stream transaction " + id);
             }
@@ -59,7 +59,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
             logger.debug("Commit stream transaction " + tx);
         }
         tx.commit();
-        bridge.clearCurrentTransactionBegin();
+        bridge.clearCurrentTransaction();
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
             logger.debug("Rollback stream transaction " + tx);
         }
         tx.rollback();
-        bridge.clearCurrentTransactionBegin();
+        bridge.clearCurrentTransaction();
     }
 
     @Override

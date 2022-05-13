@@ -67,7 +67,7 @@ public class ArangoTransactionManagerTest {
         TransactionStatus transaction = underTest.getTransaction(new DefaultTransactionAttribute());
         assertThat(transaction.isNewTransaction(), is(true));
         verify(driver).db(DATABASE_NAME);
-        verify(bridge).setCurrentTransactionBegin(any());
+        verify(bridge).setCurrentTransaction(any());
         verifyNoInteractions(database);
     }
 
@@ -81,7 +81,7 @@ public class ArangoTransactionManagerTest {
                 .thenReturn("123");
         when(database.beginStreamTransaction(any()))
                 .thenReturn(streamTransaction);
-        verify(bridge).setCurrentTransactionBegin(beginPassed.capture());
+        verify(bridge).setCurrentTransaction(beginPassed.capture());
         beginPassed.getValue().apply(Arrays.asList("foo", "bar"));
         verify(database).beginStreamTransaction(optionsPassed.capture());
         assertThat(optionsPassed.getValue().getAllowImplicit(), is(true));
