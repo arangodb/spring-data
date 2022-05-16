@@ -141,6 +141,9 @@ public abstract class AbstractResolver<A extends Annotation> {
 			if (GET_REF_ID_METHOD.equals(method)) {
 				return id;
 			}
+			if (method.getName().equals("canEqual")) {
+				return proxyCanEqual(ensureResolved(), args[0]);
+			}
 
 			if (ReflectionUtils.isObjectMethod(method)) {
 				if (ReflectionUtils.isToStringMethod(method)) {
@@ -186,6 +189,10 @@ public abstract class AbstractResolver<A extends Annotation> {
 
 		private int proxyHashCode() {
 			return proxyToString().hashCode();
+		}
+
+		private boolean proxyCanEqual(final Object proxy, final Object obj) {
+			return obj.getClass().isInstance(proxy);
 		}
 
 		private boolean proxyEquals(final Object proxy, final Object obj) {
