@@ -26,6 +26,7 @@ import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.DocumentNotFoundException;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.util.AqlUtils;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -52,6 +53,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	private final ArangoExampleConverter exampleConverter;
 	private final Class<T> domainClass;
 	private final boolean returnOriginalEntities;
+	private final QueryTransactionBridge transactionBridge;
 
 	/**
 	 * @param arangoOperations       The template used to execute much of the
@@ -59,12 +61,14 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @param domainClass            the class type of this repository
 	 * @param returnOriginalEntities whether save and saveAll should return the
 	 *                               original entities or new ones
+	 * @param transactionBridge the optional transaction bridge
 	 */
-	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass, boolean returnOriginalEntities) {
+	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass, boolean returnOriginalEntities, final QueryTransactionBridge transactionBridge) {
 		super();
 		this.arangoOperations = arangoOperations;
 		this.domainClass = domainClass;
 		this.returnOriginalEntities = returnOriginalEntities;
+		this.transactionBridge = transactionBridge;
 		mappingContext = (ArangoMappingContext) arangoOperations.getConverter().getMappingContext();
 		exampleConverter = new ArangoExampleConverter(mappingContext, arangoOperations.getResolverFactory());
 	}
