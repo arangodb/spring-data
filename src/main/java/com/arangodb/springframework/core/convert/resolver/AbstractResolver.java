@@ -144,7 +144,6 @@ public abstract class AbstractResolver<A extends Annotation> {
 			if (method.getName().equals("canEqual")) {
 				return proxyCanEqual(ensureResolved(), args[0]);
 			}
-
 			if (ReflectionUtils.isObjectMethod(method)) {
 				if (ReflectionUtils.isToStringMethod(method)) {
 					return proxyToString();
