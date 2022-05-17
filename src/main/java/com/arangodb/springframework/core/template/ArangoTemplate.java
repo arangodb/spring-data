@@ -284,17 +284,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
     @Override
-    public <T> ArangoCursor<T> query(final String query, final Class<T> entityClass) throws DataAccessException {
-        return query(query, null, null, entityClass);
-    }
-
-    @Override
-    public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars, final Class<T> entityClass)
-            throws DataAccessException {
-        return query(query, bindVars, null, entityClass);
-    }
-
-    @Override
     public <T> ArangoCursor<T> query(final String query, final AqlQueryOptions options, final Class<T> entityClass)
             throws DataAccessException {
         return query(query, null, options, entityClass);
@@ -344,15 +333,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAll(
-            final Iterable<?> values,
-            final Class<?> entityClass
-    ) throws DataAccessException {
-        return deleteAll(values, new DocumentDeleteOptions(), (Class) entityClass);
-    }
-
-    @Override
     public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteAllById(Iterable<?> ids, DocumentDeleteOptions options, Class<T> entityClass) throws DataAccessException {
         if (ids == null) {
             throw new IllegalArgumentException("ids must not be null");
@@ -365,12 +345,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             convertedIds.add(converter.convertId(id));
         }
         return deleteAll(convertedIds, options, entityClass);
-    }
-
-    @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAllById(Iterable<?> ids, Class<?> entityClass) throws DataAccessException {
-        return deleteAllById(ids, new DocumentDeleteOptions(), (Class) entityClass);
     }
 
     @Override
@@ -388,11 +362,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         potentiallyEmitEvent(new AfterDeleteEvent<>(id, entityClass));
         return result;
-    }
-
-    @Override
-    public DocumentDeleteEntity<?> delete(final Object id, final Class<?> entityClass) throws DataAccessException {
-        return delete(id, new DocumentDeleteOptions(), entityClass);
     }
 
     @Override
@@ -417,15 +386,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public <T> MultiDocumentEntity<DocumentUpdateEntity<?>> updateAll(
-            final Iterable<? extends T> values,
-            final Class<T> entityClass
-    ) throws DataAccessException {
-        return updateAll(values, new DocumentUpdateOptions(), (Class) entityClass);
-    }
-
-    @Override
     public <T> DocumentUpdateEntity<T> update(final Object id, final T value, final DocumentUpdateOptions options)
             throws DataAccessException {
 
@@ -441,11 +401,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         updateDBFields(value, result);
         potentiallyEmitEvent(new AfterSaveEvent<>(value));
         return result;
-    }
-
-    @Override
-    public DocumentUpdateEntity<?> update(final Object id, final Object value) throws DataAccessException {
-        return update(id, value, new DocumentUpdateOptions());
     }
 
     @Override
@@ -470,15 +425,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public <T> MultiDocumentEntity<DocumentUpdateEntity<?>> replaceAll(
-            final Iterable<? extends T> values,
-            final Class<T> entityClass
-    ) throws DataAccessException {
-        return replaceAll(values, new DocumentReplaceOptions(), (Class) entityClass);
-    }
-
-    @Override
     public <T> DocumentUpdateEntity<T> replace(final Object id, final T value, final DocumentReplaceOptions options)
             throws DataAccessException {
         potentiallyEmitEvent(new BeforeSaveEvent<>(value));
@@ -496,11 +442,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public DocumentUpdateEntity<?> replace(final Object id, final Object value) throws DataAccessException {
-        return replace(id, value, new DocumentReplaceOptions());
-    }
-
-    @Override
     public <T> Optional<T> find(final Object id, final Class<T> entityClass, final DocumentReadOptions options)
             throws DataAccessException {
         try {
@@ -515,24 +456,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> Optional<T> find(final Object id, final Class<T> entityClass) throws DataAccessException {
-        return find(id, entityClass, new DocumentReadOptions());
-    }
-
-    @Override
-    public <T> Iterable<T> findAll(final Class<T> entityClass) throws DataAccessException {
+	public <T> Iterable<T> findAll(final Class<T> entityClass, DocumentReadOptions options) throws DataAccessException {
         final String query = "FOR entity IN @@col RETURN entity";
         final Map<String, Object> bindVars = Collections.singletonMap("@col", entityClass);
-        return query(query, bindVars, null, entityClass).asListRemaining();
+		return query(query, bindVars, asQueryOptions(options), entityClass).asListRemaining();
     }
 
     @Override
-    public <T> Iterable<T> findAll(final Iterable<?> ids, final Class<T> entityClass)
+	public <T> Iterable<T> findAll(final Iterable<?> ids, final Class<T> entityClass, DocumentReadOptions options)
             throws DataAccessException {
         try {
             final Collection<String> keys = new ArrayList<>();
             ids.forEach(id -> keys.add(determineDocumentKeyFromId(id)));
-            Collection<T> docs = _collection(entityClass).getDocuments(keys, entityClass).getDocuments();
+			Collection<T> docs = _collection(entityClass).getDocuments(keys, entityClass).getDocuments();
             for (T doc : docs) {
                 if (doc != null) {
                     potentiallyEmitEvent(new AfterLoadEvent<>(doc));
@@ -563,12 +499,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public <T> MultiDocumentEntity<DocumentCreateEntity<?>> insertAll(Iterable<? extends T> values, Class<T> entityClass) throws DataAccessException {
-        return insertAll(values, new DocumentCreateOptions(), (Class) entityClass);
-    }
-
-    @Override
     public <T> DocumentCreateEntity<T> insert(final T value, final DocumentCreateOptions options) throws DataAccessException {
         potentiallyEmitEvent(new BeforeSaveEvent<>(value));
 
@@ -585,12 +515,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public DocumentCreateEntity<?> insert(final Object value) throws DataAccessException {
-        return insert(value, new DocumentCreateOptions());
-    }
-
-    @Override
-    public <T> T repsert(final T value) throws DataAccessException {
+    public <T> T repsert(final T value, AqlQueryOptions options) throws DataAccessException {
         @SuppressWarnings("unchecked") final Class<T> clazz = (Class<T>) value.getClass();
         final String collectionName = _collection(clazz).name();
 
@@ -605,7 +530,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             ArangoCursor<T> it = query(
                     REPSERT_QUERY,
                     bindVars,
-                    clazz
+					options, clazz
             );
             result = it.hasNext() ? it.next() : null;
         } catch (final ArangoDBException e) {
@@ -619,7 +544,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public <T> Iterable<T> repsertAll(final Iterable<T> values, final Class<? super T> entityClass) throws DataAccessException {
+    public <T> Iterable<T> repsertAll(final Iterable<T> values, final Class<? super T> entityClass, AqlQueryOptions options) throws DataAccessException {
         if (!values.iterator().hasNext()) {
             return Collections.emptyList();
         }
@@ -636,7 +561,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             result = query(
                     REPSERT_MANY_QUERY,
                     bindVars,
-                    entityClass
+					options, entityClass
             ).asListRemaining();
         } catch (final ArangoDBException e) {
             throw translateException(e);
@@ -723,9 +648,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public boolean exists(final Object id, final Class<?> entityClass) throws DataAccessException {
+	public boolean exists(final Object id, final Class<?> entityClass, DocumentExistsOptions options) throws DataAccessException {
         try {
-            return _collection(entityClass).documentExists(determineDocumentKeyFromId(id));
+			return _collection(entityClass).documentExists(determineDocumentKeyFromId(id), options);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -747,11 +672,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     @Override
     public CollectionOperations collection(final Class<?> entityClass) throws DataAccessException {
         return collection(_collection(entityClass));
-    }
-
-    @Override
-    public CollectionOperations collection(final String name) throws DataAccessException {
-        return collection(_collection(name));
     }
 
     @Override
@@ -849,4 +769,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         it.forEach(l::add);
         return l;
     }
+
+	private AqlQueryOptions asQueryOptions(DocumentReadOptions source) {
+		return new AqlQueryOptions().streamTransactionId(source.getStreamTransactionId()).allowDirtyRead(source.getAllowDirtyRead());
+	}
 }
