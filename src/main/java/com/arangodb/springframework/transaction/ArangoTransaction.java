@@ -16,7 +16,6 @@ import java.util.Set;
 class ArangoTransaction implements SmartTransactionObject {
 
     private final ArangoDatabase database;
-
     private final Set<String> writeCollections = new HashSet<>();
     private TransactionDefinition definition;
     private StreamTransactionEntity transaction;
@@ -53,11 +52,15 @@ class ArangoTransaction implements SmartTransactionObject {
     }
 
     void commit() {
-        database.commitStreamTransaction(transaction.getId());
+        if (transaction != null && transaction.getStatus() == StreamTransactionStatus.running) {
+            database.commitStreamTransaction(transaction.getId());
+        }
     }
 
     void rollback() {
-        database.abortStreamTransaction(transaction.getId());
+        if (transaction != null && transaction.getStatus() == StreamTransactionStatus.running) {
+            database.abortStreamTransaction(transaction.getId());
+        }
     }
 
     @Override

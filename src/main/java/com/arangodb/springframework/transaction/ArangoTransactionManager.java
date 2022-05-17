@@ -1,6 +1,7 @@
 package com.arangodb.springframework.transaction;
 
 import com.arangodb.ArangoDatabase;
+import com.arangodb.DbName;
 import com.arangodb.model.StreamTransactionOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.repository.query.QueryTransactionBridge;
@@ -32,7 +33,11 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
 
     @Override
     protected Object doGetTransaction() throws TransactionException {
-        return new ArangoTransaction(operations.driver().db(operations.getDatabaseName()));
+        DbName database = operations.getDatabaseName();
+        if (logger.isDebugEnabled()) {
+            logger.debug("Create new transaction for database " + database);
+        }
+        return new ArangoTransaction(operations.driver().db(database));
     }
 
     @Override
