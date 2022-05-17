@@ -22,8 +22,8 @@ public class ArangoTransactionManagerRepositoryTest extends AbstractArangoTest {
 	private HumanBeingRepository humanBeingRepository;
 
 	@Before
-	public void setUp() {
-		humanBeingRepository.deleteAll();
+	public void cleanupDatabase() {
+		template.collection(HumanBeing.class).truncate();
 	}
 
 	@Test
