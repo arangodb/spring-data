@@ -87,7 +87,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	protected Object getTargetRepository(final RepositoryInformation metadata) {
-		return new SimpleArangoRepository(arangoTemplate, metadata.getDomainType(), returnOriginalEntities);
+		return new SimpleArangoRepository(arangoTemplate, metadata.getDomainType(), returnOriginalEntities, transactionBridge);
 	}
 
 	@Override
@@ -114,7 +114,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 		QueryLookupStrategy strategy = null;
 		switch (key) {
 		case CREATE_IF_NOT_FOUND:
-			strategy = new DefaultArangoQueryLookupStrategy(arangoTemplate, applicationContext);
+			strategy = new DefaultArangoQueryLookupStrategy(arangoTemplate, transactionBridge, applicationContext);
 			break;
 		case CREATE:
 			break;
