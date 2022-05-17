@@ -115,4 +115,29 @@ public class Product {
 		this.nested = nested;
 	}
 
+	/*
+	* Simulating the structure of lombok
+	* https://projectlombok.org/features/EqualsAndHashCode
+	*/
+	@Override public boolean equals(Object o) {
+		if (o == this) return true;
+		if (!(o instanceof Product)) return false;
+		Product other = (Product) o;
+		if (!other.canEqual((Object)this)) return false;
+		if (!this.getId().equals(other.getId())) return false;
+		return true;
+	  }
+	  
+	  @Override public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		result = (result*PRIME) + super.hashCode();
+		result = (result*PRIME) + this.getId().hashCode();
+		return result;
+	  }
+	  
+	  protected boolean canEqual(Object other) {
+		return other instanceof Product;
+	  }
+
 }
