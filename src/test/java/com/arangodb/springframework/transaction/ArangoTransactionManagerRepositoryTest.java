@@ -4,6 +4,7 @@ import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTransactionalTestConfiguration;
 import com.arangodb.springframework.repository.HumanBeingRepository;
 import com.arangodb.springframework.testdata.HumanBeing;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -11,7 +12,6 @@ import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @ContextConfiguration(classes = { ArangoTransactionalTestConfiguration.class })
 public class ArangoTransactionManagerRepositoryTest extends AbstractArangoTest {
@@ -21,16 +21,37 @@ public class ArangoTransactionManagerRepositoryTest extends AbstractArangoTest {
 	@Autowired
 	private HumanBeingRepository humanBeingRepository;
 
+	@Before
+	public void setUp() {
+		humanBeingRepository.deleteAll();
+	}
+
 	@Test
 	public void shouldWorkWithoutTransaction() {
-		assertDoesNotThrow(() -> humanBeingRepository.save(anakin));
+		humanBeingRepository.save(anakin);
+
+		assertThat(humanBeingRepository.findByNameAndSurname(anakin.getName(), anakin.getSurname())).isPresent();
 	}
 
 	@Test
 	@Transactional
 	public void shouldWorkWithinTransaction() {
+		humanBeingRepository.save(anakin);
+
+		assertThat(humanBeingRepository.findByNameAndSurname(anakin.getName(), anakin.getSurname())).isPresent();
+	}
+
+	@Test
+	@Transactional
+	public void shouldWorkAfterTransaction() {
 		TestTransaction.flagForCommit();
-		assertDoesNotThrow(() -> humanBeingRepository.save(anakin));
+
+		humanBeingRepository.save(anakin);
+
+		assertThat(TestTransaction.isFlaggedForRollback()).isFalse();
+		TestTransaction.end();
+
+		assertThat(humanBeingRepository.findByNameAndSurname(anakin.getName(), anakin.getSurname())).isPresent();
 	}
 
 	@Test
