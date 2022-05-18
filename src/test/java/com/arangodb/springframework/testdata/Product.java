@@ -23,15 +23,19 @@ package com.arangodb.springframework.testdata;
 import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * @author Mark Vollmary
  *
  */
 @GeoIndex(fields = { "location" })
 @Document("test-product")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Product {
 
 	@Id
+	@EqualsAndHashCode.Include
 	private String id;
 	@Rev
 	private String rev;
@@ -114,30 +118,5 @@ public class Product {
 	public void setNested(final Product nested) {
 		this.nested = nested;
 	}
-
-	/*
-	* Simulating the structure of lombok
-	* https://projectlombok.org/features/EqualsAndHashCode
-	*/
-	@Override public boolean equals(Object o) {
-		if (o == this) return true;
-		if (!(o instanceof Product)) return false;
-		Product other = (Product) o;
-		if (!other.canEqual((Object)this)) return false;
-		if (!this.getId().equals(other.getId())) return false;
-		return true;
-	  }
-	  
-	  @Override public int hashCode() {
-		final int PRIME = 59;
-		int result = 1;
-		result = (result*PRIME) + super.hashCode();
-		result = (result*PRIME) + this.getId().hashCode();
-		return result;
-	  }
-	  
-	  protected boolean canEqual(Object other) {
-		return other instanceof Product;
-	  }
 
 }
