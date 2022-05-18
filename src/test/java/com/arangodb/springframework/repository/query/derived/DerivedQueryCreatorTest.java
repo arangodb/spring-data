@@ -955,6 +955,26 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 	}
 
 	@Test
+	public void referenceLazyListCompareTest() {
+		final Customer customer1 = new Customer("Customer1", "Surname1", 0);
+		ShoppingCart cart1 = new ShoppingCart();
+		Product product1 = new Product("asdf1");
+		Product product2 = new Product("asdf2");
+		Product product3 = new Product("asdf3");
+		product1 = productRepository.save(product1);
+		product2 = productRepository.save(product2);
+		product3 = productRepository.save(product3);
+		cart1.setProductsListLazy(Arrays.asList(product1, product2, product3));
+		cart1 = shoppingCartRepository.save(cart1);
+		customer1.setShoppingCart(cart1);
+		repository.save(customer1);
+		final ShoppingCart cartRecoverty = shoppingCartRepository.findById(cart1.getId()).get();
+		final int index = cartRecoverty.getProductsListLazy().indexOf(product2);
+		final boolean result = (index >= 0);
+		assertTrue(result);
+	}
+
+	@Test
 	@Ignore // https://github.com/arangodb/arangodb/issues/5303
 	public void referenceGeospatialTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();

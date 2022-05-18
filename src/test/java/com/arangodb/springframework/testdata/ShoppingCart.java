@@ -22,6 +22,7 @@ package com.arangodb.springframework.testdata;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 
@@ -39,6 +40,10 @@ public class ShoppingCart {
 	private String id;
 	@Ref
 	private Collection<Product> products;
+
+	@Ref(lazy = true)
+	// it needs to be a list
+	private List<Product> productsListLazy;
 
 	public ShoppingCart() {
 		super();
@@ -60,5 +65,19 @@ public class ShoppingCart {
 	public void setProducts(final Collection<Product> products) {
 		this.products = products;
 	}
+
+    /**
+     * @return List<Product> return the productsListLazy
+     */
+    public List<Product> getProductsListLazy() {
+        return productsListLazy;
+    }
+
+    /**
+     * @param productsListLazy the productsListLazy to set
+     */
+    public void setProductsListLazy(List<Product> productsListLazy) {
+        this.productsListLazy = productsListLazy;
+    }
 
 }

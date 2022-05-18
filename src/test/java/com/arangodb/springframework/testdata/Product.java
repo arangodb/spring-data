@@ -23,15 +23,19 @@ package com.arangodb.springframework.testdata;
 import com.arangodb.springframework.annotation.*;
 import org.springframework.data.annotation.Id;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * @author Mark Vollmary
  *
  */
 @GeoIndex(fields = { "location" })
 @Document("test-product")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Product {
 
 	@Id
+	@EqualsAndHashCode.Include
 	private String id;
 	@Rev
 	private String rev;
