@@ -2,9 +2,10 @@ package com.arangodb.springframework.transaction;
 
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTransactionalTestConfiguration;
-import com.arangodb.springframework.repository.HumanBeingRepository;
-import com.arangodb.springframework.testdata.HumanBeing;
-import org.junit.Before;
+import com.arangodb.springframework.repository.ActorRepository;
+import com.arangodb.springframework.repository.MovieRepository;
+import com.arangodb.springframework.testdata.Actor;
+import com.arangodb.springframework.testdata.Movie;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -16,29 +17,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ContextConfiguration(classes = { ArangoTransactionalTestConfiguration.class })
 public class ArangoTransactionManagerRepositoryTest extends AbstractArangoTest {
 
-	private final HumanBeing anakin = new HumanBeing("Anakin", "Skywalker", false);
+	public ArangoTransactionManagerRepositoryTest() {
+		super(Movie.class, Actor.class);
+	}
 
 	@Autowired
-	private HumanBeingRepository humanBeingRepository;
+	private MovieRepository movieRepository;
+	@Autowired
+	private ActorRepository actorRepository;
 
-	@Before
-	public void cleanupDatabase() {
-		template.collection(HumanBeing.class).truncate();
+	Movie starWars = new Movie();
+
+	{
+		starWars.setName("Star Wars");
 	}
 
 	@Test
 	public void shouldWorkWithoutTransaction() {
-		humanBeingRepository.save(anakin);
+		movieRepository.save(starWars);
 
-		assertThat(humanBeingRepository.findByNameAndSurname(anakin.getName(), anakin.getSurname())).isPresent();
+		assertThat(movieRepository.findById(starWars.getId())).isPresent();
 	}
 
 	@Test
 	@Transactional
 	public void shouldWorkWithinTransaction() {
-		humanBeingRepository.save(anakin);
+		movieRepository.save(starWars);
 
-		assertThat(humanBeingRepository.findByNameAndSurname(anakin.getName(), anakin.getSurname())).isPresent();
+		assertThat(movieRepository.findById(starWars.getId())).isPresent();
 	}
 
 	@Test
@@ -46,21 +52,18 @@ public class ArangoTransactionManagerRepositoryTest extends AbstractArangoTest {
 	public void shouldWorkAfterTransaction() {
 		TestTransaction.flagForCommit();
 
-		humanBeingRepository.save(anakin);
-
-		assertThat(TestTransaction.isFlaggedForRollback()).isFalse();
+		movieRepository.save(starWars);
 		TestTransaction.end();
 
-		assertThat(humanBeingRepository.findByNameAndSurname(anakin.getName(), anakin.getSurname())).isPresent();
+		assertThat(movieRepository.findById(starWars.getId())).isPresent();
 	}
 
 	@Test
 	@Transactional
 	public void shouldRollbackWithinTransaction() {
-		humanBeingRepository.save(anakin);
-		TestTransaction.flagForRollback();
+		movieRepository.save(starWars);
 		TestTransaction.end();
 
-		assertThat(humanBeingRepository.findByNameAndSurname(anakin.getName(), anakin.getSurname())).isNotPresent();
+		assertThat(movieRepository.findById(starWars.getId())).isNotPresent();
 	}
 }
