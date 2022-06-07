@@ -245,13 +245,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation) {
 		collection.ensurePersistentIndex(Arrays.asList(annotation.fields()),
-				new PersistentIndexOptions().unique(annotation.unique()).sparse(annotation.sparse()));
+				new PersistentIndexOptions()
+						.unique(annotation.unique())
+						.sparse(annotation.sparse())
+						.deduplicate(annotation.deduplicate()));
 	}
 
 	private static void ensurePersistentIndex(final CollectionOperations collection,
 			final ArangoPersistentProperty value) {
 		final PersistentIndexOptions options = new PersistentIndexOptions();
-		value.getPersistentIndexed().ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()));
+		value.getPersistentIndexed().ifPresent(i -> options
+				.unique(i.unique())
+				.sparse(i.sparse())
+				.deduplicate(i.deduplicate()));
 		collection.ensurePersistentIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
@@ -684,7 +690,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	@Override
 	public <T> void repsert(final T value) throws DataAccessException {
-		@SuppressWarnings("unchecked") final Class<T> clazz = (Class<T>) value.getClass();
+		@SuppressWarnings("unchecked")
+		final Class<T> clazz = (Class<T>) value.getClass();
 		final String collectionName = _collection(clazz).name();
 
 		potentiallyEmitEvent(new BeforeSaveEvent<>(value));
@@ -697,8 +704,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 							.put("@col", collectionName)
 							.put("doc", value)
 							.get(),
-					clazz
-			).first();
+					clazz).first();
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
@@ -724,8 +730,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 							.put("@col", collectionName)
 							.put("docs", values)
 							.get(),
-					entityClass
-			).asListRemaining();
+					entityClass).asListRemaining();
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -743,13 +748,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	private void updateDBFieldsFromObject(final Object toModify, final Object toRead) {
-		final ArangoPersistentEntity<?> entityToRead = converter.getMappingContext().getPersistentEntity(toRead.getClass());
+		final ArangoPersistentEntity<?> entityToRead = converter.getMappingContext()
+				.getPersistentEntity(toRead.getClass());
 		final PersistentPropertyAccessor<?> accessorToRead = entityToRead.getPropertyAccessor(toRead);
 		final ArangoPersistentProperty idPropertyToRead = entityToRead.getIdProperty();
 		final Optional<ArangoPersistentProperty> arangoIdPropertyToReadOptional = entityToRead.getArangoIdProperty();
 		final Optional<ArangoPersistentProperty> revPropertyToReadOptional = entityToRead.getRevProperty();
 
-		final ArangoPersistentEntity<?> entityToModify = converter.getMappingContext().getPersistentEntity(toModify.getClass());
+		final ArangoPersistentEntity<?> entityToModify = converter.getMappingContext()
+				.getPersistentEntity(toModify.getClass());
 		final PersistentPropertyAccessor<?> accessorToWrite = entityToModify.getPropertyAccessor(toModify);
 		final ArangoPersistentProperty idPropertyToWrite = entityToModify.getIdProperty();
 
@@ -760,7 +767,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		if (arangoIdPropertyToReadOptional.isPresent()) {
 			ArangoPersistentProperty arangoIdPropertyToRead = arangoIdPropertyToReadOptional.get();
 			entityToModify.getArangoIdProperty().filter(arangoId -> !arangoId.isImmutable())
-					.ifPresent(arangoId -> accessorToWrite.setProperty(arangoId, accessorToRead.getProperty(arangoIdPropertyToRead)));
+					.ifPresent(arangoId -> accessorToWrite.setProperty(arangoId,
+							accessorToRead.getProperty(arangoIdPropertyToRead)));
 		}
 
 		if (revPropertyToReadOptional.isPresent()) {
