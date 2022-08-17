@@ -217,6 +217,25 @@
 			<artifactId>arangodb-java-driver</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.arangodb</groupId>
+			<artifactId>velocypack</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 			<version>${jodatime}</version>
@@ -299,7 +318,8 @@
 			<dependency>
 				<groupId>com.arangodb</groupId>
 				<artifactId>arangodb-java-driver</artifactId>
-				<version>6.16.0</version>
+<!--				<version>6.16.0</version>-->
+				<version>7.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mockito</groupId>

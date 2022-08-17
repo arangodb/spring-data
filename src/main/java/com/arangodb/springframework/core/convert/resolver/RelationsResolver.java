@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core.convert.resolver;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,6 @@ import org.springframework.data.util.TypeInformation;
 import com.arangodb.ArangoCursor;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
@@ -58,7 +58,8 @@ public class RelationsResolver extends AbstractResolver<Relations> implements Re
 	}
 
 	private Object _resolveOne(final String id, final TypeInformation<?> type, final Relations annotation) {
-		return _resolve(id, type.getType(), annotation, true).first();
+		ArangoCursor<?> c = _resolve(id, type.getType(), annotation, true);
+		return c.hasNext() ? c.next() : null;
 	}
 
 	private Object _resolveMultiple(final String id, final TypeInformation<?> type, final Relations annotation) {
@@ -82,10 +83,9 @@ public class RelationsResolver extends AbstractResolver<Relations> implements Re
 			edges, //
 			limit ? "LIMIT 1" : "");
 
-		final Map<String, Object> bindVars = new MapBuilder()//
-				.put("start", id) //
-				.put("@vertex", type) //
-				.get();
+		final Map<String, Object> bindVars = new HashMap<>();
+				bindVars.put("start", id); //
+				bindVars.put("@vertex", type); //
 
 		return template.query(query, bindVars, type);
 	}

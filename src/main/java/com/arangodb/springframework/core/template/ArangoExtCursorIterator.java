@@ -20,10 +20,10 @@
 
 package com.arangodb.springframework.core.template;
 
+import com.arangodb.internal.cursor.entity.InternalCursorEntity;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.entity.CursorEntity;
 import com.arangodb.internal.ArangoCursorExecute;
 import com.arangodb.internal.InternalArangoDatabase;
 import com.arangodb.internal.cursor.ArangoCursorIterator;
@@ -43,7 +43,7 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 	private ApplicationEventPublisher eventPublisher;
 
 	protected ArangoExtCursorIterator(final ArangoCursor<T> cursor, final InternalArangoDatabase<?, ?> db,
-		final ArangoCursorExecute execute, final CursorEntity result) {
+		final ArangoCursorExecute execute, final InternalCursorEntity result) {
 		super(cursor, execute, db, result);
 	}
 
@@ -56,8 +56,8 @@ class ArangoExtCursorIterator<T> extends ArangoCursorIterator<T> {
 	}
 
 	@Override
-	protected <R> R deserialize(final VPackSlice source, final Class<R> type) {
-		final R result = converter.read(type, source);
+	protected <R> R deserialize(final byte[] source, final Class<R> type) {
+		final R result = converter.read(type, new VPackSlice(source));
 		if (result != null) {
 			potentiallyEmitEvent(new AfterLoadEvent<>(result));
 		}

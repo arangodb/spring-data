@@ -41,7 +41,6 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.springframework.core.ArangoOperations;
@@ -56,9 +55,6 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Christian Lechner
  */
 public class ArangoResultConverter {
-
-	private final static String MISSING_FULL_COUNT = "Query result does not contain the full result count! "
-			+ "The most likely cause is a forgotten LIMIT clause in the query.";
 
 	private final ArangoParameterAccessor accessor;
 	private final ArangoCursor<?> result;
@@ -218,8 +214,7 @@ public class ArangoResultConverter {
 	}
 
 	public PageImpl<?> convertPage() {
-		Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
-		return new PageImpl<>(result.asListRemaining(), accessor.getPageable(), result.getStats().getFullCount());
+		return new PageImpl<>(result.asListRemaining(), accessor.getPageable(), result.getCount());
 	}
 
 	public Set<?> convertSet() {
@@ -239,8 +234,7 @@ public class ArangoResultConverter {
 	}
 
 	public GeoPage<?> convertGeoPage() {
-		Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
-		return new GeoPage<>(buildGeoResults(result), accessor.getPageable(), result.getStats().getFullCount());
+		return new GeoPage<>(buildGeoResults(result), accessor.getPageable(), result.getCount());
 	}
 
 	public Object convertArray() {

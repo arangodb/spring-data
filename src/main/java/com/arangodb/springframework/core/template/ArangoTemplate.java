@@ -20,11 +20,7 @@
 
 package com.arangodb.springframework.core.template;
 
-import com.arangodb.ArangoCollection;
-import com.arangodb.ArangoCursor;
-import com.arangodb.ArangoDB;
-import com.arangodb.ArangoDBException;
-import com.arangodb.ArangoDatabase;
+import com.arangodb.*;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
@@ -64,7 +60,7 @@ import com.arangodb.springframework.core.mapping.event.BeforeSaveEvent;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.springframework.core.util.MetadataUtils;
-import com.arangodb.util.MapBuilder;
+import com.arangodb.util.RawBytes;
 import com.arangodb.velocypack.VPackSlice;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -153,7 +149,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final String key = databaseExpression != null ? databaseExpression.getValue(context, String.class)
 				: databaseName;
 		return databaseCache.computeIfAbsent(key, name -> {
-			final ArangoDatabase db = arango.db(name);
+			final ArangoDatabase db = arango.db(DbName.of(name));
 			if (!db.exists()) {
 				db.create();
 			}
@@ -185,7 +181,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final ArangoDatabase db = db();
 		final Class<?> entityClass = persistentEntity != null ? persistentEntity.getType() : null;
-		final CollectionCacheValue value = collectionCache.computeIfAbsent(new CollectionCacheKey(db.name(), name),
+		final CollectionCacheValue value = collectionCache.computeIfAbsent(new CollectionCacheKey(db.dbName().get(), name),
 				key -> {
 					final ArangoCollection collection = db.collection(name);
 					if (!collection.exists()) {
@@ -298,20 +294,20 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		return MetadataUtils.determineDocumentKeyFromId(converter.convertId(id));
 	}
 
-	private VPackSlice toVPack(final Object source) {
-		return converter.write(source);
+	private RawBytes toRawBytes(final Object source) {
+		return RawBytes.of(converter.write(source).toByteArray());
 	}
 
-	private Collection<VPackSlice> toVPackCollection(final Iterable<?> values) {
-		final Collection<VPackSlice> vpacks = new ArrayList<>();
+	private Collection<RawBytes> toRawBytesCollection(final Iterable<?> values) {
+		final Collection<RawBytes> vpacks = new ArrayList<>();
 		for (final Object value : values) {
-			vpacks.add(toVPack(value));
+			vpacks.add(toRawBytes(value));
 		}
 		return vpacks;
 	}
 
-	private <T> T fromVPack(final Class<T> entityClass, final VPackSlice source) {
-		final T result = converter.read(entityClass, source);
+	private <T> T fromRawBytes(final Class<T> entityClass, final RawBytes source) {
+		final T result = converter.read(entityClass, new VPackSlice(source.getValue()));
 		if (result != null) {
 			potentiallyEmitEvent(new AfterLoadEvent<>(result));
 		}
@@ -364,7 +360,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			if (entry.getKey().startsWith("@") && entry.getValue() instanceof Class) {
 				prepared.put(entry.getKey(), _collection((Class<?>) entry.getValue()).name());
 			} else {
-				prepared.put(entry.getKey(), toVPack(entry.getValue()));
+				prepared.put(entry.getKey(), toRawBytes(entry.getValue()));
 			}
 		}
 		return prepared;
@@ -378,7 +374,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			result = _collection(entityClass).deleteDocuments(toVPackCollection(values), entityClass, options);
+			result = _collection(entityClass).deleteDocuments(toRawBytesCollection(values), options, entityClass);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -401,7 +397,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final DocumentEntity result;
 		try {
-			result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), entityClass, options);
+			result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), options, entityClass);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -423,7 +419,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			result = _collection(entityClass).updateDocuments(toVPackCollection(values), options);
+			result = _collection(entityClass).updateDocuments(toRawBytesCollection(values), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -447,7 +443,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final DocumentEntity result;
 		try {
-			result = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id), toVPack(value),
+			result = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id), toRawBytes(value),
 					options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -471,7 +467,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			result = _collection(entityClass).replaceDocuments(toVPackCollection(values), options);
+			result = _collection(entityClass).replaceDocuments(toRawBytesCollection(values), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -494,7 +490,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final DocumentEntity result;
 		try {
-			result = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id), toVPack(value),
+			result = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id), toRawBytes(value),
 					options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -514,9 +510,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	public <T> Optional<T> find(final Object id, final Class<T> entityClass, final DocumentReadOptions options)
 			throws DataAccessException {
 		try {
-			final VPackSlice doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
-					VPackSlice.class, options);
-			return Optional.ofNullable(fromVPack(entityClass, doc));
+			final RawBytes doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
+					RawBytes.class, options);
+			return Optional.ofNullable(fromRawBytes(entityClass, doc));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -530,7 +526,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public <T> Iterable<T> findAll(final Class<T> entityClass) throws DataAccessException {
 		final String query = "FOR entity IN @@col RETURN entity";
-		final Map<String, Object> bindVars = new MapBuilder().put("@col", entityClass).get();
+		final Map<String, Object> bindVars = Collections.singletonMap("@col", entityClass);
 		return query(query, bindVars, null, entityClass).asListRemaining();
 	}
 
@@ -540,8 +536,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			final Collection<String> keys = new ArrayList<>();
 			ids.forEach(id -> keys.add(determineDocumentKeyFromId(id)));
-			final MultiDocumentEntity<VPackSlice> docs = _collection(entityClass).getDocuments(keys, VPackSlice.class);
-			return docs.getDocuments().stream().map(doc -> fromVPack(entityClass, doc)).collect(Collectors.toList());
+			final MultiDocumentEntity<RawBytes> docs = _collection(entityClass).getDocuments(keys, RawBytes.class);
+			return docs.getDocuments().stream().map(doc -> fromRawBytes(entityClass, doc)).collect(Collectors.toList());
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -555,7 +551,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			result = _collection(entityClass).insertDocuments(toVPackCollection(values), options);
+			result = _collection(entityClass).insertDocuments(toRawBytesCollection(values), options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -577,7 +573,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final DocumentEntity result;
 		try {
-			result = _collection(value.getClass()).insertDocument(toVPack(value), options);
+			result = _collection(value.getClass()).insertDocument(toRawBytes(value), options);
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
@@ -599,7 +595,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final DocumentEntity result;
 		try {
-			result = _collection(collectionName).insertDocument(toVPack(value), options);
+			result = _collection(collectionName).insertDocument(toRawBytes(value), options);
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
@@ -690,15 +686,16 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		potentiallyEmitEvent(new BeforeSaveEvent<>(value));
 
 		final T result;
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@col", collectionName);
+		bindVars.put("doc", value);
 		try {
-			result = query(
+			ArangoCursor<T> c = query(
 					REPSERT_QUERY,
-					new MapBuilder()
-							.put("@col", collectionName)
-							.put("doc", value)
-							.get(),
+					bindVars,
 					clazz
-			).first();
+			);
+			result = c.hasNext() ? c.next() : null;
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
@@ -718,12 +715,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final Iterable<? extends T> result;
 		try {
+			Map<String, Object> bindVars = new HashMap<>();
+			bindVars.put("@col", collectionName);
+			bindVars.put("docs", values);
 			result = query(
 					REPSERT_MANY_QUERY,
-					new MapBuilder()
-							.put("@col", collectionName)
-							.put("docs", values)
-							.get(),
+					bindVars,
 					entityClass
 			).asListRemaining();
 		} catch (final ArangoDBException e) {
@@ -819,8 +816,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
-		databaseCache.remove(db.name());
-		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.name()))
+		databaseCache.remove(db.dbName().get());
+		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.dbName().get()))
 				.forEach(key -> collectionCache.remove(key));
 	}
 

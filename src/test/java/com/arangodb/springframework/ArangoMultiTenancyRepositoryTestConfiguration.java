@@ -21,7 +21,6 @@
 package com.arangodb.springframework;
 
 import com.arangodb.ArangoDB;
-import com.arangodb.mapping.ArangoJack;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.ArangoConfiguration;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
@@ -49,7 +48,7 @@ public class ArangoMultiTenancyRepositoryTestConfiguration implements ArangoConf
 
 	@Override
 	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder().serializer(new ArangoJack());
+		return new ArangoDB.Builder();
 	}
 
 	@Override

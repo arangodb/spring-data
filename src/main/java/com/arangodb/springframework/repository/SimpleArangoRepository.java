@@ -229,7 +229,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 		final ArangoCursor<T> result = findAllInternal(pageable, null, new HashMap<>());
 		final List<T> content = result.asListRemaining();
-		return new PageImpl<>(content, pageable, result.getStats().getFullCount());
+		return new PageImpl<>(content, pageable, result.getCount());
 	}
 
 	/**
@@ -294,7 +294,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	public <S extends T> Page<S> findAll(final Example<S> example, final Pageable pageable) {
 		final ArangoCursor cursor = findAllInternal(pageable, example, new HashMap());
 		final List<T> content = cursor.asListRemaining();
-		return new PageImpl<>((List<S>) content, pageable, cursor.getStats().getFullCount());
+		return new PageImpl<>((List<S>) content, pageable, cursor.getCount());
 	}
 
 	/**
@@ -345,7 +345,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 				buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
 		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars,
-				pageable != null && pageable.isPaged() ? new AqlQueryOptions().fullCount(true) : null, domainClass);
+				pageable != null && pageable.isPaged() ? new AqlQueryOptions().count(true) : null, domainClass);
 	}
 
 	private <S extends T> String buildFilterClause(final Example<S> example, final Map<String, Object> bindVars) {

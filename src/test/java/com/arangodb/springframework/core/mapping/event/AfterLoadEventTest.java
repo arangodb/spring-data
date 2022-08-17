@@ -25,7 +25,9 @@ import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.junit.Before;
@@ -34,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.testdata.Customer;
-import com.arangodb.util.MapBuilder;
 
 /**
  * 
@@ -99,8 +100,11 @@ public class AfterLoadEventTest extends AbstractArangoTest {
 	@Test
 	public void findByQueryAfterLoadEvent() {
 		template.insert(customers, Customer.class);
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@collection", Customer.class);
+		bindVars.put("name", john.getName());
 		template.query("FOR c IN @@collection FILTER c.`customer-name` == @name RETURN c",
-			new MapBuilder().put("@collection", Customer.class).put("name", john.getName()).get(), Customer.class)
+			bindVars, Customer.class)
 				.forEach(elem -> { // trigger conversion
 				});
 		assertThat(listener.afterLoadEvents.size(), is(1));

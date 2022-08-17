@@ -37,7 +37,6 @@ import com.arangodb.springframework.testdata.Actor;
 import com.arangodb.springframework.testdata.Movie;
 import com.arangodb.springframework.testdata.Person;
 import com.arangodb.springframework.testdata.Role;
-import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackParser;
 import com.arangodb.velocypack.VPackSlice;
 import org.joda.time.DateTimeZone;
@@ -84,7 +83,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
     public void supplementKey() {
         final OnlyIdTestEntity value = new OnlyIdTestEntity();
         template.insert(value);
-        final List<BasicTestEntity> result = template.query("RETURN @doc", new MapBuilder().put("doc", value).get(),
+        final List<BasicTestEntity> result = template.query("RETURN @doc", Collections.singletonMap("doc", value),
                 new AqlQueryOptions(), BasicTestEntity.class).asListRemaining();
         assertThat(result.size(), is(1));
         assertThat(result.get(0).getId(), is(value.id));

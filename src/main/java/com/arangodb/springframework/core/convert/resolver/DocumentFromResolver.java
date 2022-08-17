@@ -26,7 +26,9 @@ import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.util.MapBuilder;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Mark Vollmary
@@ -49,7 +51,8 @@ public class DocumentFromResolver extends AbstractResolver<From> implements Rela
 	}
 
 	private Object _resolveOne(final String id, final TypeInformation<?> type) {
-		return _resolve(id, type.getType(), true).first();
+		ArangoCursor<?> c = _resolve(id, type.getType(), true);
+		return c.hasNext() ? c.next() : null;
 	}
 
 	@Override
@@ -64,7 +67,10 @@ public class DocumentFromResolver extends AbstractResolver<From> implements Rela
 
 	private ArangoCursor<?> _resolve(final String id, final Class<?> type, final boolean limit) {
 		final String query = String.format("FOR e IN @@edge FILTER e._from == @id %s RETURN e", limit ? "LIMIT 1" : "");
-		return template.query(query, new MapBuilder().put("@edge", type).put("id", id).get(), new AqlQueryOptions(),
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@edge", type);
+		bindVars.put("id", id);
+		return template.query(query, bindVars, new AqlQueryOptions(),
 			type);
 	}
 
