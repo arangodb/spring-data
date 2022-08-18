@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core.convert.resolver;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 
 import org.springframework.data.util.TypeInformation;
 
@@ -30,8 +31,8 @@ import org.springframework.data.util.TypeInformation;
  */
 public interface RelationResolver<A extends Annotation> {
 
-	Object resolveOne(String id, TypeInformation<?> type, A annotation);
+	Object resolveOne(String id, TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, A annotation);
 
-	Object resolveMultiple(String id, TypeInformation<?> type, A annotation);
+	Object resolveMultiple(String id, TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, A annotation);
 
 }

@@ -28,6 +28,8 @@ import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.util.MapBuilder;
 
+import java.util.Collection;
+
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
@@ -43,7 +45,7 @@ public class DocumentToResolver extends AbstractResolver<To> implements Relation
 	}
 
 	@Override
-	public Object resolveOne(final String id, final TypeInformation<?> type, final To annotation) {
+	public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final To annotation) {
 		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t)) : _resolveOne(id, type);
 	}
 
@@ -52,7 +54,7 @@ public class DocumentToResolver extends AbstractResolver<To> implements Relation
 	}
 
 	@Override
-	public Object resolveMultiple(final String id, final TypeInformation<?> type, final To annotation) {
+	public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final To annotation) {
 		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveMultiple(i, t))
 				: _resolveMultiple(id, type);
 	}
