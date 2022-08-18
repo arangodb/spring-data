@@ -25,6 +25,8 @@ import org.springframework.data.util.TypeInformation;
 import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.ArangoOperations;
 
+import java.util.Collection;
+
 /**
  * @author Mark Vollmary
  *
@@ -39,7 +41,7 @@ public class EdgeToResolver extends AbstractResolver<To> implements RelationReso
 	}
 
 	@Override
-	public Object resolveOne(final String id, final TypeInformation<?> type, final To annotation) {
+	public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final To annotation) {
 		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t)) : _resolveOne(id, type);
 	}
 
@@ -48,7 +50,7 @@ public class EdgeToResolver extends AbstractResolver<To> implements RelationReso
 	}
 
 	@Override
-	public Object resolveMultiple(final String id, final TypeInformation<?> type, final To annotation) {
+	public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final To annotation) {
 		throw new UnsupportedOperationException("Edges with multiple 'to' values are not supported.");
 	}
 
