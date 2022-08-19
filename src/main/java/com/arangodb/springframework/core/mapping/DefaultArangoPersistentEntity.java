@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core.mapping;
 
 import com.arangodb.entity.CollectionType;
+import com.arangodb.entity.ReplicationFactor;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
@@ -121,7 +122,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		if (annotation.replicationFactor() > -1) {
 			options.replicationFactor(annotation.replicationFactor());
 		} else if (annotation.satellite()) {
-			options.satellite();
+			options.replicationFactor(ReplicationFactor.ofSatellite());
 		}
 		final String[] shardKeys = annotation.shardKeys();
 		if (shardKeys.length > 1 || (shardKeys.length > 0 && StringUtils.hasText(shardKeys[0]))) {
