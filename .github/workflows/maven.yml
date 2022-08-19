@@ -2,13 +2,14 @@ name: Java CI
 
 on:
   pull_request:
+    types: [ opened, synchronize, reopened ]
     branches:
       - master
-      - test/spring-data-2.4
-      - test/spring-data-2.3
   push:
     branches:
       - master
+      - test/spring-data-2.6
+      - test/spring-data-2.5
       - test/spring-data-2.4
       - test/spring-data-2.3
 
