@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+
+## [3.7.1] - 2022-08-19
+
+- fixed counterclockwise box generation for compatibility with geo json polygons in ArangoDB 3.10 (#231)
+- fixed query generation with custom field names (#240)
+- fixed compatibility with Lombok classes (#241)
+- fixed WITH clause generation for compatibility with ArangoDB 3.10 (#247)
+
+
 ## [3.7.0] - 2022-02-08
 
 - deprecated hash and skiplist indexes
