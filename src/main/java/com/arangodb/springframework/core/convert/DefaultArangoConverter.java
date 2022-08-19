@@ -375,6 +375,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final Optional<RelationResolver<Annotation>> resolver = resolverFactory.getRelationResolver(annotation,
 			collectionType);
 
+		// FIXME: discover intermediate types, in case annotation is Relations and maxDepth > 1
+		List<TypeInformation<?>> traversedTypes = Collections.singletonList(entity.getTypeInformation());
+
 		if (!resolver.isPresent()) {
 			return Optional.empty();
 		}
@@ -383,15 +386,15 @@ public class DefaultArangoConverter implements ArangoConverter {
 			if (parentId == null) {
 				return Optional.empty();
 			}
-			return resolver.map(res -> res.resolveMultiple(parentId, property.getTypeInformation(), annotation));
+			return resolver.map(res -> res.resolveMultiple(parentId, property.getTypeInformation(), traversedTypes, annotation));
 		}
 
 		else if (source.isString()) {
-			return resolver.map(res -> res.resolveOne(source.getAsString(), property.getTypeInformation(), annotation));
+			return resolver.map(res -> res.resolveOne(source.getAsString(), property.getTypeInformation(), traversedTypes, annotation));
 		}
 
 		else {
-			return resolver.map(res -> res.resolveOne(parentId, property.getTypeInformation(), annotation));
+			return resolver.map(res -> res.resolveOne(parentId, property.getTypeInformation(), traversedTypes, annotation));
 		}
 
 	}

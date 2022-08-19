@@ -20,9 +20,7 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.data.util.TypeInformation;
@@ -46,46 +44,65 @@ public class RelationsResolver extends AbstractResolver<Relations> implements Re
 	}
 
 	@Override
-	public Object resolveOne(final String id, final TypeInformation<?> type, final Relations annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t, a))
-				: _resolveOne(id, type, annotation);
+	public Object resolveOne(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes, final Relations annotation) {
+		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t, traversedTypes, a))
+				: _resolveOne(id, type, traversedTypes, annotation);
 	}
 
 	@Override
-	public Object resolveMultiple(final String id, final TypeInformation<?> type, final Relations annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveMultiple(i, t, a))
-				: _resolveMultiple(id, type, annotation);
+	public Object resolveMultiple(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes, final Relations annotation) {
+		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveMultiple(i, t, traversedTypes, a))
+				: _resolveMultiple(id, type, traversedTypes, annotation);
 	}
 
-	private Object _resolveOne(final String id, final TypeInformation<?> type, final Relations annotation) {
-		ArangoCursor<?> c = _resolve(id, type.getType(), annotation, true);
+	private Object _resolveOne(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes, final Relations annotation) {
+		Collection<Class<?>> rawTypes = new ArrayList<>();
+		for (TypeInformation<?> it : traversedTypes) {
+			rawTypes.add(it.getType());
+		}
+		ArangoCursor<?> c = _resolve(id, type.getType(), rawTypes, annotation, true);
 		return c.hasNext() ? c.next() : null;
 	}
 
-	private Object _resolveMultiple(final String id, final TypeInformation<?> type, final Relations annotation) {
-		return _resolve(id, getNonNullComponentType(type).getType(), annotation, false).asListRemaining();
+	private Object _resolveMultiple(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes, final Relations annotation) {
+		Collection<Class<?>> rawTypes = new ArrayList<>();
+		for (TypeInformation<?> it : traversedTypes) {
+			rawTypes.add(it.getType());
+		}
+		return _resolve(id, getNonNullComponentType(type).getType(), rawTypes, annotation, false).asListRemaining();
 	}
 
 	private ArangoCursor<?> _resolve(
 		final String id,
 		final Class<?> type,
+		final Collection<Class<?>> traversedTypes,
 		final Relations annotation,
 		final boolean limit) {
 
 		final String edges = Arrays.stream(annotation.edges()).map(e -> template.collection(e).name())
 				.collect(Collectors.joining(","));
 
-		final String query = String.format(
-			"WITH @@vertex FOR v IN %d .. %d %s @start %s OPTIONS {bfs: true, uniqueVertices: \"global\"} %s RETURN v", //
-			Math.max(1, annotation.minDepth()), //
-			Math.max(1, annotation.maxDepth()), //
-			annotation.direction(), //
-			edges, //
-			limit ? "LIMIT 1" : "");
+		List<Class<?>> allTraversedTypes = new ArrayList<>();
+		allTraversedTypes.add(type);
+		allTraversedTypes.addAll(traversedTypes);
 
 		final Map<String, Object> bindVars = new HashMap<>();
-				bindVars.put("start", id); //
-				bindVars.put("@vertex", type); //
+		bindVars.put("start", id);
+		StringBuilder withClause = new StringBuilder("WITH ");
+		for (int i = 0; i < allTraversedTypes.size(); i++) {
+			bindVars.put("@with" + i, allTraversedTypes.get(i));
+			if (i > 0) withClause.append(", ");
+			withClause.append("@@with").append(i);
+		}
+
+		final String query = String.format(
+				"%s FOR v IN %d .. %d %s @start %s OPTIONS {bfs: true, uniqueVertices: \"global\"} %s RETURN v", //
+				withClause, //
+				Math.max(1, annotation.minDepth()), //
+				Math.max(1, annotation.maxDepth()), //
+				annotation.direction(), //
+				edges, //
+				limit ? "LIMIT 1" : "");
 
 		return template.query(query, bindVars, type);
 	}

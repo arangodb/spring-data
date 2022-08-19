@@ -30,6 +30,8 @@ import com.arangodb.springframework.core.ArangoOperations;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.Collection;
+
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
@@ -45,7 +47,7 @@ public class DocumentFromResolver extends AbstractResolver<From> implements Rela
 	}
 
 	@Override
-	public Object resolveOne(final String id, final TypeInformation<?> type, final From annotation) {
+	public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final From annotation) {
 		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t))
 				: _resolveOne(id, type);
 	}
@@ -56,7 +58,7 @@ public class DocumentFromResolver extends AbstractResolver<From> implements Rela
 	}
 
 	@Override
-	public Object resolveMultiple(final String id, final TypeInformation<?> type, final From annotation) {
+	public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final From annotation) {
 		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveMultiple(i, t))
 				: _resolveMultiple(id, type);
 	}
