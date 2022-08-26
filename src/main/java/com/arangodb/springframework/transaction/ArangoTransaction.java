@@ -38,7 +38,9 @@ class ArangoTransaction implements SmartTransactionObject {
     String getOrBegin(Collection<String> collections) {
         if (transaction != null) {
             if (!writeCollections.containsAll(collections)) {
-                throw new IllegalTransactionStateException("Stream transaction already started, no additional collections allowed");
+                Set<String> additional = new HashSet<>(collections);
+                additional.removeAll(writeCollections);
+                throw new IllegalTransactionStateException("Stream transaction already started on collections " + writeCollections + ", no additional collections allowed: " + additional);
             }
             return transaction.getId();
         }
