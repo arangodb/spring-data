@@ -36,6 +36,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -98,12 +99,14 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 		extractBindVars(accessor, bindVars);
 
-		return Pair.of(prepareQuery(accessor), allCollectionNames(collectionName, bindVars));
+		return Pair.of(prepareQuery(accessor), allCollectionNames(bindVars));
 	}
 
-	private Collection<String> allCollectionNames(String collectionName, Map<String, Object> bindVars) {
+	private Collection<String> allCollectionNames(Map<String, Object> bindVars) {
 		HashSet<String> allCollections = new HashSet<>();
-		allCollections.add(collectionName);
+		if (!Modifier.isAbstract(domainClass.getModifiers())) {
+			allCollections.add(collectionName);
+		}
 		bindVars.entrySet().stream()
 				.filter(entry -> entry.getKey().startsWith("@"))
 				.map(Map.Entry::getValue)

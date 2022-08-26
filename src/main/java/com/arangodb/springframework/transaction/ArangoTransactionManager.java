@@ -48,13 +48,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         }
         ArangoTransaction tx = (ArangoTransaction) transaction;
         tx.configure(definition);
-        Function<Collection<String>, String> begin = tx::getOrBegin;
-        bridge.setCurrentTransaction(begin.andThen(id -> {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Began stream transaction " + id);
-            }
-            return id;
-        }));
+        bridge.setCurrentTransaction(tx::getOrBegin);
     }
 
     @Override
