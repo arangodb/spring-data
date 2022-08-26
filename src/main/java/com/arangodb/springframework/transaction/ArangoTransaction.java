@@ -4,6 +4,8 @@ import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.StreamTransactionEntity;
 import com.arangodb.entity.StreamTransactionStatus;
 import com.arangodb.model.StreamTransactionOptions;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.interceptor.TransactionAttribute;
@@ -15,6 +17,7 @@ import java.util.Set;
 
 class ArangoTransaction implements SmartTransactionObject {
 
+    private final Log logger = LogFactory.getLog(getClass());
     private final ArangoDatabase database;
     private final Set<String> writeCollections = new HashSet<>();
     private TransactionDefinition definition;
@@ -50,6 +53,9 @@ class ArangoTransaction implements SmartTransactionObject {
                 .writeCollections(writeCollections.toArray(new String[0]))
                 .lockTimeout(definition.getTimeout() == -1 ? 0 : definition.getTimeout());
         transaction = database.beginStreamTransaction(options);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Began stream transaction " + transaction.getId() + " writing collections " + writeCollections);
+        }
         return transaction.getId();
     }
 
