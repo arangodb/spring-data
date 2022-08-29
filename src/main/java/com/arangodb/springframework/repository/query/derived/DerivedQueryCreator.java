@@ -27,6 +27,7 @@ import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
+import com.arangodb.springframework.repository.query.QueryWithCollections;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,6 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
 import java.util.*;
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 /**
  * Creates a full AQL query from a PartTree and ArangoParameterAccessor
  */
-public class DerivedQueryCreator extends AbstractQueryCreator<Pair<String, ? extends Collection<String>>, Criteria> {
+public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollections, Criteria> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DerivedQueryCreator.class);
 	private static final Set<Part.Type> UNSUPPORTED_IGNORE_CASE = new HashSet<>();
@@ -121,7 +121,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<Pair<String, ? ext
 	 * @return
 	 */
 	@Override
-	protected Pair<String, ? extends Collection<String>> complete(final Criteria criteria, final Sort sort) {
+	protected QueryWithCollections complete(final Criteria criteria, final Sort sort) {
 		if (tree.isDistinct() && !tree.isCountProjection()) {
 			LOGGER.debug("Use of 'Distinct' is meaningful only in count queries");
 		}
@@ -192,7 +192,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<Pair<String, ? ext
 				}
 			}
 		}
-		return Pair.of(query.toString(), withCollections);
+		return new QueryWithCollections(query.toString(), withCollections);
 	}
 
 	public double[] getUniquePoint() {
