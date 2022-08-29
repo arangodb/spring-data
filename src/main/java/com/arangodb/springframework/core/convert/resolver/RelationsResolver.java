@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.ArangoCursor;
@@ -36,8 +37,8 @@ import com.arangodb.springframework.core.ArangoOperations;
  */
 public class RelationsResolver extends AbstractResolver<Relations> implements RelationResolver<Relations> {
 
-	public RelationsResolver(final ArangoOperations template) {
-		super(template);
+	public RelationsResolver(final ArangoOperations template, QueryTransactionBridge transactionBridge) {
+		super(template, transactionBridge);
 	}
 
 	@Override

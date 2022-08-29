@@ -23,8 +23,12 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Collections;
 
+import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
@@ -58,10 +62,12 @@ public abstract class AbstractResolver<A extends Annotation> {
 
 	private final ObjenesisStd objenesis;
 	protected final ArangoOperations template;
+	private final QueryTransactionBridge transactionBridge;
 
-	protected AbstractResolver(final ArangoOperations template) {
+	protected AbstractResolver(final ArangoOperations template, final QueryTransactionBridge transactionBridge) {
 		super();
 		this.template = template;
+		this.transactionBridge = transactionBridge;
 		this.objenesis = new ObjenesisStd(true);
 	}
 
@@ -103,11 +109,17 @@ public abstract class AbstractResolver<A extends Annotation> {
 
 	protected DocumentReadOptions defaultReadOptions() {
 		DocumentReadOptions options = new DocumentReadOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.emptySet()));
+		}
 		return options;
 	}
 
 	protected AqlQueryOptions defaultQueryOptions() {
 		AqlQueryOptions options = new AqlQueryOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.emptySet()));
+		}
 		return options;
 	}
 
