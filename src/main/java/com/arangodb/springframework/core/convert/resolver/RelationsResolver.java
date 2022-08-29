@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.ArangoCursor;
@@ -38,9 +39,9 @@ public class RelationsResolver extends AbstractResolver implements RelationResol
 
 	private final ArangoOperations template;
 
-    public RelationsResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
+	public RelationsResolver(final ArangoOperations template, QueryTransactionBridge transactionBridge) {
+        super(template.getConverter().getConversionService(), transactionBridge);
+        this.template = template;
     }
 
     @Override

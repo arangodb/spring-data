@@ -22,8 +22,12 @@ package com.arangodb.springframework.core.convert.resolver;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.function.Supplier;
 
+import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.model.DocumentReadOptions;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
@@ -58,10 +62,12 @@ public abstract class AbstractResolver {
 
 	private final ObjenesisStd objenesis;
 	private final ConversionService conversionService;
+    private final QueryTransactionBridge transactionBridge;
 
-	protected AbstractResolver(final ConversionService conversionService) {
+	protected AbstractResolver(final ConversionService conversionService, final QueryTransactionBridge transactionBridge) {
 		super();
 		this.conversionService = conversionService;
+        this.transactionBridge = transactionBridge;
 		this.objenesis = new ObjenesisStd(true);
 	}
 
@@ -95,11 +101,17 @@ public abstract class AbstractResolver {
 
     protected DocumentReadOptions defaultReadOptions() {
         DocumentReadOptions options = new DocumentReadOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.emptySet()));
+		}
         return options;
     }
 
     protected AqlQueryOptions defaultQueryOptions() {
         AqlQueryOptions options = new AqlQueryOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.emptySet()));
+		}
         return options;
     }
 
