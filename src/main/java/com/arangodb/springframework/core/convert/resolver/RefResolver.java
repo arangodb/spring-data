@@ -58,7 +58,7 @@ public class RefResolver extends AbstractResolver implements ReferenceResolver<R
     }
 
     private Object _resolve(final String id, final TypeInformation<?> type) {
-        return template.find(id, type.getType())
+        return template.find(id, type.getType(), defaultReadOptions())
                 .orElseThrow(() -> cannotResolveException(id, type));
     }
 
