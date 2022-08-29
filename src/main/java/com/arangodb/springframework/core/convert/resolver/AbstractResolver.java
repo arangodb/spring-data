@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+import com.arangodb.springframework.core.ArangoOperations;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
@@ -56,11 +57,11 @@ public abstract class AbstractResolver<A extends Annotation> {
 	}
 
 	private final ObjenesisStd objenesis;
-	private final ConversionService conversionService;
+	protected final ArangoOperations template;
 
-	protected AbstractResolver(final ConversionService conversionService) {
+	protected AbstractResolver(final ArangoOperations template) {
 		super();
-		this.conversionService = conversionService;
+		this.template = template;
 		this.objenesis = new ObjenesisStd(true);
 	}
 
@@ -76,7 +77,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 		final TypeInformation<?> type,
 		final A annotation,
 		final ResolverCallback<A> callback) {
-		final ProxyInterceptor interceptor = new ProxyInterceptor(id, type, annotation, callback, conversionService);
+		final ProxyInterceptor interceptor = new ProxyInterceptor(id, type, annotation, callback, template.getConverter().getConversionService());
 		if (type.getType().isInterface()) {
 			final ProxyFactory proxyFactory = new ProxyFactory(new Class<?>[] { type.getType() });
 			for (final Class<?> interf : type.getType().getInterfaces()) {

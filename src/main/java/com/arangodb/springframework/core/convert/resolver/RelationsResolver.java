@@ -36,11 +36,8 @@ import com.arangodb.springframework.core.ArangoOperations;
  */
 public class RelationsResolver extends AbstractResolver<Relations> implements RelationResolver<Relations> {
 
-	private final ArangoOperations template;
-
 	public RelationsResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
+		super(template);
 	}
 
 	@Override

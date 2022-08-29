@@ -33,11 +33,8 @@ import java.util.Collection;
  */
 public class EdgeFromResolver extends AbstractResolver<From> implements RelationResolver<From> {
 
-	private final ArangoOperations template;
-
 	public EdgeFromResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
+		super(template);
 	}
 
 	@Override

@@ -38,11 +38,8 @@ import java.util.Map;
  */
 public class DocumentToResolver extends AbstractResolver<To> implements RelationResolver<To> {
 
-	private final ArangoOperations template;
-
 	public DocumentToResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
+		super(template);
 	}
 
 	@Override

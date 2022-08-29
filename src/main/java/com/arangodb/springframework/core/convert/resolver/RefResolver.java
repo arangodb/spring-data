@@ -38,11 +38,8 @@ import com.arangodb.springframework.core.ArangoOperations;
 public class RefResolver extends AbstractResolver<Ref>
 		implements ReferenceResolver<Ref>, AbstractResolver.ResolverCallback<Ref> {
 
-	private final ArangoOperations template;
-
 	public RefResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
+		super(template);
 	}
 
 	@Override
