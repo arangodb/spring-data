@@ -93,6 +93,16 @@ public abstract class AbstractResolver {
 		return enhancer.createClass();
 	}
 
+    protected DocumentReadOptions defaultReadOptions() {
+        DocumentReadOptions options = new DocumentReadOptions();
+        return options;
+    }
+
+    protected AqlQueryOptions defaultQueryOptions() {
+        AqlQueryOptions options = new AqlQueryOptions();
+        return options;
+    }
+
     static class ProxyInterceptor implements Serializable,
 			org.springframework.cglib.proxy.MethodInterceptor, org.aopalliance.intercept.MethodInterceptor {
 
