@@ -21,6 +21,7 @@ public class ArangoTransactionManagementConfigurer implements TransactionManagem
     private final QueryTransactionBridge bridge = new QueryTransactionBridge();
 
     @Override
+    @Bean
     public PlatformTransactionManager annotationDrivenTransactionManager() {
         return new ArangoTransactionManager(operations, bridge);
     }
