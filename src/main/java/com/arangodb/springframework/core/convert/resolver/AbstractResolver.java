@@ -101,6 +101,16 @@ public abstract class AbstractResolver<A extends Annotation> {
 		return enhancer.createClass();
 	}
 
+	protected DocumentReadOptions defaultReadOptions() {
+		DocumentReadOptions options = new DocumentReadOptions();
+		return options;
+	}
+
+	protected AqlQueryOptions defaultQueryOptions() {
+		AqlQueryOptions options = new AqlQueryOptions();
+		return options;
+	}
+
 	static class ProxyInterceptor<A extends Annotation> implements Serializable,
 			org.springframework.cglib.proxy.MethodInterceptor, org.aopalliance.intercept.MethodInterceptor {
 

@@ -23,7 +23,6 @@ package com.arangodb.springframework.core.convert.resolver;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.core.ArangoOperations;
 
@@ -68,7 +67,7 @@ public class DocumentFromResolver extends AbstractResolver<From> implements Rela
 		Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("@edge", type);
 		bindVars.put("id", id);
-		return template.query(query, bindVars, new AqlQueryOptions(),
+		return template.query(query, bindVars, defaultQueryOptions(),
 			type);
 	}
 
