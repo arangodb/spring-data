@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
@@ -79,16 +78,16 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			options.fullCount(true);
 		}
 
-		final Pair<String, ? extends Collection<String>> queryAndCollection = createQuery(accessor, bindVars, options);
+		final QueryWithCollections queryAndCollection = createQuery(accessor, bindVars, options);
 		if (options.getStreamTransactionId() == null && transactionBridge != null) {
-			options.streamTransactionId(transactionBridge.getCurrentTransaction(queryAndCollection.getSecond()));
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(queryAndCollection.getCollections()));
 		}
 
 
 		final ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		final Class<?> typeToRead = getTypeToRead(processor);
 
-		final ArangoCursor<?> result = operations.query(queryAndCollection.getFirst(), bindVars, options, typeToRead);
+		final ArangoCursor<?> result = operations.query(queryAndCollection.getQuery(), bindVars, options, typeToRead);
 		logWarningsIfNecessary(result);
 		return processor.processResult(convertResult(result, accessor));
 	}
@@ -108,7 +107,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	 * Implementations should create an AQL query with the given
 	 * {@link com.arangodb.springframework.repository.query.ArangoParameterAccessor} and set necessary binding
 	 * parameters and query options.
-	 * 
+	 *
 	 * @param accessor
 	 *            provides access to the actual arguments
 	 * @param bindVars
@@ -117,7 +116,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 	 *            contains the merged {@link com.arangodb.model.AqlQueryOptions}
 	 * @return a pair of the created AQL query and all collection names
 	 */
-	protected abstract Pair<String, ? extends Collection<String>> createQuery(
+	protected abstract QueryWithCollections createQuery(
 			ArangoParameterAccessor accessor,
 			Map<String, Object> bindVars,
 			AqlQueryOptions options);
@@ -128,7 +127,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 
 	/**
 	 * Merges AqlQueryOptions derived from @QueryOptions with dynamically passed AqlQueryOptions which takes priority
-	 * 
+	 *
 	 * @param oldStatic
 	 * @param newDynamic
 	 * @return

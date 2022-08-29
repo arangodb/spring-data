@@ -53,7 +53,7 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 	}
 
 	@Override
-	protected Pair<String, ? extends Collection<String>> createQuery(
+	protected QueryWithCollections createQuery(
             final ArangoParameterAccessor accessor,
             final Map<String, Object> bindVars) {
 
