@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.ArangoCursor;
@@ -39,8 +40,8 @@ public class DocumentFromResolver extends AbstractResolver implements RelationRe
 
 	private final ArangoOperations template;
 
-    public DocumentFromResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
+    public DocumentFromResolver(final ArangoOperations template, QueryTransactionBridge transactionBridge) {
+		super(template.getConverter().getConversionService(), transactionBridge);
 		this.template = template;
     }
 

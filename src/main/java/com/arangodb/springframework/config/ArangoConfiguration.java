@@ -164,7 +164,7 @@ public interface ArangoConfiguration {
                 ReferenceResolver<A> resolver = null;
                 try {
                     if (annotation instanceof Ref) {
-                        resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
+						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate(), null);
                     }
                 } catch (final Exception e) {
                     throw new ArangoDBException(e);
@@ -180,18 +180,18 @@ public interface ArangoConfiguration {
                 try {
                     if (annotation instanceof From) {
                         if (collectionType == Edge.class) {
-                            resolver = (RelationResolver<A>) new EdgeFromResolver(arangoTemplate());
+							resolver = (RelationResolver<A>) new EdgeFromResolver(arangoTemplate(), null);
                         } else if (collectionType == Document.class) {
-                            resolver = (RelationResolver<A>) new DocumentFromResolver(arangoTemplate());
+							resolver = (RelationResolver<A>) new DocumentFromResolver(arangoTemplate(), null);
                         }
                     } else if (annotation instanceof To) {
                         if (collectionType == Edge.class) {
-                            resolver = (RelationResolver<A>) new EdgeToResolver(arangoTemplate());
+							resolver = (RelationResolver<A>) new EdgeToResolver(arangoTemplate(), null);
                         } else if (collectionType == Document.class) {
-                            resolver = (RelationResolver<A>) new DocumentToResolver(arangoTemplate());
+							resolver = (RelationResolver<A>) new DocumentToResolver(arangoTemplate(), null);
                         }
                     } else if (annotation instanceof Relations) {
-                        resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
+						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate(), null);
                     }
                 } catch (final Exception e) {
                     throw new ArangoDBException(e);
