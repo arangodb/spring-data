@@ -29,7 +29,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.data.util.Pair;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -93,13 +92,13 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	}
 
 	@Override
-	protected Pair<String, ? extends Collection<String>> createQuery(
+	protected QueryWithCollections createQuery(
             final ArangoParameterAccessor accessor,
             final Map<String, Object> bindVars) {
 
 		extractBindVars(accessor, bindVars);
 
-		return Pair.of(prepareQuery(accessor), allCollectionNames(bindVars));
+		return new QueryWithCollections(prepareQuery(accessor), allCollectionNames(bindVars));
 	}
 
 	private Collection<String> allCollectionNames(Map<String, Object> bindVars) {
