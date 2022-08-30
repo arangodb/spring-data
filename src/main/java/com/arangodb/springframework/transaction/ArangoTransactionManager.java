@@ -29,6 +29,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         setNestedTransactionAllowed(false);
         setTransactionSynchronization(SYNCHRONIZATION_ALWAYS);
         setValidateExistingTransaction(true);
+        setGlobalRollbackOnParticipationFailure(true);
         setRollbackOnCommitFailure(true);
     }
 
@@ -63,12 +64,9 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         ArangoTransactionObject tx = (ArangoTransactionObject) transaction;
         tx.configure(definition);
         DbName key = operations.getDatabaseName();
-        rebind(key, tx.createResource());
-        bridge.setCurrentTransaction(collections -> {
-            ArangoTransactionResource resource = tx.getOrBegin(collections);
-            rebind(key, resource);
-            return resource.getStreamTransactionId();
-        });
+        TransactionSynchronizationManager.unbindResourceIfPossible(key);
+        TransactionSynchronizationManager.bindResource(key, tx.getResource());
+        bridge.setCurrentTransaction(collections -> tx.getOrBegin(collections).getStreamTransactionId());
     }
 
     /**
@@ -111,12 +109,13 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
     }
 
     @Override
-    protected void doCleanupAfterCompletion(Object transaction) {
-        TransactionSynchronizationManager.unbindResource(operations.getDatabaseName());
+    protected void doSetRollbackOnly(DefaultTransactionStatus status) throws TransactionException {
+        ArangoTransactionObject tx = (ArangoTransactionObject) status.getTransaction();
+        tx.setRollbackOnly();
     }
 
-    private static void rebind(DbName key, ArangoTransactionResource resource) {
-        TransactionSynchronizationManager.unbindResourceIfPossible(key);
-        TransactionSynchronizationManager.bindResource(key, resource);
+    @Override
+    protected void doCleanupAfterCompletion(Object transaction) {
+        TransactionSynchronizationManager.unbindResourceIfPossible(operations.getDatabaseName());
     }
 }

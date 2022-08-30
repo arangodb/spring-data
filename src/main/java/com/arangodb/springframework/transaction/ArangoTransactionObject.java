@@ -1,7 +1,6 @@
 package com.arangodb.springframework.transaction;
 
 import com.arangodb.ArangoDatabase;
-import com.arangodb.DbName;
 import com.arangodb.entity.StreamTransactionEntity;
 import com.arangodb.entity.StreamTransactionStatus;
 import com.arangodb.model.StreamTransactionOptions;
@@ -12,37 +11,37 @@ import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.support.SmartTransactionObject;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Transaction object created by {@link ArangoTransactionManager}.
+ */
 class ArangoTransactionObject implements SmartTransactionObject {
 
     private static final Log logger = LogFactory.getLog(ArangoTransactionObject.class);
 
     private final ArangoDatabase database;
-    private final Set<String> writeCollections = new HashSet<>();
+    private final ArangoTransactionResource resource;
     private int timeout;
-    private StreamTransactionEntity streamTransaction;
+    private StreamTransactionEntity transaction;
 
     ArangoTransactionObject(ArangoDatabase database, int defaultTimeout, @Nullable ArangoTransactionResource resource) {
         this.database = database;
+        this.resource = resource == null ? new ArangoTransactionResource(null, Collections.emptySet(), false) : resource;
         this.timeout = defaultTimeout;
-        if (resource != null) {
-            writeCollections.addAll(resource.getCollectionNames());
-            if (resource.getStreamTransactionId() != null) {
-                streamTransaction = database.getStreamTransaction(resource.getStreamTransactionId());
-            }
-        }
     }
 
-    ArangoTransactionResource createResource() {
-        return new ArangoTransactionResource(streamTransaction == null ? null : streamTransaction.getId(), writeCollections);
+    ArangoTransactionResource getResource() {
+        return resource;
     }
 
     boolean exists() {
-        return streamTransaction != null;
+        return resource.getStreamTransactionId() != null;
     }
 
     void configure(TransactionDefinition definition) {
@@ -56,55 +55,70 @@ class ArangoTransactionObject implements SmartTransactionObject {
 
     ArangoTransactionResource getOrBegin(Collection<String> collections) {
         addCollections(collections);
-        if (streamTransaction != null) {
-            return createResource();
+        if (resource.getStreamTransactionId() != null) {
+            return getResource();
         }
         StreamTransactionOptions options = new StreamTransactionOptions()
                 .allowImplicit(true)
-                .writeCollections(writeCollections.toArray(new String[0]))
+                .writeCollections(resource.getCollectionNames().toArray(new String[0]))
                 .lockTimeout(Math.max(timeout, 0));
-        streamTransaction = database.beginStreamTransaction(options);
+        transaction = database.beginStreamTransaction(options);
+        resource.setStreamTransactionId(transaction.getId());
         if (logger.isDebugEnabled()) {
-            logger.debug("Began stream transaction " + streamTransaction.getId() + " writing collections " + writeCollections);
+            logger.debug("Began stream transaction " + resource.getStreamTransactionId() + " writing collections " + resource.getCollectionNames());
         }
-        return createResource();
+        return getResource();
     }
 
     void commit() {
-        if (streamTransaction != null && streamTransaction.getStatus() == StreamTransactionStatus.running) {
-            database.commitStreamTransaction(streamTransaction.getId());
+        if (isStatus(StreamTransactionStatus.running)) {
+            database.commitStreamTransaction(resource.getStreamTransactionId());
         }
     }
 
     void rollback() {
-        if (streamTransaction != null && streamTransaction.getStatus() == StreamTransactionStatus.running) {
-            database.abortStreamTransaction(streamTransaction.getId());
+        if (isStatus(StreamTransactionStatus.running)) {
+            database.abortStreamTransaction(resource.getStreamTransactionId());
         }
+        setRollbackOnly();
     }
 
     @Override
     public boolean isRollbackOnly() {
-        return streamTransaction != null && streamTransaction.getStatus() == StreamTransactionStatus.aborted;
+        return resource.isRollbackOnly() || isStatus(StreamTransactionStatus.aborted);
+    }
+
+    public void setRollbackOnly() {
+        resource.setRollbackOnly(true);
     }
 
     @Override
     public void flush() {
-        // nothing to do
+        TransactionSynchronizationUtils.triggerFlush();
     }
 
     @Override
     public String toString() {
-        return streamTransaction == null ? "(not begun)" : streamTransaction.getId();
+        return resource.getStreamTransactionId() == null ? "(not begun)" : resource.getStreamTransactionId();
     }
 
     private void addCollections(Collection<String> collections) {
-        if (streamTransaction != null) {
-            if (!writeCollections.containsAll(collections)) {
+        if (resource.getStreamTransactionId() != null) {
+            if (!resource.getCollectionNames().containsAll(collections)) {
                 Set<String> additional = new HashSet<>(collections);
-                additional.removeAll(writeCollections);
-                throw new IllegalTransactionStateException("Stream transaction already started on collections " + writeCollections + ", no additional collections allowed: " + additional);
+                additional.removeAll(resource.getCollectionNames());
+                throw new IllegalTransactionStateException("Stream transaction already started on collections " + resource.getCollectionNames() + ", no additional collections allowed: " + additional);
             }
         }
-        writeCollections.addAll(collections);
+        HashSet<String> all = new HashSet<>(resource.getCollectionNames());
+        all.addAll(collections);
+        resource.setCollectionNames(all);
+    }
+
+    private boolean isStatus(StreamTransactionStatus status) {
+        if (transaction == null && resource.getStreamTransactionId() != null) {
+            transaction = database.getStreamTransaction(resource.getStreamTransactionId());
+        }
+        return transaction != null && transaction.getStatus() == status;
     }
 }
