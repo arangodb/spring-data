@@ -18,6 +18,7 @@ class ArangoTransactionResource {
     private Set<String> collectionNames;
 
     private boolean rollbackOnly;
+    int references = 0;
 
     ArangoTransactionResource(@Nullable String streamTransactionId, Set<String> collectionNames, boolean rollbackOnly) {
         this.streamTransactionId = streamTransactionId;
@@ -47,5 +48,17 @@ class ArangoTransactionResource {
 
     void setRollbackOnly(boolean rollbackOnly) {
         this.rollbackOnly = rollbackOnly;
+    }
+
+    void increaseReferences() {
+        ++references;
+    }
+
+    boolean isSingleReference() {
+        return references <= 1;
+    }
+
+    void decreasedReferences() {
+        --references;
     }
 }
