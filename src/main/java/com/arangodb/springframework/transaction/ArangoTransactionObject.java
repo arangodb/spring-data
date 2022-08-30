@@ -41,7 +41,7 @@ class ArangoTransactionObject implements SmartTransactionObject {
     }
 
     boolean exists() {
-        return resource.getStreamTransactionId() != null;
+        return getStreamTransaction() != null;
     }
 
     void configure(TransactionDefinition definition) {
@@ -116,9 +116,14 @@ class ArangoTransactionObject implements SmartTransactionObject {
     }
 
     private boolean isStatus(StreamTransactionStatus status) {
+        getStreamTransaction();
+        return transaction != null && transaction.getStatus() == status;
+    }
+
+    private StreamTransactionEntity getStreamTransaction() {
         if (transaction == null && resource.getStreamTransactionId() != null) {
             transaction = database.getStreamTransaction(resource.getStreamTransactionId());
         }
-        return transaction != null && transaction.getStatus() == status;
+        return transaction;
     }
 }
