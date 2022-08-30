@@ -1,5 +1,6 @@
 package com.arangodb.springframework.transaction;
 
+import com.arangodb.ArangoDBException;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.StreamTransactionEntity;
 import com.arangodb.entity.StreamTransactionStatus;
@@ -7,7 +8,6 @@ import com.arangodb.model.StreamTransactionOptions;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.Nullable;
-import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.support.SmartTransactionObject;
@@ -53,7 +53,7 @@ class ArangoTransactionObject implements SmartTransactionObject {
         }
     }
 
-    ArangoTransactionResource getOrBegin(Collection<String> collections) {
+    ArangoTransactionResource getOrBegin(Collection<String> collections) throws ArangoDBException {
         addCollections(collections);
         if (resource.getStreamTransactionId() != null) {
             return getResource();
@@ -70,13 +70,13 @@ class ArangoTransactionObject implements SmartTransactionObject {
         return getResource();
     }
 
-    void commit() {
+    void commit() throws ArangoDBException {
         if (isStatus(StreamTransactionStatus.running)) {
             database.commitStreamTransaction(resource.getStreamTransactionId());
         }
     }
 
-    void rollback() {
+    void rollback() throws ArangoDBException {
         if (isStatus(StreamTransactionStatus.running)) {
             database.abortStreamTransaction(resource.getStreamTransactionId());
         }
@@ -104,15 +104,16 @@ class ArangoTransactionObject implements SmartTransactionObject {
 
     private void addCollections(Collection<String> collections) {
         if (resource.getStreamTransactionId() != null) {
-            if (!resource.getCollectionNames().containsAll(collections)) {
+            if (!resource.getCollectionNames().containsAll(collections) && logger.isDebugEnabled()) {
                 Set<String> additional = new HashSet<>(collections);
                 additional.removeAll(resource.getCollectionNames());
-                throw new IllegalTransactionStateException("Stream transaction already started on collections " + resource.getCollectionNames() + ", no additional collections allowed: " + additional);
+                logger.debug("Stream transaction already started on collections " + resource.getCollectionNames() + ", assuming additional collections are read only: " + additional);
             }
+        } else {
+            Set<String> all = new HashSet<>(resource.getCollectionNames());
+            all.addAll(collections);
+            resource.setCollectionNames(all);
         }
-        HashSet<String> all = new HashSet<>(resource.getCollectionNames());
-        all.addAll(collections);
-        resource.setCollectionNames(all);
     }
 
     private boolean isStatus(StreamTransactionStatus status) {
