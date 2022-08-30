@@ -1,40 +1,51 @@
 package com.arangodb.springframework.transaction;
 
 import org.springframework.lang.Nullable;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Synchronisation resource (has to be mutable).
+ *
+ * @see TransactionSynchronizationManager#bindResource(Object, Object)
+ * @see ArangoTransactionObject
+ */
 class ArangoTransactionResource {
 
-    private final String streamTransactionId;
-    private final Set<String> collectionNames;
+    private String streamTransactionId;
+    private Set<String> collectionNames;
 
-    ArangoTransactionResource(@Nullable String streamTransactionId, Collection<String> collectionNames) {
+    private boolean rollbackOnly;
+
+    ArangoTransactionResource(@Nullable String streamTransactionId, Set<String> collectionNames, boolean rollbackOnly) {
         this.streamTransactionId = streamTransactionId;
-        this.collectionNames = new HashSet<>(collectionNames);
+        setCollectionNames(collectionNames);
+        this.rollbackOnly = rollbackOnly;
     }
 
     String getStreamTransactionId() {
         return streamTransactionId;
     }
 
+    void setStreamTransactionId(String streamTransactionId) {
+        this.streamTransactionId = streamTransactionId;
+    }
+
     Set<String> getCollectionNames() {
         return collectionNames;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ArangoTransactionResource that = (ArangoTransactionResource) o;
-        return Objects.equals(streamTransactionId, that.streamTransactionId) && collectionNames.equals(that.collectionNames);
+    void setCollectionNames(Set<String> collectionNames) {
+        this.collectionNames = new HashSet<>(collectionNames);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(streamTransactionId);
+    boolean isRollbackOnly() {
+        return rollbackOnly;
+    }
+
+    void setRollbackOnly(boolean rollbackOnly) {
+        this.rollbackOnly = rollbackOnly;
     }
 }
