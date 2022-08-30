@@ -1,18 +1,15 @@
 package com.arangodb.springframework.transaction;
 
+import com.arangodb.ArangoDBException;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.DbName;
 import com.arangodb.model.StreamTransactionOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.repository.query.QueryTransactionBridge;
-import org.springframework.transaction.InvalidIsolationLevelException;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.*;
 import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionStatus;
-
-import java.util.Collection;
-import java.util.function.Function;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Transaction manager using ArangoDB stream transactions on the
@@ -29,51 +26,97 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
     public ArangoTransactionManager(ArangoOperations operations, QueryTransactionBridge bridge) {
         this.operations = operations;
         this.bridge = bridge;
+        setNestedTransactionAllowed(false);
+        setTransactionSynchronization(SYNCHRONIZATION_ALWAYS);
+        setValidateExistingTransaction(true);
+        setRollbackOnCommitFailure(true);
     }
 
+    /**
+     * Creates a new transaction object. Any synchronized resource will be reused.
+     */
     @Override
-    protected Object doGetTransaction() throws TransactionException {
+    protected Object doGetTransaction() {
         DbName database = operations.getDatabaseName();
         if (logger.isDebugEnabled()) {
             logger.debug("Create new transaction for database " + database);
         }
-        return new ArangoTransaction(operations.driver().db(database));
+        try {
+            ArangoTransactionResource resource = (ArangoTransactionResource) TransactionSynchronizationManager.getResource(database);
+            return new ArangoTransactionObject(operations.driver().db(database), getDefaultTimeout(), resource);
+        } catch (ArangoDBException error) {
+            throw new TransactionSystemException("Cannot create transaction object", error);
+        }
     }
 
+    /**
+     * Configures the new transaction object. The resulting resource will be synchronized and the bridge will be initialized.
+     *
+     * @see QueryTransactionBridge
+     */
     @Override
-    protected void doBegin(Object transaction, TransactionDefinition definition) throws InvalidIsolationLevelException {
+    protected void doBegin(Object transaction, TransactionDefinition definition) throws TransactionUsageException {
         int isolationLevel = definition.getIsolationLevel();
         if (isolationLevel != -1 && (isolationLevel & TransactionDefinition.ISOLATION_SERIALIZABLE) != 0) {
             throw new InvalidIsolationLevelException("ArangoDB does not support isolation level serializable");
         }
-        ArangoTransaction tx = (ArangoTransaction) transaction;
+        ArangoTransactionObject tx = (ArangoTransactionObject) transaction;
         tx.configure(definition);
-        bridge.setCurrentTransaction(tx::getOrBegin);
+        DbName key = operations.getDatabaseName();
+        rebind(key, tx.createResource());
+        bridge.setCurrentTransaction(collections -> {
+            ArangoTransactionResource resource = tx.getOrBegin(collections);
+            rebind(key, resource);
+            return resource.getStreamTransactionId();
+        });
     }
 
+    /**
+     * Commit the current stream transaction iff any. The bridge is cleared afterwards.
+     */
     @Override
     protected void doCommit(DefaultTransactionStatus status) throws TransactionException {
-        ArangoTransaction tx = (ArangoTransaction) status.getTransaction();
+        ArangoTransactionObject tx = (ArangoTransactionObject) status.getTransaction();
         if (logger.isDebugEnabled()) {
             logger.debug("Commit stream transaction " + tx);
         }
-        tx.commit();
-        bridge.clearCurrentTransaction();
+        try {
+            tx.commit();
+            bridge.clearCurrentTransaction();
+        } catch (ArangoDBException error) {
+            throw new TransactionSystemException("Cannot commit transaction " + tx, error);
+        }
     }
 
+    /**
+     * Roll back the current stream transaction iff any. The bridge is cleared afterwards.
+     */
     @Override
     protected void doRollback(DefaultTransactionStatus status) throws TransactionException {
-        ArangoTransaction tx = (ArangoTransaction) status.getTransaction();
+        ArangoTransactionObject tx = (ArangoTransactionObject) status.getTransaction();
         if (logger.isDebugEnabled()) {
             logger.debug("Rollback stream transaction " + tx);
         }
-        tx.rollback();
-        bridge.clearCurrentTransaction();
+        try {
+            tx.rollback();
+            bridge.clearCurrentTransaction();
+        } catch (ArangoDBException error) {
+            throw new TransactionSystemException("Cannot roll back transaction " + tx, error);
+        }
     }
 
     @Override
     protected boolean isExistingTransaction(Object transaction) throws TransactionException {
-        return transaction instanceof ArangoTransaction
-                && ((ArangoTransaction) transaction).exists();
+        return transaction instanceof ArangoTransactionObject && ((ArangoTransactionObject) transaction).exists();
+    }
+
+    @Override
+    protected void doCleanupAfterCompletion(Object transaction) {
+        TransactionSynchronizationManager.unbindResource(operations.getDatabaseName());
+    }
+
+    private static void rebind(DbName key, ArangoTransactionResource resource) {
+        TransactionSynchronizationManager.unbindResourceIfPossible(key);
+        TransactionSynchronizationManager.bindResource(key, resource);
     }
 }
