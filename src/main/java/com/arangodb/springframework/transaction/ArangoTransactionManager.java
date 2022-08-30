@@ -15,8 +15,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * Transaction manager using ArangoDB stream transactions on the
  * {@linkplain ArangoOperations#getDatabaseName()} current database} of the template.
  * Isolation level {@linkplain TransactionDefinition#ISOLATION_SERIALIZABLE serializable} is not supported.
- *
- * @see ArangoDatabase#beginStreamTransaction(StreamTransactionOptions)
  */
 public class ArangoTransactionManager extends AbstractPlatformTransactionManager {
 
@@ -26,11 +24,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
     public ArangoTransactionManager(ArangoOperations operations, QueryTransactionBridge bridge) {
         this.operations = operations;
         this.bridge = bridge;
-        setNestedTransactionAllowed(false);
-        setTransactionSynchronization(SYNCHRONIZATION_ALWAYS);
         setValidateExistingTransaction(true);
-        setGlobalRollbackOnParticipationFailure(true);
-        setRollbackOnCommitFailure(true);
     }
 
     /**
@@ -53,6 +47,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
     /**
      * Configures the new transaction object. The resulting resource will be synchronized and the bridge will be initialized.
      *
+     * @see ArangoDatabase#beginStreamTransaction(StreamTransactionOptions)
      * @see QueryTransactionBridge
      */
     @Override
@@ -71,6 +66,8 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
 
     /**
      * Commit the current stream transaction iff any. The bridge is cleared afterwards.
+     *
+     * @see ArangoDatabase#commitStreamTransaction(String)
      */
     @Override
     protected void doCommit(DefaultTransactionStatus status) throws TransactionException {
@@ -88,6 +85,8 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
 
     /**
      * Roll back the current stream transaction iff any. The bridge is cleared afterwards.
+     *
+     * @see ArangoDatabase#abortStreamTransaction(String)
      */
     @Override
     protected void doRollback(DefaultTransactionStatus status) throws TransactionException {
@@ -103,9 +102,14 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         }
     }
 
+    /**
+     * Check if the transaction objects has an underlying stream transaction.
+     *
+     * @see ArangoDatabase#getStreamTransaction(String)
+     */
     @Override
     protected boolean isExistingTransaction(Object transaction) throws TransactionException {
-        return transaction instanceof ArangoTransactionObject && ((ArangoTransactionObject) transaction).exists();
+        return ((ArangoTransactionObject) transaction).exists();
     }
 
     @Override
