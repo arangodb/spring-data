@@ -78,16 +78,16 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			options.fullCount(true);
 		}
 
-		final QueryWithCollections queryAndCollection = createQuery(accessor, bindVars, options);
+		final QueryWithCollections query = createQuery(accessor, bindVars, options);
 		if (options.getStreamTransactionId() == null && transactionBridge != null) {
-			options.streamTransactionId(transactionBridge.getCurrentTransaction(queryAndCollection.getCollections()));
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(query.getCollections()));
 		}
 
 
 		final ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		final Class<?> typeToRead = getTypeToRead(processor);
 
-		final ArangoCursor<?> result = operations.query(queryAndCollection.getQuery(), bindVars, options, typeToRead);
+		final ArangoCursor<?> result = operations.query(query.getQuery(), bindVars, options, typeToRead);
 		logWarningsIfNecessary(result);
 		return processor.processResult(convertResult(result, accessor));
 	}
