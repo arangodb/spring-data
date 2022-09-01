@@ -93,23 +93,24 @@ public interface ArangoOperations {
 	}
 
 	/**
-	 * Performs a database query using the given {@code query}, then returns a new {@code ArangoCursor} instance for the
-	 * result list.
+	 * Performs a database query using the given {@code query}, then returns a new {@code ArangoCursor}
+	 * instance for the result list.
 	 *
 	 * @param query
 	 *            An AQL query string
-	 * @param options
-	 *            Additional options that will be passed to the query API, can be null
 	 * @param entityClass
 	 *            The entity type of the result
 	 * @return cursor of the results
 	 * @throws DataAccessException
 	 */
-	<T> ArangoCursor<T> query(String query, AqlQueryOptions options, Class<T> entityClass) throws DataAccessException;
+    default <T> ArangoCursor<T> query(String query, AqlQueryOptions options, Class<T> entityClass)
+            throws DataAccessException {
+        return query(query, null, options, entityClass);
+    }
 
 	/**
-	 * Performs a database query using the given {@code query}, then returns a new {@code ArangoCursor} instance for the
-	 * result list.
+	 * Performs a database query using the given {@code query}, then returns a new {@code ArangoCursor}
+	 * instance for the result list.
 	 *
 	 * @param query
 	 *            An AQL query string
