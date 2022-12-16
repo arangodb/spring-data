@@ -396,6 +396,24 @@ public interface ArangoOperations {
 			throws DataAccessException;
 
 	/**
+	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
+	 * _key is given, a new unique _key is generated automatically.
+	 *
+	 * @param <T>
+	 *
+	 * @param collectionName
+	 *            Name of the collection in which the new documents should be inserted
+	 * @param values
+	 *            A List of documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<? extends DocumentEntity> insert(String collectionName, Iterable<T> values,
+			Class<T> entityClass) throws DataAccessException;
+
+	/**
 	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
 	 * _key is given, a new unique _key is generated automatically.
 	 *

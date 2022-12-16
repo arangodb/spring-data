@@ -173,6 +173,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		return _collection(entityClass, null);
 	}
 
+	private ArangoCollection _collection(final String name, final Class<?> entityClass) {
+		final ArangoPersistentEntity<?> persistentEntity = converter.getMappingContext()
+				.getRequiredPersistentEntity(entityClass);
+		return _collection(name, persistentEntity, persistentEntity.getCollectionOptions());
+	}
+
 	private ArangoCollection _collection(final Class<?> entityClass, final Object id) {
 		final ArangoPersistentEntity<?> persistentEntity = converter.getMappingContext()
 				.getRequiredPersistentEntity(entityClass);
@@ -565,10 +571,33 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		return result;
 	}
 
+	private <T> MultiDocumentEntity<? extends DocumentEntity> insert(final String collectionName,
+			final Iterable<T> values, final Class<T> entityClass, final DocumentCreateOptions options) {
+
+		potentiallyEmitBeforeSaveEvent(values);
+
+		final MultiDocumentEntity<? extends DocumentEntity> result;
+		try {
+			result = _collection(collectionName, entityClass).insertDocuments(toVPackCollection(values), options);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
+
+		updateDBFields(values, result);
+		potentiallyEmitAfterSaveEvent(values, result);
+		return result;
+	}
+
 	@Override
 	public <T> MultiDocumentEntity<? extends DocumentEntity> insert(final Iterable<T> values,
 			final Class<T> entityClass) throws DataAccessException {
 		return insert(values, entityClass, new DocumentCreateOptions());
+	}
+
+	@Override
+	public <T> MultiDocumentEntity<? extends DocumentEntity> insert(final String collectionName,
+			final Iterable<T> values, final Class<T> entityClass) throws DataAccessException {
+		return insert(collectionName, values, entityClass, new DocumentCreateOptions());
 	}
 
 	@Override
