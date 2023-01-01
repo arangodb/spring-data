@@ -275,8 +275,6 @@ public interface ArangoOperations {
 	 *            A List of documents
 	 * @param entityClass
 	 *            The entity class which represents the collection
-	 * @param options
-	 *            Additional options, can be null
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
@@ -487,7 +485,7 @@ public interface ArangoOperations {
 	 * Creates new documents from the given documents, unless there already exists. In that case it updates or replaces
 	 * the documents, depending on the chosen strategy.
 	 *
-	 * @deprecated use {@link #repsert(Iterable)} instead
+	 * @deprecated use {@link #repsert(Iterable, Class)} instead
 	 * @param value
 	 *            A List of documents
 	 * @param strategy
