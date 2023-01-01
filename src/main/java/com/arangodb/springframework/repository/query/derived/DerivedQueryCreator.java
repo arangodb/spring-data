@@ -398,7 +398,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 		final String template = templateAndProperty[0];
 		final String property = templateAndProperty[1];
 		Criteria criteria = null;
-		final boolean checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
+		final boolean checkUnique = part.getProperty().toDotPath().split("\\.").length <= 1;
 		Class<?> type = part.getProperty().getType();
 
 		// whether the current field type is a type encoded as geoJson
