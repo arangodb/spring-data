@@ -1,4 +1,5 @@
-![ArangoDB-Logo](https://www.arangodb.com/docs/assets/arangodb_logo_2016_inverted.png)
+![ArangoDB_Logo_RGB_Full_Color_Black-f](https://user-images.githubusercontent.com/7775349/211683174-7113fe7f-3707-4d15-b180-bf2ddaa86617.jpg)
+
 
 # Spring Data ArangoDB
 
