@@ -8,6 +8,11 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - '.github/**'
+      - 'docker/**'
+      - 'ChangeLog.md'
+      - 'README.md'
 
 jobs:
 
