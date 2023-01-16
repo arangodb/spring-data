@@ -8,26 +8,21 @@ on:
   push:
     branches:
       - master
-      - test/spring-data-2.6
-      - test/spring-data-2.5
-      - test/spring-data-2.4
-      - test/spring-data-2.3
 
 jobs:
 
   test:
 
-    timeout-minutes: 30
+    timeout-minutes: 20
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
         docker-img:
-          - docker.io/arangodb/arangodb:3.7.18
-          - docker.io/arangodb/arangodb:3.8.7
-          - docker.io/arangodb/arangodb:3.9.2
-          - docker.io/arangodb/arangodb-preview:3.10.0-alpha.1
+          - docker.io/arangodb/arangodb:3.8.8
+          - docker.io/arangodb/arangodb:3.9.7
+          - docker.io/arangodb/arangodb:3.10.2
         topology:
           - single
           - cluster
@@ -35,38 +30,61 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Set up JDK
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: 11
           distribution: 'adopt'
+          cache: maven
       - name: Start Database
         run: ./docker/start_db.sh
         env:
           ARANGO_LICENSE_KEY: ${{ secrets.ARANGO_LICENSE_KEY }}
           STARTER_MODE: ${{ matrix.topology }}
           DOCKER_IMAGE: ${{ matrix.docker-img }}
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
       - name: Info
         run: mvn -version
       - name: Test
         run: mvn --no-transfer-progress test
-      - name: Collect docker logs on failure
-        if: ${{ cancelled() || failure() }}
-        uses: jwalton/gh-docker-logs@v1
+
+  test-spring-boot-versions:
+
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        docker-img:
+          - docker.io/arangodb/arangodb:3.10.2
+        topology:
+          - single
+          - cluster
+        spring-boot-version:
+          - 2.4.9
+          - 2.5.12
+          - 2.6.10
+          - 2.7.7
+
+    steps:
+      - uses: actions/checkout@v2
         with:
-          dest: './logs'
-      - name: Tar logs
-        if: ${{ cancelled() || failure() }}
-        run: tar cvzf ./logs.tgz ./logs
-      - name: Upload logs to GitHub
-        if: ${{ cancelled() || failure() }}
-        uses: actions/upload-artifact@master
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v3
         with:
-          name: logs-${{github.job}}.tgz
-          path: ./logs.tgz
+          java-version: 8
+          distribution: 'adopt'
+          cache: maven
+      - name: Start Database
+        run: ./docker/start_db.sh
+        env:
+          ARANGO_LICENSE_KEY: ${{ secrets.ARANGO_LICENSE_KEY }}
+          STARTER_MODE: ${{ matrix.topology }}
+          DOCKER_IMAGE: ${{ matrix.docker-img }}
+      - name: Info
+        run: mvn -version
+      - name: Test
+        run: mvn --no-transfer-progress -Dspring-boot.version=${{matrix.spring-boot-version}} test
