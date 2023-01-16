@@ -47,6 +47,7 @@
 
 	<properties>
 		<java-module-name>com.arangodb.springframework</java-module-name>
+		<spring-boot.version>${project.parent.version}</spring-boot.version>
 	</properties>
 
 	<repositories>
@@ -287,7 +288,7 @@
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${project.parent.version}</version>
+				<version>${spring-boot.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
