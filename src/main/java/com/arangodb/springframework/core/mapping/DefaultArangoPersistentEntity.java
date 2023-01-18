@@ -28,12 +28,8 @@ import com.arangodb.springframework.annotation.FulltextIndex;
 import com.arangodb.springframework.annotation.FulltextIndexes;
 import com.arangodb.springframework.annotation.GeoIndex;
 import com.arangodb.springframework.annotation.GeoIndexes;
-import com.arangodb.springframework.annotation.HashIndex;
-import com.arangodb.springframework.annotation.HashIndexes;
 import com.arangodb.springframework.annotation.PersistentIndex;
 import com.arangodb.springframework.annotation.PersistentIndexes;
-import com.arangodb.springframework.annotation.SkiplistIndex;
-import com.arangodb.springframework.annotation.SkiplistIndexes;
 import com.arangodb.springframework.annotation.TtlIndex;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -80,8 +76,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	private ArangoPersistentProperty arangoIdProperty;
 	private ArangoPersistentProperty revProperty;
 	private ArangoPersistentProperty ttlIndexedProperty;
-	private final Collection<ArangoPersistentProperty> hashIndexedProperties;
-	private final Collection<ArangoPersistentProperty> skiplistIndexedProperties;
 	private final Collection<ArangoPersistentProperty> persistentIndexedProperties;
 	private final Collection<ArangoPersistentProperty> geoIndexedProperties;
 	private final Collection<ArangoPersistentProperty> fulltextIndexedProperties;
@@ -94,8 +88,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		super(information);
 		collection = StringUtils.uncapitalize(information.getType().getSimpleName());
 		context = new StandardEvaluationContext();
-		hashIndexedProperties = new ArrayList<>();
-		skiplistIndexedProperties = new ArrayList<>();
 		persistentIndexedProperties = new ArrayList<>();
 		geoIndexedProperties = new ArrayList<>();
 		fulltextIndexedProperties = new ArrayList<>();
@@ -206,8 +198,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 			}
 			ttlIndexedProperty = property;
 		}
-		property.getHashIndexed().ifPresent(i -> hashIndexedProperties.add(property));
-		property.getSkiplistIndexed().ifPresent(i -> skiplistIndexedProperties.add(property));
 		property.getPersistentIndexed().ifPresent(i -> persistentIndexedProperties.add(property));
 		property.getGeoIndexed().ifPresent(i -> geoIndexedProperties.add(property));
 		property.getFulltextIndexed().ifPresent(i -> fulltextIndexedProperties.add(property));
@@ -226,21 +216,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	@Override
 	public CollectionCreateOptions getCollectionOptions() {
 		return collectionOptions;
-	}
-
-	@Override
-	public Collection<HashIndex> getHashIndexes() {
-		final Collection<HashIndex> indexes = getIndexes(HashIndex.class);
-		Optional.ofNullable(findAnnotation(HashIndexes.class)).ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
-		return indexes;
-	}
-
-	@Override
-	public Collection<SkiplistIndex> getSkiplistIndexes() {
-		final Collection<SkiplistIndex> indexes = getIndexes(SkiplistIndex.class);
-		Optional.ofNullable(findAnnotation(SkiplistIndexes.class))
-				.ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
-		return indexes;
 	}
 
 	@Override
@@ -279,16 +254,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		final List<A> indexes = findAnnotations(annotation).stream().filter(a -> annotation.isInstance(a))
 				.map(a -> annotation.cast(a)).collect(Collectors.toList());
 		return indexes;
-	}
-
-	@Override
-	public Collection<ArangoPersistentProperty> getHashIndexedProperties() {
-		return hashIndexedProperties;
-	}
-
-	@Override
-	public Collection<ArangoPersistentProperty> getSkiplistIndexedProperties() {
-		return skiplistIndexedProperties;
 	}
 
 	@Override

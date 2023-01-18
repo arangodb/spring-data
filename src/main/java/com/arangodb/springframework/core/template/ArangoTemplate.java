@@ -38,15 +38,11 @@ import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.model.FulltextIndexOptions;
 import com.arangodb.model.GeoIndexOptions;
-import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
-import com.arangodb.model.SkiplistIndexOptions;
 import com.arangodb.model.TtlIndexOptions;
 import com.arangodb.springframework.annotation.FulltextIndex;
 import com.arangodb.springframework.annotation.GeoIndex;
-import com.arangodb.springframework.annotation.HashIndex;
 import com.arangodb.springframework.annotation.PersistentIndex;
-import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.annotation.TtlIndex;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.CollectionOperations;
@@ -204,10 +200,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	private static void ensureCollectionIndexes(final CollectionOperations collection,
 			final ArangoPersistentEntity<?> persistentEntity) {
-		persistentEntity.getHashIndexes().stream().forEach(index -> ensureHashIndex(collection, index));
-		persistentEntity.getHashIndexedProperties().stream().forEach(p -> ensureHashIndex(collection, p));
-		persistentEntity.getSkiplistIndexes().stream().forEach(index -> ensureSkiplistIndex(collection, index));
-		persistentEntity.getSkiplistIndexedProperties().stream().forEach(p -> ensureSkiplistIndex(collection, p));
 		persistentEntity.getPersistentIndexes().stream().forEach(index -> ensurePersistentIndex(collection, index));
 		persistentEntity.getPersistentIndexedProperties().stream().forEach(p -> ensurePersistentIndex(collection, p));
 		persistentEntity.getGeoIndexes().stream().forEach(index -> ensureGeoIndex(collection, index));
@@ -216,31 +208,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		persistentEntity.getFulltextIndexedProperties().stream().forEach(p -> ensureFulltextIndex(collection, p));
 		persistentEntity.getTtlIndex().ifPresent(index -> ensureTtlIndex(collection, index));
 		persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p));
-	}
-
-	private static void ensureHashIndex(final CollectionOperations collection, final HashIndex annotation) {
-		collection.ensureHashIndex(Arrays.asList(annotation.fields()), new HashIndexOptions()
-				.unique(annotation.unique()).sparse(annotation.sparse()).deduplicate(annotation.deduplicate()));
-	}
-
-	private static void ensureHashIndex(final CollectionOperations collection, final ArangoPersistentProperty value) {
-		final HashIndexOptions options = new HashIndexOptions();
-		value.getHashIndexed()
-				.ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()).deduplicate(i.deduplicate()));
-		collection.ensureHashIndex(Collections.singleton(value.getFieldName()), options);
-	}
-
-	private static void ensureSkiplistIndex(final CollectionOperations collection, final SkiplistIndex annotation) {
-		collection.ensureSkiplistIndex(Arrays.asList(annotation.fields()), new SkiplistIndexOptions()
-				.unique(annotation.unique()).sparse(annotation.sparse()).deduplicate(annotation.deduplicate()));
-	}
-
-	private static void ensureSkiplistIndex(final CollectionOperations collection,
-			final ArangoPersistentProperty value) {
-		final SkiplistIndexOptions options = new SkiplistIndexOptions();
-		value.getSkiplistIndexed()
-				.ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()).deduplicate(i.deduplicate()));
-		collection.ensureSkiplistIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
 	private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation) {

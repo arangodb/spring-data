@@ -30,15 +30,9 @@ import com.arangodb.springframework.annotation.FulltextIndexes;
 import com.arangodb.springframework.annotation.GeoIndex;
 import com.arangodb.springframework.annotation.GeoIndexed;
 import com.arangodb.springframework.annotation.GeoIndexes;
-import com.arangodb.springframework.annotation.HashIndex;
-import com.arangodb.springframework.annotation.HashIndexed;
-import com.arangodb.springframework.annotation.HashIndexes;
 import com.arangodb.springframework.annotation.PersistentIndex;
 import com.arangodb.springframework.annotation.PersistentIndexed;
 import com.arangodb.springframework.annotation.PersistentIndexes;
-import com.arangodb.springframework.annotation.SkiplistIndex;
-import com.arangodb.springframework.annotation.SkiplistIndexed;
-import com.arangodb.springframework.annotation.SkiplistIndexes;
 import com.arangodb.springframework.annotation.TtlIndex;
 import com.arangodb.springframework.annotation.TtlIndexed;
 import com.arangodb.springframework.core.geo.GeoJsonPoint;
@@ -68,182 +62,6 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
 	private IndexType geoType(final IndexType type) {
 		return Integer.valueOf(template.getVersion().getVersion().split("\\.")[1]) >= 4 ? IndexType.geo : type;
-	}
-
-	public static class HashIndexedSingleFieldTestEntity {
-		@HashIndexed
-		private String a;
-	}
-
-	@Test
-	public void singleFieldHashIndexed() {
-		assertThat(template.collection(HashIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
-		assertThat(template.collection(HashIndexedSingleFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash));
-		assertThat(template.collection(HashIndexedSingleFieldTestEntity.class).getIndexes().stream()
-				.filter(i -> i.getType() == IndexType.hash).findFirst().get().getFields(),
-			hasItems("a"));
-	}
-
-	public static class HashIndexedMultipleSingleFieldTestEntity {
-		@HashIndexed
-		private String a;
-		@HashIndexed
-		private String b;
-	}
-
-	@Test
-	public void multipleSingleFieldHashIndexed() {
-		assertThat(template.collection(HashIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
-		assertThat(template.collection(HashIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash));
-	}
-
-	@HashIndex(fields = { "a" })
-	public static class HashIndexWithSingleFieldTestEntity {
-	}
-
-	@Test
-	public void singleFieldHashIndex() {
-		assertThat(template.collection(HashIndexWithSingleFieldTestEntity.class).getIndexes().size(), is(2));
-		assertThat(template.collection(HashIndexWithSingleFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash));
-		assertThat(template.collection(HashIndexedSingleFieldTestEntity.class).getIndexes().stream()
-				.filter(i -> i.getType() == IndexType.hash).findFirst().get().getFields(),
-			hasItems("a"));
-	}
-
-	@HashIndex(fields = { "a" })
-	@HashIndex(fields = { "b" })
-	public static class HashIndexWithMultipleSingleFieldTestEntity {
-	}
-
-	@Test
-	public void multipleSingleFieldHashIndex() {
-		assertThat(template.collection(HashIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
-		assertThat(template.collection(HashIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash));
-	}
-
-	@HashIndex(fields = { "a", "b" })
-	public static class HashIndexWithMultiFieldTestEntity {
-	}
-
-	@Test
-	public void multiFieldHashIndex() {
-		assertThat(template.collection(HashIndexWithMultiFieldTestEntity.class).getIndexes().size(), is(2));
-		assertThat(template.collection(HashIndexWithMultiFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash));
-		assertThat(template.collection(HashIndexWithMultiFieldTestEntity.class).getIndexes().stream()
-				.filter(i -> i.getType() == IndexType.hash).findFirst().get().getFields(),
-			hasItems("a", "b"));
-	}
-
-	@HashIndexes({ @HashIndex(fields = { "a" }), @HashIndex(fields = { "b" }) })
-	public static class HashIndexWithMultipleIndexesTestEntity {
-	}
-
-	@Test
-	public void multipleIndexesHashIndex() {
-		assertThat(template.collection(HashIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
-		assertThat(template.collection(HashIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash));
-	}
-
-	public static class SkiplistIndexedSingleFieldTestEntity {
-		@SkiplistIndexed
-		private String a;
-	}
-
-	@Test
-	public void singleFieldSkiplistIndexed() {
-		assertThat(template.collection(SkiplistIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
-		assertThat(template.collection(SkiplistIndexedSingleFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.skiplist));
-		assertThat(template.collection(SkiplistIndexedSingleFieldTestEntity.class).getIndexes().stream()
-				.filter(i -> i.getType() == IndexType.skiplist).findFirst().get().getFields(),
-			hasItems("a"));
-	}
-
-	public static class SkiplistIndexedMultipleSingleFieldTestEntity {
-		@SkiplistIndexed
-		private String a;
-		@SkiplistIndexed
-		private String b;
-	}
-
-	@Test
-	public void multipleSingleFieldSkiplistIndexed() {
-		assertThat(template.collection(SkiplistIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
-		assertThat(
-			template.collection(SkiplistIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-					.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.skiplist));
-	}
-
-	@SkiplistIndex(fields = { "a" })
-	public static class SkiplistIndexWithSingleFieldTestEntity {
-	}
-
-	@Test
-	public void singleFieldSkiplistIndex() {
-		assertThat(template.collection(SkiplistIndexWithSingleFieldTestEntity.class).getIndexes().size(), is(2));
-		assertThat(
-			template.collection(SkiplistIndexWithSingleFieldTestEntity.class).getIndexes().stream()
-					.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.skiplist));
-		assertThat(template.collection(SkiplistIndexedSingleFieldTestEntity.class).getIndexes().stream()
-				.filter(i -> i.getType() == IndexType.skiplist).findFirst().get().getFields(),
-			hasItems("a"));
-	}
-
-	@SkiplistIndex(fields = { "a" })
-	@SkiplistIndex(fields = { "b" })
-	public static class SkiplistIndexWithMultipleSingleFieldTestEntity {
-	}
-
-	@Test
-	public void multipleSingleFieldSkiplistIndex() {
-		assertThat(template.collection(SkiplistIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
-		assertThat(
-			template.collection(SkiplistIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-					.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.skiplist));
-	}
-
-	@SkiplistIndex(fields = { "a", "b" })
-	public static class SkiplistIndexWithMultiFieldTestEntity {
-	}
-
-	@Test
-	public void multiFieldSkiplistIndex() {
-		assertThat(template.collection(SkiplistIndexWithMultiFieldTestEntity.class).getIndexes().size(), is(2));
-		assertThat(template.collection(SkiplistIndexWithMultiFieldTestEntity.class).getIndexes().stream()
-				.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.skiplist));
-		assertThat(template.collection(SkiplistIndexWithMultiFieldTestEntity.class).getIndexes().stream()
-				.filter(i -> i.getType() == IndexType.skiplist).findFirst().get().getFields(),
-			hasItems("a", "b"));
-	}
-
-	@SkiplistIndexes({ @SkiplistIndex(fields = { "a" }), @SkiplistIndex(fields = { "b" }) })
-	public static class SkiplistIndexWithMultipleIndexesTestEntity {
-	}
-
-	@Test
-	public void multipleIndexesSkiplistIndex() {
-		assertThat(template.collection(SkiplistIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
-		assertThat(
-			template.collection(SkiplistIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-					.map(i -> i.getType()).collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.skiplist));
 	}
 
 	public static class PersistentIndexedSingleFieldTestEntity {
@@ -520,8 +338,6 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	}
 
 	public static class DifferentIndexedAnnotations {
-		@HashIndexed
-		@SkiplistIndexed
 		@PersistentIndexed
 		@GeoIndexed
 		@FulltextIndexed
@@ -531,16 +347,13 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
 	@Test
 	public void differentIndexedAnnotationsSameField() {
-		assertThat(template.collection(DifferentIndexedAnnotations.class).getIndexes().size(), is(7));
+		assertThat(template.collection(DifferentIndexedAnnotations.class).getIndexes().size(), is(5));
 		assertThat(
 			template.collection(DifferentIndexedAnnotations.class).getIndexes().stream().map(i -> i.getType())
 					.collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash, IndexType.skiplist, IndexType.persistent, geo1(),
-				IndexType.fulltext, IndexType.ttl));
+			hasItems(IndexType.primary, IndexType.persistent, geo1(), IndexType.fulltext, IndexType.ttl));
 	}
 
-	@HashIndex(fields = { "a" })
-	@SkiplistIndex(fields = { "a" })
 	@PersistentIndex(fields = { "a" })
 	@GeoIndex(fields = { "a" })
 	@FulltextIndex(field = "a")
@@ -550,18 +363,13 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
 	@Test
 	public void differentIndexAnnotations() {
-		assertThat(template.collection(DifferentIndexAnnotations.class).getIndexes().size(), is(6));
+		assertThat(template.collection(DifferentIndexAnnotations.class).getIndexes().size(), is(4));
 		assertThat(
 			template.collection(DifferentIndexAnnotations.class).getIndexes().stream().map(i -> i.getType())
 					.collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash, IndexType.skiplist, IndexType.persistent, geo1(),
-				IndexType.fulltext));
+			hasItems(IndexType.primary, IndexType.persistent, geo1(), IndexType.fulltext));
 	}
 
-	@HashIndex(fields = { "a" })
-	@HashIndex(fields = { "b" })
-	@SkiplistIndex(fields = { "a" })
-	@SkiplistIndex(fields = { "b" })
 	@PersistentIndex(fields = { "a" })
 	@PersistentIndex(fields = { "b" })
 	@GeoIndex(fields = { "a" })
@@ -574,38 +382,37 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
 	@Test
 	public void multipleDifferentIndexAnnotations() {
-		assertThat(template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().size(), is(11));
+		assertThat(template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().size(), is(7));
 		assertThat(
 			template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().stream().map(i -> i.getType())
 					.collect(Collectors.toList()),
-			hasItems(IndexType.primary, IndexType.hash, IndexType.skiplist, IndexType.persistent, geo1(),
+			hasItems(IndexType.primary, IndexType.persistent, geo1(),
 				IndexType.fulltext));
 	}
 
 	@Document("TwoEntityCollectionWithAdditionalIndexesCollection")
-	@HashIndex(fields = "a")
+	@PersistentIndex(fields = "a")
 	static class TwoEntityCollectionWithAdditionalIndexesTestEntity1 {
 
 	}
 
 	@Document("TwoEntityCollectionWithAdditionalIndexesCollection")
-	@HashIndex(fields = "b")
-	@SkiplistIndex(fields = "a")
+	@PersistentIndex(fields = {"a", "b"})
 	static class TwoEntityCollectionWithAdditionalIndexesTestEntity2 {
 
 	}
 
 	@Test
 	public void twoEntityCollectionWithAdditionalIndexes() {
-		// one primary + one hash index
+		// one primary + one persistent index
 		assertThat(template.collection(TwoEntityCollectionWithAdditionalIndexesTestEntity1.class).getIndexes().size(),
 			is(1 + 1));
-		// one primary + two hash + one skiplist index
+		// one primary + two persistent index
 		assertThat(template.collection(TwoEntityCollectionWithAdditionalIndexesTestEntity2.class).getIndexes().size(),
-			is(1 + 3));
-		// one primary + two hash + one skiplist index
+			is(1 + 2));
+		// one primary + two persistent index
 		assertThat(template.collection(TwoEntityCollectionWithAdditionalIndexesTestEntity1.class).getIndexes().size(),
-			is(1 + 3));
+			is(1 + 2));
 	}
 
 	public static class TtlIndexedSingleFieldTestEntity {
