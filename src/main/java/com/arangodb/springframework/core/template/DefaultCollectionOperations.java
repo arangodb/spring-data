@@ -66,7 +66,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 
 	@Override
 	public void drop() throws DataAccessException {
-		collectionCache.remove(new CollectionCacheKey(collection.db().name(), collection.name()));
+		collectionCache.remove(new CollectionCacheKey(collection.db().dbName().get(), collection.name()));
 		try {
 			collection.drop();
 		} catch (final ArangoDBException e) {
