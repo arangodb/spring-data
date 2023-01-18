@@ -245,13 +245,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation) {
 		collection.ensurePersistentIndex(Arrays.asList(annotation.fields()),
-				new PersistentIndexOptions().unique(annotation.unique()).sparse(annotation.sparse()));
+				new PersistentIndexOptions()
+						.unique(annotation.unique())
+						.sparse(annotation.sparse())
+						.deduplicate(annotation.deduplicate()));
 	}
 
 	private static void ensurePersistentIndex(final CollectionOperations collection,
 			final ArangoPersistentProperty value) {
 		final PersistentIndexOptions options = new PersistentIndexOptions();
-		value.getPersistentIndexed().ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()));
+		value.getPersistentIndexed().ifPresent(i -> options
+				.unique(i.unique())
+				.sparse(i.sparse())
+				.deduplicate(i.deduplicate()));
 		collection.ensurePersistentIndex(Collections.singleton(value.getFieldName()), options);
 	}
 

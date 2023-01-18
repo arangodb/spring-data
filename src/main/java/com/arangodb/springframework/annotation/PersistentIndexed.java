@@ -45,4 +45,9 @@ public @interface PersistentIndexed {
 	 */
 	boolean sparse() default false;
 
+	/**
+	 * If {@literal true}, then set deduplicate to index
+	 */
+	boolean deduplicate() default false;
+
 }
