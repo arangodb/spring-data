@@ -108,11 +108,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private static CollectionCreateOptions createCollectionOptions(final Document annotation) {
 		final CollectionCreateOptions options = new CollectionCreateOptions().type(CollectionType.DOCUMENT)
-				.waitForSync(annotation.waitForSync()).doCompact(annotation.doCompact())
-				.isVolatile(annotation.isVolatile()).isSystem(annotation.isSystem());
-		if (annotation.journalSize() > -1) {
-			options.journalSize(annotation.journalSize());
-		}
+				.waitForSync(annotation.waitForSync()).isSystem(annotation.isSystem());
 		if (annotation.replicationFactor() > -1) {
 			options.replicationFactor(annotation.replicationFactor());
 		}
@@ -126,9 +122,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		if (annotation.numberOfShards() > -1) {
 			options.numberOfShards(annotation.numberOfShards());
 		}
-		if (annotation.indexBuckets() > -1) {
-			options.indexBuckets(annotation.indexBuckets());
-		}
 		if (annotation.allowUserKeys()) {
 			options.keyOptions(annotation.allowUserKeys(), annotation.keyType(),
 					annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
@@ -139,11 +132,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 
 	private static CollectionCreateOptions createCollectionOptions(final Edge annotation) {
 		final CollectionCreateOptions options = new CollectionCreateOptions().type(CollectionType.EDGES)
-				.waitForSync(annotation.waitForSync()).doCompact(annotation.doCompact())
-				.isVolatile(annotation.isVolatile()).isSystem(annotation.isSystem());
-		if (annotation.journalSize() > -1) {
-			options.journalSize(annotation.journalSize());
-		}
+				.waitForSync(annotation.waitForSync()).isSystem(annotation.isSystem());
 		if (annotation.replicationFactor() > -1) {
 			options.replicationFactor(annotation.replicationFactor());
 		}
@@ -153,9 +142,6 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		}
 		if (annotation.numberOfShards() > -1) {
 			options.numberOfShards(annotation.numberOfShards());
-		}
-		if (annotation.indexBuckets() > -1) {
-			options.indexBuckets(annotation.indexBuckets());
 		}
 		if (annotation.allowUserKeys()) {
 			options.keyOptions(annotation.allowUserKeys(), annotation.keyType(),
