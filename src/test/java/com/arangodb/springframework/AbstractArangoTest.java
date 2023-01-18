@@ -49,7 +49,9 @@ public abstract class AbstractArangoTest {
 
 	@Before
 	public void before() {
-		template.dropDatabase();
+		for (final Class<?> collection : collections) {
+			template.collection(collection).truncate();
+		}
 		AbstractArangoTest.staticTemplate = template;
 	}
 
