@@ -128,7 +128,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	public ArangoTemplate(final ArangoDB arango, final String database, final ArangoConverter converter,
 			final ResolverFactory resolverFactory, final PersistenceExceptionTranslator exceptionTranslator) {
 		super();
-		this.arango = arango._setCursorInitializer(new ArangoCursorInitializer(converter));
+		this.arango = arango;
 		this.databaseName = database;
 		this.databaseExpression = PARSER.parseExpression(databaseName, ParserContext.TEMPLATE_EXPRESSION);
 		this.converter = converter;
@@ -324,7 +324,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars,
 			final AqlQueryOptions options, final Class<T> entityClass) throws DataAccessException {
-		return db().query(query, bindVars == null ? null : prepareBindVars(bindVars), options, entityClass);
+		ArangoCursor<VPackSlice> cursor = db().query(query, bindVars == null ? null : prepareBindVars(bindVars), options, VPackSlice.class);
+		return new ArangoExtCursor<>(cursor, entityClass, converter, eventPublisher);
 	}
 
 	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
@@ -839,7 +840,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		context.addPropertyAccessor(new BeanFactoryAccessor());
 		eventPublisher = applicationContext;
-		arango._setCursorInitializer(new ArangoCursorInitializer(converter, applicationContext));
 	}
 
 	private void potentiallyEmitEvent(final ArangoMappingEvent<?> event) {

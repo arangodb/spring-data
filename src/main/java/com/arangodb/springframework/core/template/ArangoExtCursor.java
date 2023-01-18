@@ -20,38 +20,160 @@
 
 package com.arangodb.springframework.core.template;
 
+import com.arangodb.*;
+import com.arangodb.entity.CursorEntity;
+import com.arangodb.springframework.core.convert.ArangoConverter;
+import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
+import com.arangodb.springframework.core.mapping.event.ArangoMappingEvent;
+import com.arangodb.velocypack.VPackSlice;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.arangodb.ArangoCursor;
-import com.arangodb.entity.CursorEntity;
-import com.arangodb.internal.ArangoCursorExecute;
-import com.arangodb.internal.InternalArangoDatabase;
-import com.arangodb.internal.cursor.ArangoCursorImpl;
-import com.arangodb.internal.cursor.ArangoCursorIterator;
-import com.arangodb.springframework.core.convert.ArangoConverter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
- * 
  * @author Mark Vollmary
  * @author Christian Lechner
  */
-class ArangoExtCursor<T> extends ArangoCursorImpl<T> {
+class ArangoExtCursor<T> implements ArangoCursor<T> {
 
-	protected ArangoExtCursor(final InternalArangoDatabase<?, ?> db, final ArangoCursorExecute execute,
-		final Class<T> type, final CursorEntity result, final ArangoConverter converter,
-		final ApplicationEventPublisher eventPublisher) {
-		super(db, execute, type, result);
-		final ArangoExtCursorIterator<?> it = (ArangoExtCursorIterator<?>) iterator;
-		it.setConverter(converter);
-		it.setEventPublisher(eventPublisher);
-	}
+    private final ArangoCursor<VPackSlice> delegate;
+    private final Class<T> type;
+    private final ArangoConverter converter;
+    private final ApplicationEventPublisher eventPublisher;
 
-	@Override
-	protected ArangoCursorIterator<T> createIterator(
-		final ArangoCursor<T> cursor,
-		final InternalArangoDatabase<?, ?> db,
-		final ArangoCursorExecute execute,
-		final CursorEntity result) {
-		return new ArangoExtCursorIterator<>(cursor, db, execute, result);
-	}
+    public ArangoExtCursor(ArangoCursor<VPackSlice> delegate, Class<T> type, ArangoConverter converter, ApplicationEventPublisher eventPublisher) {
+        this.delegate = delegate;
+        this.type = type;
+        this.converter = converter;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Override
+    public String getId() {
+        return delegate.getId();
+    }
+
+    @Override
+    public Class<T> getType() {
+        return type;
+    }
+
+    @Override
+    public Integer getCount() {
+        return delegate.getCount();
+    }
+
+    @Override
+    public CursorEntity.Stats getStats() {
+        return delegate.getStats();
+    }
+
+    @Override
+    public Collection<CursorEntity.Warning> getWarnings() {
+        return delegate.getWarnings();
+    }
+
+    @Override
+    public boolean isCached() {
+        return delegate.isCached();
+    }
+
+    @Override
+    public List<T> asListRemaining() {
+        final List<T> remaining = new ArrayList<>();
+        while (hasNext()) {
+            remaining.add(next());
+        }
+        return remaining;
+    }
+
+    @Override
+    public boolean isPotentialDirtyRead() {
+        return delegate.isPotentialDirtyRead();
+    }
+
+    @Override
+    public ArangoIterator<T> iterator() {
+        return this;
+    }
+
+    @Override
+    public Stream<T> stream() {
+        return StreamSupport.stream(spliterator(), false);
+    }
+
+    @Override
+    public void foreach(Consumer<? super T> action) {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public <R> ArangoIterable<R> map(Function<? super T, ? extends R> mapper) {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public ArangoIterable<T> filter(Predicate<? super T> predicate) {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public T first() {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public long count() {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public boolean anyMatch(Predicate<? super T> predicate) {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public boolean allMatch(Predicate<? super T> predicate) {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public boolean noneMatch(Predicate<? super T> predicate) {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public <R extends Collection<? super T>> R collectInto(R target) {
+        throw new UnsupportedOperationException("deprecated");
+    }
+
+    @Override
+    public void close() throws IOException {
+        delegate.close();
+    }
+
+    @Override
+    public boolean hasNext() {
+        return delegate.hasNext();
+    }
+
+    @Override
+    public T next() {
+        final T result = converter.read(type, delegate.next());
+        if (result != null) {
+            potentiallyEmitEvent(new AfterLoadEvent<>(result));
+        }
+        return result;
+    }
+
+    private void potentiallyEmitEvent(final ArangoMappingEvent<?> event) {
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(event);
+        }
+    }
 }
