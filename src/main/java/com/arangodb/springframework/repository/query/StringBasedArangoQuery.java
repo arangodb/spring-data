@@ -62,11 +62,11 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 	private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("@(@?[A-Za-z0-9][A-Za-z0-9_]*)");
 
-	private final StandardEvaluationContext context;
 	private final String query;
 	private	final String collectionName;
 	private final Expression queryExpression;
 	private final Set<String> queryBindParams;
+	private final ApplicationContext applicationContext;
 
 	public StringBasedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations,
 								  final ApplicationContext applicationContext) {
@@ -80,18 +80,13 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 		this.query = query;
 		collectionName = AqlUtils.buildCollectionName(operations.collection(domainClass).name());
+		this.applicationContext = applicationContext;
 
 		assertSinglePageablePlaceholder();
 		assertSingleSortPlaceholder();
 
 		this.queryBindParams = getBindParamsInQuery();
 		queryExpression = PARSER.parseExpression(query, ParserContext.TEMPLATE_EXPRESSION);
-
-		context = new StandardEvaluationContext();
-		context.setRootObject(applicationContext);
-		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
-		context.addPropertyAccessor(new BeanFactoryAccessor());
-        context.setVariable("collection", collectionName);
 	}
 
 	@Override
@@ -116,6 +111,11 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	}
 
 	private String prepareQuery(final ArangoParameterAccessor accessor) {
+		StandardEvaluationContext context = new StandardEvaluationContext();
+		context.setRootObject(applicationContext);
+		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
+		context.addPropertyAccessor(new BeanFactoryAccessor());
+		context.setVariable("collection", collectionName);
 		context.setVariables(accessor.getSpelVars());
 
 		String preparedQuery = queryExpression.getValue(context, String.class);
