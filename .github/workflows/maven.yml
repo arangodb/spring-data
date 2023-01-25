@@ -68,10 +68,9 @@ jobs:
           - single
           - cluster
         spring-boot-version:
-          - 2.4.9
           - 2.5.12
           - 2.6.10
-          - 2.7.7
+          - 2.7.8
 
     steps:
       - uses: actions/checkout@v2
@@ -91,5 +90,16 @@ jobs:
           DOCKER_IMAGE: ${{ matrix.docker-img }}
       - name: Info
         run: mvn -version
+      - name: Install
+        run: mvn --no-transfer-progress install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true
+      - name: Set Spring version
+        working-directory: integration-tests
+        run: sed -i "0,/<version>.*<\/version>/s//<version>$SPRING_BOOT_VERSION<\/version>/" pom.xml
+        env:
+          SPRING_BOOT_VERSION: ${{matrix.spring-boot-version}}
+      - name: Maven Deps Tree
+        working-directory: integration-tests
+        run: mvn dependency:tree
       - name: Test
-        run: mvn --no-transfer-progress -Dspring-boot.version=${{matrix.spring-boot-version}} test
+        working-directory: integration-tests
+        run: mvn --no-transfer-progress test
