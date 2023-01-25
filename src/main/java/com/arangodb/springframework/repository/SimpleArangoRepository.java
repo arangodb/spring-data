@@ -28,10 +28,12 @@ import com.arangodb.springframework.core.util.AqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * The implementation of all CRUD, paging and sorting functionality in
@@ -327,6 +329,10 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public <S extends T> boolean exists(final Example<S> example) {
 		return count(example) > 0;
+	}
+
+	public <S extends T, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+		throw new UnsupportedOperationException();
 	}
 
 	private <S extends T> ArangoCursor<T> findAllInternal(final Sort sort, @Nullable final Example<S> example,
