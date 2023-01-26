@@ -21,17 +21,18 @@
 package com.arangodb.springframework.core.template;
 
 import com.arangodb.*;
-import com.arangodb.entity.CursorEntity;
+import com.arangodb.entity.CursorWarning;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
 import com.arangodb.springframework.core.mapping.event.ArangoMappingEvent;
-import com.arangodb.velocypack.VPackSlice;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -41,12 +42,12 @@ import java.util.stream.StreamSupport;
  */
 class ArangoExtCursor<T> implements ArangoCursor<T> {
 
-    private final ArangoCursor<VPackSlice> delegate;
+    private final ArangoCursor<JsonNode> delegate;
     private final Class<T> type;
     private final ArangoConverter converter;
     private final ApplicationEventPublisher eventPublisher;
 
-    public ArangoExtCursor(ArangoCursor<VPackSlice> delegate, Class<T> type, ArangoConverter converter, ApplicationEventPublisher eventPublisher) {
+    public ArangoExtCursor(ArangoCursor<JsonNode> delegate, Class<T> type, ArangoConverter converter, ApplicationEventPublisher eventPublisher) {
         this.delegate = delegate;
         this.type = type;
         this.converter = converter;
@@ -69,12 +70,12 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
     }
 
     @Override
-    public CursorEntity.Stats getStats() {
+    public Map<String, Object> getStats() {
         return delegate.getStats();
     }
 
     @Override
-    public Collection<CursorEntity.Warning> getWarnings() {
+    public Collection<CursorWarning> getWarnings() {
         return delegate.getWarnings();
     }
 
@@ -105,51 +106,6 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
     @Override
     public Stream<T> stream() {
         return StreamSupport.stream(spliterator(), false);
-    }
-
-    @Override
-    public void foreach(Consumer<? super T> action) {
-        throw new UnsupportedOperationException("deprecated");
-    }
-
-    @Override
-    public <R> ArangoIterable<R> map(Function<? super T, ? extends R> mapper) {
-        throw new UnsupportedOperationException("deprecated");
-    }
-
-    @Override
-    public ArangoIterable<T> filter(Predicate<? super T> predicate) {
-        throw new UnsupportedOperationException("deprecated");
-    }
-
-    @Override
-    public T first() {
-        throw new UnsupportedOperationException("deprecated");
-    }
-
-    @Override
-    public long count() {
-        throw new UnsupportedOperationException("deprecated");
-    }
-
-    @Override
-    public boolean anyMatch(Predicate<? super T> predicate) {
-        throw new UnsupportedOperationException("deprecated");
-    }
-
-    @Override
-    public boolean allMatch(Predicate<? super T> predicate) {
-        throw new UnsupportedOperationException("deprecated");
-    }
-
-    @Override
-    public boolean noneMatch(Predicate<? super T> predicate) {
-        throw new UnsupportedOperationException("deprecated");
-    }
-
-    @Override
-    public <R extends Collection<? super T>> R collectInto(R target) {
-        throw new UnsupportedOperationException("deprecated");
     }
 
     @Override

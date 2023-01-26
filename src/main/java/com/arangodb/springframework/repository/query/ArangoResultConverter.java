@@ -32,6 +32,7 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Slice;
@@ -45,7 +46,6 @@ import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * Converts the result returned from the ArangoDB Java driver to the desired type.
@@ -148,13 +148,13 @@ public class ArangoResultConverter {
 		GeoResult<?> geoResult = null;
 		while (cursor.hasNext() && geoResult == null) {
 			final Object object = cursor.next();
-			if (!(object instanceof VPackSlice)) {
+			if (!(object instanceof JsonNode)) {
 				continue;
 			}
 
-			final VPackSlice slice = (VPackSlice) object;
-			final VPackSlice distSlice = slice.get("_distance");
-			final Double distanceInMeters = distSlice.isDouble() ? distSlice.getAsDouble() : null;
+			final JsonNode slice = (JsonNode) object;
+			final JsonNode distSlice = slice.get("_distance");
+			final Double distanceInMeters = distSlice.isDouble() ? distSlice.doubleValue() : null;
 			if (distanceInMeters == null) {
 				continue;
 			}
@@ -174,13 +174,13 @@ public class ArangoResultConverter {
 	 * @return GeoResult object
 	 */
 	private GeoResult<?> buildGeoResult(final Object object) {
-		if (object == null || !(object instanceof VPackSlice)) {
+		if (object == null || !(object instanceof JsonNode)) {
 			return null;
 		}
 
-		final VPackSlice slice = (VPackSlice) object;
-		final VPackSlice distSlice = slice.get("_distance");
-		final Double distanceInMeters = distSlice.isDouble() ? distSlice.getAsDouble() : null;
+		final JsonNode slice = (JsonNode) object;
+		final JsonNode distSlice = slice.get("_distance");
+		final Double distanceInMeters = distSlice.isDouble() ? distSlice.doubleValue() : null;
 		if (distanceInMeters == null) {
 			return null;
 		}
@@ -218,8 +218,8 @@ public class ArangoResultConverter {
 	}
 
 	public PageImpl<?> convertPage() {
-		Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
-		return new PageImpl<>(result.asListRemaining(), accessor.getPageable(), result.getStats().getFullCount());
+		Assert.notNull(result.getStats().get("fullCount"), MISSING_FULL_COUNT);
+		return new PageImpl<>(result.asListRemaining(), accessor.getPageable(), (Long) result.getStats().get("fullCount"));
 	}
 
 	public Set<?> convertSet() {
@@ -239,8 +239,8 @@ public class ArangoResultConverter {
 	}
 
 	public GeoPage<?> convertGeoPage() {
-		Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
-		return new GeoPage<>(buildGeoResults(result), accessor.getPageable(), result.getStats().getFullCount());
+		Assert.notNull(result.getStats().get("fullCount"), MISSING_FULL_COUNT);
+		return new GeoPage<>(buildGeoResults(result), accessor.getPageable(), (Long) result.getStats().get("fullCount"));
 	}
 
 	public Object convertArray() {

@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.data.convert.MappingContextTypeInformationMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.TypeInformationMapper;
@@ -37,9 +39,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
-
-import com.arangodb.velocypack.VPackBuilder;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Christian Lechner
@@ -92,13 +91,13 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 	}
 
 	@Override
-	public TypeInformation<?> readType(final VPackSlice source) {
+	public TypeInformation<?> readType(final JsonNode source) {
 		Assert.notNull(source, "Source must not be null!");
 		return getFromCacheOrCreate(accessor.readAliasFrom(source));
 	}
 
 	@Override
-	public <T> TypeInformation<? extends T> readType(final VPackSlice source, final TypeInformation<T> basicType) {
+	public <T> TypeInformation<? extends T> readType(final JsonNode source, final TypeInformation<T> basicType) {
 		Assert.notNull(source, "Source must not be null!");
 		Assert.notNull(basicType, "Basic type must not be null!");
 
@@ -122,11 +121,11 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 		return (TypeInformation<? extends T>) basicType.specialize(targetType);
 	}
 	
-	public void writeType(final Class<?> type, final VPackBuilder sink) {
+	public void writeType(final Class<?> type, final ObjectNode sink) {
 		writeType(ClassTypeInformation.from(type), sink);
 	}
 	
-	public void writeType(final TypeInformation<?> info, final VPackBuilder sink) {
+	public void writeType(final TypeInformation<?> info, final ObjectNode sink) {
 		Assert.notNull(info, "TypeInformation must not be null!");
 
 		final Alias alias = getAliasFor(info);
@@ -174,22 +173,22 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 			this.typeKey = typeKey;
 		}
 
-		public Alias readAliasFrom(final VPackSlice source) {
+		public Alias readAliasFrom(final JsonNode source) {
 			if (source.isArray()) {
 				return Alias.NONE;
 			}
 
 			if (source.isObject()) {
-				final VPackSlice typeKey = source.get(this.typeKey);
-				return Alias.ofNullable(typeKey.isString() ? typeKey.getAsString() : null);
+				final JsonNode typeKey = source.get(this.typeKey);
+				return Alias.ofNullable(typeKey.isTextual() ? typeKey.textValue() : null);
 			}
 
-			throw new IllegalArgumentException("Cannot read alias from VPack type " + source.getType());
+			throw new IllegalArgumentException("Cannot read alias from VPack type " + source.getNodeType());
 		}
 
-		public void writeTypeTo(final VPackBuilder sink, final Object alias) {
+		public void writeTypeTo(final ObjectNode sink, final Object alias) {
 			if (this.typeKey != null) {
-				sink.add(this.typeKey, alias.toString());
+				sink.put(this.typeKey, alias.toString());
 			}
 		}
 

@@ -56,8 +56,7 @@ import com.arangodb.springframework.core.mapping.event.BeforeSaveEvent;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.springframework.core.util.MetadataUtils;
-import com.arangodb.util.MapBuilder;
-import com.arangodb.velocypack.VPackSlice;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -267,19 +266,19 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		return MetadataUtils.determineDocumentKeyFromId(converter.convertId(id));
 	}
 
-	private VPackSlice toVPack(final Object source) {
+	private JsonNode toVPack(final Object source) {
 		return converter.write(source);
 	}
 
-	private Collection<VPackSlice> toVPackCollection(final Iterable<?> values) {
-		final Collection<VPackSlice> vpacks = new ArrayList<>();
+	private Collection<JsonNode> toVPackCollection(final Iterable<?> values) {
+		final Collection<JsonNode> vpacks = new ArrayList<>();
 		for (final Object value : values) {
 			vpacks.add(toVPack(value));
 		}
 		return vpacks;
 	}
 
-	private <T> T fromVPack(final Class<T> entityClass, final VPackSlice source) {
+	private <T> T fromVPack(final Class<T> entityClass, final JsonNode source) {
 		final T result = converter.read(entityClass, source);
 		if (result != null) {
 			potentiallyEmitEvent(new AfterLoadEvent<>(result));
@@ -324,7 +323,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars,
 			final AqlQueryOptions options, final Class<T> entityClass) throws DataAccessException {
-		ArangoCursor<VPackSlice> cursor = db().query(query, bindVars == null ? null : prepareBindVars(bindVars), options, VPackSlice.class);
+		ArangoCursor<JsonNode> cursor = db().query(query, bindVars == null ? null : prepareBindVars(bindVars), options, JsonNode.class);
 		return new ArangoExtCursor<>(cursor, entityClass, converter, eventPublisher);
 	}
 
@@ -484,8 +483,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	public <T> Optional<T> find(final Object id, final Class<T> entityClass, final DocumentReadOptions options)
 			throws DataAccessException {
 		try {
-			final VPackSlice doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
-					VPackSlice.class, options);
+			final JsonNode doc = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id),
+					JsonNode.class, options);
 			return Optional.ofNullable(fromVPack(entityClass, doc));
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -500,7 +499,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public <T> Iterable<T> findAll(final Class<T> entityClass) throws DataAccessException {
 		final String query = "FOR entity IN @@col RETURN entity";
-		final Map<String, Object> bindVars = new MapBuilder().put("@col", entityClass).get();
+		final Map<String, Object> bindVars = Collections.singletonMap("@col", entityClass);
 		return query(query, bindVars, null, entityClass).asListRemaining();
 	}
 
@@ -510,7 +509,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			final Collection<String> keys = new ArrayList<>();
 			ids.forEach(id -> keys.add(determineDocumentKeyFromId(id)));
-			final MultiDocumentEntity<VPackSlice> docs = _collection(entityClass).getDocuments(keys, VPackSlice.class);
+			final MultiDocumentEntity<JsonNode> docs = _collection(entityClass).getDocuments(keys, JsonNode.class);
 			return docs.getDocuments().stream().map(doc -> fromVPack(entityClass, doc)).collect(Collectors.toList());
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
@@ -602,14 +601,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		potentiallyEmitEvent(new BeforeSaveEvent<>(value));
 
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@col", collectionName);
+		bindVars.put("doc", value);
+
 		final T result;
 		try {
 			ArangoCursor<T> it = query(
 					REPSERT_QUERY,
-					new MapBuilder()
-							.put("@col", collectionName)
-							.put("doc", value)
-							.get(),
+					bindVars,
 					clazz
 			);
 			result = it.hasNext() ? it.next() : null;
@@ -630,14 +630,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final String collectionName = _collection(entityClass).name();
 		potentiallyEmitBeforeSaveEvent(values);
 
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@col", collectionName);
+		bindVars.put("docs", values);
+
 		final Iterable<? extends T> result;
 		try {
 			result = query(
 					REPSERT_MANY_QUERY,
-					new MapBuilder()
-							.put("@col", collectionName)
-							.put("docs", values)
-							.get(),
+					bindVars,
 					entityClass
 			).asListRemaining();
 		} catch (final ArangoDBException e) {

@@ -36,7 +36,7 @@ import java.util.Set;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
-import com.arangodb.velocypack.VPackSlice;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * This class contains additional types (besides the default ones) that are supported by the converter.
@@ -52,7 +52,7 @@ public final class ArangoSimpleTypes {
 		final Set<Class<?>> simpleTypes = new HashSet<>();
 
 		// com.arangodb.*
-		simpleTypes.add(VPackSlice.class);
+		simpleTypes.add(JsonNode.class);
 		simpleTypes.add(DBDocumentEntity.class);
 
 		// java.math.*

@@ -20,10 +20,10 @@
 
 package com.arangodb.springframework.core.convert;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.data.mapping.Alias;
 
-import com.arangodb.velocypack.VPackBuilder;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * 
@@ -31,8 +31,8 @@ import com.arangodb.velocypack.VPackSlice;
  */
 public interface ArangoTypeAliasAccessor {
 	
-	Alias readAliasFrom(VPackSlice source);
+	Alias readAliasFrom(JsonNode source);
 
-	void writeTypeTo(VPackBuilder sink, Object alias);
+	void writeTypeTo(ObjectNode sink, Object alias);
 
 }
