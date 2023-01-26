@@ -13,12 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.Test;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.*;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
@@ -513,6 +509,19 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 
 		final Customer retrieved = repository.findOne(example).orElse(null);
 		assertEquals(customer, retrieved);
+	}
+
+	@Test
+	public void findAllUnpagedPageableTest() {
+		final List<Customer> toBeRetrieved = new LinkedList<>();
+		toBeRetrieved.add(new Customer("Dhiren", "Upadhyay", 30));
+		toBeRetrieved.add(new Customer("Ashim", "Upadhyay", 28));
+		toBeRetrieved.add(new Customer("Lokendr", "Upadhyay", 24));
+		repository.saveAll(toBeRetrieved);
+		final Page<Customer> retrievedPage = repository.findAll(Pageable.unpaged());
+		assertEquals(toBeRetrieved.size(), retrievedPage.getTotalElements());
+		assertEquals(toBeRetrieved.size(), retrievedPage.getSize());
+		assertEquals(toBeRetrieved, retrievedPage.getContent());
 	}
 
 }
