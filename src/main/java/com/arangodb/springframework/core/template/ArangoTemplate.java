@@ -596,63 +596,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	@Override
-	public <T> void upsert(final T value, final UpsertStrategy strategy) throws DataAccessException {
-		final Class<? extends Object> entityClass = value.getClass();
-		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
-
-		final Object id = getDocumentKey(entity, value);
-		if (id != null && (!(value instanceof Persistable) || !Persistable.class.cast(value).isNew())) {
-			switch (strategy) {
-			case UPDATE:
-				update(id.toString(), value);
-				break;
-			case REPLACE:
-			default:
-				replace(id.toString(), value);
-				break;
-			}
-			return;
-		}
-		insert(value);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> void upsert(final Iterable<T> value, final UpsertStrategy strategy) throws DataAccessException {
-		final Optional<T> first = StreamSupport.stream(value.spliterator(), false).findFirst();
-		if (!first.isPresent()) {
-			return;
-		}
-		final Class<T> entityClass = (Class<T>) first.get().getClass();
-		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
-
-		final Collection<T> withId = new ArrayList<>();
-		final Collection<T> withoutId = new ArrayList<>();
-		for (final T e : value) {
-			final Object id = getDocumentKey(entity, e);
-			if (id != null && (!(e instanceof Persistable) || !Persistable.class.cast(e).isNew())) {
-				withId.add(e);
-				continue;
-			}
-			withoutId.add(e);
-		}
-		if (!withoutId.isEmpty()) {
-			insert(withoutId, entityClass);
-		}
-		if (!withId.isEmpty()) {
-			switch (strategy) {
-			case UPDATE:
-				update(withId, entityClass);
-				break;
-			case REPLACE:
-			default:
-				replace(withId, entityClass);
-				break;
-			}
-		}
-	}
-
-	@Override
 	public <T> void repsert(final T value) throws DataAccessException {
 		@SuppressWarnings("unchecked") final Class<T> clazz = (Class<T>) value.getClass();
 		final String collectionName = _collection(clazz).name();
