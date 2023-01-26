@@ -61,7 +61,8 @@ public class RelationsResolver extends AbstractResolver<Relations> implements Re
 		for (TypeInformation<?> it : traversedTypes) {
 			rawTypes.add(it.getType());
 		}
-		return _resolve(id, type.getType(), rawTypes, annotation, true).first();
+		ArangoCursor<?> it = _resolve(id, type.getType(), rawTypes, annotation, true);
+		return it.hasNext() ? it.next() : null;
 	}
 
 	private Object _resolveMultiple(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes, final Relations annotation) {

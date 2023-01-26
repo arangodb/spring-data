@@ -275,8 +275,6 @@ public interface ArangoOperations {
 	 *            A List of documents
 	 * @param entityClass
 	 *            The entity class which represents the collection
-	 * @param options
-	 *            Additional options, can be null
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
@@ -446,38 +444,6 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 */
 	DocumentEntity insert(String collectionName, Object value) throws DataAccessException;
-
-	public enum UpsertStrategy {
-		REPLACE, UPDATE
-	}
-
-	/**
-	 * Creates a new document from the given document, unless there is already a document with the id given. In that
-	 * case it updates or replaces the document, depending on the chosen strategy.
-	 *
-	 * @deprecated use {@link #repsert(Object)} instead
-	 * @param value
-	 *            A representation of a single document
-	 * @param strategy
-	 *            The strategy to use when not inserting the document
-	 * @throws DataAccessException
-	 */
-	@Deprecated
-	<T> void upsert(T value, UpsertStrategy strategy) throws DataAccessException;
-
-	/**
-	 * Creates new documents from the given documents, unless there already exists. In that case it updates or replaces
-	 * the documents, depending on the chosen strategy.
-	 *
-	 * @deprecated use {@link #repsert(Iterable)} instead
-	 * @param value
-	 *            A List of documents
-	 * @param strategy
-	 *            The strategy to use when not inserting the document
-	 * @throws DataAccessException
-	 */
-	@Deprecated
-	<T> void upsert(Iterable<T> value, UpsertStrategy strategy) throws DataAccessException;
 
 	/**
 	 * Creates a new document from the given document, unless there is already a document with the id given. In that
