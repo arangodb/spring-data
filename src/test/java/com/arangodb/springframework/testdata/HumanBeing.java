@@ -2,14 +2,14 @@ package com.arangodb.springframework.testdata;
 
 import java.util.Collection;
 
+import com.arangodb.springframework.annotation.PersistentIndex;
 import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.HashIndex;
 import com.arangodb.springframework.annotation.Relations;
 
 @Document
-@HashIndex(fields = { "name", "surname" }, unique = true)
+@PersistentIndex(fields = { "name", "surname" }, unique = true)
 public class HumanBeing {
 	@Id
 	private String id;
@@ -121,7 +121,7 @@ public class HumanBeing {
 	}
 
 	/**
-	 * @param childs the childs to set
+	 * @param children the childs to set
 	 */
 	public void setChildren(Collection<HumanBeing> children) {
 		this.children = children;

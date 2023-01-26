@@ -33,9 +33,7 @@ import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.Permissions;
 import com.arangodb.model.FulltextIndexOptions;
 import com.arangodb.model.GeoIndexOptions;
-import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
-import com.arangodb.model.SkiplistIndexOptions;
 import com.arangodb.model.TtlIndexOptions;
 import com.arangodb.springframework.core.CollectionOperations;
 
@@ -68,7 +66,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 
 	@Override
 	public void drop() throws DataAccessException {
-		collectionCache.remove(new CollectionCacheKey(collection.db().name(), collection.name()));
+		collectionCache.remove(new CollectionCacheKey(collection.db().dbName().get(), collection.name()));
 		try {
 			collection.drop();
 		} catch (final ArangoDBException e) {
@@ -108,26 +106,6 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	public Collection<IndexEntity> getIndexes() throws DataAccessException {
 		try {
 			return collection.getIndexes();
-		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
-		}
-	}
-
-	@Override
-	public IndexEntity ensureHashIndex(final Iterable<String> fields, final HashIndexOptions options)
-			throws DataAccessException {
-		try {
-			return collection.ensureHashIndex(fields, options);
-		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
-		}
-	}
-
-	@Override
-	public IndexEntity ensureSkiplistIndex(final Iterable<String> fields, final SkiplistIndexOptions options)
-			throws DataAccessException {
-		try {
-			return collection.ensureSkiplistIndex(fields, options);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}

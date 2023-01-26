@@ -29,7 +29,6 @@ import com.arangodb.springframework.annotation.ArangoId;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.Ref;
-import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.geo.*;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
@@ -532,7 +531,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
     @Test
     public void arangoIdOnly() {
         final ArangoIdOnlyTestEntity entity = new ArangoIdOnlyTestEntity();
-        template.upsert(entity, UpsertStrategy.UPDATE);
+        template.repsert(entity);
         assertThat(entity.id, is(notNullValue()));
         final Optional<ArangoIdOnlyTestEntity> find = template.find(entity.id, ArangoIdOnlyTestEntity.class);
         assertThat(find.isPresent(), is(true));

@@ -37,12 +37,10 @@ import com.arangodb.springframework.annotation.Field;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.FulltextIndexed;
 import com.arangodb.springframework.annotation.GeoIndexed;
-import com.arangodb.springframework.annotation.HashIndexed;
 import com.arangodb.springframework.annotation.PersistentIndexed;
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.annotation.Rev;
-import com.arangodb.springframework.annotation.SkiplistIndexed;
 import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.annotation.TtlIndexed;
 
@@ -125,16 +123,6 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	private Optional<String> getAnnotatedFieldName() {
 		return Optional.ofNullable(findAnnotation(Field.class))
 				.map(f -> StringUtils.hasText(f.value()) ? f.value() : null);
-	}
-
-	@Override
-	public Optional<HashIndexed> getHashIndexed() {
-		return Optional.ofNullable(findAnnotation(HashIndexed.class));
-	}
-
-	@Override
-	public Optional<SkiplistIndexed> getSkiplistIndexed() {
-		return Optional.ofNullable(findAnnotation(SkiplistIndexed.class));
 	}
 
 	@Override

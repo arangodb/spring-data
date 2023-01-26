@@ -47,7 +47,6 @@ import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.core.ArangoOperations.UpsertStrategy;
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.Product;
@@ -103,62 +102,6 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final DocumentEntity res = template.insert("test-customer", new Customer("John", "Doe", 30));
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getId(), is(notNullValue()));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test
-	public void upsertReplace() {
-		final Customer customer = new Customer("John", "Doe", 30);
-		template.upsert(customer, UpsertStrategy.REPLACE);
-		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(30));
-		customer.setAge(35);
-		template.upsert(customer, UpsertStrategy.REPLACE);
-		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(35));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test
-	public void upsertUpdate() {
-		final Customer customer = new Customer("John", "Doe", 30);
-		template.upsert(customer, UpsertStrategy.UPDATE);
-		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(30));
-		customer.setAge(35);
-		template.upsert(customer, UpsertStrategy.UPDATE);
-		assertThat(template.find(customer.getId(), Customer.class).get().getAge(), is(35));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test
-	public void upsertReplaceMultiple() {
-		final Customer c1 = new Customer("John", "Doe", 30);
-		final Customer c2 = new Customer("John2", "Doe2", 30);
-		template.upsert(Arrays.asList(c1, c2), UpsertStrategy.REPLACE);
-		assertThat(template.find(c1.getId(), Customer.class).get().getAge(), is(30));
-		assertThat(template.find(c2.getId(), Customer.class).get().getAge(), is(30));
-		c1.setAge(35);
-		c2.setAge(35);
-		final Customer c3 = new Customer("John3", "Doe2", 30);
-		template.upsert(Arrays.asList(c1, c2, c3), UpsertStrategy.REPLACE);
-		assertThat(template.find(c1.getId(), Customer.class).get().getAge(), is(35));
-		assertThat(template.find(c2.getId(), Customer.class).get().getAge(), is(35));
-		assertThat(template.find(c3.getId(), Customer.class).get().getAge(), is(30));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test
-	public void upsertUpdateMultiple() {
-		final Customer c1 = new Customer("John", "Doe", 30);
-		final Customer c2 = new Customer("John2", "Doe2", 30);
-		template.upsert(Arrays.asList(c1, c2), UpsertStrategy.UPDATE);
-		assertThat(template.find(c1.getId(), Customer.class).get().getAge(), is(30));
-		assertThat(template.find(c2.getId(), Customer.class).get().getAge(), is(30));
-		c1.setAge(35);
-		c2.setAge(35);
-		final Customer c3 = new Customer("John3", "Doe2", 30);
-		template.upsert(Arrays.asList(c1, c2, c3), UpsertStrategy.UPDATE);
-		assertThat(template.find(c1.getId(), Customer.class).get().getAge(), is(35));
-		assertThat(template.find(c2.getId(), Customer.class).get().getAge(), is(35));
-		assertThat(template.find(c3.getId(), Customer.class).get().getAge(), is(30));
 	}
 
 	@Test
@@ -404,56 +347,11 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	@Test
-	public void upsertWithUserGeneratedKey() {
-		final NewEntityTest entity = new NewEntityTest("test");
-		template.upsert(entity, UpsertStrategy.REPLACE);
-		assertThat(template.exists("test", NewEntityTest.class), is(true));
-		entity.setPersisted(true);
-		template.upsert(entity, UpsertStrategy.REPLACE);
-		assertThat(template.exists("test", NewEntityTest.class), is(true));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test
-	public void mutliUpsertWithUserGeneratedKey() {
-		final NewEntityTest entity1 = new NewEntityTest("test1");
-		final NewEntityTest entity2 = new NewEntityTest("test2");
-		template.upsert(Arrays.asList(entity1, entity2), UpsertStrategy.REPLACE);
-		assertThat(template.collection(NewEntityTest.class).count(), is(2L));
-		entity1.setPersisted(true);
-		entity2.setPersisted(true);
-		template.upsert(Arrays.asList(entity1, entity2), UpsertStrategy.REPLACE);
-		assertThat(template.collection(NewEntityTest.class).count(), is(2L));
-	}
-
 	@Document
 	static class MapContentTestEntity {
 		@Id
 		String id;
 		Map<String, Object> value;
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test
-	public void replaceMapContent() {
-		final MapContentTestEntity entity = new MapContentTestEntity();
-		entity.value = new HashMap<>();
-		entity.value.put("notToRemove", "test");
-		entity.value.put("toRemove", "test");
-		template.insert(entity);
-
-		entity.value.remove("toRemove");
-		template.upsert(entity, UpsertStrategy.REPLACE);
-		assertThat(entity.value.size(), is(1));
-		assertThat(entity.value.containsKey("notToRemove"), is(true));
-		assertThat(entity.value.containsKey("toRemove"), is(false));
-
-		final Optional<MapContentTestEntity> find = template.find(entity.id, MapContentTestEntity.class);
-		assertThat(find.isPresent(), is(true));
-		assertThat(find.get().value.containsKey("notToRemove"), is(true));
-		assertThat(find.get().value.containsKey("toRemove"), is(false));
 	}
 
 }

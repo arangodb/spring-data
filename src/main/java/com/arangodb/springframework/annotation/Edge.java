@@ -61,12 +61,6 @@ public @interface Edge {
 	String collection() default "";
 
 	/**
-	 * The maximal size of a journal or datafile in bytes. The value must be at
-	 * least 1048576 (1 MiB).
-	 */
-	long journalSize() default -1;
-
-	/**
 	 * (The default is 1): in a cluster, this attribute determines how many copies
 	 * of each shard are kept on different DBServers. The value 1 means that only
 	 * one copy (no synchronous replication) is kept. A value of k means that k-1
@@ -90,24 +84,6 @@ public @interface Edge {
 	 * document create, update, replace or removal operation. (default: false)
 	 */
 	boolean waitForSync() default false;
-
-	/**
-	 * Whether or not the collection will be compacted (default is true)
-	 */
-	boolean doCompact() default true;
-
-	/**
-	 * If true then the collection data is kept in-memory only and not made
-	 * persistent. Unloading the collection will cause the collection data to be
-	 * discarded. Stopping or re-starting the server will also cause full loss of
-	 * data in the collection. Setting this option will make the resulting
-	 * collection be slightly faster than regular collections because ArangoDB does
-	 * not enforce any synchronization to disk and does not calculate any CRC
-	 * checksums for datafiles (as there are no datafiles). This option should
-	 * therefore be used for cache-type collections only, and not for data that
-	 * cannot be re-created otherwise. (The default is false)
-	 */
-	boolean isVolatile() default false;
 
 	/**
 	 * (The default is [ "_key" ]): in a cluster, this attribute determines which
@@ -135,19 +111,6 @@ public @interface Edge {
 	 * do. (The default is false)
 	 */
 	boolean isSystem() default false;
-
-	/**
-	 * The number of buckets into which indexes using a hash table are split. The
-	 * default is 16 and this number has to be a power of 2 and less than or equal
-	 * to 1024. For very large collections one should increase this to avoid long
-	 * pauses when the hash table has to be initially built or resized, since
-	 * buckets are resized individually and can be initially built in parallel. For
-	 * example, 64 might be a sensible value for a collection with 100 000 000
-	 * documents. Currently, only the edge index respects this value, but other
-	 * index types might follow in future ArangoDB versions. Changes (see below) are
-	 * applied when the collection is loaded the next time.
-	 */
-	int indexBuckets() default -1;
 
 	/**
 	 * If set to true, then it is allowed to supply own key values in the _key

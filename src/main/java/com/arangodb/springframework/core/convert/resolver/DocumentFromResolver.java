@@ -51,7 +51,8 @@ public class DocumentFromResolver extends AbstractResolver<From> implements Rela
 	}
 
 	private Object _resolveOne(final String id, final TypeInformation<?> type) {
-		return _resolve(id, type.getType(), true).first();
+		ArangoCursor<?> it = _resolve(id, type.getType(), true);
+		return it.hasNext() ? it.next() : null;
 	}
 
 	@Override

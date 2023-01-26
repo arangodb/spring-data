@@ -20,11 +20,7 @@
 
 package com.arangodb.springframework.core.template;
 
-import com.arangodb.ArangoCollection;
-import com.arangodb.ArangoCursor;
-import com.arangodb.ArangoDB;
-import com.arangodb.ArangoDBException;
-import com.arangodb.ArangoDatabase;
+import com.arangodb.*;
 import com.arangodb.entity.ArangoDBVersion;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.MultiDocumentEntity;
@@ -38,15 +34,11 @@ import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.model.FulltextIndexOptions;
 import com.arangodb.model.GeoIndexOptions;
-import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
-import com.arangodb.model.SkiplistIndexOptions;
 import com.arangodb.model.TtlIndexOptions;
 import com.arangodb.springframework.annotation.FulltextIndex;
 import com.arangodb.springframework.annotation.GeoIndex;
-import com.arangodb.springframework.annotation.HashIndex;
 import com.arangodb.springframework.annotation.PersistentIndex;
-import com.arangodb.springframework.annotation.SkiplistIndex;
 import com.arangodb.springframework.annotation.TtlIndex;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.CollectionOperations;
@@ -136,7 +128,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	public ArangoTemplate(final ArangoDB arango, final String database, final ArangoConverter converter,
 			final ResolverFactory resolverFactory, final PersistenceExceptionTranslator exceptionTranslator) {
 		super();
-		this.arango = arango._setCursorInitializer(new ArangoCursorInitializer(converter));
+		this.arango = arango;
 		this.databaseName = database;
 		this.databaseExpression = PARSER.parseExpression(databaseName, ParserContext.TEMPLATE_EXPRESSION);
 		this.converter = converter;
@@ -153,7 +145,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final String key = databaseExpression != null ? databaseExpression.getValue(context, String.class)
 				: databaseName;
 		return databaseCache.computeIfAbsent(key, name -> {
-			final ArangoDatabase db = arango.db(name);
+			final ArangoDatabase db = arango.db(DbName.of(name));
 			if (!db.exists()) {
 				db.create();
 			}
@@ -185,7 +177,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final ArangoDatabase db = db();
 		final Class<?> entityClass = persistentEntity != null ? persistentEntity.getType() : null;
-		final CollectionCacheValue value = collectionCache.computeIfAbsent(new CollectionCacheKey(db.name(), name),
+		final CollectionCacheValue value = collectionCache.computeIfAbsent(new CollectionCacheKey(db.dbName().get(), name),
 				key -> {
 					final ArangoCollection collection = db.collection(name);
 					if (!collection.exists()) {
@@ -204,10 +196,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	private static void ensureCollectionIndexes(final CollectionOperations collection,
 			final ArangoPersistentEntity<?> persistentEntity) {
-		persistentEntity.getHashIndexes().stream().forEach(index -> ensureHashIndex(collection, index));
-		persistentEntity.getHashIndexedProperties().stream().forEach(p -> ensureHashIndex(collection, p));
-		persistentEntity.getSkiplistIndexes().stream().forEach(index -> ensureSkiplistIndex(collection, index));
-		persistentEntity.getSkiplistIndexedProperties().stream().forEach(p -> ensureSkiplistIndex(collection, p));
 		persistentEntity.getPersistentIndexes().stream().forEach(index -> ensurePersistentIndex(collection, index));
 		persistentEntity.getPersistentIndexedProperties().stream().forEach(p -> ensurePersistentIndex(collection, p));
 		persistentEntity.getGeoIndexes().stream().forEach(index -> ensureGeoIndex(collection, index));
@@ -216,31 +204,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		persistentEntity.getFulltextIndexedProperties().stream().forEach(p -> ensureFulltextIndex(collection, p));
 		persistentEntity.getTtlIndex().ifPresent(index -> ensureTtlIndex(collection, index));
 		persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p));
-	}
-
-	private static void ensureHashIndex(final CollectionOperations collection, final HashIndex annotation) {
-		collection.ensureHashIndex(Arrays.asList(annotation.fields()), new HashIndexOptions()
-				.unique(annotation.unique()).sparse(annotation.sparse()).deduplicate(annotation.deduplicate()));
-	}
-
-	private static void ensureHashIndex(final CollectionOperations collection, final ArangoPersistentProperty value) {
-		final HashIndexOptions options = new HashIndexOptions();
-		value.getHashIndexed()
-				.ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()).deduplicate(i.deduplicate()));
-		collection.ensureHashIndex(Collections.singleton(value.getFieldName()), options);
-	}
-
-	private static void ensureSkiplistIndex(final CollectionOperations collection, final SkiplistIndex annotation) {
-		collection.ensureSkiplistIndex(Arrays.asList(annotation.fields()), new SkiplistIndexOptions()
-				.unique(annotation.unique()).sparse(annotation.sparse()).deduplicate(annotation.deduplicate()));
-	}
-
-	private static void ensureSkiplistIndex(final CollectionOperations collection,
-			final ArangoPersistentProperty value) {
-		final SkiplistIndexOptions options = new SkiplistIndexOptions();
-		value.getSkiplistIndexed()
-				.ifPresent(i -> options.unique(i.unique()).sparse(i.sparse()).deduplicate(i.deduplicate()));
-		collection.ensureSkiplistIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
 	private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation) {
@@ -361,7 +324,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars,
 			final AqlQueryOptions options, final Class<T> entityClass) throws DataAccessException {
-		return db().query(query, bindVars == null ? null : prepareBindVars(bindVars), options, entityClass);
+		ArangoCursor<VPackSlice> cursor = db().query(query, bindVars == null ? null : prepareBindVars(bindVars), options, VPackSlice.class);
+		return new ArangoExtCursor<>(cursor, entityClass, converter, eventPublisher);
 	}
 
 	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
@@ -632,63 +596,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	@Override
-	public <T> void upsert(final T value, final UpsertStrategy strategy) throws DataAccessException {
-		final Class<? extends Object> entityClass = value.getClass();
-		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
-
-		final Object id = getDocumentKey(entity, value);
-		if (id != null && (!(value instanceof Persistable) || !Persistable.class.cast(value).isNew())) {
-			switch (strategy) {
-			case UPDATE:
-				update(id.toString(), value);
-				break;
-			case REPLACE:
-			default:
-				replace(id.toString(), value);
-				break;
-			}
-			return;
-		}
-		insert(value);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> void upsert(final Iterable<T> value, final UpsertStrategy strategy) throws DataAccessException {
-		final Optional<T> first = StreamSupport.stream(value.spliterator(), false).findFirst();
-		if (!first.isPresent()) {
-			return;
-		}
-		final Class<T> entityClass = (Class<T>) first.get().getClass();
-		final ArangoPersistentEntity<?> entity = getConverter().getMappingContext().getPersistentEntity(entityClass);
-
-		final Collection<T> withId = new ArrayList<>();
-		final Collection<T> withoutId = new ArrayList<>();
-		for (final T e : value) {
-			final Object id = getDocumentKey(entity, e);
-			if (id != null && (!(e instanceof Persistable) || !Persistable.class.cast(e).isNew())) {
-				withId.add(e);
-				continue;
-			}
-			withoutId.add(e);
-		}
-		if (!withoutId.isEmpty()) {
-			insert(withoutId, entityClass);
-		}
-		if (!withId.isEmpty()) {
-			switch (strategy) {
-			case UPDATE:
-				update(withId, entityClass);
-				break;
-			case REPLACE:
-			default:
-				replace(withId, entityClass);
-				break;
-			}
-		}
-	}
-
-	@Override
 	public <T> void repsert(final T value) throws DataAccessException {
 		@SuppressWarnings("unchecked") final Class<T> clazz = (Class<T>) value.getClass();
 		final String collectionName = _collection(clazz).name();
@@ -697,14 +604,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final T result;
 		try {
-			result = query(
+			ArangoCursor<T> it = query(
 					REPSERT_QUERY,
 					new MapBuilder()
 							.put("@col", collectionName)
 							.put("doc", value)
 							.get(),
 					clazz
-			).first();
+			);
+			result = it.hasNext() ? it.next() : null;
 		} catch (final ArangoDBException e) {
 			throw exceptionTranslator.translateExceptionIfPossible(e);
 		}
@@ -825,8 +733,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
-		databaseCache.remove(db.name());
-		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.name()))
+		databaseCache.remove(db.dbName().get());
+		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.dbName().get()))
 				.forEach(key -> collectionCache.remove(key));
 	}
 
@@ -875,7 +783,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		context.addPropertyAccessor(new BeanFactoryAccessor());
 		eventPublisher = applicationContext;
-		arango._setCursorInitializer(new ArangoCursorInitializer(converter, applicationContext));
 	}
 
 	private void potentiallyEmitEvent(final ArangoMappingEvent<?> event) {
