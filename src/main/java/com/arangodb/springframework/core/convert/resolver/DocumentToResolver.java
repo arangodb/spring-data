@@ -50,7 +50,8 @@ public class DocumentToResolver extends AbstractResolver<To> implements Relation
 	}
 
 	private Object _resolveOne(final String id, final TypeInformation<?> type) {
-		return _resolve(id, type.getType(), true).first();
+		ArangoCursor<?> it = _resolve(id, type.getType(), true);
+		return it.hasNext() ? it.next() : null;
 	}
 
 	@Override

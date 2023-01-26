@@ -29,9 +29,7 @@ import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.Permissions;
 import com.arangodb.model.FulltextIndexOptions;
 import com.arangodb.model.GeoIndexOptions;
-import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
-import com.arangodb.model.SkiplistIndexOptions;
 import com.arangodb.model.TtlIndexOptions;
 
 /**
@@ -87,36 +85,6 @@ public interface CollectionOperations {
 	 * @throws DataAccessException
 	 */
 	Collection<IndexEntity> getIndexes() throws DataAccessException;
-
-	/**
-	 * Creates a hash index for the collection if it does not already exist.
-	 *
-	 * @param fields
-	 *            A list of attribute paths
-	 * @param options
-	 *            Additional options, can be null
-	 * @return information about the index
-	 * @throws DataAccessException
-	 * @deprecated use {@link #ensurePersistentIndex(Iterable, PersistentIndexOptions)} instead.
-	 * Since ArangoDB 3.7 a hash index is an alias for a persistent index.
-	 */
-	@Deprecated
-	IndexEntity ensureHashIndex(Iterable<String> fields, HashIndexOptions options) throws DataAccessException;
-
-	/**
-	 * Creates a skip-list index for the collection, if it does not already exist.
-	 *
-	 * @param fields
-	 *            A list of attribute paths
-	 * @param options
-	 *            Additional options, can be null
-	 * @return information about the index
-	 * @throws DataAccessException
-	 * @deprecated use {@link #ensurePersistentIndex(Iterable, PersistentIndexOptions)} instead.
-	 * Since ArangoDB 3.7 a skiplist index is an alias for a persistent index.
-	 */
-	@Deprecated
-	IndexEntity ensureSkiplistIndex(Iterable<String> fields, SkiplistIndexOptions options) throws DataAccessException;
 
 	/**
 	 * Creates a persistent index for the collection, if it does not already exist.
