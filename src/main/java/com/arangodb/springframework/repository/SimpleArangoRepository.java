@@ -351,7 +351,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 				buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
 		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars,
-				pageable != null && pageable.isPaged() ? new AqlQueryOptions().fullCount(true) : null, domainClass);
+				pageable != null ? new AqlQueryOptions().fullCount(true) : null, domainClass);
 	}
 
 	private <S extends T> String buildFilterClause(final Example<S> example, final Map<String, Object> bindVars) {
@@ -366,7 +366,12 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
     private String buildPageableClause(final Pageable pageable, final String varName) {
         if (pageable == null) return "";
         Sort persistentSort = AqlUtils.toPersistentSort(pageable.getSort(), mappingContext, domainClass);
-        Pageable persistentPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), persistentSort);
+		Pageable persistentPageable;
+		if (pageable.isPaged()) {
+			persistentPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), persistentSort);
+		} else {
+			persistentPageable = pageable;
+		}
         return AqlUtils.buildPageableClause(persistentPageable, varName);
     }
 
