@@ -36,10 +36,10 @@ import com.arangodb.springframework.testdata.Actor;
 import com.arangodb.springframework.testdata.Movie;
 import com.arangodb.springframework.testdata.Person;
 import com.arangodb.springframework.testdata.Role;
-import com.arangodb.velocypack.VPackSlice;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.joda.time.DateTimeZone;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -101,11 +101,11 @@ public class GeneralMappingTest extends AbstractArangoTest {
         final FieldNameTestEntity entity = new FieldNameTestEntity();
         entity.test = "1234";
         final DocumentEntity res = template.insert(entity);
-        final VPackSlice slice = template.driver().db(ArangoTestConfiguration.DB).getDocument(res.getId(),
-                VPackSlice.class);
+        final ObjectNode slice = template.driver().db(ArangoTestConfiguration.DB)
+                .getDocument(res.getId(), ObjectNode.class);
         assertThat(slice, is(notNullValue()));
-        assertThat(slice.get("alt-test").isString(), is(true));
-        assertThat(slice.get("alt-test").getAsString(), is(entity.test));
+        assertThat(slice.get("alt-test").isTextual(), is(true));
+        assertThat(slice.get("alt-test").textValue(), is(entity.test));
     }
 
     public static class ConstructorWithParamTestEntity extends BasicTestEntity {
@@ -608,11 +608,11 @@ public class GeneralMappingTest extends AbstractArangoTest {
             assertThat(find.modifiedBy.getId(), is(createID));
         }
 
-        final VPackSlice doc = template.driver().db(ArangoTestConfiguration.DB).collection("auditingTestEntity")
-                .getDocument(value.id, VPackSlice.class);
+        final ObjectNode doc = template.driver().db(ArangoTestConfiguration.DB).collection("auditingTestEntity")
+                .getDocument(value.id, ObjectNode.class);
         assertThat(doc, is(notNullValue()));
         assertThat(doc.get("createdBy").isObject(), is(true));
-        assertThat(doc.get("modifiedBy").isString(), is(true));
+        assertThat(doc.get("modifiedBy").isTextual(), is(true));
 
         final String modifiedID = "modified";
         {

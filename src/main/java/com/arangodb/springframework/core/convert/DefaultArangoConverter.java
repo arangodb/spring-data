@@ -400,12 +400,8 @@ public class DefaultArangoConverter implements ArangoConverter {
         }
 
         if (source.isNumber()) {
-            if (byte[].class.isAssignableFrom(type)) {
-                try {
-                    return source.binaryValue();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            if (byte.class.isAssignableFrom(type) || Byte.class.isAssignableFrom(type)) {
+                return source.numberValue().byteValue();
             } else if (short.class.isAssignableFrom(type) || Short.class.isAssignableFrom(type)) {
                 return source.shortValue();
             } else if (int.class.isAssignableFrom(type) || Integer.class.isAssignableFrom(type)) {
@@ -661,7 +657,11 @@ public class DefaultArangoConverter implements ArangoConverter {
         return node;
     }
 
-    private ArrayNode createArray(final Object source, final TypeInformation<?> definedType) {
+    private JsonNode createArray(final Object source, final TypeInformation<?> definedType) {
+        if (byte[].class.equals(source.getClass())) {
+            return JsonNodeFactory.instance.textNode(Base64Utils.encodeToString((byte[]) source));
+        }
+
         ArrayNode node = JsonNodeFactory.instance.arrayNode();
         for (int i = 0; i < Array.getLength(source); ++i) {
             Object element = Array.get(source, i);
@@ -704,8 +704,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             return createMap((Map<?, ?>) source, ClassTypeInformation.MAP);
         } else if (source instanceof Boolean) {
             return JsonNodeFactory.instance.booleanNode((Boolean) source);
-        } else if (source instanceof byte[]) {
-            return JsonNodeFactory.instance.binaryNode((byte[]) source);
+        } else if (source instanceof Byte) {
+            return JsonNodeFactory.instance.numberNode((Byte) source);
         } else if (source instanceof Character) {
             return JsonNodeFactory.instance.textNode(source.toString());
         } else if (source instanceof Short) {
