@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.data.convert.MappingContextTypeInformationMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
@@ -121,16 +122,16 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 		return (TypeInformation<? extends T>) basicType.specialize(targetType);
 	}
 	
-	public void writeType(final Class<?> type, final ObjectNode sink) {
-		writeType(ClassTypeInformation.from(type), sink);
+	public void writeType(final Class<?> type, final ObjectNode node) {
+		writeType(ClassTypeInformation.from(type), node);
 	}
 	
-	public void writeType(final TypeInformation<?> info, final ObjectNode sink) {
+	public void writeType(final TypeInformation<?> info, final ObjectNode node) {
 		Assert.notNull(info, "TypeInformation must not be null!");
 
 		final Alias alias = getAliasFor(info);
 		if (alias.isPresent()) {
-			accessor.writeTypeTo(sink, alias.getValue());
+			accessor.writeTypeTo(node, alias.getValue());
 		}
 	}
 
@@ -173,6 +174,7 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 			this.typeKey = typeKey;
 		}
 
+		@Override
 		public Alias readAliasFrom(final JsonNode source) {
 			if (source.isArray()) {
 				return Alias.NONE;
@@ -180,15 +182,17 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 
 			if (source.isObject()) {
 				final JsonNode typeKey = source.get(this.typeKey);
-				return Alias.ofNullable(typeKey.isTextual() ? typeKey.textValue() : null);
+				JsonNode nonNullTypeKey = typeKey != null ? typeKey : JsonNodeFactory.instance.missingNode();
+				return Alias.ofNullable(nonNullTypeKey.isTextual() ? nonNullTypeKey.textValue() : null);
 			}
 
 			throw new IllegalArgumentException("Cannot read alias from VPack type " + source.getNodeType());
 		}
 
-		public void writeTypeTo(final ObjectNode sink, final Object alias) {
+		@Override
+		public void writeTypeTo(final ObjectNode node, final Object alias) {
 			if (this.typeKey != null) {
-				sink.put(this.typeKey, alias.toString());
+				node.put(this.typeKey, alias.toString());
 			}
 		}
 

@@ -20,14 +20,24 @@
 
 package com.arangodb.springframework.core.convert;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.TimeZone;
 
 /**
  * @author Mark Vollmary
  *
  */
 public class JavaTimeUtil {
+
+	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+	static {
+		DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+	}
 
 	private JavaTimeUtil() {
 		super();
@@ -80,4 +90,13 @@ public class JavaTimeUtil {
 	public static ZonedDateTime parseZonedDateTime(final CharSequence source) {
 		return ZonedDateTime.parse(source);
 	}
+
+	public static java.util.Date parse(final String source) throws ParseException {
+		return DATE_FORMAT.parse(source);
+	}
+
+	public static String format(final java.util.Date date) {
+		return DATE_FORMAT.format(date);
+	}
+
 }

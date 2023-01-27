@@ -347,7 +347,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		MultiDocumentEntity<? extends DocumentEntity> result;
 		try {
-			result = _collection(entityClass).deleteDocuments(toVPackCollection(values), entityClass, options);
+			result = _collection(entityClass).deleteDocuments(toVPackCollection(values), options, entityClass);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
@@ -370,7 +370,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final DocumentEntity result;
 		try {
-			result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), entityClass, options);
+			result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), options, entityClass);
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}

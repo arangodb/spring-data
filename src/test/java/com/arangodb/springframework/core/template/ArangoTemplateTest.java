@@ -50,7 +50,6 @@ import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.Product;
-import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
 
 /**
@@ -238,8 +237,11 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void query() {
 		template.insert(new Customer("John", "Doe", 30));
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@coll", "test-customer");
+		bindVars.put("name", "John");
 		final ArangoCursor<Customer> cursor = template.query("FOR c IN @@coll FILTER c.`customer-name` == @name RETURN c",
-			new MapBuilder().put("@coll", "test-customer").put("name", "John").get(), new AqlQueryOptions(), Customer.class);
+			bindVars, new AqlQueryOptions(), Customer.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<Customer> customers = cursor.asListRemaining();
 		assertThat(customers.size(), is(1));
@@ -265,8 +267,12 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void queryMap() {
 		template.insert(new Customer("John", "Doe", 30));
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@coll", "test-customer");
+		bindVars.put("name", "John");
+
 		final ArangoCursor<Map> cursor = template.query("FOR c IN @@coll FILTER c.`customer-name` == @name RETURN c",
-			new MapBuilder().put("@coll", "test-customer").put("name", "John").get(), new AqlQueryOptions(), Map.class);
+			bindVars, new AqlQueryOptions(), Map.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<Map> customers = cursor.asListRemaining();
 		assertThat(customers.size(), is(1));
@@ -278,8 +284,12 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void queryBaseDocument() {
 		template.insert(new Customer("John", "Doe", 30));
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@coll", "test-customer");
+		bindVars.put("name", "John");
+
 		final ArangoCursor<BaseDocument> cursor = template.query("FOR c IN @@coll FILTER c.`customer-name` == @name RETURN c",
-			new MapBuilder().put("@coll", "test-customer").put("name", "John").get(), new AqlQueryOptions(),
+			bindVars, new AqlQueryOptions(),
 			BaseDocument.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<BaseDocument> customers = cursor.asListRemaining();
@@ -292,8 +302,11 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	@Test
 	public void queryVPackSlice() {
 		template.insert(new Customer("John", "Doe", 30));
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@coll", "test-customer");
+		bindVars.put("name", "John");
 		final ArangoCursor<VPackSlice> cursor = template.query("FOR c IN @@coll FILTER c.`customer-name` == @name RETURN c",
-			new MapBuilder().put("@coll", "test-customer").put("name", "John").get(), new AqlQueryOptions(),
+				bindVars, new AqlQueryOptions(),
 			VPackSlice.class);
 		assertThat(cursor, is(notNullValue()));
 		final List<VPackSlice> customers = cursor.asListRemaining();

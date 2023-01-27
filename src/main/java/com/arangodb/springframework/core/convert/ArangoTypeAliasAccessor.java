@@ -33,6 +33,6 @@ public interface ArangoTypeAliasAccessor {
 	
 	Alias readAliasFrom(JsonNode source);
 
-	void writeTypeTo(ObjectNode sink, Object alias);
+	void writeTypeTo(ObjectNode node, Object alias);
 
 }

@@ -37,9 +37,9 @@ public interface ArangoTypeMapper {
 
 	<T> TypeInformation<? extends T> readType(JsonNode source, TypeInformation<T> defaultType);
 
-	void writeType(Class<?> type, ObjectNode sink);
+	void writeType(Class<?> type, ObjectNode node);
 
-	void writeType(TypeInformation<?> type, ObjectNode sink);
+	void writeType(TypeInformation<?> type, ObjectNode node);
 
 	boolean isTypeKey(String key);
 

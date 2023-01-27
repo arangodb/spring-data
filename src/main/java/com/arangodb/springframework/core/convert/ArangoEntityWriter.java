@@ -20,18 +20,15 @@
 
 package com.arangodb.springframework.core.convert;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.data.convert.EntityWriter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
  *
  */
-public interface ArangoEntityWriter extends EntityWriter<Object, VPackBuilder> {
-
-	default JsonNode write(final Object source) {
-	}
+public interface ArangoEntityWriter {
+     JsonNode write(final Object source);
 
 }
