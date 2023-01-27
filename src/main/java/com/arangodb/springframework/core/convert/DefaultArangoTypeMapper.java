@@ -182,8 +182,7 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 
 			if (source.isObject()) {
 				final JsonNode typeKey = source.get(this.typeKey);
-				JsonNode nonNullTypeKey = typeKey != null ? typeKey : JsonNodeFactory.instance.missingNode();
-				return Alias.ofNullable(nonNullTypeKey.isTextual() ? nonNullTypeKey.textValue() : null);
+				return Alias.ofNullable(typeKey != null && typeKey.isTextual() ? typeKey.textValue() : null);
 			}
 
 			throw new IllegalArgumentException("Cannot read alias from VPack type " + source.getNodeType());

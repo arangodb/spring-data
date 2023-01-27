@@ -199,11 +199,12 @@ public class DefaultArangoConverter implements ArangoConverter {
         Object instance = instantiator.createInstance(entity, provider);
         PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(instance);
 
-        String id = source.get(_ID).isTextual() ? source.get(_ID).textValue() : null;
+        JsonNode idNode = getOrMissing(source, _ID);
+        String id = idNode.isTextual() ? idNode.textValue() : null;
 
         entity.doWithProperties((ArangoPersistentProperty property) -> {
             if (!entity.isConstructorArgument(property)) {
-                JsonNode value = source.get(property.getFieldName());
+                JsonNode value = getOrMissing(source, property.getFieldName());
                 readProperty(entity, id, accessor, value, property);
             }
         });
@@ -211,7 +212,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         entity.doWithAssociations((Association<ArangoPersistentProperty> association) -> {
             ArangoPersistentProperty property = association.getInverse();
             if (!entity.isConstructorArgument(property)) {
-                JsonNode value = source.get(property.getFieldName());
+                JsonNode value = getOrMissing(source, property.getFieldName());
                 readProperty(entity, id, accessor, value, property);
             }
         });
@@ -226,8 +227,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             final JsonNode source,
             final ArangoPersistentProperty property) {
 
-        JsonNode nonNullSource = source != null ? source : JsonNodeFactory.instance.missingNode();
-        Object propertyValue = readPropertyValue(entity, parentId, nonNullSource, property);
+        Object propertyValue = readPropertyValue(entity, parentId, source, property);
         if (propertyValue != null || !property.getType().isPrimitive()) {
             accessor.setProperty(property, propertyValue);
         }
@@ -339,7 +339,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
         Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
 
-        if (!resolver.isPresent() || source.isMissingNode()) {
+        if (!resolver.isPresent() || source.isMissingNode() || source.isNull()) {
             return Optional.empty();
         } else if (property.isCollectionLike()) {
             Collection<String> ids;
@@ -517,13 +517,14 @@ public class DefaultArangoConverter implements ArangoConverter {
         public ArangoPropertyValueProvider(final ArangoPersistentEntity<?> entity, final JsonNode source) {
             this.entity = entity;
             this.source = source;
-            this.id = source.get(_ID).isTextual() ? source.get(_ID).textValue() : null;
+            JsonNode idNode = getOrMissing(source, _ID);
+            this.id = idNode.isTextual() ? idNode.textValue() : null;
         }
 
         @SuppressWarnings("unchecked")
         @Override
         public <T> T getPropertyValue(final ArangoPersistentProperty property) {
-            JsonNode value = source.get(property.getFieldName());
+            JsonNode value = getOrMissing(source, property.getFieldName());
             return (T) readPropertyValue(entity, id, value, property);
         }
 
@@ -881,6 +882,19 @@ public class DefaultArangoConverter implements ArangoConverter {
         } catch (ParseException e) {
             throw new MappingException(String.format("Can't parse java.util.Date from String %s!", source), e);
         }
+    }
+
+    private JsonNode getOrMissing(final JsonNode node, final String fieldName) {
+        if (!node.has(fieldName)) {
+            return JsonNodeFactory.instance.missingNode();
+        }
+
+        JsonNode value = node.get(fieldName);
+        if (fieldName == null) {
+            return JsonNodeFactory.instance.nullNode();
+        }
+
+        return value;
     }
 
 }
