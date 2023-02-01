@@ -1,10 +1,7 @@
 package com.arangodb.springframework.repository;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.arangodb.springframework.annotation.SpelParam;
 import org.springframework.data.domain.Page;
@@ -261,6 +258,13 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 	// Named query
 
 	Customer findOneByIdNamedQuery(@Param("id") String id);
+
+	@Query("WITH #collection, `test-product` " +
+			"FOR c IN #collection FILTER c._key == @id " +
+			"LET owns = FIRST(FOR p IN OUTBOUND c owns RETURN p) " +
+			"LIMIT 1 " +
+			"RETURN MERGE(c, { owns: owns, owns2: owns})")
+	Optional<Customer> findByIdUsingEmbeddedEntities(@Param("id") String id);
 
 	// Static projection
 

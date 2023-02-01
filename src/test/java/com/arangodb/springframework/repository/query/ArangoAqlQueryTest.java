@@ -8,12 +8,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.arangodb.springframework.testdata.Owns;
+import com.arangodb.springframework.testdata.Product;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -271,4 +270,18 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		assertThat(customers.next(), is(nullValue()));
 	}
 
+	@Test
+	public void findOneUsingEmbeddedEntities() {
+		Customer owner = new Customer("A", "C", 4);
+		template.insert(owner);
+		Product pa = new Product("a");
+		Product pb = new Product("b");
+		template.insert(Arrays.asList(pa, pb), Product.class);
+		template.insert(new Owns(owner, pa));
+		template.insert(new Owns(owner, pb));
+
+		Customer actual = repository.findByIdUsingEmbeddedEntities(owner.getId()).get();
+		assertThat(actual.getOwns(), containsInAnyOrder(pa, pb));
+		assertThat(actual.getOwns2(), is(actual.getOwns()));
+	}
 }
