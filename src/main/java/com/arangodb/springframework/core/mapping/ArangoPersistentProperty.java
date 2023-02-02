@@ -22,6 +22,7 @@ package com.arangodb.springframework.core.mapping;
 
 import java.util.Optional;
 
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 
 import com.arangodb.springframework.annotation.From;
@@ -42,6 +43,9 @@ import com.arangodb.springframework.annotation.TtlIndexed;
 public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersistentProperty> {
 
 	String getFieldName();
+
+	@Override
+	ArangoPersistentEntity<?> getOwner();
 
 	boolean isArangoIdProperty();
 
