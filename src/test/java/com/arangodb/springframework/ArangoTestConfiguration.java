@@ -67,8 +67,8 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 	@Override
 	public Collection<Converter<?, ?>> customConverters() {
 		final Collection<Converter<?, ?>> converters = new ArrayList<>();
-		converters.add(new CustomMappingTest.CustomVPackReadTestConverter());
-		converters.add(new CustomMappingTest.CustomVPackWriteTestConverter());
+		converters.add(new CustomMappingTest.CustomJsonNodeReadTestConverter());
+		converters.add(new CustomMappingTest.CustomJsonNodeWriteTestConverter());
 		converters.add(new CustomMappingTest.CustomDBEntityReadTestConverter());
 		converters.add(new CustomMappingTest.CustomDBEntityWriteTestConverter());
 		return converters;
