@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -50,7 +51,6 @@ import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.Product;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark Vollmary
@@ -278,7 +278,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customers.size(), is(1));
 		assertThat(customers.get(0).get("customer-name"), is("John"));
 		assertThat(customers.get(0).get("surname"), is("Doe"));
-		assertThat(customers.get(0).get("age"), is(30L));
+		assertThat(customers.get(0).get("age"), is(30));
 	}
 
 	@Test
@@ -296,7 +296,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customers.size(), is(1));
 		assertThat(customers.get(0).getAttribute("customer-name"), is("John"));
 		assertThat(customers.get(0).getAttribute("surname"), is("Doe"));
-		assertThat(customers.get(0).getAttribute("age"), is(30L));
+		assertThat(customers.get(0).getAttribute("age"), is(30));
 	}
 
 	@Test
@@ -305,15 +305,15 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("@coll", "test-customer");
 		bindVars.put("name", "John");
-		final ArangoCursor<VPackSlice> cursor = template.query("FOR c IN @@coll FILTER c.`customer-name` == @name RETURN c",
+		final ArangoCursor<ObjectNode> cursor = template.query("FOR c IN @@coll FILTER c.`customer-name` == @name RETURN c",
 				bindVars, new AqlQueryOptions(),
-			VPackSlice.class);
+				ObjectNode.class);
 		assertThat(cursor, is(notNullValue()));
-		final List<VPackSlice> customers = cursor.asListRemaining();
+		final List<ObjectNode> customers = cursor.asListRemaining();
 		assertThat(customers.size(), is(1));
-		assertThat(customers.get(0).get("customer-name").getAsString(), is("John"));
-		assertThat(customers.get(0).get("surname").getAsString(), is("Doe"));
-		assertThat(customers.get(0).get("age").getAsInt(), is(30));
+		assertThat(customers.get(0).get("customer-name").textValue(), is("John"));
+		assertThat(customers.get(0).get("surname").textValue(), is("Doe"));
+		assertThat(customers.get(0).get("age").intValue(), is(30));
 	}
 
 	static class TransientTestEntity {
