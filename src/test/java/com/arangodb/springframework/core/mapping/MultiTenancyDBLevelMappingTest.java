@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.mapping;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.arangodb.DbName;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,21 +64,21 @@ public class MultiTenancyDBLevelMappingTest {
 		{
 			tenantProvider.setId(TENANT00);
 			template.insert(new MultiTenancyTestEntity());
-			assertThat(template.driver().db(ArangoMultiTenancyTestConfiguration.DB + TENANT00)
+			assertThat(template.driver().db(DbName.of(ArangoMultiTenancyTestConfiguration.DB + TENANT00))
 					.collection(TENANT00 + "_collection").exists(),
 				is(true));
 		}
 		{
 			tenantProvider.setId(TENANT01);
 			template.insert(new MultiTenancyTestEntity());
-			assertThat(template.driver().db(ArangoMultiTenancyTestConfiguration.DB + TENANT01)
+			assertThat(template.driver().db(DbName.of(ArangoMultiTenancyTestConfiguration.DB + TENANT01))
 					.collection(TENANT01 + "_collection").exists(),
 				is(true));
 		}
-		assertThat(template.driver().db(ArangoMultiTenancyTestConfiguration.DB + TENANT00)
+		assertThat(template.driver().db(DbName.of(ArangoMultiTenancyTestConfiguration.DB + TENANT00))
 				.collection(TENANT00 + "_collection").count().getCount(),
 			is(1L));
-		assertThat(template.driver().db(ArangoMultiTenancyTestConfiguration.DB + TENANT01)
+		assertThat(template.driver().db(DbName.of(ArangoMultiTenancyTestConfiguration.DB + TENANT01))
 				.collection(TENANT01 + "_collection").count().getCount(),
 			is(1L));
 	}

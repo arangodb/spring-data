@@ -64,7 +64,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		assertThat(retrieved, hasEntry("_rev", john.getRev()));
 		assertThat(retrieved, hasEntry("customer-name", john.getName()));
 		assertThat(retrieved, hasEntry("surname", john.getSurname()));
-		assertThat(retrieved, hasEntry("age", (long) john.getAge()));
+		assertThat(retrieved, hasEntry("age", john.getAge()));
 		assertThat(retrieved, hasEntry("alive", john.isAlive()));
 	}
 
@@ -76,7 +76,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		assertThat(retrieved.getRevision(), is(john.getRev()));
 		assertThat(retrieved.getAttribute("customer-name"), is(john.getName()));
 		assertThat(retrieved.getAttribute("surname"), is(john.getSurname()));
-		assertThat(retrieved.getAttribute("age"), is((long) john.getAge()));
+		assertThat(retrieved.getAttribute("age"), is(john.getAge()));
 		assertThat(retrieved.getAttribute("alive"), is(john.isAlive()));
 	}
 

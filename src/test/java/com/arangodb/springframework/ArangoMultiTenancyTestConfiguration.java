@@ -21,7 +21,7 @@
 package com.arangodb.springframework;
 
 import com.arangodb.ArangoDB;
-import com.arangodb.mapping.ArangoJack;
+import com.arangodb.config.ArangoConfigProperties;
 import com.arangodb.springframework.config.ArangoConfiguration;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
 import org.springframework.context.annotation.ComponentScan;
@@ -44,7 +44,7 @@ public class ArangoMultiTenancyTestConfiguration implements ArangoConfiguration 
 
 	@Override
 	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder().serializer(new ArangoJack());
+		return new ArangoDB.Builder().loadProperties(ArangoConfigProperties.fromFile());
 	}
 
 	@Override
@@ -55,8 +55,8 @@ public class ArangoMultiTenancyTestConfiguration implements ArangoConfiguration 
 	@Override
 	public Collection<Converter<?, ?>> customConverters() {
 		final Collection<Converter<?, ?>> converters = new ArrayList<>();
-		converters.add(new CustomMappingTest.CustomVPackReadTestConverter());
-		converters.add(new CustomMappingTest.CustomVPackWriteTestConverter());
+		converters.add(new CustomMappingTest.CustomJsonNodeReadTestConverter());
+		converters.add(new CustomMappingTest.CustomJsonNodeWriteTestConverter());
 		converters.add(new CustomMappingTest.CustomDBEntityReadTestConverter());
 		converters.add(new CustomMappingTest.CustomDBEntityWriteTestConverter());
 		return converters;

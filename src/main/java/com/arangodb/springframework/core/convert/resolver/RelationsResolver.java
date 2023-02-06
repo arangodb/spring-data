@@ -28,7 +28,6 @@ import org.springframework.data.util.TypeInformation;
 import com.arangodb.ArangoCursor;
 import com.arangodb.springframework.annotation.Relations;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.util.MapBuilder;
 
 /**
  * @author Mark Vollmary
@@ -87,7 +86,8 @@ public class RelationsResolver extends AbstractResolver<Relations> implements Re
 		allTraversedTypes.add(type);
 		allTraversedTypes.addAll(traversedTypes);
 
-		MapBuilder bindVars = new MapBuilder().put("start", id);
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("start", id);
 		StringBuilder withClause = new StringBuilder("WITH ");
 		for (int i = 0; i < allTraversedTypes.size(); i++) {
 			bindVars.put("@with" + i, allTraversedTypes.get(i));
@@ -104,7 +104,7 @@ public class RelationsResolver extends AbstractResolver<Relations> implements Re
 				edges, //
 				limit ? "LIMIT 1" : "");
 
-		return template.query(query, bindVars.get(), type);
+		return template.query(query, bindVars, type);
 	}
 
 }

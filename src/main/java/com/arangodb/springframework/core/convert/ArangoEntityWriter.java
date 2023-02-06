@@ -20,22 +20,15 @@
 
 package com.arangodb.springframework.core.convert;
 
-import org.springframework.data.convert.EntityWriter;
 
-import com.arangodb.velocypack.VPackBuilder;
-import com.arangodb.velocypack.VPackSlice;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
  *
  */
-public interface ArangoEntityWriter extends EntityWriter<Object, VPackBuilder> {
-
-	default VPackSlice write(final Object source) {
-		final VPackBuilder builder = new VPackBuilder();
-		write(source, builder);
-		return builder.slice();
-	}
+public interface ArangoEntityWriter {
+     JsonNode write(final Object source);
 
 }
