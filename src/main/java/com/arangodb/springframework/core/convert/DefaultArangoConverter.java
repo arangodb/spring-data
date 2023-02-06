@@ -616,7 +616,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
         if (property.getRef().isPresent()) {
             if (sourceType.isCollectionLike()) {
-                node.put(fieldName, createReferences(source, property.getRef().get()));
+                node.set(fieldName, createReferences(source, property.getRef().get()));
             } else {
                 getRefId(source, property.getRef().get()).ifPresent(id -> node.put(fieldName, id));
             }
@@ -628,7 +628,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             }
         } else {
             Object entity = source instanceof LazyLoadingProxy ? ((LazyLoadingProxy) source).getEntity() : source;
-            node.put(fieldName, createInternal(entity, property.getTypeInformation()));
+            node.set(fieldName, createInternal(entity, property.getTypeInformation()));
         }
     }
 
@@ -639,7 +639,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             Object value = entry.getValue();
             String convertedKey = convertId(key);
             if (value != null) {
-                node.put(convertedKey, createInternal(value, getNonNullMapValueType(definedType)));
+                node.set(convertedKey, createInternal(value, getNonNullMapValueType(definedType)));
             }
         }
         return node;
