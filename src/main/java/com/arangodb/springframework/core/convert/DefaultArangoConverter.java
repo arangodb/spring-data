@@ -204,7 +204,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final String id = source.get(_ID).isString() ? source.get(_ID).getAsString() : null;
 
 		entity.doWithProperties((final ArangoPersistentProperty property) -> {
-			if (!entity.isCreatorArgument(property)) {
+			if (!entity.isConstructorArgument(property)) {
 				final VPackSlice value = source.get(property.getFieldName());
 				readProperty(entity, id, accessor, value, property);
 			}
@@ -212,7 +212,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 		entity.doWithAssociations((final Association<ArangoPersistentProperty> association) -> {
 			final ArangoPersistentProperty property = association.getInverse();
-			if (!entity.isCreatorArgument(property)) {
+			if (!entity.isConstructorArgument(property)) {
 				final VPackSlice value = source.get(property.getFieldName());
 				readProperty(entity, id, accessor, value, property);
 			}
