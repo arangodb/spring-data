@@ -415,7 +415,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             } else if (BigInteger.class.isAssignableFrom(type) && (source.isIntegralNumber())) {
                 return source.bigIntegerValue();
             } else if (BigDecimal.class.isAssignableFrom(type) && source.isFloatingPointNumber()) {
-                return source.isBigDecimal();
+                return source.decimalValue();
             } else {
                 return source.numberValue();
             }
