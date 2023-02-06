@@ -231,7 +231,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 		final ArangoCursor<T> result = findAllInternal(pageable, null, new HashMap<>());
 		final List<T> content = result.asListRemaining();
-		return new PageImpl<>(content, pageable, (Long) result.getStats().get("fullCount"));
+		return new PageImpl<>(content, pageable, ((Number) result.getStats().get("fullCount")).longValue());
 	}
 
 	/**
@@ -296,7 +296,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	public <S extends T> Page<S> findAll(final Example<S> example, final Pageable pageable) {
 		final ArangoCursor cursor = findAllInternal(pageable, example, new HashMap());
 		final List<T> content = cursor.asListRemaining();
-		return new PageImpl<>((List<S>) content, pageable, (Long) cursor.getStats().get("fullCount"));
+		return new PageImpl<>((List<S>) content, pageable, ((Number) cursor.getStats().get("fullCount")).longValue());
 	}
 
 	/**

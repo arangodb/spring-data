@@ -219,7 +219,7 @@ public class ArangoResultConverter {
 
 	public PageImpl<?> convertPage() {
 		Assert.notNull(result.getStats().get("fullCount"), MISSING_FULL_COUNT);
-		return new PageImpl<>(result.asListRemaining(), accessor.getPageable(), (Long) result.getStats().get("fullCount"));
+		return new PageImpl<>(result.asListRemaining(), accessor.getPageable(), ((Number) result.getStats().get("fullCount")).longValue());
 	}
 
 	public Set<?> convertSet() {
@@ -240,7 +240,7 @@ public class ArangoResultConverter {
 
 	public GeoPage<?> convertGeoPage() {
 		Assert.notNull(result.getStats().get("fullCount"), MISSING_FULL_COUNT);
-		return new GeoPage<>(buildGeoResults(result), accessor.getPageable(), (Long) result.getStats().get("fullCount"));
+		return new GeoPage<>(buildGeoResults(result), accessor.getPageable(), ((Number) result.getStats().get("fullCount")).longValue());
 	}
 
 	public Object convertArray() {
