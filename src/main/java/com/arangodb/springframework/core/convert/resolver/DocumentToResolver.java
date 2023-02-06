@@ -26,9 +26,10 @@ import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.util.MapBuilder;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Mark Vollmary
@@ -66,8 +67,10 @@ public class DocumentToResolver extends AbstractResolver<To> implements Relation
 
 	private ArangoCursor<?> _resolve(final String id, final Class<?> type, final boolean limit) {
 		final String query = String.format("FOR e IN @@edge FILTER e._to == @id RETURN e", limit ? "LIMIT 1" : "");
-		return template.query(query, new MapBuilder().put("@edge", type).put("id", id).get(), new AqlQueryOptions(),
-			type);
+		Map<String, Object> bindVars = new HashMap<>();
+		bindVars.put("@edge", type);
+		bindVars.put("id", id);
+		return template.query(query, bindVars, new AqlQueryOptions(), type);
 	}
 
 }

@@ -31,7 +31,6 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 
-import com.arangodb.velocypack.internal.util.DateUtil;
 
 /**
  * These date and java.time converters are necessary to override (possibly existing) Spring converters.
@@ -63,7 +62,7 @@ public class TimeStringConverters {
 
 	private static Date parseDate(final String source) {
 		try {
-			return source == null ? null : DateUtil.parse(source);
+			return source == null ? null : JavaTimeUtil.parse(source);
 		} catch (final ParseException e) {
 			throw new IllegalArgumentException(e);
 		}
@@ -75,7 +74,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final Date source) {
-			return source == null ? null : DateUtil.format(source);
+			return source == null ? null : JavaTimeUtil.format(source);
 		}
 	}
 

@@ -20,11 +20,11 @@
 
 package com.arangodb.springframework.core.convert;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
-import com.arangodb.velocypack.VPackBuilder;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Christian Lechner
@@ -33,13 +33,13 @@ import com.arangodb.velocypack.VPackSlice;
 public interface ArangoTypeMapper {
 
 	@Nullable
-	TypeInformation<?> readType(VPackSlice source);
+	TypeInformation<?> readType(JsonNode source);
 
-	<T> TypeInformation<? extends T> readType(VPackSlice source, TypeInformation<T> defaultType);
+	<T> TypeInformation<? extends T> readType(JsonNode source, TypeInformation<T> defaultType);
 
-	void writeType(Class<?> type, VPackBuilder sink);
+	void writeType(Class<?> type, ObjectNode node);
 
-	void writeType(TypeInformation<?> type, VPackBuilder sink);
+	void writeType(TypeInformation<?> type, ObjectNode node);
 
 	boolean isTypeKey(String key);
 

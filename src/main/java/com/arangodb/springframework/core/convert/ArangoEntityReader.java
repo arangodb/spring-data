@@ -22,13 +22,13 @@ package com.arangodb.springframework.core.convert;
 
 import org.springframework.data.convert.EntityReader;
 
-import com.arangodb.velocypack.VPackSlice;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
  *
  */
-public interface ArangoEntityReader extends EntityReader<Object, VPackSlice> {
+public interface ArangoEntityReader extends EntityReader<Object, JsonNode> {
 
 }

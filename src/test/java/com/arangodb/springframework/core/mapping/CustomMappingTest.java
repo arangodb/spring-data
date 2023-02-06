@@ -26,6 +26,8 @@ import static org.junit.Assert.assertThat;
 
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.Test;
 import org.springframework.core.convert.converter.Converter;
 
@@ -34,9 +36,6 @@ import com.arangodb.entity.DocumentEntity;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
-import com.arangodb.velocypack.VPackBuilder;
-import com.arangodb.velocypack.VPackSlice;
-import com.arangodb.velocypack.ValueType;
 
 /**
  * @author Mark Vollmary
@@ -62,14 +61,14 @@ public class CustomMappingTest extends AbstractArangoTest {
 	private static final String FIELD = "test";
 
 	@Document
-	public static class CustomVPackTestEntity {
+	public static class CustomJsonNodeTestEntity {
 		private String value;
 
-		public CustomVPackTestEntity() {
+		public CustomJsonNodeTestEntity() {
 			super();
 		}
 
-		public CustomVPackTestEntity(final String value) {
+		public CustomJsonNodeTestEntity(final String value) {
 			super();
 			this.value = value;
 		}
@@ -84,23 +83,23 @@ public class CustomMappingTest extends AbstractArangoTest {
 
 	}
 
-	public static class CustomVPackWriteTestConverter implements Converter<CustomVPackTestEntity, VPackSlice> {
+	public static class CustomJsonNodeWriteTestConverter implements Converter<CustomJsonNodeTestEntity, JsonNode> {
 		@Override
-		public VPackSlice convert(final CustomVPackTestEntity source) {
-			return new VPackBuilder().add(ValueType.OBJECT).add(FIELD, source.getValue()).close().slice();
+		public JsonNode convert(final CustomJsonNodeTestEntity source) {
+			return JsonNodeFactory.instance.objectNode().put(FIELD, source.getValue());
 		}
 	}
 
-	public static class CustomVPackReadTestConverter implements Converter<VPackSlice, CustomVPackTestEntity> {
+	public static class CustomJsonNodeReadTestConverter implements Converter<JsonNode, CustomJsonNodeTestEntity> {
 		@Override
-		public CustomVPackTestEntity convert(final VPackSlice source) {
-			return new CustomVPackTestEntity(source.get(FIELD).getAsString());
+		public CustomJsonNodeTestEntity convert(final JsonNode source) {
+			return new CustomJsonNodeTestEntity(source.get(FIELD).textValue());
 		}
 	}
 
 	@Test
-	public void customToVPack() {
-		final DocumentEntity meta = template.insert(new CustomVPackTestEntity("abc"));
+	public void customToJsonNode() {
+		final DocumentEntity meta = template.insert(new CustomJsonNodeTestEntity("abc"));
 		final Optional<BaseDocument> doc = template.find(meta.getId(), BaseDocument.class);
 		assertThat(doc.isPresent(), is(true));
 		assertThat(doc.get().getAttribute(FIELD), is("abc"));
@@ -108,9 +107,9 @@ public class CustomMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	public void vpackToCustom() {
+	public void jsonNodeToCustom() {
 		final DocumentEntity meta = template.insert(new TestEntity("abc"));
-		final Optional<CustomVPackTestEntity> doc = template.find(meta.getId(), CustomVPackTestEntity.class);
+		final Optional<CustomJsonNodeTestEntity> doc = template.find(meta.getId(), CustomJsonNodeTestEntity.class);
 		assertThat(doc.isPresent(), is(true));
 		assertThat(doc.get().getValue(), is("abc"));
 	}
@@ -166,7 +165,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	public void vpackToDBEntity() {
+	public void jsonNodeToDBEntity() {
 		final DocumentEntity meta = template.insert(new TestEntity("abc"));
 		final Optional<CustomDBEntityTestEntity> doc = template.find(meta.getId(), CustomDBEntityTestEntity.class);
 		assertThat(doc.isPresent(), is(true));

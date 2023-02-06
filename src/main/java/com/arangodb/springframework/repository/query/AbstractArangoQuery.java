@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -34,7 +35,6 @@ import org.springframework.util.Assert;
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.velocypack.VPackSlice;
 
 /**
  * 
@@ -187,7 +187,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		}
 
 		if (method.isGeoQuery()) {
-			return VPackSlice.class;
+			return JsonNode.class;
 		}
 
 		final Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
