@@ -12,7 +12,6 @@ import java.util.*;
 
 import com.arangodb.springframework.testdata.Owns;
 import com.arangodb.springframework.testdata.Product;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
