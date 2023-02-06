@@ -191,7 +191,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
         if (!source.isObject()) {
             throw new MappingException(
-                    String.format("Can't read entity type %s from VPack type %s!", type, source.getNodeType()));
+                    String.format("Can't read entity type %s from type %s!", type, source.getNodeType()));
         }
 
         EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
@@ -464,7 +464,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             return readDBDocumentEntity(source);
         }
 
-        throw new MappingException(String.format("Can't read type %s from VPack type %s!", type, source.getNodeType()));
+        throw new MappingException(String.format("Can't read type %s from type %s!", type, source.getNodeType()));
     }
 
     private BaseDocument readBaseDocument(final Class<?> type, final JsonNode source) {

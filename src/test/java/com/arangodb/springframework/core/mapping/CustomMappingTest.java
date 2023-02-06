@@ -107,7 +107,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	public void vpackToCustom() {
+	public void jsonNodeToCustom() {
 		final DocumentEntity meta = template.insert(new TestEntity("abc"));
 		final Optional<CustomJsonNodeTestEntity> doc = template.find(meta.getId(), CustomJsonNodeTestEntity.class);
 		assertThat(doc.isPresent(), is(true));
@@ -165,7 +165,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 	}
 
 	@Test
-	public void vpackToDBEntity() {
+	public void jsonNodeToDBEntity() {
 		final DocumentEntity meta = template.insert(new TestEntity("abc"));
 		final Optional<CustomDBEntityTestEntity> doc = template.find(meta.getId(), CustomDBEntityTestEntity.class);
 		assertThat(doc.isPresent(), is(true));

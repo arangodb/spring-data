@@ -185,7 +185,7 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 				return Alias.ofNullable(typeKey != null && typeKey.isTextual() ? typeKey.textValue() : null);
 			}
 
-			throw new IllegalArgumentException("Cannot read alias from VPack type " + source.getNodeType());
+			throw new IllegalArgumentException("Cannot read alias from type " + source.getNodeType());
 		}
 
 		@Override

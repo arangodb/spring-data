@@ -300,7 +300,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	}
 
 	@Test
-	public void queryVPackSlice() {
+	public void queryJsonNodeSlice() {
 		template.insert(new Customer("John", "Doe", 30));
 		Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("@coll", "test-customer");
