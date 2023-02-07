@@ -259,7 +259,7 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
 
     Customer findOneByIdNamedQuery(@Param("id") String id);
 
-    @Query( "WITH #collection, `test-product` " +
+    @Query( "WITH #collection, `test-product`, `material` " +
             "FOR c IN #collection FILTER c._key == @id " +
             "LET owns = (" +
             "	FOR p IN OUTBOUND c owns " +
