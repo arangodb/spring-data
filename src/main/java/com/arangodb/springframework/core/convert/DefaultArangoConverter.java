@@ -336,9 +336,13 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final ArangoPersistentProperty property,
 		final Annotation annotation) {
 
+		if (source.isNone() || source.isNull()) {
+			return Optional.empty();
+		}
+
 		final Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
 
-		if (!resolver.isPresent() || source.isNone()) {
+		if (!resolver.isPresent()) {
 			return Optional.empty();
 		}
 
@@ -351,6 +355,11 @@ public class DefaultArangoConverter implements ArangoConverter {
 			}
 
 			return resolver.map(res -> res.resolveMultiple(ids, property.getTypeInformation(), annotation));
+		}
+
+		else if (source.isObject()) {
+			// source contains target
+			return Optional.of(readInternal(property.getTypeInformation(), source));
 		}
 
 		else {
@@ -370,6 +379,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		final ArangoPersistentProperty property,
 		final A annotation) {
 
+		if (source.isNull()) {
+			return Optional.empty();
+		}
+
 		final Class<? extends Annotation> collectionType = entity.findAnnotation(Edge.class) != null ? Edge.class
 				: Document.class;
 		final Optional<RelationResolver<Annotation>> resolver = resolverFactory.getRelationResolver(annotation,
@@ -383,6 +396,10 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 
 		else if (property.isCollectionLike()) {
+			if (source.isArray()) {
+				// source contains target array
+				return Optional.of(readInternal(property.getTypeInformation(), source));
+			}
 			if (parentId == null) {
 				return Optional.empty();
 			}
@@ -390,7 +407,13 @@ public class DefaultArangoConverter implements ArangoConverter {
 		}
 
 		else if (source.isString()) {
+			// resolve from/to using target id
 			return resolver.map(res -> res.resolveOne(source.getAsString(), property.getTypeInformation(), traversedTypes, annotation));
+		}
+
+		else if (source.isObject()) {
+			// source contains target
+			return Optional.of(readInternal(property.getTypeInformation(), source));
 		}
 
 		else {

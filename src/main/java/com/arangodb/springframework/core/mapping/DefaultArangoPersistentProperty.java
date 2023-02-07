@@ -22,6 +22,7 @@ package com.arangodb.springframework.core.mapping;
 
 import java.util.Optional;
 
+import com.arangodb.entity.CollectionType;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -55,11 +56,16 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	private final FieldNamingStrategy fieldNamingStrategy;
 
 	public DefaultArangoPersistentProperty(final Property property,
-		final PersistentEntity<?, ArangoPersistentProperty> owner, final SimpleTypeHolder simpleTypeHolder,
+		final ArangoPersistentEntity<?> owner, final SimpleTypeHolder simpleTypeHolder,
 		final FieldNamingStrategy fieldNamingStrategy) {
 		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy != null ? fieldNamingStrategy
 				: PropertyNameFieldNamingStrategy.INSTANCE;
+	}
+
+	@Override
+	public ArangoPersistentEntity<?> getOwner() {
+		return (ArangoPersistentEntity<?>) super.getOwner();
 	}
 
 	@Override
@@ -106,9 +112,9 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 			fieldName = "_key";
 		} else if (isRevProperty()) {
 			fieldName = "_rev";
-		} else if (getFrom().isPresent()) {
+		} else if (getFrom().isPresent() && getOwner().getCollectionOptions().getType() == CollectionType.EDGES) {
 			fieldName = "_from";
-		} else if (getTo().isPresent()) {
+		} else if (getTo().isPresent() && getOwner().getCollectionOptions().getType() == CollectionType.EDGES) {
 			fieldName = "_to";
 		} else {
 			fieldName = getAnnotatedFieldName().orElse(fieldNamingStrategy.getFieldName(this));
