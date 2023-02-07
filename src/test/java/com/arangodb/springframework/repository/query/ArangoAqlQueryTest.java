@@ -9,9 +9,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import com.arangodb.springframework.testdata.Owns;
-import com.arangodb.springframework.testdata.Product;
+import com.arangodb.springframework.testdata.*;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,8 +26,6 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.repository.OverriddenCrudMethodsRepository;
-import com.arangodb.springframework.testdata.Customer;
-import com.arangodb.springframework.testdata.CustomerNameProjection;
 
 /**
  *
@@ -271,16 +269,53 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void findOneUsingEmbeddedEntities() {
-		Customer owner = new Customer("A", "C", 4);
-		template.insert(owner);
+		Material wood = new Material("wood");
+		Material glass = new Material("glass");
+		template.insert(wood);
+		template.insert(glass);
+
 		Product pa = new Product("a");
 		Product pb = new Product("b");
 		template.insert(Arrays.asList(pa, pb), Product.class);
+		template.insert(new Contains(pa, wood));
+		template.insert(new Contains(pb, glass));
+
+		Customer owner = new Customer("A", "C", 4);
+		template.insert(owner);
 		template.insert(new Owns(owner, pa));
 		template.insert(new Owns(owner, pb));
 
 		Customer actual = repository.findByIdUsingEmbeddedEntities(owner.getId()).get();
 		assertThat(actual.getOwns(), containsInAnyOrder(pa, pb));
 		assertThat(actual.getOwns2(), is(actual.getOwns()));
+
+		List<Material> materials = actual.getOwns().stream().map(Product::getContains).collect(Collectors.toList());
+		assertThat(materials, hasItems(wood, glass));
 	}
+
+	@Test
+	public void embeddedEntitiesNull() {
+		Product pa = new Product("a");
+		Product pb = new Product("b");
+		template.insert(Arrays.asList(pa, pb), Product.class);
+
+		Customer owner = new Customer("A", "C", 4);
+		template.insert(owner);
+		template.insert(new Owns(owner, pa));
+		template.insert(new Owns(owner, pb));
+
+		Customer actual = repository.embeddedEntitiesNull(owner.getId()).get();
+		assertThat(actual.getOwns(), containsInAnyOrder(pa, pb));
+		assertThat(actual.getOwns2(), is(actual.getOwns()));
+	}
+
+	@Test
+	public void embeddedEntitiesEmptyArray() {
+		Customer owner = new Customer("A", "C", 4);
+		template.insert(owner);
+
+		Customer actual = repository.embeddedEntitiesEmptyArray(owner.getId()).get();
+		assertThat(actual.getOwns().size(), is(0));
+	}
+
 }

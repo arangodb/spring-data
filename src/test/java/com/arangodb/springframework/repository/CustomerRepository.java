@@ -37,249 +37,266 @@ import com.arangodb.springframework.testdata.CustomerNameProjection;
  */
 public interface CustomerRepository extends ArangoRepository<Customer, String>, ImportedQueryRepository{
 
-	@Query("FOR c IN #{#collection} FILTER #{filterGenerator.allEqual('c', #kv)} RETURN c")
-	List<Customer> findByAllEqual(@SpelParam("kv") Map<String, Object> kv);
+    @Query("FOR c IN #{#collection} FILTER #{filterGenerator.allEqual('c', #kv)} RETURN c")
+    List<Customer> findByAllEqual(@SpelParam("kv") Map<String, Object> kv);
 
-	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")
-	Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
+    @Query("FOR c IN #collection FILTER c._key == @id RETURN c")
+    Map<String, Object> findOneByIdAqlWithNamedParameter(@Param("id") String idString, AqlQueryOptions options);
 
-	@Query("FOR c IN #collection FILTER c.`customer-name` == @name AND c._key == @id RETURN c")
-	@QueryOptions(cache = true, ttl = 128)
-	BaseDocument findOneByIdAndNameAql(@Param("id") String id, @Param("name") String name);
+    @Query("FOR c IN #collection FILTER c.`customer-name` == @name AND c._key == @id RETURN c")
+    @QueryOptions(cache = true, ttl = 128)
+    BaseDocument findOneByIdAndNameAql(@Param("id") String id, @Param("name") String name);
 
-	@QueryOptions(maxPlans = 1000, ttl = 128)
-	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
-	ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map<String, Object> bindVars);
+    @QueryOptions(maxPlans = 1000, ttl = 128)
+    @Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
+    ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
-	Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
+    @Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
+    Customer findOneByNameAndBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
-	Customer findOneByIdAndNameWithBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
+    @Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
+    Customer findOneByIdAndNameWithBindVarsAql(@Param("name") String name, @BindVars Map<String, Object> bindVars);
 
-	@Query("FOR c IN @@0 FILTER \"@1\" != '@2' AND c._id == @1 RETURN c")
-	Customer findOneByIdInCollectionAqlWithUnusedParam(String collection, String id, String id2);
+    @Query("FOR c IN @@0 FILTER \"@1\" != '@2' AND c._id == @1 RETURN c")
+    Customer findOneByIdInCollectionAqlWithUnusedParam(String collection, String id, String id2);
 
-	@Query("FOR c IN @@collection FILTER \"\\\"@id\\\"\" != '\"@id2\"' AND c._id == @id RETURN c")
-	Customer findOneByIdInNamedCollectionAqlWithUnusedParam(
-		@Param("@collection") String collection,
-		@Param("id") String id,
-		@Param("id2") String id2);
+    @Query("FOR c IN @@collection FILTER \"\\\"@id\\\"\" != '\"@id2\"' AND c._id == @id RETURN c")
+    Customer findOneByIdInNamedCollectionAqlWithUnusedParam(
+            @Param("@collection") String collection,
+            @Param("id") String id,
+            @Param("id2") String id2);
 
-	@Query("FOR c IN @@collection FILTER \"'@id'\" != '\\'@id2\\'' AND c._id == @id RETURN c")
-	Customer findOneByIdInIncorrectNamedCollectionAql(
-		@Param("collection") String collection,
-		@Param("id") String id,
-		@Param("id2") String id2);
+    @Query("FOR c IN @@collection FILTER \"'@id'\" != '\\'@id2\\'' AND c._id == @id RETURN c")
+    Customer findOneByIdInIncorrectNamedCollectionAql(
+            @Param("collection") String collection,
+            @Param("id") String id,
+            @Param("id2") String id2);
 
-	@Query("FOR c IN @collection FILTER c._id == @id RETURN c")
-	Customer findOneByIdInNamedCollectionAqlRejected(@Param("collection") String collection, @Param("id") String id);
+    @Query("FOR c IN @collection FILTER c._id == @id RETURN c")
+    Customer findOneByIdInNamedCollectionAqlRejected(@Param("collection") String collection, @Param("id") String id);
 
-	@Query("FOR c in #collection FILTER c.surname == @surname RETURN c")
-	List<Customer> findManyBySurname(@Param("surname") String surname);
+    @Query("FOR c in #collection FILTER c.surname == @surname RETURN c")
+    List<Customer> findManyBySurname(@Param("surname") String surname);
 
-	Set<Customer> findDistinctByNameAfter(String name);
+    Set<Customer> findDistinctByNameAfter(String name);
 
-	List<Customer> findByNameNotIgnoreCaseAndAgeLessThanIgnoreCaseOrderByNameDesc(String name, int age);
+    List<Customer> findByNameNotIgnoreCaseAndAgeLessThanIgnoreCaseOrderByNameDesc(String name, int age);
 
-	Iterable<Customer> findTop3ByAgeInAndStringArrayIgnoreCaseOrNameNotInAndIntegerListIgnoreCaseOrderByAgeAscNameDescAllIgnoreCase(
-		int[] ages,
-		String[] stringArray,
-		String[] names,
-		List<Integer> integerList);
+    Iterable<Customer> findTop3ByAgeInAndStringArrayIgnoreCaseOrNameNotInAndIntegerListIgnoreCaseOrderByAgeAscNameDescAllIgnoreCase(
+            int[] ages,
+            String[] stringArray,
+            String[] names,
+            List<Integer> integerList);
 
-	Customer[] findDistinctByAgeGreaterThanEqualOrStringArrayAndNameBeforeOrIntegerListOrderByNameAscAgeAscAllIgnoreCase(
-		int age,
-		String[] stringArray,
-		String name,
-		List<Integer> integerList);
+    Customer[] findDistinctByAgeGreaterThanEqualOrStringArrayAndNameBeforeOrIntegerListOrderByNameAscAgeAscAllIgnoreCase(
+            int age,
+            String[] stringArray,
+            String name,
+            List<Integer> integerList);
 
-	Collection<Customer> findTop2DistinctByStringArrayContainingIgnoreCaseOrIntegerListNotNullIgnoreCaseOrderByNameAsc(
-		String string);
+    Collection<Customer> findTop2DistinctByStringArrayContainingIgnoreCaseOrIntegerListNotNullIgnoreCaseOrderByNameAsc(
+            String string);
 
-	Collection<Customer> findByStringArrayNotContainingIgnoreCase(String string);
+    Collection<Customer> findByStringArrayNotContainingIgnoreCase(String string);
 
-	Collection<Customer> findByNameContaining(String string);
+    Collection<Customer> findByNameContaining(String string);
 
-	Collection<Customer> findByNameContainingIgnoreCase(String string);
+    Collection<Customer> findByNameContainingIgnoreCase(String string);
 
-	int countByAgeGreaterThanOrStringArrayNullAndIntegerList(int age, List<Integer> integerList);
+    int countByAgeGreaterThanOrStringArrayNullAndIntegerList(int age, List<Integer> integerList);
 
-	Integer countDistinctByAliveTrueOrNameLikeOrAgeLessThanEqual(String pattern, int age);
+    Integer countDistinctByAliveTrueOrNameLikeOrAgeLessThanEqual(String pattern, int age);
 
-	Customer findByNameStartsWithAndSurnameEndsWithAndAgeBetween(
-		String prefix,
-		String suffix,
-		int lowerBound,
-		int upperBound);
+    Customer findByNameStartsWithAndSurnameEndsWithAndAgeBetween(
+            String prefix,
+            String suffix,
+            int lowerBound,
+            int upperBound);
 
-	void removeByNameNotLikeAndSurnameRegexOrAliveFalse(String pattern, String regex);
+    void removeByNameNotLikeAndSurnameRegexOrAliveFalse(String pattern, String regex);
 
-	// GEOSPATIAL
+    // GEOSPATIAL
 
-	Customer[] findByLocationNear(Point location);
+    Customer[] findByLocationNear(Point location);
 
-	Customer[] findByPositionNear(Point location);
+    Customer[] findByPositionNear(Point location);
 
-	List<Customer> findByLocationWithinAndName(Point location, Range<Double> distanceRange, String name);
+    List<Customer> findByLocationWithinAndName(Point location, Range<Double> distanceRange, String name);
 
-	List<Customer> findByPositionWithinAndName(Point location, Range<Double> distanceRange, String name);
+    List<Customer> findByPositionWithinAndName(Point location, Range<Double> distanceRange, String name);
 
-	Iterable<Customer> findByLocationWithinOrNameAndLocationNear(Circle circle, String name, Point location2);
+    Iterable<Customer> findByLocationWithinOrNameAndLocationNear(Circle circle, String name, Point location2);
 
-	Iterable<Customer> findByPositionWithinOrNameAndPositionNear(Circle circle, String name, Point location2);
+    Iterable<Customer> findByPositionWithinOrNameAndPositionNear(Circle circle, String name, Point location2);
 
-	List<Customer> findByLocationWithin(Box box);
+    List<Customer> findByLocationWithin(Box box);
 
-	List<Customer> findByPositionWithin(Box box);
+    List<Customer> findByPositionWithin(Box box);
 
-	Collection<Customer> findByLocationWithinAndLocationWithinOrName(
-			Point location,
-			int distance,
-			Ring<?> ring,
-			String name);
+    Collection<Customer> findByLocationWithinAndLocationWithinOrName(
+            Point location,
+            int distance,
+            Ring<?> ring,
+            String name);
 
-	Collection<Customer> findByPositionWithinAndPositionWithinOrName(
-			Point location,
-			int distance,
-			Ring<?> ring,
-			String name);
+    Collection<Customer> findByPositionWithinAndPositionWithinOrName(
+            Point location,
+            int distance,
+            Ring<?> ring,
+            String name);
 
-	List<Customer> findByLocationWithin(Polygon polygon);
+    List<Customer> findByLocationWithin(Polygon polygon);
 
-	List<Customer> findByPositionWithin(Polygon polygon);
+    List<Customer> findByPositionWithin(Polygon polygon);
 
-	List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
-			String name1,
-			Point location1,
-			double distance,
-			String name2,
-			String surname1,
-			String name3,
-			Point location2,
-			String surname2,
-			Point location3,
-			Range<Double> distanceRange);
+    List<Customer> findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin(
+            String name1,
+            Point location1,
+            double distance,
+            String name2,
+            String surname1,
+            String name3,
+            Point location2,
+            String surname2,
+            Point location3,
+            Range<Double> distanceRange);
 
-	List<Customer> findByNameOrPositionWithinOrNameAndSurnameOrNameAndPositionNearAndSurnameAndPositionWithin(
-			String name1,
-			Point location1,
-			double distance,
-			String name2,
-			String surname1,
-			String name3,
-			Point location2,
-			String surname2,
-			Point location3,
-			Range<Double> distanceRange);
+    List<Customer> findByNameOrPositionWithinOrNameAndSurnameOrNameAndPositionNearAndSurnameAndPositionWithin(
+            String name1,
+            Point location1,
+            double distance,
+            String name2,
+            String surname1,
+            String name3,
+            Point location2,
+            String surname2,
+            Point location3,
+            Range<Double> distanceRange);
 
-	// EXISTS
+    // EXISTS
 
-	boolean existsByName(String name);
+    boolean existsByName(String name);
 
-	Customer[] findByNestedCustomerAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
+    Customer[] findByNestedCustomerAliveExistsAndStringListAllIgnoreCase(List<String> stringList);
 
-	// SORT
+    // SORT
 
-	Customer[] findByNameOrderBySurnameAsc(Sort sort, String name);
+    Customer[] findByNameOrderBySurnameAsc(Sort sort, String name);
 
-	@Query("FOR c IN #collection FILTER c.`customer-name` == @name #sort RETURN c")
-	List<Customer> findByNameWithSort(Sort sort, @Param("name") String name);
+    @Query("FOR c IN #collection FILTER c.`customer-name` == @name #sort RETURN c")
+    List<Customer> findByNameWithSort(Sort sort, @Param("name") String name);
 
-	// PAGEABLE
+    // PAGEABLE
 
-	Page<Customer> readByNameAndSurname(Pageable pageable, String name, AqlQueryOptions options, String surname);
+    Page<Customer> readByNameAndSurname(Pageable pageable, String name, AqlQueryOptions options, String surname);
 
-	@Query("FOR c IN #collection FILTER c.`customer-name` == @name AND c.surname == @surname #pageable RETURN c")
-	Page<Customer> findByNameAndSurnameWithPageable(Pageable pageable, @Param("name") String name, @Param("surname") String surname);
+    @Query("FOR c IN #collection FILTER c.`customer-name` == @name AND c.surname == @surname #pageable RETURN c")
+    Page<Customer> findByNameAndSurnameWithPageable(Pageable pageable, @Param("name") String name, @Param("surname") String surname);
 
-	// GEO_RESULT, GEO_RESULTS, GEO_PAGE
+    // GEO_RESULT, GEO_RESULTS, GEO_PAGE
 
-	GeoResult<Customer> queryByLocationWithin(Point location, double distance);
+    GeoResult<Customer> queryByLocationWithin(Point location, double distance);
 
-	GeoResult<Customer> queryByPositionWithin(Point location, double distance);
+    GeoResult<Customer> queryByPositionWithin(Point location, double distance);
 
-	GeoResults<Customer> findByLocationWithin(Point location, Range<Double> distanceRange);
+    GeoResults<Customer> findByLocationWithin(Point location, Range<Double> distanceRange);
 
-	GeoResults<Customer> findByPositionWithin(Point location, Range<Double> distanceRange);
+    GeoResults<Customer> findByPositionWithin(Point location, Range<Double> distanceRange);
 
-	GeoPage<Customer> findByLocationNear(Point location, Pageable pageable);
+    GeoPage<Customer> findByLocationNear(Point location, Pageable pageable);
 
-	GeoPage<Customer> findByPositionNear(Point location, Pageable pageable);
+    GeoPage<Customer> findByPositionNear(Point location, Pageable pageable);
 
-	GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(
-			String name,
-			String surname,
-			Point location1,
-			Distance distance,
-			Point location2,
-			Range<Distance> distanceRange);
+    GeoResults<Customer> findByNameOrSurnameAndLocationWithinOrLocationWithin(
+            String name,
+            String surname,
+            Point location1,
+            Distance distance,
+            Point location2,
+            Range<Distance> distanceRange);
 
-	GeoResults<Customer> findByNameOrSurnameAndPositionWithinOrPositionWithin(
-			String name,
-			String surname,
-			Point location1,
-			Distance distance,
-			Point location2,
-			Range<Distance> distanceRange);
+    GeoResults<Customer> findByNameOrSurnameAndPositionWithinOrPositionWithin(
+            String name,
+            String surname,
+            Point location1,
+            Distance distance,
+            Point location2,
+            Range<Distance> distanceRange);
 
-	// NESTED PROPERTIES
+    // NESTED PROPERTIES
 
-	List<Customer> findByNestedCustomerName(String name);
+    List<Customer> findByNestedCustomerName(String name);
 
-	List<Customer> findByNicknameValue(String value);
+    List<Customer> findByNicknameValue(String value);
 
-	// REFERENCES
+    // REFERENCES
 
-	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(
-		Point location,
-		double distance);
+    List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(
+            Point location,
+            double distance);
 
-	List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsNameLike(String name);
+    List<Customer> findByNestedCustomersNestedCustomerShoppingCartProductsNameLike(String name);
 
-	// Graph traversal
+    // Graph traversal
 
-	List<Customer> getByOwnsName(String name);
+    List<Customer> getByOwnsName(String name);
 
-	List<Customer> getByOwnsContainsName(String name);
+    List<Customer> getByOwnsContainsName(String name);
 
-	List<Customer> getByOwnsNameAndOwns2Name(String name, String name2);
+    List<Customer> getByOwnsNameAndOwns2Name(String name, String name2);
 
-	// Count query
+    // Count query
 
-	@Query("RETURN COUNT(@@collection)")
-	long queryCount(@Param("@collection") Class<Customer> collection);
+    @Query("RETURN COUNT(@@collection)")
+    long queryCount(@Param("@collection") Class<Customer> collection);
 
-	// Date query
+    // Date query
 
-	@Query("RETURN DATE_ISO8601(1474988621)")
-	Instant queryDate();
+    @Query("RETURN DATE_ISO8601(1474988621)")
+    Instant queryDate();
 
-	// Named query
+    // Named query
 
-	Customer findOneByIdNamedQuery(@Param("id") String id);
+    Customer findOneByIdNamedQuery(@Param("id") String id);
 
-	@Query("WITH #collection, `test-product` " +
-			"FOR c IN #collection FILTER c._key == @id " +
-			"LET owns = FIRST(FOR p IN OUTBOUND c owns RETURN p) " +
-			"LIMIT 1 " +
-			"RETURN MERGE(c, { owns: owns, owns2: owns})")
-	Optional<Customer> findByIdUsingEmbeddedEntities(@Param("id") String id);
+    @Query( "WITH #collection, `test-product` " +
+            "FOR c IN #collection FILTER c._key == @id " +
+            "LET owns = (" +
+            "	FOR p IN OUTBOUND c owns " +
+            "	LET contains = FIRST(FOR m IN OUTBOUND p contains RETURN m) " +
+            "	RETURN MERGE(p, { contains: contains })" +
+            ") " +
+            "RETURN MERGE(c, { owns: owns, owns2: owns})")
+    Optional<Customer> findByIdUsingEmbeddedEntities(@Param("id") String id);
 
-	// Static projection
+    @Query( "WITH #collection, `test-product` " +
+            "FOR c IN #collection FILTER c._key == @id " +
+            "RETURN MERGE(c, { owns: [], owns2: [] })")
+    Optional<Customer> embeddedEntitiesEmptyArray(@Param("id") String id);
 
-	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")
-	CustomerNameProjection findOneByIdWithStaticProjection(@Param("id") String id);
+    @Query( "WITH #collection, `test-product` " +
+            "FOR c IN #collection FILTER c._key == @id " +
+            "LET owns = (" +
+            "	FOR p IN OUTBOUND c owns " +
+            "	RETURN MERGE(p, { contains: null })" +
+            ") " +
+            "RETURN MERGE(c, { owns: owns, owns2: owns})")
+    Optional<Customer> embeddedEntitiesNull(@Param("id") String id);
 
-	@Query("FOR c IN #collection FILTER c.age >= 18 RETURN c")
-	List<CustomerNameProjection> findManyLegalAgeWithStaticProjection();
+    // Static projection
 
-	// Dynamic projection
+    @Query("FOR c IN #collection FILTER c._key == @id RETURN c")
+    CustomerNameProjection findOneByIdWithStaticProjection(@Param("id") String id);
 
-	@Query("FOR c IN #collection FILTER c._key == @id RETURN c")
-	<T> T findOneByIdWithDynamicProjection(@Param("id") String id, Class<T> projection);
+    @Query("FOR c IN #collection FILTER c.age >= 18 RETURN c")
+    List<CustomerNameProjection> findManyLegalAgeWithStaticProjection();
 
-	@Query("FOR c IN #collection FILTER c.age >= 18 RETURN c")
-	<T> List<T> findManyLegalAgeWithDynamicProjection(Class<T> projection);
+    // Dynamic projection
+
+    @Query("FOR c IN #collection FILTER c._key == @id RETURN c")
+    <T> T findOneByIdWithDynamicProjection(@Param("id") String id, Class<T> projection);
+
+    @Query("FOR c IN #collection FILTER c.age >= 18 RETURN c")
+    <T> List<T> findManyLegalAgeWithDynamicProjection(Class<T> projection);
 
 }
