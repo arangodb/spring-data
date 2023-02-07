@@ -50,13 +50,6 @@
         <jaxb.version>2.3.1</jaxb.version> <!-- fix dependency convergence-->
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>spring-libs-milestone</id>
-			<url>https://repo.spring.io/libs-milestone</url>
-		</repository>
-	</repositories>
-
 	<build>
 		<plugins>
 			<plugin>
