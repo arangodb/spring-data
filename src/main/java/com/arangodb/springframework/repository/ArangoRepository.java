@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.repository;
 
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
@@ -34,5 +35,5 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
  *
  */
 @NoRepositoryBean
-public interface ArangoRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
+public interface ArangoRepository<T, ID> extends CrudRepository<T, ID>, PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
 }
