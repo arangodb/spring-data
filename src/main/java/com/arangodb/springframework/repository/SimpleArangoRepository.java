@@ -22,12 +22,15 @@ package com.arangodb.springframework.repository;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.util.AqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
@@ -163,14 +166,16 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public void delete(final T entity) {
-		String id = null;
-		try {
-			id = (String) arangoOperations.getConverter().getMappingContext().getPersistentEntity(domainClass)
-					.getIdProperty().getField().get(entity);
-		} catch (final IllegalAccessException e) {
-			e.printStackTrace();
+		final ArangoPersistentEntity<?> persistentEntity = arangoOperations.getConverter()
+				.getMappingContext().getRequiredPersistentEntity(domainClass);
+		final PersistentPropertyAccessor<?> accessor = persistentEntity.getPropertyAccessor(entity);
+		final String id = (String) accessor.getProperty(persistentEntity.getIdProperty());
+		final String rev = (String) persistentEntity.getRevProperty().map(accessor::getProperty).orElse(null);
+		final DocumentDeleteOptions options = new DocumentDeleteOptions();
+		if (rev != null) {
+			options.ifMatch(rev);
 		}
-		arangoOperations.delete(id, domainClass);
+		arangoOperations.delete(id, domainClass, options);
 	}
 
     /**
