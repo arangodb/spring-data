@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.8.0] - 2023-02-08
+
+- improved resolution of already fetched embedded entities (#270)
+- added `deduplicate` in persistent indexes options  (#242)
 - dependencies update
+- fixed support for `Pageable.unpaged()` in `PagingAndSortingRepository` (#255)
+- fixed concurrency in SPEL evaluation of string based queries (#266)
 
 ## [3.7.1] - 2022-08-19
 
