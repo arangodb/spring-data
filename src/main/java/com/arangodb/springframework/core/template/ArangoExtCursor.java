@@ -20,7 +20,9 @@
 
 package com.arangodb.springframework.core.template;
 
-import com.arangodb.*;
+import com.arangodb.ArangoCursor;
+import com.arangodb.ArangoIterator;
+import com.arangodb.entity.CursorStats;
 import com.arangodb.entity.CursorWarning;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
@@ -32,7 +34,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -70,7 +71,7 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
     }
 
     @Override
-    public Map<String, Object> getStats() {
+    public CursorStats getStats() {
         return delegate.getStats();
     }
 
