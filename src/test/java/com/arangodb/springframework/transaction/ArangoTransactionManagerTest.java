@@ -37,9 +37,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.*;
 import static org.springframework.beans.PropertyAccessorFactory.forDirectFieldAccess;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -86,7 +84,7 @@ public class ArangoTransactionManagerTest {
         assertThat(status.isNewTransaction(), is(true));
         verify(driver).db(DATABASE_NAME);
         verify(bridge).setCurrentTransaction(any());
-        ArangoTransactionResource resource = (ArangoTransactionResource) TransactionSynchronizationManager.getResource(DATABASE_NAME);
+        ArangoTransactionHolder resource = (ArangoTransactionHolder) TransactionSynchronizationManager.getResource(DATABASE_NAME);
         assertThat(resource.getStreamTransactionId(), nullValue());
         assertThat(resource.getCollectionNames(), empty());
         assertThat(resource.isRollbackOnly(), is(false));
@@ -94,16 +92,16 @@ public class ArangoTransactionManagerTest {
     }
 
     @Test
-    public void nestedGetTransactionReturnsNewTransactionWithFormerCollections() {
+    public void innerGetTransactionIsNotNewTransactionIncludingFormerCollections() {
         DefaultTransactionAttribute first = new DefaultTransactionAttribute();
         first.setLabels(Collections.singleton("foo"));
         TransactionStatus outer = underTest.getTransaction(first);
         DefaultTransactionAttribute second = new DefaultTransactionAttribute();
         second.setLabels(Collections.singleton("bar"));
         TransactionStatus inner = underTest.getTransaction(second);
-        assertThat(inner.isNewTransaction(), is(true));
+        assertThat(inner.isNewTransaction(), is(false));
         ArangoTransactionObject transactionObject = getTransactionObject(inner);
-        assertThat(transactionObject.getResource().getCollectionNames(), hasItems("foo", "bar"));
+        assertThat(transactionObject.getHolder().getCollectionNames(), hasItems("foo", "bar"));
         verifyNoInteractions(database);
     }
 
@@ -112,7 +110,11 @@ public class ArangoTransactionManagerTest {
         TransactionStatus outer = underTest.getTransaction(new DefaultTransactionAttribute());
         TransactionStatus inner = underTest.getTransaction(new DefaultTransactionAttribute());
         underTest.rollback(inner);
-        underTest.commit(outer);
+        try {
+            underTest.commit(outer);
+        } finally {
+            assertThat(TransactionSynchronizationManager.getResource(DATABASE_NAME), nullValue());
+        }
     }
 
     @Test
@@ -140,22 +142,52 @@ public class ArangoTransactionManagerTest {
         assertThat(outer.isNewTransaction(), is(true));
 
         beginTransaction("123", "foo", "bar");
+        when(streamTransaction.getStatus())
+                .thenReturn(StreamTransactionStatus.running);
 
         DefaultTransactionAttribute second = new DefaultTransactionAttribute();
         second.setLabels(Collections.singleton("bar"));
         TransactionStatus inner1 = underTest.getTransaction(second);
         assertThat(inner1.isNewTransaction(), is(false));
         ArangoTransactionObject tx1 = getTransactionObject(inner1);
-        assertThat(tx1.getResource().getStreamTransactionId(), is("123"));
+        assertThat(tx1.getHolder().getStreamTransactionId(), is("123"));
         underTest.commit(inner1);
         TransactionStatus inner2 = underTest.getTransaction(second);
         assertThat(inner2.isNewTransaction(), is(false));
         ArangoTransactionObject tx2 = getTransactionObject(inner1);
-        assertThat(tx2.getResource().getStreamTransactionId(), is("123"));
+        assertThat(tx2.getHolder().getStreamTransactionId(), is("123"));
         underTest.commit(inner2);
         underTest.commit(outer);
         verify(database).commitStreamTransaction("123");
         assertThat(TransactionSynchronizationManager.getResource(DATABASE_NAME), nullValue());
+    }
+
+    @Test
+    public void getTransactionForPropagationSupportsWithoutExistingCreatesDummyTransaction() {
+        DefaultTransactionAttribute supports = new DefaultTransactionAttribute();
+        supports.setPropagationBehavior(TransactionDefinition.PROPAGATION_SUPPORTS);
+        supports.setLabels(Collections.singleton("foo"));
+        TransactionStatus empty = underTest.getTransaction(supports);
+        assertThat(empty.isNewTransaction(), is(false));
+        underTest.commit(empty);
+        verifyNoInteractions(database);
+        assertThat(TransactionSynchronizationManager.getResource(DATABASE_NAME), nullValue());
+    }
+
+    @Test
+    public void getTransactionForPropagationSupportsWithExistingCreatesInner() {
+        DefaultTransactionAttribute first = new DefaultTransactionAttribute();
+        first.setLabels(Collections.singleton("foo"));
+        TransactionStatus outer = underTest.getTransaction(first);
+        DefaultTransactionAttribute supports = new DefaultTransactionAttribute();
+        supports.setPropagationBehavior(TransactionDefinition.PROPAGATION_SUPPORTS);
+        supports.setLabels(Collections.singleton("bar"));
+        TransactionStatus inner = underTest.getTransaction(supports);
+        assertThat(inner.isNewTransaction(), is(false));
+        underTest.commit(inner);
+        ArangoTransactionObject transactionObject = getTransactionObject(inner);
+        assertThat(TransactionSynchronizationManager.getResource(DATABASE_NAME), is(transactionObject.getHolder()));
+        verifyNoInteractions(database);
     }
 
     @Test
@@ -179,8 +211,8 @@ public class ArangoTransactionManagerTest {
         TransactionStatus state = underTest.getTransaction(definition);
         beginTransaction("123", "foo");
         beginPassed.getValue().apply(Collections.singletonList("baz"));
-        assertThat(getTransactionObject(state).getResource().getCollectionNames(), hasItems("foo", "bar"));
-        assertThat(getTransactionObject(state).getResource().getCollectionNames(), not(hasItem("baz")));
+        assertThat(getTransactionObject(state).getHolder().getCollectionNames(), hasItems("foo", "bar"));
+        assertThat(getTransactionObject(state).getHolder().getCollectionNames(), not(hasItem("baz")));
     }
 
     @Test(expected = InvalidIsolationLevelException.class)
@@ -195,10 +227,8 @@ public class ArangoTransactionManagerTest {
                 .thenReturn(id);
         when(database.beginStreamTransaction(any()))
                 .thenReturn(streamTransaction);
-        when(database.getStreamTransaction(any()))
+        lenient().when(database.getStreamTransaction(any()))
                 .thenReturn(streamTransaction);
-        when(streamTransaction.getStatus())
-                .thenReturn(StreamTransactionStatus.running);
         verify(bridge).setCurrentTransaction(beginPassed.capture());
         beginPassed.getValue().apply(Arrays.asList(collectionNames));
     }
