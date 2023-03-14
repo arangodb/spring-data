@@ -29,21 +29,41 @@ import java.util.function.Function;
  * Bridge to postpone late transaction start to be able to inject collections from query side.
  */
 public class QueryTransactionBridge {
-    private static final Function<Collection<String>, String> NO_TRANSACTION = any -> null;
-    private static final ThreadLocal<Function<Collection<String>, String>> CURRENT_TRANSACTION = new NamedInheritableThreadLocal<>("ArangoTransactionBegin");
 
-    public QueryTransactionBridge() {
-        CURRENT_TRANSACTION.set(NO_TRANSACTION);
-    }
+    private static final ThreadLocal<Function<Collection<String>, String>> CURRENT_TRANSACTION = new NamedInheritableThreadLocal<Function<Collection<String>, String>>("ArangoTransactionBegin") {
+        @Override
+        protected Function<Collection<String>, String> initialValue() {
+            return any -> null;
+        }
+    };
 
+    /**
+     * Prepare the bridge for accepting transaction begin.
+     * @param begin a function accepting collection names and returning a stream transaction id
+     *
+     * @see com.arangodb.springframework.transaction.ArangoTransactionManager
+     */
     public void setCurrentTransaction(Function<Collection<String>, String> begin) {
         CURRENT_TRANSACTION.set(begin);
     }
 
+    /**
+     * Reset the bridge ignoring transaction begin.
+     *
+     * @see com.arangodb.springframework.transaction.ArangoTransactionManager
+     */
     public void clearCurrentTransaction() {
-        CURRENT_TRANSACTION.set(NO_TRANSACTION);
+        CURRENT_TRANSACTION.remove();
     }
 
+    /**
+     * Applies the collection names to any current transaction.
+     * @param collections additional collection names
+     * @return the stream transaction id or {@code null} without transaction
+     *
+     * @see AbstractArangoQuery
+     * @see com.arangodb.springframework.repository.SimpleArangoRepository
+     */
     public String getCurrentTransaction(Collection<String> collections) {
         return CURRENT_TRANSACTION.get().apply(collections);
     }

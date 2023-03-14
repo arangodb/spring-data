@@ -22,7 +22,6 @@ package com.arangodb.springframework.transaction;
 
 import com.arangodb.ArangoDBException;
 import com.arangodb.ArangoDatabase;
-import com.arangodb.entity.StreamTransactionEntity;
 import com.arangodb.entity.StreamTransactionStatus;
 import com.arangodb.model.StreamTransactionOptions;
 import org.apache.commons.logging.Log;
@@ -31,41 +30,37 @@ import org.springframework.lang.Nullable;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.support.SmartTransactionObject;
-import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.springframework.transaction.TransactionDefinition.TIMEOUT_DEFAULT;
+
 /**
- * Transaction object created by {@link ArangoTransactionManager}.
+ * Transaction object created by
+ * {@link ArangoTransactionManager#doGetTransaction()}.
  */
 class ArangoTransactionObject implements SmartTransactionObject {
 
     private static final Log logger = LogFactory.getLog(ArangoTransactionObject.class);
 
     private final ArangoDatabase database;
-    private final ArangoTransactionResource resource;
+    private final ArangoTransactionHolder holder;
     private int timeout;
-    private StreamTransactionEntity transaction;
 
-    ArangoTransactionObject(ArangoDatabase database, int defaultTimeout, @Nullable ArangoTransactionResource resource) {
+    ArangoTransactionObject(ArangoDatabase database, int defaultTimeout, @Nullable ArangoTransactionHolder holder) {
         this.database = database;
-        this.resource = resource == null ? new ArangoTransactionResource(null, Collections.emptySet(), false) : resource;
+        this.holder = holder == null ? new ArangoTransactionHolder() : holder;
         this.timeout = defaultTimeout;
     }
 
-    ArangoTransactionResource getResource() {
-        return resource;
-    }
-
-    boolean exists() {
-        return getStreamTransaction() != null;
+    ArangoTransactionHolder getHolder() {
+        return holder;
     }
 
     void configure(TransactionDefinition definition) {
-        if (definition.getTimeout() != -1) {
+        if (definition.getTimeout() != TIMEOUT_DEFAULT) {
             this.timeout = definition.getTimeout();
         }
         if (definition instanceof TransactionAttribute) {
@@ -73,78 +68,55 @@ class ArangoTransactionObject implements SmartTransactionObject {
         }
     }
 
-    ArangoTransactionResource getOrBegin(Collection<String> collections) throws ArangoDBException {
+    ArangoTransactionHolder getOrBegin(Collection<String> collections) throws ArangoDBException {
         addCollections(collections);
-        if (resource.getStreamTransactionId() != null) {
-            return getResource();
+        if (holder.getStreamTransactionId() == null) {
+            StreamTransactionOptions options = new StreamTransactionOptions()
+                    .allowImplicit(true)
+                    .writeCollections(holder.getCollectionNames().toArray(new String[0]))
+                    .lockTimeout(Math.max(timeout, 0));
+            holder.setStreamTransaction(database.beginStreamTransaction(options));
+            if (logger.isDebugEnabled()) {
+                logger.debug("Began stream transaction " + holder.getStreamTransactionId() + " writing collections " + holder.getCollectionNames());
+            }
         }
-        StreamTransactionOptions options = new StreamTransactionOptions()
-                .allowImplicit(true)
-                .writeCollections(resource.getCollectionNames().toArray(new String[0]))
-                .lockTimeout(Math.max(timeout, 0));
-        transaction = database.beginStreamTransaction(options);
-        resource.setStreamTransactionId(transaction.getId());
-        if (logger.isDebugEnabled()) {
-            logger.debug("Began stream transaction " + resource.getStreamTransactionId() + " writing collections " + resource.getCollectionNames());
-        }
-        return getResource();
+        return getHolder();
     }
 
     void commit() throws ArangoDBException {
-        if (isStatus(StreamTransactionStatus.running)) {
-            database.commitStreamTransaction(resource.getStreamTransactionId());
+        if (holder.isStatus(StreamTransactionStatus.running)) {
+            holder.setStreamTransaction(database.commitStreamTransaction(holder.getStreamTransactionId()));
         }
     }
 
     void rollback() throws ArangoDBException {
-        if (isStatus(StreamTransactionStatus.running)) {
-            database.abortStreamTransaction(resource.getStreamTransactionId());
+        holder.setRollbackOnly();
+        if (holder.isStatus(StreamTransactionStatus.running)) {
+            holder.setStreamTransaction(database.abortStreamTransaction(holder.getStreamTransactionId()));
         }
-        setRollbackOnly();
     }
 
     @Override
     public boolean isRollbackOnly() {
-        return resource.isRollbackOnly() || isStatus(StreamTransactionStatus.aborted);
-    }
-
-    public void setRollbackOnly() {
-        resource.setRollbackOnly(true);
+        return holder.isRollbackOnly();
     }
 
     @Override
     public void flush() {
-        TransactionSynchronizationUtils.triggerFlush();
     }
 
     @Override
     public String toString() {
-        return resource.getStreamTransactionId() == null ? "(not begun)" : resource.getStreamTransactionId();
+        return holder.getStreamTransactionId() == null ? "(not begun)" : holder.getStreamTransactionId();
     }
 
     private void addCollections(Collection<String> collections) {
-        if (resource.getStreamTransactionId() != null) {
-            if (!resource.getCollectionNames().containsAll(collections) && logger.isDebugEnabled()) {
-                Set<String> additional = new HashSet<>(collections);
-                additional.removeAll(resource.getCollectionNames());
-                logger.debug("Stream transaction already started on collections " + resource.getCollectionNames() + ", assuming additional collections are read only: " + additional);
-            }
-        } else {
-            Set<String> all = new HashSet<>(resource.getCollectionNames());
-            all.addAll(collections);
-            resource.setCollectionNames(all);
+        if (holder.getStreamTransactionId() == null) {
+            holder.addCollectionNames(collections);
+        } else if (logger.isDebugEnabled() && !holder.getCollectionNames().containsAll(collections)) {
+            Set<String> additional = new HashSet<>(collections);
+            additional.removeAll(holder.getCollectionNames());
+            logger.debug("Stream transaction already started on collections " + holder.getCollectionNames() + ", assuming additional collections are read only: " + additional);
         }
-    }
-
-    private boolean isStatus(StreamTransactionStatus status) {
-        getStreamTransaction();
-        return transaction != null && transaction.getStatus() == status;
-    }
-
-    private StreamTransactionEntity getStreamTransaction() {
-        if (transaction == null && resource.getStreamTransactionId() != null) {
-            transaction = database.getStreamTransaction(resource.getStreamTransactionId());
-        }
-        return transaction;
     }
 }
