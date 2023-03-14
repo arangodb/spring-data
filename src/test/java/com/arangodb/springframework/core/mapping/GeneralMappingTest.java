@@ -101,8 +101,10 @@ public class GeneralMappingTest extends AbstractArangoTest {
         final FieldNameTestEntity entity = new FieldNameTestEntity();
         entity.test = "1234";
         final DocumentEntity res = template.insert(entity);
+        String colName = res.getId().split("/")[0];
         final ObjectNode slice = template.driver().db(ArangoTestConfiguration.DB)
-                .getDocument(res.getId(), ObjectNode.class);
+                .collection(colName)
+                .getDocument(res.getKey(), ObjectNode.class);
         assertThat(slice, is(notNullValue()));
         assertThat(slice.get("alt-test").isTextual(), is(true));
         assertThat(slice.get("alt-test").textValue(), is(entity.test));
