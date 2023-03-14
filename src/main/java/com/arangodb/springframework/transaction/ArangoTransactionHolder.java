@@ -20,9 +20,12 @@
 
 package com.arangodb.springframework.transaction;
 
+import com.arangodb.entity.StreamTransactionEntity;
+import com.arangodb.entity.StreamTransactionStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,53 +35,41 @@ import java.util.Set;
  * @see TransactionSynchronizationManager#bindResource(Object, Object)
  * @see ArangoTransactionObject
  */
-class ArangoTransactionResource {
+class ArangoTransactionHolder {
 
-    private String streamTransactionId;
-    private Set<String> collectionNames;
+    private final Set<String> collectionNames = new HashSet<>();
+    private StreamTransactionEntity transaction = null;
+    private boolean rollbackOnly = false;
 
-    private boolean rollbackOnly;
-    int references = 0;
-
-    ArangoTransactionResource(@Nullable String streamTransactionId, Set<String> collectionNames, boolean rollbackOnly) {
-        this.streamTransactionId = streamTransactionId;
-        setCollectionNames(collectionNames);
-        this.rollbackOnly = rollbackOnly;
-    }
-
+    @Nullable
     String getStreamTransactionId() {
-        return streamTransactionId;
+        return transaction == null ? null : transaction.getId();
     }
 
-    void setStreamTransactionId(String streamTransactionId) {
-        this.streamTransactionId = streamTransactionId;
+    void setStreamTransaction(StreamTransactionEntity transaction) {
+        this.transaction = transaction;
     }
 
     Set<String> getCollectionNames() {
         return collectionNames;
     }
 
-    void setCollectionNames(Set<String> collectionNames) {
-        this.collectionNames = new HashSet<>(collectionNames);
+    void addCollectionNames(Collection<String> collectionNames) {
+        if (transaction != null) {
+            throw new IllegalStateException("Collections must not be added after stream transaction begun");
+        }
+        this.collectionNames.addAll(collectionNames);
     }
 
     boolean isRollbackOnly() {
-        return rollbackOnly;
+        return rollbackOnly || isStatus(StreamTransactionStatus.aborted);
     }
 
-    void setRollbackOnly(boolean rollbackOnly) {
-        this.rollbackOnly = rollbackOnly;
+    void setRollbackOnly() {
+        rollbackOnly = true;
     }
 
-    void increaseReferences() {
-        ++references;
-    }
-
-    boolean isSingleReference() {
-        return references <= 1;
-    }
-
-    void decreasedReferences() {
-        --references;
+    public boolean isStatus(StreamTransactionStatus status) {
+        return transaction != null && transaction.getStatus() == status;
     }
 }
