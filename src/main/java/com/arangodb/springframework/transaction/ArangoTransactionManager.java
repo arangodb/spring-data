@@ -54,8 +54,8 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
     public ArangoTransactionManager(ArangoOperations operations, QueryTransactionBridge bridge) {
         this.operations = operations;
         this.bridge = bridge;
-        super.setGlobalRollbackOnParticipationFailure(true);
-        super.setTransactionSynchronization(SYNCHRONIZATION_ON_ACTUAL_TRANSACTION);
+        setGlobalRollbackOnParticipationFailure(true);
+        setTransactionSynchronization(SYNCHRONIZATION_ON_ACTUAL_TRANSACTION);
     }
 
     /**
@@ -126,10 +126,21 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         }
         try {
             tx.commit();
+            afterCompletion();
         } catch (ArangoDBException error) {
+            if (!isRollbackOnCommitFailure()) {
+                try {
+                    tx.rollback();
+                } catch (ArangoDBException noRollback) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Cannot rollback after commit " + tx, noRollback);
+                    }
+                    // expose commit exception instead
+                } finally {
+                    afterCompletion();
+                }
+            }
             throw new TransactionSystemException("Cannot commit transaction " + tx, error);
-        } finally {
-            bridge.clearCurrentTransaction();
         }
     }
 
@@ -151,7 +162,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         } catch (ArangoDBException error) {
             throw new TransactionSystemException("Cannot roll back transaction " + tx, error);
         } finally {
-            bridge.clearCurrentTransaction();
+            afterCompletion();
         }
     }
 
@@ -203,13 +214,8 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         }
     }
 
-    /**
-     * Unbind the holder from the last transaction completed.
-     *
-     * @see ArangoTransactionHolder
-     */
-    @Override
-    protected void doCleanupAfterCompletion(Object transaction) {
+    private void afterCompletion() {
+        bridge.clearCurrentTransaction();
         TransactionSynchronizationManager.unbindResource(operations.getDatabaseName());
     }
 }
