@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [3.9.0] - 2023-04-18
+
+- upgraded dependency `com.arangodb:arangodb-java-driver:6.22.0` (DE-541)
+
 ## [3.8.0] - 2023-02-08
 
 - improved resolution of already fetched embedded entities (#270)
