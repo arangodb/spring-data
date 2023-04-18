@@ -20,11 +20,15 @@
 
 package com.arangodb.springframework.repository;
 
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.annotation.Document;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,6 +54,19 @@ public class ShardedCollectionRepositoryTest extends AbstractArangoTest {
         assertThat(d3.country).isEqualTo("country1");
         assertThat(d3.name).isEqualTo("name3");
     }
+
+    @Test
+    public void forceOneShardAttributeValue() {
+        ShardedUser d = shardedRepository.save(new ShardedUser(null, "foo", "bar"));
+        Optional<ShardedUser> res = shardedRepository.findByName("foo", new AqlQueryOptions()
+                .forceOneShardAttributeValue("bar")
+        ).stream().findFirst();
+        assertThat(res).isPresent();
+        assertThat(res.get().key).isEqualTo(d.key);
+        assertThat(res.get().name).isEqualTo(d.name);
+        assertThat(res.get().country).isEqualTo(d.country);
+    }
+
 }
 
 @Document(shardKeys = "country", numberOfShards = 10)
@@ -68,4 +85,5 @@ class ShardedUser {
 }
 
 interface ShardedRepository extends ArangoRepository<ShardedUser, String> {
+    List<ShardedUser> findByName(String name, AqlQueryOptions options);
 }
