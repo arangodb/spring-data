@@ -142,7 +142,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final String key = databaseExpression != null ? databaseExpression.getValue(context, String.class)
 				: databaseName;
 		return databaseCache.computeIfAbsent(key, name -> {
-			final ArangoDatabase db = arango.db(DbName.of(name));
+			final ArangoDatabase db = arango.db(name);
 			if (!db.exists()) {
 				db.create();
 			}
@@ -174,7 +174,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 		final ArangoDatabase db = db();
 		final Class<?> entityClass = persistentEntity != null ? persistentEntity.getType() : null;
-		final CollectionCacheValue value = collectionCache.computeIfAbsent(new CollectionCacheKey(db.dbName().get(), name),
+		final CollectionCacheValue value = collectionCache.computeIfAbsent(new CollectionCacheKey(db.name(), name),
 				key -> {
 					final ArangoCollection collection = db.collection(name);
 					if (!collection.exists()) {
@@ -732,8 +732,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		} catch (final ArangoDBException e) {
 			throw translateExceptionIfPossible(e);
 		}
-		databaseCache.remove(db.dbName().get());
-		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.dbName().get()))
+		databaseCache.remove(db.name());
+		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.name()))
 				.forEach(key -> collectionCache.remove(key));
 	}
 

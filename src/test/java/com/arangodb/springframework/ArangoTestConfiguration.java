@@ -21,7 +21,6 @@
 package com.arangodb.springframework;
 
 import com.arangodb.ArangoDB;
-import com.arangodb.DbName;
 import com.arangodb.config.ArangoConfigProperties;
 import com.arangodb.springframework.annotation.EnableArangoAuditing;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
@@ -52,7 +51,7 @@ import java.util.Collection;
 @EnableArangoAuditing(auditorAwareRef = "auditorProvider")
 public class ArangoTestConfiguration implements ArangoConfiguration {
 
-	public static final DbName DB = DbName.of("spring-test-db");
+	public static final String DB = "spring-test-db";
 
 	@Override
 	public ArangoDB.Builder arango() {
@@ -61,7 +60,7 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 
 	@Override
 	public String database() {
-		return DB.get();
+		return DB;
 	}
 
 	@Override
