@@ -132,39 +132,53 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		if (newDynamic == null) {
 			return oldStatic;
 		}
-		final Integer batchSize = newDynamic.getBatchSize();
-		if (batchSize != null) {
-			oldStatic.batchSize(batchSize);
+
+		AqlQueryOptions mergedOptions = newDynamic.clone();
+
+		if (mergedOptions.getBatchSize() == null) {
+			mergedOptions.batchSize(oldStatic.getBatchSize());
 		}
-		final Integer maxPlans = newDynamic.getMaxPlans();
-		if (maxPlans != null) {
-			oldStatic.maxPlans(maxPlans);
+
+		if (mergedOptions.getCache() == null) {
+			mergedOptions.cache(oldStatic.getCache());
 		}
-		final Integer ttl = newDynamic.getTtl();
-		if (ttl != null) {
-			oldStatic.ttl(ttl);
+
+		if (mergedOptions.getCount() == null) {
+			mergedOptions.count(oldStatic.getCount());
 		}
-		final Boolean cache = newDynamic.getCache();
-		if (cache != null) {
-			oldStatic.cache(cache);
+
+		if (mergedOptions.getFullCount() == null) {
+			mergedOptions.fullCount(oldStatic.getFullCount());
 		}
-		final Boolean count = newDynamic.getCount();
-		if (count != null) {
-			oldStatic.count(count);
+
+		if (mergedOptions.getMaxPlans() == null) {
+			mergedOptions.maxPlans(oldStatic.getMaxPlans());
 		}
-		final Boolean fullCount = newDynamic.getFullCount();
-		if (fullCount != null) {
-			oldStatic.fullCount(fullCount);
+
+		if (mergedOptions.getProfile() == null) {
+			mergedOptions.profile(oldStatic.getProfile());
 		}
-		final Boolean profile = newDynamic.getProfile();
-		if (profile != null) {
-			oldStatic.profile(profile);
+		if (mergedOptions.getRules() == null) {
+			mergedOptions.rules(oldStatic.getRules());
 		}
-		final Collection<String> rules = newDynamic.getRules();
-		if (rules != null) {
-			oldStatic.rules(rules);
+
+		if (mergedOptions.getTtl() == null) {
+			mergedOptions.ttl(oldStatic.getTtl());
 		}
-		return oldStatic;
+
+		if (mergedOptions.getStream() == null) {
+			mergedOptions.stream(oldStatic.getStream());
+		}
+
+		if (mergedOptions.getMemoryLimit() == null) {
+			mergedOptions.memoryLimit(oldStatic.getMemoryLimit());
+		}
+
+		if (mergedOptions.getAllowDirtyRead() == null) {
+			mergedOptions.allowDirtyRead(oldStatic.getAllowDirtyRead());
+		}
+
+		return mergedOptions;
 	}
 
 	private Class<?> getTypeToRead(final ResultProcessor processor) {

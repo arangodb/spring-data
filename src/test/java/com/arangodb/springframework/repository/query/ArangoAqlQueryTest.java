@@ -4,8 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsIn.isOneOf;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.time.Instant;
 import java.util.*;
@@ -90,6 +89,24 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final ArangoCursor<Customer> retrieved = repository
 				.findOneByBindVarsAql(new AqlQueryOptions().ttl(127).cache(true), bindVars);
 		assertEquals(john, retrieved.next());
+	}
+
+	@Test
+	public void overrideQueryOptions() {
+		Integer countNotOverridden = repository.sequenceTo10K(1, new AqlQueryOptions()).getCount();
+		assertThat(countNotOverridden, is(10_000));
+
+		Integer countOverridden = repository.sequenceTo10K(1, new AqlQueryOptions().count(false)).getCount();
+		assertThat(countOverridden, nullValue());
+	}
+
+	@Test
+	public void mergeQueryOptions() {
+		List<Double> cursorNotMerged = repository.sequenceTo10K(0, new AqlQueryOptions()).asListRemaining();
+		assertThat(cursorNotMerged, hasSize(10_001));
+		assertThat(cursorNotMerged.get(0), nullValue());
+		assertThrows(ArangoDBException.class,
+				()-> repository.sequenceTo10K(0, new AqlQueryOptions().failOnWarning(true)));
 	}
 
 	@Test
