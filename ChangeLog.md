@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [3.10.0] - 2023-05-17
 
+- fixed merge AQL options from `@QueryOptions` annotation and `AqlQueryOptions` parameter (#276)
 - upgraded dependency `com.arangodb:arangodb-java-driver:6.24.0` (DE-541)
 
 ## [3.9.0] - 2023-04-18
