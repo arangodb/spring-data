@@ -31,9 +31,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -87,16 +87,19 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
 
     @Override
     public List<T> asListRemaining() {
-        final List<T> remaining = new ArrayList<>();
-        while (hasNext()) {
-            remaining.add(next());
-        }
-        return remaining;
+        return delegate.asListRemaining().stream()
+                .map(this::convert)
+                .collect(Collectors.toList());
     }
 
     @Override
     public boolean isPotentialDirtyRead() {
         return delegate.isPotentialDirtyRead();
+    }
+
+    @Override
+    public String getNextBatchId() {
+        return delegate.getNextBatchId();
     }
 
     @Override
@@ -121,7 +124,11 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
 
     @Override
     public T next() {
-        final T result = converter.read(type, delegate.next());
+        return convert(delegate.next());
+    }
+
+    private T convert(JsonNode value) {
+        final T result = converter.read(type, value);
         if (result != null) {
             potentiallyEmitEvent(new AfterLoadEvent<>(result));
         }
