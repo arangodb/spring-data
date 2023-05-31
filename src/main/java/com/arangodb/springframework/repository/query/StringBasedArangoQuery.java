@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.repository.query;
 
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.core.ArangoOperations;
@@ -94,7 +95,8 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	@Override
 	protected QueryWithCollections createQuery(
             final ArangoParameterAccessor accessor,
-            final Map<String, Object> bindVars) {
+		final Map<String, Object> bindVars,
+		final AqlQueryOptions options) {
 
 		extractBindVars(accessor, bindVars);
 
