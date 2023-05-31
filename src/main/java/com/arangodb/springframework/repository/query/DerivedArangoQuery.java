@@ -22,11 +22,11 @@ package com.arangodb.springframework.repository.query;
 
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.IndexType;
+import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.repository.query.derived.BindParameterBinding;
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.util.Pair;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -55,7 +55,8 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 	@Override
 	protected QueryWithCollections createQuery(
             final ArangoParameterAccessor accessor,
-            final Map<String, Object> bindVars) {
+		final Map<String, Object> bindVars,
+		final AqlQueryOptions options) {
 
 		return new DerivedQueryCreator(mappingContext, domainClass, tree, accessor, new BindParameterBinding(bindVars),
 				geoFields).createQuery();
