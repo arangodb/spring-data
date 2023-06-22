@@ -22,6 +22,11 @@ package com.arangodb.springframework.core.util;
 
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
+import com.arangodb.springframework.repository.query.filter.AqlFilterBuilder;
+import com.arangodb.springframework.repository.query.filter.Filterable;
+import com.arangodb.springframework.repository.query.search.AqlSearchBuilder;
+import com.arangodb.springframework.repository.query.search.Searchable;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
@@ -34,6 +39,7 @@ import java.util.stream.Collectors;
 /**
  * 
  * @author Christian Lechner
+ * @author Siva Prasad Erigineni
  */
 public final class AqlUtils {
 
@@ -239,6 +245,12 @@ public final class AqlUtils {
 
 	public static String buildFieldName(final String field) {
 		return field.contains("-") ? "`" + field + "`" : field;
+	}
+	public static String buildFilterClause(Filterable filter) {
+    	return AqlFilterBuilder.of(filter).toFilterStatement();
+    }
+	public static String buildSearchClause(Searchable search) {
+		return AqlSearchBuilder.of(search).toSearchStatement();
 	}
 
 }
