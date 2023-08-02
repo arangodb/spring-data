@@ -12,6 +12,7 @@
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
 		<version>3.0.8</version>
+		<relativePath/>
 	</parent>
 
 	<name>arangodb-spring-data</name>
