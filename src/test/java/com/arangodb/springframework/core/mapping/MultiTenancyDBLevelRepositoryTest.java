@@ -20,19 +20,19 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.util.Optional;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.arangodb.springframework.ArangoMultiTenancyRepositoryTestConfiguration;
 import com.arangodb.springframework.component.TenantProvider;
@@ -44,7 +44,7 @@ import com.arangodb.springframework.testdata.IdTestEntity;
  * @author Paulo Ferreira
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { ArangoMultiTenancyRepositoryTestConfiguration.class })
 public class MultiTenancyDBLevelRepositoryTest {
 
@@ -79,8 +79,8 @@ public class MultiTenancyDBLevelRepositoryTest {
 		assertThat(result.isPresent(), is(false));
 	}
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void cleanup() {
 		tenantProvider.setId(TENANT00);
 		template.dropDatabase();

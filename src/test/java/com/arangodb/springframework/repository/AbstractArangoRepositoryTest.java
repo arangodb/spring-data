@@ -19,7 +19,7 @@ import com.arangodb.springframework.testdata.Owns;
 import com.arangodb.springframework.testdata.Product;
 import com.arangodb.springframework.testdata.ShoppingCart;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.GeoResult;
 
@@ -52,7 +52,7 @@ public abstract class AbstractArangoRepositoryTest extends AbstractArangoTest {
 				Owns.class);
 	}
 
-	@Before
+	@BeforeEach
 	public void createMockCustomers() {
 		john = new Customer("John", "Smith", 20);
 		bob = new Customer("Bob", "Thompson", 40);

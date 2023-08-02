@@ -20,8 +20,7 @@
 
 package com.arangodb.springframework.core.util;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,6 +28,7 @@ import org.springframework.data.domain.Sort.Direction;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * 
@@ -137,65 +137,35 @@ public class AqlUtilsTest {
 
 		// Illegal sort properties
 
-		try {
-			AqlUtils.buildSortClause(Sort.by(".property"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by(".property")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("property."));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("property.")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("property..property"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("property..property")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("property.`property"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("property.`property")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("pro`perty.property"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("pro`perty.property")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("`property``.property"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("`property``.property")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("`property```.property"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("`property```.property")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("`property.`\\`.property`"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("`property.`\\`.property`")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("`property.`\\``.property`"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("`property.`\\``.property`")));
 
-		try {
-			AqlUtils.buildSortClause(Sort.by("`property`.\\``.property`"));
-			Assert.fail();
-		} catch (IllegalArgumentException e) {
-		}
+		assertThrows(IllegalArgumentException.class,
+				() -> AqlUtils.buildSortClause(Sort.by("`property`.\\``.property`")));
 
 	}
 

@@ -23,9 +23,9 @@ package com.arangodb.springframework.debug.repository;
 
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.springframework.AbstractArangoTest;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -38,7 +38,7 @@ public class PersistenceConstructorTest extends AbstractArangoTest {
         PersistenceConstructorClass entity = new PersistenceConstructorClass("myClass");
         DocumentEntity inserted = template.insert(entity);
         PersistenceConstructorClass read = template.find(inserted.getId(), PersistenceConstructorClass.class).get();
-        Assert.assertThat(read, is(entity));
+        assertThat(read, is(entity));
     }
 
 }

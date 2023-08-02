@@ -23,7 +23,7 @@ package com.arangodb.springframework.debug.repository;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.debug.repository.entity.User;
 import com.arangodb.springframework.debug.repository.entity.UserLogin;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -1,11 +1,9 @@
 package com.arangodb.springframework.repository.query.graphtraversal;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.*;
 // Avoiding this since Eclipse draws unnecessary attention to it due to is(java.lang.Class<T> type) being deprecated:
 //import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,8 +12,8 @@ import java.util.Optional;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.arangodb.springframework.AbstractArangoTest;
@@ -62,8 +60,8 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 		return Arrays.asList(ned, catelyn, sansa, robb, jon, jaimie, emily, dude, dudette);
 	}
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void setUp() {
 		populateData();
 	}
 
@@ -115,7 +113,7 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 	public void testFindByNameAndSurname() {
 		findByExample(ned).ifPresent(nedStark -> {
 			final Collection<HumanBeing> kids = nedStark.getChildren();
-			assertEquals(2, kids.size());
+			assertThat(kids.size(), equalTo(2));
 			for (final HumanBeing human : kids) {
 				assertThat(human, anyOf(Matchers.is(robb), Matchers.is(sansa)));
 			}
@@ -127,7 +125,7 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 		findByExample(catelyn).ifPresent(catelynStark -> {
 			final Collection<HumanBeing> ancestors = humanBeingRepo
 					.getAllChildrenAndGrandchildren("humanBeing/" + catelynStark.getId(), ChildOf.class);
-			assertEquals(3, ancestors.size());
+			assertThat(ancestors.size(), equalTo(3));
 			for (final HumanBeing human : ancestors) {
 				assertThat(human, anyOf(Matchers.is(robb), Matchers.is(sansa), Matchers.is(dude)));
 			}
@@ -139,7 +137,7 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 		findByExample(ned).ifPresent(nedStark -> {
 			final Collection<HumanBeing> ancestors = humanBeingRepo
 					.getAllChildrenMultilevel("humanBeing/" + nedStark.getId(), (byte) 3, ChildOf.class);
-			assertEquals(4, ancestors.size());
+			assertThat(ancestors.size(), equalTo(4));
 			for (final HumanBeing human : ancestors) {
 				assertThat(human,
 					anyOf(Matchers.is(robb), Matchers.is(sansa), Matchers.is(dude), Matchers.is(dudette)));
@@ -153,7 +151,7 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 		findByExample(dudette).ifPresent(dudetteStark -> {
 			final Collection<HumanBeing> predecessors = humanBeingRepo
 					.getAllParentsMultilevel("humanBeing/" + dudetteStark.getId(), (byte) 3, ChildOf.class);
-			assertEquals(7, predecessors.size());
+			assertThat(predecessors.size(), equalTo(7));
 			final List<Matcher<? super HumanBeing>> matchers = Arrays.asList(Matchers.is(dude), Matchers.is(robb),
 				Matchers.is(emily), Matchers.is(ned), Matchers.is(catelyn), Matchers.is(jon), Matchers.is(jaimie));
 			for (final HumanBeing human : predecessors) {

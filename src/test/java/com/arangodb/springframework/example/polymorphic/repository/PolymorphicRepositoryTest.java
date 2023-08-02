@@ -24,13 +24,13 @@ import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.example.polymorphic.entity.Animal;
 import com.arangodb.springframework.example.polymorphic.entity.Dog;
 import com.arangodb.springframework.example.polymorphic.entity.Eagle;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -59,8 +59,8 @@ public class PolymorphicRepositoryTest extends AbstractArangoTest {
 		final List<Animal> animals = new LinkedList<>();
 		repo.findAll().iterator().forEachRemaining(animals::add);
 
-		Assert.assertThat(animals.size(), is(2));
-		Assert.assertThat(animals.stream().anyMatch(it -> it.equals(eagle)), is(true));
-		Assert.assertThat(animals.stream().anyMatch(it -> it.equals(dog)), is(true));
+		assertThat(animals.size(), is(2));
+		assertThat(animals.stream().anyMatch(it -> it.equals(eagle)), is(true));
+		assertThat(animals.stream().anyMatch(it -> it.equals(dog)), is(true));
 	}
 }

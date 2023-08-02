@@ -2,16 +2,15 @@ package com.arangodb.springframework.repository.query;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.collection.IsIn.isOneOf;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import com.arangodb.springframework.testdata.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,7 +47,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		filters.put("age", 20);
 		List<Customer> retrieved = repository.findByAllEqual(filters);
 		assertThat(retrieved, hasSize(1));
-		assertEquals(john, retrieved.get(0));
+		assertThat(retrieved.get(0), equalTo(john));
 
 		filters.put("age", 21);
 		retrieved = repository.findByAllEqual(filters);
@@ -88,7 +87,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		bindVars.put("name", john.getName());
 		final ArangoCursor<Customer> retrieved = repository
 				.findOneByBindVarsAql(new AqlQueryOptions().ttl(127).cache(true), bindVars);
-		assertEquals(john, retrieved.next());
+		assertThat(retrieved.next(), equalTo(john));
 	}
 
 	@Test
@@ -115,7 +114,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("id", john.getId());
 		final Customer retrieved = repository.findOneByNameAndBindVarsAql(john.getName(), bindVars);
-		assertEquals(john, retrieved);
+		assertThat(retrieved, equalTo(john));
 	}
 
 	@Test
@@ -125,7 +124,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		bindVars.put("id", john.getId());
 		bindVars.put("name", john.getId() + "random");
 		final Customer retrieved = repository.findOneByNameAndBindVarsAql(john.getName(), bindVars);
-		assertEquals(john, retrieved);
+		assertThat(retrieved, equalTo(john));
 	}
 
 	@Test
@@ -135,39 +134,35 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		bindVars.put("id", john.getId());
 		bindVars.put("name", john.getName() + "random");
 		final Customer retrieved = repository.findOneByIdAndNameWithBindVarsAql(john.getName(), bindVars);
-		assertEquals(john, retrieved);
+		assertThat(retrieved, equalTo(john));
 	}
 
-	@Test(expected = ArangoDBException.class)
+	@Test
 	public void findOneByIdInCollectionAqlWithUnusedParamTest() {
 		repository.saveAll(customers);
-		final Customer retrieved = repository.findOneByIdInCollectionAqlWithUnusedParam(john.getId().split("/")[0],
-			john.getId(), john.getId());
-		assertEquals(john, retrieved);
+		assertThrows(ArangoDBException.class,
+				() -> repository.findOneByIdInCollectionAqlWithUnusedParam(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
-	@Test(expected = ArangoDBException.class)
+	@Test
 	public void findOneByIdInNamedCollectionAqlWithUnusedParamTest() {
 		repository.saveAll(customers);
-		final Customer retrieved = repository.findOneByIdInNamedCollectionAqlWithUnusedParam(john.getId().split("/")[0],
-			john.getId(), john.getId());
-		assertEquals(john, retrieved);
+		assertThrows(ArangoDBException.class,
+				() -> repository.findOneByIdInNamedCollectionAqlWithUnusedParam(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
-	@Test(expected = ArangoDBException.class)
+	@Test
 	public void findOneByIdInIncorrectNamedCollectionAqlTest() {
 		repository.saveAll(customers);
-		final Customer retrieved = repository.findOneByIdInIncorrectNamedCollectionAql(john.getId().split("/")[0],
-			john.getId(), john.getId());
-		assertEquals(john, retrieved);
+		assertThrows(ArangoDBException.class,
+				() -> repository.findOneByIdInIncorrectNamedCollectionAql(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
-	@Test(expected = ArangoDBException.class)
+	@Test
 	public void findOneByIdInNamedCollectionAqlRejectedTest() {
 		repository.saveAll(customers);
-		final Customer retrieved = repository.findOneByIdInNamedCollectionAqlRejected(john.getId().split("/")[0],
-			john.getId());
-		assertEquals(john, retrieved);
+		assertThrows(ArangoDBException.class,
+				() -> repository.findOneByIdInNamedCollectionAqlRejected(john.getId().split("/")[0], john.getId()));
 	}
 
 	@Test
@@ -177,7 +172,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("Matt", "Smith", 34));
 		repository.saveAll(toBeRetrieved);
 		final List<Customer> retrieved = repository.findManyBySurname("Smith");
-		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+		assertThat(equals(retrieved, toBeRetrieved, cmp, eq, false), equalTo(true));
 
 	}
 
@@ -189,32 +184,32 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(new Customer("Matt", "Smith", 34));
 		repository.saveAll(toBeRetrieved);
 		final List<Customer> retrieved = repository.importedQuery("Smith");
-		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+		assertThat(equals(retrieved, toBeRetrieved, cmp, eq, false), equalTo(true));
 
 	}
 
 	@Test
 	public void queryCount() {
-		assertEquals(repository.queryCount(Customer.class), 0L);
+		assertThat(repository.queryCount(Customer.class), equalTo(0L));
 	}
 
 	@Test
 	public void queryDate() {
-		assertEquals(repository.queryDate(), Instant.ofEpochMilli(1474988621));
+		assertThat(repository.queryDate(), equalTo(Instant.ofEpochMilli(1474988621)));
 	}
 
 	@Test
 	public void findOneByIdNamedQueryTest() {
 		repository.saveAll(customers);
 		final Customer retrieved = repository.findOneByIdNamedQuery(john.getId());
-		assertEquals(john, retrieved);
+		assertThat(retrieved, equalTo(john));
 	}
 
 	@Test
 	public void findOneByIdWithStaticProjectionTest() {
 		repository.saveAll(customers);
 		final CustomerNameProjection retrieved = repository.findOneByIdWithStaticProjection(john.getId());
-		assertEquals(retrieved.getName(), john.getName());
+		assertThat(retrieved.getName(), equalTo(john.getName()));
 	}
 
 	@Test
@@ -222,7 +217,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final List<CustomerNameProjection> retrieved = repository.findManyLegalAgeWithStaticProjection();
 		for (final CustomerNameProjection proj : retrieved) {
-			assertThat(proj.getName(), isOneOf(john.getName(), bob.getName()));
+			assertThat(proj.getName(), oneOf(john.getName(), bob.getName()));
 		}
 	}
 
@@ -231,7 +226,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final CustomerNameProjection retrieved = repository.findOneByIdWithDynamicProjection(john.getId(),
 			CustomerNameProjection.class);
-		assertEquals(retrieved.getName(), john.getName());
+		assertThat(retrieved.getName(), equalTo(john.getName()));
 	}
 
 	@Test
@@ -240,7 +235,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		final List<CustomerNameProjection> retrieved = repository
 				.findManyLegalAgeWithDynamicProjection(CustomerNameProjection.class);
 		for (final CustomerNameProjection proj : retrieved) {
-			assertThat(proj.getName(), isOneOf(john.getName(), bob.getName()));
+			assertThat(proj.getName(), oneOf(john.getName(), bob.getName()));
 		}
 	}
 
