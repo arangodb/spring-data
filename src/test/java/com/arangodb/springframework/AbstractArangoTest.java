@@ -20,19 +20,19 @@
 
 package com.arangodb.springframework;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.arangodb.springframework.core.ArangoOperations;
 
 /**
  * @author Mark Vollmary
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { ArangoTestConfiguration.class })
 public abstract class AbstractArangoTest {
 
@@ -47,7 +47,7 @@ public abstract class AbstractArangoTest {
 		this.collections = collections;
 	}
 
-	@Before
+	@BeforeEach
 	public void before() {
 		for (final Class<?> collection : collections) {
 			template.collection(collection).truncate();
@@ -55,7 +55,7 @@ public abstract class AbstractArangoTest {
 		AbstractArangoTest.staticTemplate = template;
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void afterClass() {
 		staticTemplate.dropDatabase();
 	}

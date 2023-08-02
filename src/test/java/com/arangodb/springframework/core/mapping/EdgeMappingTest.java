@@ -20,11 +20,11 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.annotation.From;

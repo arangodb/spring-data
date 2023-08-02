@@ -20,15 +20,15 @@
 
 package com.arangodb.springframework.core.mapping.event;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isIn;
-import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.arangodb.springframework.AbstractArangoTest;
@@ -51,7 +51,7 @@ public class SaveEventTest extends AbstractArangoTest {
 		super(Customer.class);
 	}
 
-	@Before
+	@BeforeEach
 	public void createMockCustomers() {
 		john = new Customer("John", "Smith", 20);
 		bob = new Customer("Bob", "Thompson", 40);
@@ -60,7 +60,7 @@ public class SaveEventTest extends AbstractArangoTest {
 		customers.add(bob);
 	}
 
-	@Before
+	@BeforeEach
 	public void clearEvents() {
 		listener.beforeSaveEvents.clear();
 		listener.afterSaveEvents.clear();

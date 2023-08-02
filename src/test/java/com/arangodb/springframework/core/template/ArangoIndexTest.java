@@ -36,7 +36,8 @@ import com.arangodb.springframework.annotation.PersistentIndexes;
 import com.arangodb.springframework.annotation.TtlIndex;
 import com.arangodb.springframework.annotation.TtlIndexed;
 import com.arangodb.springframework.core.geo.GeoJsonPoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mapping.MappingException;
 
 import java.util.Collection;
@@ -44,7 +45,6 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.fail;
 
 /**
  * @author Mark Vollmary
@@ -459,12 +459,9 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
 	@Test
 	public void multipleTtlIndexedShouldThrow() {
-		try {
-			template.collection(MultipleTtlIndexedTestEntity.class).getIndexes();
-			fail("did not throw");
-		} catch (MappingException e) {
-			assertThat(e.getMessage(), containsString("Found multiple ttl indexed properties!"));
-		}
+		assertThat(Assertions.assertThrows(MappingException.class,
+				() -> template.collection(MultipleTtlIndexedTestEntity.class).getIndexes()).getMessage(),
+				containsString("Found multiple ttl indexed properties!"));
 	}
 
 	@TtlIndex(field = "a",expireAfter = 3600)

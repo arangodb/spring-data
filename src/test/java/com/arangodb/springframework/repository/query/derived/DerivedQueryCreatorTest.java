@@ -1,7 +1,8 @@
 package com.arangodb.springframework.repository.query.derived;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.equalTo;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,8 +13,9 @@ import java.util.Locale;
 import java.util.Set;
 
 import com.arangodb.springframework.testdata.*;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +47,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(new Customer("Bill", "", 0));
 		repository.save(new Customer("Alfred", "", 0));
 		final Set<Customer> retrieved = repository.findDistinctByNameAfter("Bill");
-		assertTrue(equals(customers, retrieved, cmp, eq, false));
+		assertThat(equals(customers, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -58,7 +60,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(new Customer("C", "", 0));
 		final List<Customer> retrieved = repository.findByNameNotIgnoreCaseAndAgeLessThanIgnoreCaseOrderByNameDesc("c",
 			18);
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, true), equalTo(true));
 	}
 
 	@Test
@@ -91,7 +93,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Iterable<Customer> retrieved = repository
 				.findTop3ByAgeInAndStringArrayIgnoreCaseOrNameNotInAndIntegerListIgnoreCaseOrderByAgeAscNameDescAllIgnoreCase(
 					ages, new String[] { "B", "cF", "AAa" }, names, integerList);
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, true), equalTo(true));
 	}
 
 	@Test
@@ -115,7 +117,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Customer[] retrieved = repository
 				.findDistinctByAgeGreaterThanEqualOrStringArrayAndNameBeforeOrIntegerListOrderByNameAscAgeAscAllIgnoreCase(
 					18, new String[] { "B", "cF", "AAa" }, "dThB", integerList);
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, true), equalTo(true));
 	}
 
 	@Test
@@ -137,7 +139,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Collection<Customer> retrieved = repository
 				.findTop2DistinctByStringArrayContainingIgnoreCaseOrIntegerListNotNullIgnoreCaseOrderByNameAsc(
 					"string");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, true), equalTo(true));
 	}
 
 	@Test
@@ -151,7 +153,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(customer1);
 		repository.save(customer2);
 		final Collection<Customer> retrieved = repository.findByStringArrayNotContainingIgnoreCase("Hello");
-		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+		assertThat(equals(retrieved, toBeRetrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -168,7 +170,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(c1);
 		toBeRetrieved.add(c3);
 		final Collection<Customer> retrieved = repository.findByNameContaining("abc");
-		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+		assertThat(equals(retrieved, toBeRetrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -186,7 +188,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(c2);
 		toBeRetrieved.add(c3);
 		final Collection<Customer> retrieved = repository.findByNameContainingIgnoreCase("abc");
-		assertTrue(equals(retrieved, toBeRetrieved, cmp, eq, false));
+		assertThat(equals(retrieved, toBeRetrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -197,7 +199,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(new Customer("%_\\name", "%surname", 20));
 		repository.save(new Customer("%_\\name", "surname%", 18));
 		final Customer retrieved = repository.findByNameStartsWithAndSurnameEndsWithAndAgeBetween("%_\\", "%", 19, 20);
-		assertEquals(customer1, retrieved);
+		assertThat(retrieved, equalTo(customer1));
 	}
 
 	@Test
@@ -211,7 +213,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(customer);
 		repository.save(new Customer("", "", 18));
 		final int retrieved = repository.countByAgeGreaterThanOrStringArrayNullAndIntegerList(18, integerList);
-		assertEquals(2, retrieved);
+		assertThat(retrieved, equalTo(2));
 	}
 
 	@Test
@@ -223,7 +225,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(new Customer("aqwertyb\\c_", "", 20, false));
 		repository.save(new Customer("aqwertyb^c_", "", 21, false));
 		final int retrieved = repository.countDistinctByAliveTrueOrNameLikeOrAgeLessThanEqual("a%b_\\\\c\\_", 18);
-		assertEquals(3, retrieved);
+		assertThat(retrieved, equalTo(3));
 	}
 
 	@Test
@@ -236,7 +238,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		repository.removeByNameNotLikeAndSurnameRegexOrAliveFalse("%a_b%", "^a[bc]+");
 		final Iterable<Customer> retrieved = repository.findAll();
-		assertTrue(equals(customers, retrieved, cmp, eq, false));
+		assertThat(equals(customers, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -246,7 +248,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final Customer[] retrieved = repository.findByLocationNear(new Point(51, 46));
 		final Customer[] check = { bob, john };
-		assertTrue(equals(check, retrieved, cmp, eq, true));
+		assertThat(equals(check, retrieved, cmp, eq, true), equalTo(true));
 	}
 
 	@Test
@@ -256,7 +258,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		final Customer[] retrieved = repository.findByPositionNear(new Point(51, 46));
 		final Customer[] check = { bob, john };
-		assertTrue(equals(check, retrieved, cmp, eq, true));
+		assertThat(equals(check, retrieved, cmp, eq, true), equalTo(true));
 	}
 
 	@Test
@@ -282,7 +284,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
 		final List<Customer> retrieved = repository.findByLocationWithinAndName(new Point(0.11, 0.11),
 				Range.of(lowerBound, upperBound), "");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -308,7 +310,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Bound<Double> upperBound = Bound.inclusive(convertAngleToDistance(50));
 		final List<Customer> retrieved = repository.findByPositionWithinAndName(new Point(0.11, 0.11),
 				Range.of(lowerBound, upperBound), "");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -329,7 +331,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Circle circle = new Circle(new Point(0, 20), distance);
 		final Iterable<Customer> retrieved = repository.findByLocationWithinOrNameAndLocationNear(circle, "+++",
 			new Point(0, 0));
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -350,7 +352,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Circle circle = new Circle(new Point(0, 20), distance);
 		final Iterable<Customer> retrieved = repository.findByPositionWithinOrNameAndPositionNear(circle, "+++",
 				new Point(0, 0));
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -386,7 +388,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 
 		toBeRetrieved.add(customer3);
 		final List<Customer> retrieved = repository.findByLocationWithin(new Box(new Point(9, -1), new Point(11, 1)));
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -422,7 +424,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 
 		toBeRetrieved.add(customer3);
 		final List<Customer> retrieved = repository.findByPositionWithin(new Box(new Point(9, -1), new Point(11, 1)));
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -449,7 +451,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Bound<Integer> upperBound = Bound.inclusive((int) convertAngleToDistance(15));
 		final Collection<Customer> retrieved = repository.findByLocationWithinAndLocationWithinOrName(new Point(0, 20),
 			distance, new Ring<>(new Point(0, 0), Range.of(lowerBound, upperBound)), "+++");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -476,7 +478,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Bound<Integer> upperBound = Bound.inclusive((int) convertAngleToDistance(15));
 		final Collection<Customer> retrieved = repository.findByPositionWithinAndPositionWithinOrName(new Point(0, 20),
 				distance, new Ring<>(new Point(0, 0), Range.of(lowerBound, upperBound)), "+++");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -518,7 +520,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				.findByNameOrLocationWithinOrNameAndSurnameOrNameAndLocationNearAndSurnameAndLocationWithin("John",
 					new Point(0, 0), distance, "Peter", "Pen", "Jack", new Point(47, 63), "Sparrow", new Point(10, 60),
 					distanceRange);
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -560,7 +562,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				.findByNameOrPositionWithinOrNameAndSurnameOrNameAndPositionNearAndSurnameAndPositionWithin("John",
 						new Point(0, 0), distance, "Peter", "Pen", "Jack", new Point(47, 63), "Sparrow", new Point(10, 60),
 						distanceRange);
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -582,7 +584,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(customer2);
 		template.insert(new IncompleteCustomer("Incomplete", stringList2));
 		final Customer[] retrieved = repository.findByNestedCustomerAliveExistsAndStringListAllIgnoreCase(stringList2);
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -594,7 +596,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(toBeRetrieved);
 		repository.save(new Customer("Stark", "0", 0));
 		final Customer[] retrieved = repository.findByNameOrderBySurnameAsc(Sort.by("age"), "Tony");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, true), equalTo(true));
 	}
 
 	@Test
@@ -610,10 +612,10 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Pageable pageable = PageRequest.of(1, 2, Sort.by("age"));
 		final Page<Customer> retrieved = repository.readByNameAndSurname(pageable, "",
 			new AqlQueryOptions().fullCount(false), "");
-		assertEquals(5, retrieved.getTotalElements());
-		assertEquals(3, retrieved.getTotalPages());
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, true));
+		assertThat(retrieved.getTotalElements(), equalTo((long) 5));
+		assertThat(retrieved.getTotalPages(), equalTo(3));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, true), equalTo(true));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, true), equalTo(true));
 	}
 
 	@Test
@@ -629,8 +631,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final double expectedDistanceInMeters = getDistanceBetweenPoints(new Point(5, 7), new Point(1, 2));
 		final double expectedNormalizedDistance = expectedDistanceInMeters / 1000.0
 				/ Metrics.KILOMETERS.getMultiplier();
-		assertEquals(customer1, retrieved.getContent());
-		assertEquals(expectedNormalizedDistance, retrieved.getDistance().getNormalizedValue(), 0.000000001);
+		assertThat(retrieved.getContent(), equalTo(customer1));
+		assertThat(retrieved.getDistance().getNormalizedValue(), closeTo(expectedNormalizedDistance, 0.000000001));
 	}
 
 	@Test
@@ -646,8 +648,8 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final double expectedDistanceInMeters = getDistanceBetweenPoints(new Point(5, 7), new Point(1, 2));
 		final double expectedNormalizedDistance = expectedDistanceInMeters / 1000.0
 				/ Metrics.KILOMETERS.getMultiplier();
-		assertEquals(customer1, retrieved.getContent());
-		assertEquals(expectedNormalizedDistance, retrieved.getDistance().getNormalizedValue(), 0.000000001);
+		assertThat(retrieved.getContent(), equalTo(customer1));
+		assertThat(retrieved.getDistance().getNormalizedValue(), closeTo(expectedNormalizedDistance, 0.000000001));
 	}
 
 	@Test
@@ -675,7 +677,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(21, 43)) / 1000, Metrics.KILOMETERS)));
 		expectedGeoResults.add(new GeoResult<>(customer2,
 				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(43, 21)) / 1000, Metrics.KILOMETERS)));
-		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+		assertThat(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false), equalTo(true));
 	}
 
 	@Test
@@ -703,7 +705,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(21, 43)) / 1000, Metrics.KILOMETERS)));
 		expectedGeoResults.add(new GeoResult<>(customer2,
 				new Distance(getDistanceBetweenPoints(new Point(1, 0), new Point(43, 21)) / 1000, Metrics.KILOMETERS)));
-		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+		assertThat(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false), equalTo(true));
 	}
 
 	@Test
@@ -726,9 +728,9 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 4)) / 1000, Metrics.KILOMETERS)));
 		expectedGeoResults.add(new GeoResult<>(customer4,
 				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 6)) / 1000, Metrics.KILOMETERS)));
-		assertEquals(4, retrieved.getTotalElements());
-		assertEquals(2, retrieved.getTotalPages());
-		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, true));
+		assertThat(retrieved.getTotalElements(), equalTo((long) 4));
+		assertThat(retrieved.getTotalPages(), equalTo(2));
+		assertThat(equals(expectedGeoResults, retrieved, geoCmp, geoEq, true), equalTo(true));
 	}
 
 	@Test
@@ -751,9 +753,9 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 4)) / 1000, Metrics.KILOMETERS)));
 		expectedGeoResults.add(new GeoResult<>(customer4,
 				new Distance(getDistanceBetweenPoints(new Point(0, 0), new Point(0, 6)) / 1000, Metrics.KILOMETERS)));
-		assertEquals(4, retrieved.getTotalElements());
-		assertEquals(2, retrieved.getTotalPages());
-		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, true));
+		assertThat(retrieved.getTotalElements(), equalTo((long) 4));
+		assertThat(retrieved.getTotalPages(), equalTo(2));
+		assertThat(equals(expectedGeoResults, retrieved, geoCmp, geoEq, true), equalTo(true));
 	}
 
 	@Test
@@ -790,7 +792,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				new Distance(getDistanceBetweenPoints(location, new Point(0, 5)) / 1000, Metrics.KILOMETERS)));
 		expectedGeoResults.add(new GeoResult<>(customer3,
 				new Distance(getDistanceBetweenPoints(location, new Point(25, 0)) / 1000, Metrics.KILOMETERS)));
-		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+		assertThat(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false), equalTo(true));
 	}
 
 	@Test
@@ -827,14 +829,14 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				new Distance(getDistanceBetweenPoints(location, new Point(0, 5)) / 1000, Metrics.KILOMETERS)));
 		expectedGeoResults.add(new GeoResult<>(customer3,
 				new Distance(getDistanceBetweenPoints(location, new Point(25, 0)) / 1000, Metrics.KILOMETERS)));
-		assertTrue(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false));
+		assertThat(equals(expectedGeoResults, retrieved, geoCmp, geoEq, false), equalTo(true));
 	}
 
 	@Test
 	public void existsTest() {
 		repository.save(john);
-		assertTrue(repository.existsByName("John"));
-		assertTrue(!repository.existsByName("Bob"));
+		assertThat(repository.existsByName("John"), equalTo(true));
+		assertThat(!repository.existsByName("Bob"), equalTo(true));
 	}
 
 	@Test
@@ -854,7 +856,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final Polygon polygon = new Polygon(new Point(0, 0), new Point(30, 60), new Point(50, 0), new Point(30, 10),
 				new Point(30, 20));
 		final List<Customer> retrieved = repository.findByLocationWithin(polygon);
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -880,7 +882,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 				new Point(0, 0)
 		);
 		final List<Customer> retrieved = repository.findByPositionWithin(polygon);
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -891,7 +893,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(toBeRetrieved);
 		repository.save(bob);
 		final List<Customer> retrieved = repository.findByNestedCustomerName("Bob");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -902,7 +904,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(toBeRetrieved);
 		repository.save(bob);
 		final List<Customer> retrieved = repository.findByNicknameValue("Johnny");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -951,7 +953,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(toBeRetrieved);
 		final List<Customer> retrieved = repository
 				.findByNestedCustomersNestedCustomerShoppingCartProductsNameLike("%1%");
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -970,12 +972,11 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		repository.save(customer1);
 		final ShoppingCart cartRecoverty = shoppingCartRepository.findById(cart1.getId()).get();
 		final int index = cartRecoverty.getProductsListLazy().indexOf(product2);
-		final boolean result = (index >= 0);
-		assertTrue(result);
+		assertThat(index, Matchers.greaterThanOrEqualTo(0));
 	}
 
 	@Test
-	@Ignore // https://github.com/arangodb/arangodb/issues/5303
+	@Disabled("https://github.com/arangodb/arangodb/issues/5303")
 	public void referenceGeospatialTest() {
 		final List<Customer> toBeRetrieved = new LinkedList<>();
 		final Customer customer1 = new Customer("", "", 0);
@@ -1022,7 +1023,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		final List<Customer> retrieved = repository
 				.findByNestedCustomersNestedCustomerShoppingCartProductsLocationWithin(new Point(1, 2),
 					convertAngleToDistance(25));
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -1052,7 +1053,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(john);
 		toBeRetrieved.add(matt);
 		retrieved = repository.getByOwnsName(phone.getName());
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -1082,7 +1083,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(john);
 		toBeRetrieved.add(matt);
 		retrieved = repository.getByOwnsNameAndOwns2Name(phone.getName(), phone.getName());
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	@Test
@@ -1122,7 +1123,7 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 		toBeRetrieved.add(adam);
 		toBeRetrieved.add(matt);
 		retrieved = repository.getByOwnsContainsName(wood.getName());
-		assertTrue(equals(toBeRetrieved, retrieved, cmp, eq, false));
+		assertThat(equals(toBeRetrieved, retrieved, cmp, eq, false), equalTo(true));
 	}
 
 	private double convertAngleToDistance(final int angle) {

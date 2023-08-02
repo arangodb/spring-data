@@ -22,7 +22,7 @@ package com.arangodb.springframework.debug.repository;
 
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.debug.repository.entity.UUIDEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;

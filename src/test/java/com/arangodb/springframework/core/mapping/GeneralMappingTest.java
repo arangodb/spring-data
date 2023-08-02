@@ -43,7 +43,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.joda.time.DateTimeZone;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.*;
@@ -56,9 +56,8 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Mark Vollmary
@@ -774,7 +773,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
         Map<String, Object> nestedResult = (Map<String, Object>) find.get().value.get("nested");
         assertThat(nestedResult.size(), is(1));
         assertThat(((List<String>) nestedResult.get("key1")).size(), is(2));
-        assertEquals(Arrays.asList(nestedArray), nestedResult.get("key1"));
+        assertThat(nestedResult.get("key1"), is(Arrays.asList(nestedArray)));
     }
 
     @Test
@@ -792,6 +791,6 @@ public class GeneralMappingTest extends AbstractArangoTest {
         Map<String, Object> nestedResult = (Map<String, Object>) find.get().value.get("nested");
         assertThat(nestedResult.size(), is(1));
         assertThat(((List<String>) nestedResult.get("key1")).size(), is(2));
-        assertEquals(nestedCollection, nestedResult.get("key1"));
+        assertThat(nestedResult.get("key1"), is(nestedCollection));
     }
 }

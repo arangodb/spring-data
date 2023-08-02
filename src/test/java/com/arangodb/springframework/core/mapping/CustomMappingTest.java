@@ -20,15 +20,15 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
 
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.converter.Converter;
 
 import com.arangodb.entity.BaseDocument;
