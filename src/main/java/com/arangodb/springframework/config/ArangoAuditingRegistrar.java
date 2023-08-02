@@ -83,6 +83,7 @@ public class ArangoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupp
 				.genericBeanDefinition(ArangoMappingContextLookup.class);
 		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 
+		builder.setFactoryMethod("from");
 		builder.addConstructorArgValue(definition.getBeanDefinition());
 		return configureDefaultAuditHandlerAttributes(configuration, builder);
 	}
