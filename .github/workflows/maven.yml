@@ -43,7 +43,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: 11
+          java-version: 17
           distribution: 'adopt'
           cache: maven
       - name: Start Database
@@ -71,9 +71,8 @@ jobs:
           - single
           - cluster
         spring-boot-version:
-          - 2.5.12
-          - 2.6.10
-          - 2.7.8
+          - 3.0.9
+          - 3.1.2
 
     steps:
       - uses: actions/checkout@v2
@@ -82,7 +81,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: 8
+          java-version: 17
           distribution: 'adopt'
           cache: maven
       - name: Start Database
