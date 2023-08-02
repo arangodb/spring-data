@@ -174,7 +174,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             return readCollection(typeToUse, source);
         }
 
-		if (TypeInformation.OBJECT.equals(typeToUse)) {
+		if (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class)) {
 			return readCollection(TypeInformation.COLLECTION, source);
         }
 
