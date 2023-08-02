@@ -31,7 +31,6 @@ import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
@@ -213,7 +212,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 
 	protected static TypeInformation<?> getNonNullComponentType(final TypeInformation<?> type) {
 		final TypeInformation<?> compType = type.getComponentType();
-		return compType != null ? compType : ClassTypeInformation.OBJECT;
+		return compType != null ? compType : TypeInformation.OBJECT;
 	}
 
 }

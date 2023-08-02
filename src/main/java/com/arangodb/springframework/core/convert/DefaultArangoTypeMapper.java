@@ -37,7 +37,6 @@ import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.mapping.Alias;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
@@ -117,13 +116,13 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 			return basicType;
 		}
 
-		final ClassTypeInformation<?> targetType = ClassTypeInformation.from(documentsTargetType.getType());
+		final TypeInformation<?> targetType = TypeInformation.of(documentsTargetType.getType());
 
-		return (TypeInformation<? extends T>) basicType.specialize(targetType);
+		return basicType.specialize(targetType);
 	}
 	
 	public void writeType(final Class<?> type, final ObjectNode node) {
-		writeType(ClassTypeInformation.from(type), node);
+		writeType(TypeInformation.of(type), node);
 	}
 	
 	public void writeType(final TypeInformation<?> info, final ObjectNode node) {

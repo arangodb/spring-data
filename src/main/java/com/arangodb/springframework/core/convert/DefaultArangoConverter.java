@@ -53,9 +53,7 @@ import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
 import org.springframework.data.mapping.model.PropertyValueProvider;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -120,7 +118,7 @@ public class DefaultArangoConverter implements ArangoConverter {
     @SuppressWarnings("unchecked")
     @Override
     public <R> R read(final Class<R> type, final JsonNode source) {
-        return (R) readInternal(ClassTypeInformation.from(type), source);
+        return (R) readInternal(TypeInformation.of(type), source);
     }
 
     private Object readInternal(final TypeInformation<?> type, final JsonNode source) {
@@ -164,8 +162,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             return readMap(typeToUse, source);
         }
 
-        if (!source.isArray() && ClassTypeInformation.OBJECT.equals(typeToUse)) {
-            return readMap(ClassTypeInformation.MAP, source);
+		if (!source.isArray() && TypeInformation.OBJECT.equals(typeToUse)) {
+			return readMap(TypeInformation.MAP, source);
         }
 
         if (typeToUse.getType().isArray()) {
@@ -176,8 +174,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             return readCollection(typeToUse, source);
         }
 
-        if (ClassTypeInformation.OBJECT.equals(typeToUse)) {
-            return readCollection(ClassTypeInformation.COLLECTION, source);
+		if (TypeInformation.OBJECT.equals(typeToUse)) {
+			return readCollection(TypeInformation.COLLECTION, source);
         }
 
         ArangoPersistentEntity<?> entity = context.getRequiredPersistentEntity(rawTypeToUse);
@@ -348,7 +346,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         } else if (property.isCollectionLike()) {
             Collection<String> ids;
             try {
-                ids = (Collection<String>) readCollection(ClassTypeInformation.COLLECTION, source);
+                ids = (Collection<String>) readCollection(TypeInformation.COLLECTION, source);
             } catch (ClassCastException e) {
                 throw new MappingException("All references must be of type String!", e);
             }
@@ -452,7 +450,7 @@ public class DefaultArangoConverter implements ArangoConverter {
                 Enum<?> e = Enum.valueOf((Class<? extends Enum>) type, value);
                 return e;
             } else if (byte[].class.isAssignableFrom(type)) {
-                return Base64Utils.decodeFromString(value);
+				return Base64.getDecoder().decode(source.getAsString());
             } else if (java.sql.Date.class.isAssignableFrom(type)) {
                 return new java.sql.Date(parseDate(value).getTime());
             } else if (Timestamp.class.isAssignableFrom(type)) {
@@ -487,7 +485,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     private BaseDocument readBaseDocument(final Class<?> type, final JsonNode source) {
         @SuppressWarnings("unchecked")
-        Map<String, Object> properties = (Map<String, Object>) readMap(ClassTypeInformation.MAP, source);
+        Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
 
         if (BaseDocument.class.equals(type)) {
             return new BaseDocument(properties);
@@ -499,7 +497,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     private BaseEdgeDocument readBaseEdgeDocument(final Class<?> type, final JsonNode source) {
         @SuppressWarnings("unchecked")
-        Map<String, Object> properties = (Map<String, Object>) readMap(ClassTypeInformation.MAP, source);
+        Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
 
         if (BaseEdgeDocument.class.equals(type)) {
             return new BaseEdgeDocument(properties);
@@ -511,7 +509,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     @SuppressWarnings("unchecked")
     private DBDocumentEntity readDBDocumentEntity(final JsonNode source) {
-        return new DBDocumentEntity((Map<String, Object>) readMap(ClassTypeInformation.MAP, source));
+        return new DBDocumentEntity((Map<String, Object>) readMap(TypeInformation.MAP, source));
     }
 
     private ParameterValueProvider<ArangoPersistentProperty> getParameterProvider(
@@ -547,7 +545,7 @@ public class DefaultArangoConverter implements ArangoConverter {
     @Override
     public JsonNode write(final Object source) {
         Object entity = source instanceof LazyLoadingProxy ? ((LazyLoadingProxy) source).getEntity() : source;
-        return createInternal(entity, ClassTypeInformation.OBJECT);
+        return createInternal(entity, TypeInformation.OBJECT);
     }
 
     private JsonNode createInternal(final Object source, final TypeInformation<?> definedType) {
@@ -556,7 +554,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         }
 
         Class<?> rawType = source.getClass();
-        TypeInformation<?> type = ClassTypeInformation.from(rawType);
+        TypeInformation<?> type = TypeInformation.of(rawType);
 
         if (conversions.isSimpleType(rawType)) {
             Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(rawType);
@@ -629,7 +627,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             return;
         }
 
-        TypeInformation<?> sourceType = ClassTypeInformation.from(source.getClass());
+        TypeInformation<?> sourceType = TypeInformation.of(source.getClass());
         String fieldName = property.getFieldName();
 
         if (property.getRef().isPresent()) {
@@ -677,7 +675,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     private JsonNode createArray(final Object source, final TypeInformation<?> definedType) {
         if (byte[].class.equals(source.getClass())) {
-            return JsonNodeFactory.instance.textNode(Base64Utils.encodeToString((byte[]) source));
+            return JsonNodeFactory.instance.textNode(Base64.getEncoder().encodeToString((byte[]) source));
         }
 
         ArrayNode node = JsonNodeFactory.instance.arrayNode();
@@ -719,7 +717,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         } else if (source instanceof JsonNode) {
             return (JsonNode) source;
         } else if (source instanceof DBDocumentEntity) {
-            return createMap((Map<?, ?>) source, ClassTypeInformation.MAP);
+            return createMap((Map<?, ?>) source, TypeInformation.MAP);
         } else if (source instanceof Boolean) {
             return JsonNodeFactory.instance.booleanNode((Boolean) source);
         } else if (source instanceof Byte) {
@@ -743,7 +741,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         } else if (source instanceof Enum) {
             return JsonNodeFactory.instance.textNode(((Enum<?>) source).name());
         } else if (ClassUtils.isPrimitiveArray(source.getClass())) {
-            return createArray(source, ClassTypeInformation.OBJECT);
+            return createArray(source, TypeInformation.OBJECT);
         } else if (source instanceof Date) {
             return JsonNodeFactory.instance.textNode(JavaTimeUtil.format((Date) source));
         } else if (source instanceof BigInteger) {
@@ -886,12 +884,12 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     private TypeInformation<?> getNonNullComponentType(final TypeInformation<?> type) {
         TypeInformation<?> compType = type.getComponentType();
-        return compType != null ? compType : ClassTypeInformation.OBJECT;
+        return compType != null ? compType : TypeInformation.OBJECT;
     }
 
     private TypeInformation<?> getNonNullMapValueType(final TypeInformation<?> type) {
         TypeInformation<?> valueType = type.getMapValueType();
-        return valueType != null ? valueType : ClassTypeInformation.OBJECT;
+        return valueType != null ? valueType : TypeInformation.OBJECT;
     }
 
     private Date parseDate(final String source) {

@@ -32,7 +32,6 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.StringUtils;
 
@@ -57,7 +56,7 @@ public class ArangoQueryMethod extends QueryMethod {
 	public ArangoQueryMethod(final Method method, final RepositoryMetadata metadata, final ProjectionFactory factory) {
 		super(method, metadata, factory);
 		this.method = method;
-		this.returnType = ClassTypeInformation.from(metadata.getRepositoryInterface()).getReturnType(method);
+		this.returnType = TypeInformation.of(metadata.getRepositoryInterface()).getReturnType(method);
 	}
 
 	@Override

@@ -36,7 +36,6 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
@@ -150,7 +149,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 		public DefaultArangoRepositoryMetadata(final Class<?> repositoryInterface) {
 			super(repositoryInterface);
-			typeInformation = ClassTypeInformation.from(repositoryInterface);
+			typeInformation = TypeInformation.of(repositoryInterface);
 		}
 
 		@Override
@@ -170,7 +169,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 		public AnnotationArangoRepositoryMetadata(final Class<?> repositoryInterface) {
 			super(repositoryInterface);
-			typeInformation = ClassTypeInformation.from(repositoryInterface);
+			typeInformation = TypeInformation.of(repositoryInterface);
 		}
 
 		@Override
