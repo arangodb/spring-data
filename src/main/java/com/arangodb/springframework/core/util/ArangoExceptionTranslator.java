@@ -59,6 +59,8 @@ public class ArangoExceptionTranslator implements PersistenceExceptionTranslator
 				case ArangoErrors.ERROR_HTTP_CONFLICT:
 					if (ERROR_ARANGO_CONFLICT.equals(exception.getErrorNum()) && exception.getMessage().contains("_rev")) {
 						return new OptimisticLockingFailureException(exception.getMessage(), exception);
+					} else if (ERROR_ARANGO_CONFLICT.equals(exception.getErrorNum()) && exception.getMessage().contains("write-write conflict")) {
+						return new TransientDataAccessResourceException(exception.getMessage(), exception);
 					} else {
 						return new DataIntegrityViolationException(exception.getMessage(), exception);
 					}
