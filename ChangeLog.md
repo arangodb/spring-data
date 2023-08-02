@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- upgraded dependency Spring 6 and Spring Data 3 (as from Spring Boot 3) including JDK 17 (#250)
+
 ## [3.10.0] - 2023-05-17
 
 - fixed merge AQL options from `@QueryOptions` annotation and `AqlQueryOptions` parameter (#276)
