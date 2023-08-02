@@ -64,6 +64,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.expression.Expression;
@@ -148,10 +149,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			}
 			return db;
 		});
-	}
-
-	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
-		return exceptionTranslator.translateExceptionIfPossible(exception);
 	}
 
 	private ArangoCollection _collection(final String name) {
@@ -297,7 +294,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			}
 			return version;
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 	}
 
@@ -347,7 +344,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			result = _collection(entityClass).deleteDocuments(toJsonNodeCollection(values), options, entityClass);
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		potentiallyEmitAfterDeleteEvent(values, entityClass, result);
@@ -370,7 +367,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), options, entityClass);
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		potentiallyEmitEvent(new AfterDeleteEvent<>(id, entityClass));
@@ -392,7 +389,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			result = _collection(entityClass).updateDocuments(toJsonNodeCollection(values), options);
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFields(values, result);
@@ -417,7 +414,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			result = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id), toJsonNode(value),
 					options);
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFields(value, result);
@@ -440,7 +437,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			result = _collection(entityClass).replaceDocuments(toJsonNodeCollection(values), options);
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFields(values, result);
@@ -464,7 +461,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			result = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id), toJsonNode(value),
 					options);
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFields(value, result);
@@ -485,7 +482,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 					JsonNode.class, options);
 			return Optional.ofNullable(fromJsonNode(entityClass, doc));
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 	}
 
@@ -510,7 +507,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			final MultiDocumentEntity<JsonNode> docs = _collection(entityClass).getDocuments(keys, JsonNode.class);
 			return docs.getDocuments().stream().map(doc -> fromJsonNode(entityClass, doc)).collect(Collectors.toList());
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 	}
 
@@ -524,7 +521,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			result = _collection(entityClass).insertDocuments(toJsonNodeCollection(values), options);
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFields(values, result);
@@ -546,7 +543,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			result = _collection(value.getClass()).insertDocument(toJsonNode(value), options);
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFields(value, result);
@@ -568,7 +565,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			result = _collection(collectionName).insertDocument(toJsonNode(value), options);
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFields(value, result);
@@ -612,7 +609,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			);
 			result = it.hasNext() ? it.next() : null;
 		} catch (final ArangoDBException e) {
-			throw exceptionTranslator.translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFieldsFromObject(value, result);
@@ -640,7 +637,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 					entityClass
 			).asListRemaining();
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 
 		updateDBFieldsFromObjects(values, result);
@@ -720,7 +717,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			return _collection(entityClass).documentExists(determineDocumentKeyFromId(id));
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 	}
 
@@ -730,7 +727,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			db.drop();
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 		databaseCache.remove(db.name());
 		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.name()))
@@ -767,7 +764,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		try {
 			return arango.getUsers();
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 	}
 
