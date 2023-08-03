@@ -49,6 +49,7 @@
 	<properties>
 		<java-module-name>com.arangodb.springframework</java-module-name>
         <jaxb.version>2.3.1</jaxb.version> <!-- fix dependency convergence-->
+		<slf4j>2.0.7</slf4j>
 	</properties>
 
 	<build>
@@ -229,10 +230,6 @@
 			<version>2.12.5</version>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
 
 		<!-- Spring -->
 		<dependency>
@@ -243,18 +240,6 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-beans</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-expression</artifactId>
-		</dependency>
 
 		<!-- Spring Data -->
 		<dependency>
@@ -263,11 +248,6 @@
 		</dependency>
 
 		<!-- Test -->
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest-core</artifactId>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>com.arangodb</groupId>
 			<artifactId>jackson-dataformat-velocypack</artifactId>
@@ -295,11 +275,6 @@
 				<groupId>com.arangodb</groupId>
 				<artifactId>arangodb-java-driver</artifactId>
 				<version>7.1.0</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>${mockito}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
