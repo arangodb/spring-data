@@ -100,19 +100,13 @@ public class ArangoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupp
 		}
 
 		@Override
-		public MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> getObject()
-				throws Exception {
+		public MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> getObject() {
 			return context;
 		}
 
 		@Override
 		public Class<?> getObjectType() {
 			return MappingContext.class;
-		}
-
-		@Override
-		public boolean isSingleton() {
-			return true;
 		}
 
 	}

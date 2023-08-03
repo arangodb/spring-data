@@ -37,6 +37,7 @@ import com.arangodb.springframework.config.ArangoAuditingRegistrar;
  * Annotation to activate auditing in ArangoDB via annotation configuration.
  *
  * @author Mark Vollmary
+ * @see org.springframework.data.auditing.config.AuditingConfiguration
  *
  */
 
@@ -63,7 +64,7 @@ public @interface EnableArangoAuditing {
 	boolean modifyOnCreate() default true;
 
 	/**
-	 * Configures a {@link DateTimeProvider} bean name that allows customizing the {@link org.joda.time.DateTime} to be
+	 * Configures a {@link DateTimeProvider} bean name that allows customizing the timestamp to be
 	 * used for setting creation and modification dates.
 	 */
 	String dateTimeProviderRef() default "";
