@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import com.arangodb.springframework.testdata.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -104,7 +106,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		List<Double> cursorNotMerged = repository.sequenceTo10K(0, new AqlQueryOptions()).asListRemaining();
 		assertThat(cursorNotMerged, hasSize(10_001));
 		assertThat(cursorNotMerged.get(0), nullValue());
-		assertThrows(ArangoDBException.class,
+		assertThrows(InvalidDataAccessApiUsageException.class,
 				()-> repository.sequenceTo10K(0, new AqlQueryOptions().failOnWarning(true)));
 	}
 
@@ -140,28 +142,28 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Test
 	public void findOneByIdInCollectionAqlWithUnusedParamTest() {
 		repository.saveAll(customers);
-		assertThrows(ArangoDBException.class,
+		assertThrows(InvalidDataAccessApiUsageException.class,
 				() -> repository.findOneByIdInCollectionAqlWithUnusedParam(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
 	@Test
 	public void findOneByIdInNamedCollectionAqlWithUnusedParamTest() {
 		repository.saveAll(customers);
-		assertThrows(ArangoDBException.class,
+		assertThrows(InvalidDataAccessResourceUsageException.class,
 				() -> repository.findOneByIdInNamedCollectionAqlWithUnusedParam(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
 	@Test
 	public void findOneByIdInIncorrectNamedCollectionAqlTest() {
 		repository.saveAll(customers);
-		assertThrows(ArangoDBException.class,
+		assertThrows(InvalidDataAccessApiUsageException.class,
 				() -> repository.findOneByIdInIncorrectNamedCollectionAql(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
 	@Test
 	public void findOneByIdInNamedCollectionAqlRejectedTest() {
 		repository.saveAll(customers);
-		assertThrows(ArangoDBException.class,
+		assertThrows(InvalidDataAccessApiUsageException.class,
 				() -> repository.findOneByIdInNamedCollectionAqlRejected(john.getId().split("/")[0], john.getId()));
 	}
 
