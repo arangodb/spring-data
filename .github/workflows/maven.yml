@@ -16,6 +16,7 @@ on:
       - 'docker/**'
       - 'ChangeLog.md'
       - 'README.md'
+      - 'CONTRIBUTING.md'
 
 jobs:
 
