@@ -201,7 +201,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         String id = idNode.isTextual() ? idNode.textValue() : null;
 
         entity.doWithProperties((ArangoPersistentProperty property) -> {
-            if (!entity.isConstructorArgument(property)) {
+            if (!entity.isCreatorArgument(property)) {
                 JsonNode value = getOrMissing(source, property.getFieldName());
                 readProperty(entity, id, accessor, value, property);
             }
@@ -209,7 +209,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
         entity.doWithAssociations((Association<ArangoPersistentProperty> association) -> {
             ArangoPersistentProperty property = association.getInverse();
-            if (!entity.isConstructorArgument(property)) {
+            if (!entity.isCreatorArgument(property)) {
                 JsonNode value = getOrMissing(source, property.getFieldName());
                 readProperty(entity, id, accessor, value, property);
             }
@@ -450,7 +450,7 @@ public class DefaultArangoConverter implements ArangoConverter {
                 Enum<?> e = Enum.valueOf((Class<? extends Enum>) type, value);
                 return e;
             } else if (byte[].class.isAssignableFrom(type)) {
-				return Base64.getDecoder().decode(source.getAsString());
+				return Base64.getDecoder().decode(value);
             } else if (java.sql.Date.class.isAssignableFrom(type)) {
                 return new java.sql.Date(parseDate(value).getTime());
             } else if (Timestamp.class.isAssignableFrom(type)) {
