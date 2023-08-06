@@ -21,8 +21,7 @@
 package com.arangodb.springframework.core.mapping.event;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isIn;
+import static org.hamcrest.Matchers.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,12 +82,12 @@ public class SaveEventTest extends AbstractArangoTest {
 
 		assertThat(listener.beforeSaveEvents.size(), is(3));
 		for (final BeforeSaveEvent<Customer> event : listener.beforeSaveEvents) {
-			assertThat(event.getSource(), isIn(customers));
+			assertThat(event.getSource(), is(in(customers)));
 		}
 
 		assertThat(listener.afterSaveEvents.size(), is(2));
 		for (final AfterSaveEvent<Customer> event : listener.afterSaveEvents) {
-			assertThat(event.getSource(), isIn(customers));
+			assertThat(event.getSource(), is(in(customers)));
 		}
 	}
 
@@ -118,7 +117,7 @@ public class SaveEventTest extends AbstractArangoTest {
 
 		assertThat(listener.beforeSaveEvents.size(), is(2));
 		for (final BeforeSaveEvent<Customer> event : listener.beforeSaveEvents) {
-			assertThat(event.getSource(), isIn(customers));
+			assertThat(event.getSource(), is(in(customers)));
 		}
 
 		assertThat(listener.afterSaveEvents.size(), is(1));
@@ -151,7 +150,7 @@ public class SaveEventTest extends AbstractArangoTest {
 
 		assertThat(listener.beforeSaveEvents.size(), is(2));
 		for (final BeforeSaveEvent<Customer> event : listener.beforeSaveEvents) {
-			assertThat(event.getSource(), isIn(customers));
+			assertThat(event.getSource(), is(in(customers)));
 		}
 
 		assertThat(listener.afterSaveEvents.size(), is(1));

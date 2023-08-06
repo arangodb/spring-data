@@ -24,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.oneOf;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.Collection;
@@ -66,7 +66,7 @@ public class ToMappingTest extends AbstractArangoTest {
 		for (final BasicEdgeLazyTestEntity e : document.entities) {
 			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
 			assertThat(e.getId(), is(notNullValue()));
-			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getId(), is(oneOf(edge0.getId(), edge1.getId())));
 			assertThat(e.getTo(), is(notNullValue()));
 			assertThat(e.getTo().getId(), is(notNullValue()));
 			assertThat(e.getTo().getId(), is(e0.getId()));
@@ -95,7 +95,7 @@ public class ToMappingTest extends AbstractArangoTest {
 		for (final BasicEdgeLazyTestEntity e : document.entities) {
 			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
 			assertThat(e.getId(), is(notNullValue()));
-			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getId(), is(oneOf(edge0.getId(), edge1.getId())));
 			assertThat(e.getTo(), is(notNullValue()));
 			assertThat(e.getTo().getId(), is(notNullValue()));
 			assertThat(e.getTo().getId(), is(e0.getId()));
@@ -124,7 +124,7 @@ public class ToMappingTest extends AbstractArangoTest {
 		for (final BasicEdgeLazyTestEntity e : document.entities) {
 			assertThat(e, instanceOf(BasicEdgeLazyTestEntity.class));
 			assertThat(e.getId(), is(notNullValue()));
-			assertThat(e.getId(), is(isOneOf(edge0.getId(), edge1.getId())));
+			assertThat(e.getId(), is(oneOf(edge0.getId(), edge1.getId())));
 			assertThat(e.getTo(), is(notNullValue()));
 			assertThat(e.getTo().getId(), is(notNullValue()));
 			assertThat(e.getTo().getId(), is(e0.getId()));

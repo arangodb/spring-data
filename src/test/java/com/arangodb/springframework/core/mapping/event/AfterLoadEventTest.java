@@ -21,8 +21,7 @@
 package com.arangodb.springframework.core.mapping.event;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isIn;
+import static org.hamcrest.Matchers.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,7 +81,7 @@ public class AfterLoadEventTest extends AbstractArangoTest {
 		template.find(customers.stream().map(elem -> elem.getId()).collect(Collectors.toList()), Customer.class);
 		assertThat(listener.afterLoadEvents.size(), is(2));
 		for (final AfterLoadEvent<Customer> event : listener.afterLoadEvents) {
-			assertThat(event.getSource(), isIn(customers));
+			assertThat(event.getSource(), is(in(customers)));
 		}
 	}
 
@@ -93,7 +92,7 @@ public class AfterLoadEventTest extends AbstractArangoTest {
 		});
 		assertThat(listener.afterLoadEvents.size(), is(2));
 		for (final AfterLoadEvent<Customer> event : listener.afterLoadEvents) {
-			assertThat(event.getSource(), isIn(customers));
+			assertThat(event.getSource(), is(in(customers)));
 		}
 	}
 

@@ -24,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.oneOf;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.Arrays;
@@ -68,7 +68,7 @@ public class RelationsMappingTest extends AbstractArangoTest {
 		for (final BasicTestEntity e : document.entities) {
 			assertThat(e, instanceOf(BasicTestEntity.class));
 			assertThat(e.getId(), is(notNullValue()));
-			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+			assertThat(e.getId(), is(oneOf(e1.getId(), e2.getId())));
 		}
 	}
 
@@ -95,7 +95,7 @@ public class RelationsMappingTest extends AbstractArangoTest {
 		for (final BasicTestEntity e : document.entities) {
 			assertThat(e, instanceOf(BasicTestEntity.class));
 			assertThat(e.getId(), is(notNullValue()));
-			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+			assertThat(e.getId(), is(oneOf(e1.getId(), e2.getId())));
 		}
 	}
 
@@ -122,7 +122,7 @@ public class RelationsMappingTest extends AbstractArangoTest {
 		for (final BasicTestEntity e : document.entities) {
 			assertThat(e, instanceOf(BasicTestEntity.class));
 			assertThat(e.getId(), is(notNullValue()));
-			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+			assertThat(e.getId(), is(oneOf(e1.getId(), e2.getId())));
 		}
 	}
 
@@ -254,7 +254,7 @@ public class RelationsMappingTest extends AbstractArangoTest {
 		for (final BasicTestEntity e : document.entities) {
 			assertThat(e, instanceOf(BasicTestEntity.class));
 			assertThat(e.getId(), is(notNullValue()));
-			assertThat(e.getId(), is(isOneOf(e1.getId(), e2.getId())));
+			assertThat(e.getId(), is(oneOf(e1.getId(), e2.getId())));
 		}
 	}
 }
