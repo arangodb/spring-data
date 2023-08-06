@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 - upgraded dependency Spring 6 and Spring Data 3 (as from Spring Boot 3) including JDK 17 (#250)
 - exceptions during `ArangoOperations.query()` will be translated
+- drop support for Joda-Time
 
 ## [3.10.0] - 2023-05-17
 
