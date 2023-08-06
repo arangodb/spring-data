@@ -21,8 +21,7 @@
 package com.arangodb.springframework.core.mapping.event;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isIn;
+import static org.hamcrest.Matchers.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,7 +88,7 @@ public class DeleteEventTest extends AbstractArangoTest {
 
 		assertThat(listener.beforeDeleteEvents.size(), is(2));
 		for (final BeforeDeleteEvent<Customer> event : listener.beforeDeleteEvents) {
-			assertThat(event.getSource(), isIn(ids));
+			assertThat(event.getSource(), is(in(ids)));
 		}
 
 		assertThat(listener.afterDeleteEvents.size(), is(1));

@@ -450,20 +450,20 @@ public class GeneralMappingTest extends AbstractArangoTest {
             assertThat(role.getActor().getName(), is(actor.getName()));
 
             assertThat(role.getMovie(), is(notNullValue()));
-            assertThat(role.getMovie().getId(), isOneOf(movie1.getId(), movie2.getId(), movie3.getId()));
-            assertThat(role.getMovie().getName(), isOneOf(movie1.getName(), movie2.getName(), movie3.getName()));
+            assertThat(role.getMovie().getId(), oneOf(movie1.getId(), movie2.getId(), movie3.getId()));
+            assertThat(role.getMovie().getName(), oneOf(movie1.getName(), movie2.getName(), movie3.getName()));
         }
 
         for (final Movie movie : retrieved.getMovies()) {
             assertThat(movie, is(notNullValue()));
-            assertThat(movie.getId(), isOneOf(movie1.getId(), movie2.getId(), movie3.getId()));
-            assertThat(movie.getName(), isOneOf(movie1.getName(), movie2.getName(), movie3.getName()));
+            assertThat(movie.getId(), oneOf(movie1.getId(), movie2.getId(), movie3.getId()));
+            assertThat(movie.getName(), oneOf(movie1.getName(), movie2.getName(), movie3.getName()));
 
             assertThat(movie.getActors(), is(notNullValue()));
             for (final Actor a : movie.getActors()) {
                 assertThat(a, is(notNullValue()));
-                assertThat(a.getId(), isOneOf(actor.getId()));
-                assertThat(a.getName(), isOneOf(actor.getName()));
+                assertThat(a.getId(), oneOf(actor.getId()));
+                assertThat(a.getName(), oneOf(actor.getName()));
             }
         }
 
@@ -729,6 +729,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
         template.insert(entity);
         final Optional<MapInMapTestEntity> find = template.find(entity.id, MapInMapTestEntity.class);
         assertThat(find.isPresent(), is(true));
+        @SuppressWarnings("unchecked")
         Map<String, Object> nestedResult = (Map<String, Object>) find.get().value.get("nested");
         assertThat(nestedResult.size(), is(1));
         assertThat(nestedResult.get("key1"), is("test"));
@@ -746,10 +747,13 @@ public class GeneralMappingTest extends AbstractArangoTest {
         template.insert(entity);
         final Optional<MapInMapTestEntity> find = template.find(entity.id, MapInMapTestEntity.class);
         assertThat(find.isPresent(), is(true));
+        @SuppressWarnings("unchecked")
         Map<String, Object> nestedResult = (Map<String, Object>) find.get().value.get("nested");
         assertThat(nestedResult.size(), is(1));
-        assertThat(((List<String>) nestedResult.get("key1")).size(), is(2));
-        assertThat(nestedResult.get("key1"), is(Arrays.asList(nestedArray)));
+        @SuppressWarnings("unchecked")
+        List<String> nestedList = (List<String>) nestedResult.get("key1");
+        assertThat(nestedList.size(), is(2));
+        assertThat(nestedList, is(Arrays.asList(nestedArray)));
     }
 
     @Test
@@ -764,9 +768,12 @@ public class GeneralMappingTest extends AbstractArangoTest {
         template.insert(entity);
         final Optional<MapInMapTestEntity> find = template.find(entity.id, MapInMapTestEntity.class);
         assertThat(find.isPresent(), is(true));
+        @SuppressWarnings("unchecked")
         Map<String, Object> nestedResult = (Map<String, Object>) find.get().value.get("nested");
         assertThat(nestedResult.size(), is(1));
-        assertThat(((List<String>) nestedResult.get("key1")).size(), is(2));
-        assertThat(nestedResult.get("key1"), is(nestedCollection));
+        @SuppressWarnings("unchecked")
+        List<String> nestedList = (List<String>) nestedResult.get("key1");
+        assertThat(nestedList.size(), is(2));
+        assertThat(nestedList, is(nestedCollection));
     }
 }
