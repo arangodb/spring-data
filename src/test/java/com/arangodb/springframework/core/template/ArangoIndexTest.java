@@ -262,12 +262,14 @@ public class ArangoIndexTest extends AbstractArangoTest {
 			hasItems(IndexType.primary, geo1()));
 	}
 
+	@SuppressWarnings("deprecation")
 	public static class FulltextIndexedSingleFieldTestEntity {
 		@FulltextIndexed
 		private String a;
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void singleFieldFulltextIndexed() {
 		assertThat(template.collection(FulltextIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
 		assertThat(template.collection(FulltextIndexedSingleFieldTestEntity.class).getIndexes().stream()
@@ -278,6 +280,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 			hasItems("a"));
 	}
 
+	@SuppressWarnings("deprecation")
 	public static class FulltextIndexedMultipleSingleFieldTestEntity {
 		@FulltextIndexed
 		private String a;
@@ -286,6 +289,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void multipleSingleFieldFulltextIndexed() {
 		assertThat(template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
 		assertThat(
@@ -299,6 +303,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void singleFieldFulltextIndex() {
 		assertThat(template.collection(FulltextIndexWithSingleFieldTestEntity.class).getIndexes().size(), is(2));
 		assertThat(
@@ -316,6 +321,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void multipleSingleFieldFulltextIndex() {
 		assertThat(template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
 		assertThat(
@@ -329,6 +335,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void multipleIndexesFulltextIndex() {
 		assertThat(template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
 		assertThat(
@@ -337,6 +344,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 			hasItems(IndexType.primary, IndexType.fulltext));
 	}
 
+	@SuppressWarnings("deprecation")
 	public static class DifferentIndexedAnnotations {
 		@PersistentIndexed
 		@GeoIndexed
@@ -346,6 +354,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void differentIndexedAnnotationsSameField() {
 		assertThat(template.collection(DifferentIndexedAnnotations.class).getIndexes().size(), is(5));
 		assertThat(
@@ -362,6 +371,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void differentIndexAnnotations() {
 		assertThat(template.collection(DifferentIndexAnnotations.class).getIndexes().size(), is(4));
 		assertThat(
@@ -381,6 +391,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void multipleDifferentIndexAnnotations() {
 		assertThat(template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().size(), is(7));
 		assertThat(

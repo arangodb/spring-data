@@ -129,6 +129,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	}
 
 	@Override
+	@Deprecated
 	public IndexEntity ensureFulltextIndex(final Iterable<String> fields, final FulltextIndexOptions options)
 			throws DataAccessException {
 		try {

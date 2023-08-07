@@ -34,6 +34,8 @@ import org.springframework.util.StringUtils;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
@@ -67,7 +69,7 @@ public class ArangoEntityClassScanner {
 				componentProvider.addIncludeFilter(new AnnotationTypeFilter(annotationType));
 			}
 			for (final BeanDefinition definition : componentProvider.findCandidateComponents(basePackage)) {
-				entities.add(ClassUtils.forName(definition.getBeanClassName(), null));
+				entities.add(ClassUtils.forName(requireNonNull(definition.getBeanClassName()), null));
 			}
 		}
 		return entities;

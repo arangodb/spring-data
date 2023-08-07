@@ -120,7 +120,9 @@ public interface CollectionOperations {
 	 *            Additional options, can be null
 	 * @return information about the index
 	 * @throws DataAccessException
+	 * @deprecated since ArangoDB 3.10, use ArangoSearch or Inverted indexes instead.
 	 */
+	@Deprecated
 	IndexEntity ensureFulltextIndex(Iterable<String> fields, FulltextIndexOptions options) throws DataAccessException;
 
 	/**

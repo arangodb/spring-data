@@ -28,11 +28,13 @@ import java.lang.annotation.Target;
 /**
  * Annotation to mark a field to be indexed using ArangoDB's Fulltext index.
  *
+ * @deprecated since ArangoDB 3.10, use ArangoSearch or Inverted indexes instead.
  * @author Mark Vollmary
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
+@Deprecated
 public @interface FulltextIndexed {
 
 	/**

@@ -229,11 +229,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		collection.ensureGeoIndex(Collections.singleton(value.getFieldName()), options);
 	}
 
+	@SuppressWarnings("deprecation")
 	private static void ensureFulltextIndex(final CollectionOperations collection, final FulltextIndex annotation) {
 		collection.ensureFulltextIndex(Collections.singleton(annotation.field()),
 				new FulltextIndexOptions().minLength(annotation.minLength() > -1 ? annotation.minLength() : null));
 	}
 
+	@SuppressWarnings("deprecation")
 	private static void ensureFulltextIndex(final CollectionOperations collection,
 											final ArangoPersistentProperty value) {
 		final FulltextIndexOptions options = new FulltextIndexOptions();

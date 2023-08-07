@@ -136,6 +136,7 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	}
 
 	@Override
+	@Deprecated
 	public Optional<FulltextIndexed> getFulltextIndexed() {
 		return Optional.ofNullable(findAnnotation(FulltextIndexed.class));
 	}
