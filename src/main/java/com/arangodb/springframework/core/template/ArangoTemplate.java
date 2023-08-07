@@ -190,12 +190,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	private static void ensureCollectionIndexes(final CollectionOperations collection,
 			final ArangoPersistentEntity<?> persistentEntity) {
-		persistentEntity.getPersistentIndexes().stream().forEach(index -> ensurePersistentIndex(collection, index));
-		persistentEntity.getPersistentIndexedProperties().stream().forEach(p -> ensurePersistentIndex(collection, p));
-		persistentEntity.getGeoIndexes().stream().forEach(index -> ensureGeoIndex(collection, index));
-		persistentEntity.getGeoIndexedProperties().stream().forEach(p -> ensureGeoIndex(collection, p));
-		persistentEntity.getFulltextIndexes().stream().forEach(index -> ensureFulltextIndex(collection, index));
-		persistentEntity.getFulltextIndexedProperties().stream().forEach(p -> ensureFulltextIndex(collection, p));
+		persistentEntity.getPersistentIndexes().forEach(index -> ensurePersistentIndex(collection, index));
+		persistentEntity.getPersistentIndexedProperties().forEach(p -> ensurePersistentIndex(collection, p));
+		persistentEntity.getGeoIndexes().forEach(index -> ensureGeoIndex(collection, index));
+		persistentEntity.getGeoIndexedProperties().forEach(p -> ensureGeoIndex(collection, p));
+		persistentEntity.getFulltextIndexes().forEach(index -> ensureFulltextIndex(collection, index));
+		persistentEntity.getFulltextIndexedProperties().forEach(p -> ensureFulltextIndex(collection, p));
 		persistentEntity.getTtlIndex().ifPresent(index -> ensureTtlIndex(collection, index));
 		persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p));
 	}
@@ -331,8 +331,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
 		final Map<String, Object> prepared = new HashMap<>(bindVars.size());
 		for (final Entry<String, Object> entry : bindVars.entrySet()) {
-			if (entry.getKey().startsWith("@") && entry.getValue() instanceof Class) {
-				prepared.put(entry.getKey(), _collection((Class<?>) entry.getValue()).name());
+			if (entry.getKey().startsWith("@") && entry.getValue() instanceof Class<?> clazz) {
+				prepared.put(entry.getKey(), _collection(clazz).name());
 			} else {
 				prepared.put(entry.getKey(), toJsonNode(entry.getValue()));
 			}
@@ -505,7 +505,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	@Override
-	public <T> Iterable<T> find(final Iterable<? extends Object> ids, final Class<T> entityClass)
+	public <T> Iterable<T> find(final Iterable<?> ids, final Class<T> entityClass)
 			throws DataAccessException {
 		try {
 			final Collection<String> keys = new ArrayList<>();
@@ -582,17 +582,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	@Override
 	public DocumentEntity insert(final String collectionName, final Object value) throws DataAccessException {
 		return insert(collectionName, value, new DocumentCreateOptions());
-	}
-
-	private Object getDocumentKey(final ArangoPersistentEntity<?> entity, final Object value) {
-		Object id = entity.getIdentifierAccessor(value).getIdentifier();
-		if (id == null) {
-			final Object docId = entity.getArangoIdAccessor(value).getIdentifier();
-			if (docId != null) {
-				id = MetadataUtils.determineDocumentKeyFromId((String) docId);
-			}
-		}
-		return id;
 	}
 
 	@Override
@@ -690,16 +679,16 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		final Iterator<T> valueIterator = values.iterator();
 		if (res.getErrors().isEmpty()) {
 			final Iterator<? extends DocumentEntity> documentIterator = res.getDocuments().iterator();
-			for (; valueIterator.hasNext() && documentIterator.hasNext();) {
+			while (valueIterator.hasNext() && documentIterator.hasNext()) {
 				updateDBFields(valueIterator.next(), documentIterator.next());
 			}
 		} else {
 			final Iterator<Object> documentIterator = res.getDocumentsAndErrors().iterator();
-			for (; valueIterator.hasNext() && documentIterator.hasNext();) {
+			while (valueIterator.hasNext() && documentIterator.hasNext()) {
 				final Object nextDoc = documentIterator.next();
 				final Object nextValue = valueIterator.next();
-				if (nextDoc instanceof DocumentEntity) {
-					updateDBFields(nextValue, (DocumentEntity) nextDoc);
+				if (nextDoc instanceof DocumentEntity doc) {
+					updateDBFields(nextValue, doc);
 				}
 			}
 		}

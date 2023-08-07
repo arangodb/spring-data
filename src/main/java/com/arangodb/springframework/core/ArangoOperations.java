@@ -355,7 +355,7 @@ public interface ArangoOperations {
 	 * @return the documents
 	 * @throws DataAccessException
 	 */
-	<T> Iterable<T> find(final Iterable<? extends Object> ids, final Class<T> entityClass) throws DataAccessException;
+	<T> Iterable<T> find(final Iterable<?> ids, final Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
@@ -535,7 +535,7 @@ public interface ArangoOperations {
 	/**
 	 * Fetches data about all users. You can only execute this call if you have access to the _system database.
 	 *
-	 * @return informations about all users
+	 * @return information about all users
 	 * @throws DataAccessException
 	 */
 	Iterable<UserEntity> getUsers() throws DataAccessException;

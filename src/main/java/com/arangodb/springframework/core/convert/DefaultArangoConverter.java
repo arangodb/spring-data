@@ -57,7 +57,6 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -260,7 +259,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         return readInternal(property.getTypeInformation(), source);
     }
 
-    private Object readMap(final TypeInformation<?> type, final JsonNode source) {
+    private Map<?, ?> readMap(final TypeInformation<?> type, final JsonNode source) {
         if (!source.isObject()) {
             throw new MappingException(
                     String.format("Can't read map type %s from type %s!", type, source.getNodeType()));
@@ -301,10 +300,7 @@ public class DefaultArangoConverter implements ArangoConverter {
                 new ArrayList<>(node.size()) :
                 CollectionFactory.createCollection(collectionType, componentType.getType(), node.size());
 
-        Iterator<JsonNode> iterator = source.iterator();
-
-        while (iterator.hasNext()) {
-            JsonNode elem = iterator.next();
+        for (JsonNode elem : source) {
             collection.add(readInternal(componentType, elem));
         }
 
@@ -341,7 +337,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
 		Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
 
-        if (!resolver.isPresent()) {
+        if (resolver.isEmpty()) {
             return Optional.empty();
         } else if (property.isCollectionLike()) {
             Collection<String> ids;
@@ -384,7 +380,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         // FIXME: discover intermediate types, in case annotation is Relations and maxDepth > 1
         List<TypeInformation<?>> traversedTypes = Collections.singletonList(entity.getTypeInformation());
 
-        if (!resolver.isPresent()) {
+        if (resolver.isEmpty()) {
             return Optional.empty();
         } else if (property.isCollectionLike()) {
             if (source.isArray()) {
@@ -484,32 +480,27 @@ public class DefaultArangoConverter implements ArangoConverter {
     }
 
     private BaseDocument readBaseDocument(final Class<?> type, final JsonNode source) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
-
         if (BaseDocument.class.equals(type)) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
             return new BaseDocument(properties);
-        } //
-        else {
-            throw new MappingException(String.format("Can't read type %s as %s!", type, BaseDocument.class));
         }
+        throw new MappingException(String.format("Can't read type %s as %s!", type, BaseDocument.class));
     }
 
     private BaseEdgeDocument readBaseEdgeDocument(final Class<?> type, final JsonNode source) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
-
         if (BaseEdgeDocument.class.equals(type)) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
             return new BaseEdgeDocument(properties);
-        } //
-        else {
-            throw new MappingException(String.format("Can't read type %s as %s!", type, BaseEdgeDocument.class));
         }
+        throw new MappingException(String.format("Can't read type %s as %s!", type, BaseEdgeDocument.class));
     }
 
-    @SuppressWarnings("unchecked")
     private DBDocumentEntity readDBDocumentEntity(final JsonNode source) {
-        return new DBDocumentEntity((Map<String, Object>) readMap(TypeInformation.MAP, source));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
+        return new DBDocumentEntity(properties);
     }
 
     private ParameterValueProvider<ArangoPersistentProperty> getParameterProvider(
@@ -544,7 +535,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     @Override
     public JsonNode write(final Object source) {
-        Object entity = source instanceof LazyLoadingProxy ? ((LazyLoadingProxy) source).getEntity() : source;
+        Object entity = source instanceof LazyLoadingProxy proxy ? proxy.getEntity() : source;
         return createInternal(entity, TypeInformation.OBJECT);
     }
 
@@ -643,7 +634,7 @@ public class DefaultArangoConverter implements ArangoConverter {
                 getRefId(source, null).ifPresent(id -> node.put(fieldName, id));
             }
         } else {
-            Object entity = source instanceof LazyLoadingProxy ? ((LazyLoadingProxy) source).getEntity() : source;
+            Object entity = source instanceof LazyLoadingProxy proxy ? proxy.getEntity() : source;
             node.set(fieldName, createInternal(entity, property.getTypeInformation()));
         }
     }
@@ -707,57 +698,53 @@ public class DefaultArangoConverter implements ArangoConverter {
         return node;
     }
 
-    private void writeAttribute(final String attribute, final Object source, final ObjectNode sink) {
-        sink.set(attribute, createSimpleJsonNode(source));
-    }
-
     private JsonNode createSimpleJsonNode(final Object source) {
         if (source == null) {
             return JsonNodeFactory.instance.nullNode();
-        } else if (source instanceof JsonNode) {
-            return (JsonNode) source;
-        } else if (source instanceof DBDocumentEntity) {
-            return createMap((Map<?, ?>) source, TypeInformation.MAP);
-        } else if (source instanceof Boolean) {
-            return JsonNodeFactory.instance.booleanNode((Boolean) source);
-        } else if (source instanceof Byte) {
-            return JsonNodeFactory.instance.numberNode((Byte) source);
-        } else if (source instanceof Character) {
-            return JsonNodeFactory.instance.textNode(source.toString());
-        } else if (source instanceof Short) {
-            return JsonNodeFactory.instance.numberNode((Short) source);
-        } else if (source instanceof Integer) {
-            return JsonNodeFactory.instance.numberNode((Integer) source);
-        } else if (source instanceof Long) {
-            return JsonNodeFactory.instance.numberNode((Long) source);
-        } else if (source instanceof Float) {
-            return JsonNodeFactory.instance.numberNode((Float) source);
-        } else if (source instanceof Double) {
-            return JsonNodeFactory.instance.numberNode((Double) source);
-        } else if (source instanceof String) {
-            return JsonNodeFactory.instance.textNode((String) source);
-        } else if (source instanceof Class) {
-            return JsonNodeFactory.instance.textNode(((Class<?>) source).getName());
-        } else if (source instanceof Enum) {
-            return JsonNodeFactory.instance.textNode(((Enum<?>) source).name());
+        } else if (source instanceof JsonNode jsonNode) {
+            return jsonNode;
+        } else if (source instanceof DBDocumentEntity dbDocumentEntity) {
+            return createMap(dbDocumentEntity, TypeInformation.MAP);
+        } else if (source instanceof Boolean boolSource) {
+            return JsonNodeFactory.instance.booleanNode(boolSource);
+        } else if (source instanceof Byte numberSource) {
+            return JsonNodeFactory.instance.numberNode(numberSource);
+        } else if (source instanceof Character textSource) {
+            return JsonNodeFactory.instance.textNode(textSource.toString());
+        } else if (source instanceof Short numberSource) {
+            return JsonNodeFactory.instance.numberNode(numberSource);
+        } else if (source instanceof Integer numberSource) {
+            return JsonNodeFactory.instance.numberNode(numberSource);
+        } else if (source instanceof Long numberSource) {
+            return JsonNodeFactory.instance.numberNode(numberSource);
+        } else if (source instanceof Float numberSource) {
+            return JsonNodeFactory.instance.numberNode(numberSource);
+        } else if (source instanceof Double numberSource) {
+            return JsonNodeFactory.instance.numberNode(numberSource);
+        } else if (source instanceof String textSource) {
+            return JsonNodeFactory.instance.textNode(textSource);
+        } else if (source instanceof Class<?> clazzSource) {
+            return JsonNodeFactory.instance.textNode(clazzSource.getName());
+        } else if (source instanceof Enum<?> enumSource) {
+            return JsonNodeFactory.instance.textNode(enumSource.name());
         } else if (ClassUtils.isPrimitiveArray(source.getClass())) {
             return createArray(source, TypeInformation.OBJECT);
-        } else if (source instanceof Date) {
-            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format((Date) source));
-        } else if (source instanceof BigInteger) {
-            return JsonNodeFactory.instance.numberNode((BigInteger) source);
-        } else if (source instanceof BigDecimal) {
-            return JsonNodeFactory.instance.numberNode((BigDecimal) source);
-        } else if (source instanceof Instant) {
-            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format((Instant) source));
-        } else if (source instanceof LocalDate) {
-            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format((LocalDate) source));
-        } else if (source instanceof LocalDateTime) {
-            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format((LocalDateTime) source));
-        } else if (source instanceof OffsetDateTime) {
-            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format((OffsetDateTime) source));
-        } else if (source instanceof ZonedDateTime) {
-            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format((ZonedDateTime) source));
+        } else if (source instanceof Date dateSource) {
+            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format(dateSource));
+        } else if (source instanceof BigInteger numberSource) {
+            return JsonNodeFactory.instance.numberNode(numberSource);
+        } else if (source instanceof BigDecimal numberSource) {
+            return JsonNodeFactory.instance.numberNode(numberSource);
+        } else if (source instanceof Instant dateSource) {
+            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format(dateSource));
+        } else if (source instanceof LocalDate dateSource) {
+            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format(dateSource));
+        } else if (source instanceof LocalDateTime dateSource) {
+            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format(dateSource));
+        } else if (source instanceof OffsetDateTime dateSource) {
+            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format(dateSource));
+        } else if (source instanceof ZonedDateTime dateSource) {
+            return JsonNodeFactory.instance.textNode(JavaTimeUtil.format(dateSource));
         } else {
             throw new MappingException(String.format("Type %s is not a simple type!", source.getClass()));
         }
@@ -786,8 +773,8 @@ public class DefaultArangoConverter implements ArangoConverter {
     }
 
     private Optional<String> getRefId(final Object source, final ArangoPersistentEntity<?> entity, final Ref annotation) {
-        if (source instanceof LazyLoadingProxy) {
-            return Optional.of(((LazyLoadingProxy) source).getRefId());
+        if (source instanceof LazyLoadingProxy proxy) {
+            return Optional.of(proxy.getRefId());
         }
 
         return Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier())
@@ -804,7 +791,7 @@ public class DefaultArangoConverter implements ArangoConverter {
     }
 
     private static Collection<?> asCollection(final Object source) {
-        return (source instanceof Collection) ? Collection.class.cast(source)
+        return (source instanceof Collection<?> collection) ? collection
                 : source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
     }
 
@@ -833,7 +820,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     @SuppressWarnings("unchecked")
     private <T> T convertIfNecessary(final Object source, final Class<T> type) {
-        return (T) (source == null ? source
+        return (T) (source == null ? null
                 : type.isAssignableFrom(source.getClass()) ? source : conversionService.convert(source, type));
     }
 
@@ -874,8 +861,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             throw new MappingException(
                     String.format("Type %s is not a valid id type!", id != null ? id.getClass() : "null"));
         }
-        if (id instanceof String) {
-            return id.toString();
+        if (id instanceof String stringId) {
+            return stringId;
         }
         boolean hasCustomConverter = conversions.hasCustomWriteTarget(id.getClass(), String.class);
         return hasCustomConverter ? conversionService.convert(id, String.class) : id.toString();

@@ -22,7 +22,6 @@ package com.arangodb.springframework.core.mapping;
 
 import java.util.Optional;
 
-import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 
 import com.arangodb.springframework.annotation.From;

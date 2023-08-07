@@ -199,8 +199,8 @@ public class BindParameterBinding {
 		if (!shouldIgnoreCase) {
 			return argument;
 		}
-		if (argument instanceof String) {
-			return ((String) argument).toLowerCase();
+		if (argument instanceof String text) {
+			return text.toLowerCase();
 		}
 		final List<String> lowered = new LinkedList<>();
 		if (argument.getClass().isArray()) {
