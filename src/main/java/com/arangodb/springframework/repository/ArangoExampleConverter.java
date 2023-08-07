@@ -58,8 +58,8 @@ public class ArangoExampleConverter<T> {
 
 	public String convertExampleToPredicate(final Example<T> example, final Map<String, Object> bindVars) {
 		final StringBuilder predicateBuilder = new StringBuilder();
-		final ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(example.getProbeType());
-		Assert.isTrue(example.getProbe() != null, "Probe in Example cannot be null");
+		final ArangoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(example.getProbeType());
+		Assert.notNull(example.getProbe(), "Probe in Example cannot be null");
 		final String bindEntintyName = "e";
 		traversePropertyTree(example, predicateBuilder, bindVars, "", "", persistentEntity, example.getProbe(),
 				bindEntintyName);
@@ -87,6 +87,7 @@ public class ArangoExampleConverter<T> {
 					if (ClassUtils.isPrimitiveOrWrapper(item.getClass()) || item.getClass() == String.class) {
 						addPredicate(example, predicateBuilderArrayItem, bindVars, null, fullJavaPath, item, "CURRENT");
 					} else {
+						Assert.notNull(persistentEntity, "Missing persistent entity for " + property.getActualType());
 						traversePropertyTree(example, predicateBuilderArrayItem, bindVars, "", fullJavaPath,
 								persistentEntity, item, "CURRENT");
 					}
@@ -94,18 +95,18 @@ public class ArangoExampleConverter<T> {
 					if (predicateBuilderArray.length() > 0) {
 						predicateBuilderArray.append(" OR ");
 					}
-					predicateBuilderArray.append(predicateBuilderArrayItem.toString());
+					predicateBuilderArray.append(predicateBuilderArrayItem);
 				}
 				final String delimiter = example.getMatcher().isAllMatching() ? " AND " : " OR ";
 				if (predicateBuilder.length() > 0) {
 					predicateBuilder.append(delimiter);
 				}
 				String clause = String.format("LENGTH(%s.%s[* FILTER %s ])>0", bindEntintyName, property.getName(),
-						predicateBuilderArray.toString());
+						predicateBuilderArray);
 				predicateBuilder.append(clause);
 
 			} else if (property.isEntity() && value != null) {
-				final ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(property.getType());
+				final ArangoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(property.getType());
 				traversePropertyTree(example, predicateBuilder, bindVars, fullPath, fullJavaPath, persistentEntity,
 						value, bindEntintyName);
 			} else if (!example.getMatcher().isIgnoredPath(fullJavaPath) && (value != null
@@ -122,7 +123,7 @@ public class ArangoExampleConverter<T> {
 			final Object value = accessor.getProperty(property);
 
 			if (property.isEntity() && property.isAssociation() && value != null) {
-				final ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(property.getType());
+				final ArangoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(property.getType());
 				final PersistentPropertyAccessor<?> associatedAccessor = persistentEntity.getPropertyAccessor(value);
 				final Object idValue = associatedAccessor.getProperty(persistentEntity.getIdProperty());
 				String refIdValue = null;
@@ -140,7 +141,7 @@ public class ArangoExampleConverter<T> {
 
 	private void addPredicate(final Example<T> example, final StringBuilder predicateBuilder,
 			final Map<String, Object> bindVars, final String fullPath, final String fullJavaPath, Object value,
-			final String bindEntintyName) {
+							  final String bindEntintyName) {
 		final String delimiter = example.getMatcher().isAllMatching() ? " AND " : " OR ";
 		if (predicateBuilder.length() > 0) {
 			predicateBuilder.append(delimiter);

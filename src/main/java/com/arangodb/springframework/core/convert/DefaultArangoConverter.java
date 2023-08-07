@@ -790,18 +790,17 @@ public class DefaultArangoConverter implements ArangoConverter {
             return Optional.of(((LazyLoadingProxy) source).getRefId());
         }
 
-        Optional<Object> id = Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier());
-        if (id.isPresent()) {
-            if (annotation != null) {
-                Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
-                return id.map(key -> resolver.get().write(source, entity, convertId(key), annotation));
-            } else {
-                return id.map(key -> MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key)));
-            }
-
-        }
-
-        return Optional.ofNullable((String) entity.getArangoIdAccessor(source).getIdentifier());
+        return Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier())
+            .map(key -> {
+                if (annotation != null) {
+                    return resolverFactory.getReferenceResolver(annotation)
+                            .map(resolver -> resolver.write(source, entity, convertId(key), annotation))
+                            .orElseThrow(() -> new IllegalArgumentException("Missing reference resolver for " + annotation));
+                } else {
+                    return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key));
+                }
+            })
+            .or(() -> Optional.ofNullable((String) entity.getArangoIdAccessor(source).getIdentifier()));
     }
 
     private static Collection<?> asCollection(final Object source) {

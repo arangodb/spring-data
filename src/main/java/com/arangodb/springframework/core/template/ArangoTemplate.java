@@ -659,13 +659,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	private void updateDBFieldsFromObject(final Object toModify, final Object toRead) {
-		final ArangoPersistentEntity<?> entityToRead = converter.getMappingContext().getPersistentEntity(toRead.getClass());
+		final ArangoPersistentEntity<?> entityToRead = converter.getMappingContext().getRequiredPersistentEntity(toRead.getClass());
 		final PersistentPropertyAccessor<?> accessorToRead = entityToRead.getPropertyAccessor(toRead);
 		final ArangoPersistentProperty idPropertyToRead = entityToRead.getIdProperty();
 		final Optional<ArangoPersistentProperty> arangoIdPropertyToReadOptional = entityToRead.getArangoIdProperty();
 		final Optional<ArangoPersistentProperty> revPropertyToReadOptional = entityToRead.getRevProperty();
 
-		final ArangoPersistentEntity<?> entityToModify = converter.getMappingContext().getPersistentEntity(toModify.getClass());
+		final ArangoPersistentEntity<?> entityToModify = converter.getMappingContext().getRequiredPersistentEntity(toModify.getClass());
 		final PersistentPropertyAccessor<?> accessorToWrite = entityToModify.getPropertyAccessor(toModify);
 		final ArangoPersistentProperty idPropertyToWrite = entityToModify.getIdProperty();
 
@@ -706,7 +706,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
 	private void updateDBFields(final Object value, final DocumentEntity documentEntity) {
-		final ArangoPersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(value.getClass());
+		final ArangoPersistentEntity<?> entity = converter.getMappingContext().getRequiredPersistentEntity(value.getClass());
 		final PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(value);
 		final ArangoPersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null && !idProperty.isImmutable()) {
@@ -737,7 +737,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 		}
 		databaseCache.remove(db.name());
 		collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.name()))
-				.forEach(key -> collectionCache.remove(key));
+				.forEach(collectionCache::remove);
 	}
 
 	@Override

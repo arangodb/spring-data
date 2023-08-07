@@ -37,6 +37,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.arangodb.ArangoCursor;
@@ -69,7 +70,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T, ID> ArangoEntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
-		return new ArangoPersistentEntityInformation<T, ID>(
+		return new ArangoPersistentEntityInformation<>(
 				(ArangoPersistentEntity<T>) context.getRequiredPersistentEntity(domainClass));
 	}
 
@@ -95,8 +96,11 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(
-			final QueryLookupStrategy.Key key, final QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			@Nullable final QueryLookupStrategy.Key key, final QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
+		if (key == null) {
+			return Optional.empty();
+		}
 		QueryLookupStrategy strategy = null;
 		switch (key) {
 		case CREATE_IF_NOT_FOUND:
