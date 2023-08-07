@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -55,8 +56,8 @@ public interface ArangoConfiguration {
 	String database();
 
 	@Bean
-	default ArangoOperations arangoTemplate() throws Exception {
-		return new ArangoTemplate(arango().build(), database(), arangoConverter(), resolverFactory());
+	default ArangoOperations arangoTemplate(ArangoConverter arangoConverter, @Lazy ResolverFactory resolverFactory) throws Exception {
+		return new ArangoTemplate(arango().build(), database(), arangoConverter, resolverFactory);
 	}
 
 	@Bean
@@ -69,9 +70,9 @@ public interface ArangoConfiguration {
 	}
 
 	@Bean
-	default ArangoConverter arangoConverter() throws Exception {
-		return new DefaultArangoConverter(arangoMappingContext(), customConversions(), resolverFactory(),
-				arangoTypeMapper());
+	default ArangoConverter arangoConverter(ArangoMappingContext arangoMappingContext, @Lazy ResolverFactory resolverFactory) throws Exception {
+		return new DefaultArangoConverter(arangoMappingContext, customConversions(), resolverFactory,
+				arangoTypeMapper(arangoMappingContext));
 	}
 
 	default CustomConversions customConversions() {
@@ -98,11 +99,12 @@ public interface ArangoConfiguration {
 		return DefaultArangoTypeMapper.DEFAULT_TYPE_KEY;
 	}
 
-	default ArangoTypeMapper arangoTypeMapper() throws Exception {
-		return new DefaultArangoTypeMapper(typeKey(), arangoMappingContext());
+	default ArangoTypeMapper arangoTypeMapper(ArangoMappingContext arangoMappingContext) throws Exception {
+		return new DefaultArangoTypeMapper(typeKey(), arangoMappingContext);
 	}
 
-	default ResolverFactory resolverFactory() {
+	@Bean
+	default ResolverFactory resolverFactory(ArangoOperations arangoTemplate) {
 		return new ResolverFactory() {
 			@SuppressWarnings("unchecked")
 			@Override
@@ -110,7 +112,7 @@ public interface ArangoConfiguration {
 				ReferenceResolver<A> resolver = null;
 				try {
 					if (annotation instanceof Ref) {
-						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
+						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate);
 					}
 				} catch (final Exception e) {
 					throw new ArangoDBException(e);
@@ -126,18 +128,18 @@ public interface ArangoConfiguration {
 				try {
 					if (annotation instanceof From) {
 						if (collectionType == Edge.class) {
-							resolver = (RelationResolver<A>) new EdgeFromResolver(arangoTemplate());
+							resolver = (RelationResolver<A>) new EdgeFromResolver(arangoTemplate);
 						} else if (collectionType == Document.class) {
-							resolver = (RelationResolver<A>) new DocumentFromResolver(arangoTemplate());
+							resolver = (RelationResolver<A>) new DocumentFromResolver(arangoTemplate);
 						}
 					} else if (annotation instanceof To) {
 						if (collectionType == Edge.class) {
-							resolver = (RelationResolver<A>) new EdgeToResolver(arangoTemplate());
+							resolver = (RelationResolver<A>) new EdgeToResolver(arangoTemplate);
 						} else if (collectionType == Document.class) {
-							resolver = (RelationResolver<A>) new DocumentToResolver(arangoTemplate());
+							resolver = (RelationResolver<A>) new DocumentToResolver(arangoTemplate);
 						}
 					} else if (annotation instanceof Relations) {
-						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
+						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate);
 					}
 				} catch (final Exception e) {
 					throw new ArangoDBException(e);
