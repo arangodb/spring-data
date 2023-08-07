@@ -41,6 +41,7 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 	 *
 	 * @param lines must not be {@literal null}.
 	 */
+	@SafeVarargs
 	public GeoJsonMultiLineString(List<Point>... lines) {
 
 		Assert.notEmpty(lines, "Points for MultiLineString must not be null!");
