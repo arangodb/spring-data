@@ -52,7 +52,7 @@ public class ArangoConverters {
 
 		@Override
 		public UUID convert(final String source) {
-			return source == null ? null : UUID.fromString(source);
+			return UUID.fromString(source);
 		}
 	}
 
@@ -62,7 +62,7 @@ public class ArangoConverters {
 
 		@Override
 		public String convert(final UUID source) {
-			return source == null ? null : source.toString();
+			return source.toString();
 		}
 	}
 
