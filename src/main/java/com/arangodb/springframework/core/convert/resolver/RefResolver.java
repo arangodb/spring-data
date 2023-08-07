@@ -47,7 +47,7 @@ public class RefResolver extends AbstractResolver<Ref>
 
 	@Override
 	public Object resolveOne(final String id, final TypeInformation<?> type, final Ref annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, this) : resolve(id, type, annotation);
+		return annotation.lazy() ? proxy(id, type, annotation, this) : _resolve(id, type);
 	}
 
 	@Override
@@ -58,7 +58,12 @@ public class RefResolver extends AbstractResolver<Ref>
 
 	@Override
 	public Object resolve(final String id, final TypeInformation<?> type, final Ref annotation) {
-		return template.find(id, type.getType()).get();
+		return _resolve(id, type);
+	}
+
+	public Object _resolve(final String id, final TypeInformation<?> type) {
+		return template.find(id, type.getType())
+				.orElseThrow(() -> cannotResolveException(id, type));
 	}
 
 	@Override

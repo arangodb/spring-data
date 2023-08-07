@@ -64,7 +64,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 		this.objenesis = new ObjenesisStd(true);
 	}
 
-	public static interface ResolverCallback<A extends Annotation> {
+	public interface ResolverCallback<A extends Annotation> {
 
 		Object resolve(String id, TypeInformation<?> type, A annotation);
 
@@ -177,12 +177,12 @@ public abstract class AbstractResolver<A extends Annotation> {
 		}
 
 		private String proxyToString() {
-			final StringBuilder str = new StringBuilder();
-			str.append(LazyLoadingProxy.class.getSimpleName());
-			str.append(" [");
-			str.append(id);
-			str.append("]");
-			return str.toString();
+			return new StringBuilder()
+					.append(LazyLoadingProxy.class.getSimpleName())
+					.append(" [")
+					.append(id)
+					.append("]")
+					.toString();
 		}
 
 		private int proxyHashCode() {
@@ -213,6 +213,10 @@ public abstract class AbstractResolver<A extends Annotation> {
 	protected static TypeInformation<?> getNonNullComponentType(final TypeInformation<?> type) {
 		final TypeInformation<?> compType = type.getComponentType();
 		return compType != null ? compType : TypeInformation.OBJECT;
+	}
+
+	protected static RuntimeException cannotResolveException(final String id, final TypeInformation<?> type) {
+		return new IllegalArgumentException("Cannot resolve " + type.getType() + " for id " + id);
 	}
 
 }
