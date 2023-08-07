@@ -488,8 +488,8 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 			}
 			Assert.isTrue(iterator.hasNext(), "Too few arguments passed");
 			final Object nearValue = iterator.next();
-			if (nearValue instanceof Point) {
-				checkUniquePoint((Point) nearValue);
+			if (nearValue instanceof Point point) {
+				checkUniquePoint(point);
 			} else {
 				bindingCounter = binding.bind(nearValue, shouldIgnoreCase(part), null, point -> checkUniquePoint(point),
 						bindingCounter);

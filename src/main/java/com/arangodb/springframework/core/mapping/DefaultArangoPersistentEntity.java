@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -124,7 +123,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 			options.numberOfShards(annotation.numberOfShards());
 		}
 		if (annotation.allowUserKeys()) {
-			options.keyOptions(annotation.allowUserKeys(), annotation.keyType(),
+			options.keyOptions(true, annotation.keyType(),
 					annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
 					annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
 		}
@@ -145,7 +144,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 			options.numberOfShards(annotation.numberOfShards());
 		}
 		if (annotation.allowUserKeys()) {
-			options.keyOptions(annotation.allowUserKeys(), annotation.keyType(),
+			options.keyOptions(true, annotation.keyType(),
 					annotation.keyIncrement() > -1 ? annotation.keyIncrement() : null,
 					annotation.keyOffset() > -1 ? annotation.keyOffset() : null);
 		}
@@ -239,9 +238,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	}
 
 	public <A extends Annotation> Collection<A> getIndexes(final Class<A> annotation) {
-		final List<A> indexes = findAnnotations(annotation).stream().filter(a -> annotation.isInstance(a))
-				.map(a -> annotation.cast(a)).collect(Collectors.toList());
-		return indexes;
+		return findAnnotations(annotation).stream().filter(annotation::isInstance)
+				.map(annotation::cast).collect(Collectors.toList());
 	}
 
 	@Override

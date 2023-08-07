@@ -37,12 +37,10 @@ public class ArangoExceptionTranslator implements PersistenceExceptionTranslator
 
 	@Override
 	public DataAccessException translateExceptionIfPossible(final RuntimeException ex) {
-		DataAccessException dae = null;
-		if (ex instanceof DataAccessException) {
-			return DataAccessException.class.cast(ex);
+		if (ex instanceof DataAccessException dae) {
+			return dae;
 		}
-		if (ex instanceof ArangoDBException) {
-			final ArangoDBException exception = ArangoDBException.class.cast(ex);
+		if (ex instanceof ArangoDBException exception) {
 			final Integer responseCode = exception.getResponseCode();
 			if (responseCode == null) {
 				return null;

@@ -58,13 +58,13 @@ public class DefaultArangoTypeMapper implements ArangoTypeMapper {
 	}
 
 	public DefaultArangoTypeMapper(final String typeKey) {
-		this(typeKey, Arrays.asList(new SimpleTypeInformationMapper()));
+		this(typeKey, Collections.singletonList(new SimpleTypeInformationMapper()));
 	}
 
 	public DefaultArangoTypeMapper(final String typeKey,
 		final MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
 		this(typeKey, new DefaultTypeAliasAccessor(typeKey), mappingContext,
-				Arrays.asList(new SimpleTypeInformationMapper()));
+				Collections.singletonList(new SimpleTypeInformationMapper()));
 	}
 
 	public DefaultArangoTypeMapper(final String typeKey, final List<? extends TypeInformationMapper> mappers) {

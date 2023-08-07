@@ -84,7 +84,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	public long count() throws DataAccessException {
 		try {
 			final Long count = collection.count().getCount();
-			return count != null ? count.longValue() : -1;
+			return count != null ? count : -1L;
 		} catch (final ArangoDBException e) {
 			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}

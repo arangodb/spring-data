@@ -35,7 +35,7 @@ public class DBDocumentEntity extends HashMap<String, Object> {
 		super();
 	}
 
-	public DBDocumentEntity(final Map<? extends String, ? extends Object> m) {
+	public DBDocumentEntity(final Map<String, ?> m) {
 		super(m);
 	}
 
