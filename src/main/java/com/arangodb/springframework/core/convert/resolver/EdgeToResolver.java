@@ -46,7 +46,8 @@ public class EdgeToResolver extends AbstractResolver<To> implements RelationReso
 	}
 
 	private Object _resolveOne(final String id, final TypeInformation<?> type) {
-		return template.find(id, type.getType()).get();
+		return template.find(id, type.getType())
+				.orElseThrow(() -> cannotResolveException(id, type));
 	}
 
 	@Override

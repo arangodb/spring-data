@@ -66,7 +66,7 @@ public class DocumentToResolver extends AbstractResolver<To> implements Relation
 	}
 
 	private ArangoCursor<?> _resolve(final String id, final Class<?> type, final boolean limit) {
-		final String query = String.format("FOR e IN @@edge FILTER e._to == @id RETURN e", limit ? "LIMIT 1" : "");
+		final String query = String.format("FOR e IN @@edge FILTER e._to == @id %s RETURN e", limit ? "LIMIT 1" : "");
 		Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("@edge", type);
 		bindVars.put("id", id);
