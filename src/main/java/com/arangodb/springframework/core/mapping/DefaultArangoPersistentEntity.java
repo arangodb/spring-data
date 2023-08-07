@@ -165,6 +165,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public void addPersistentProperty(final ArangoPersistentProperty property) {
 		super.addPersistentProperty(property);
 		if (property.isArangoIdProperty()) {

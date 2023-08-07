@@ -61,6 +61,7 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 
 	Optional<GeoIndexed> getGeoIndexed();
 
+	@Deprecated
 	Optional<FulltextIndexed> getFulltextIndexed();
 
 	Optional<TtlIndexed> getTtlIndexed();
