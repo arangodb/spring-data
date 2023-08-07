@@ -45,6 +45,7 @@ public class ArangoRepositoryConfigurationExtension extends RepositoryConfigurat
 	}
 
 	@Override
+	@Deprecated
 	protected String getModulePrefix() {
 		return "arango";
 	}
