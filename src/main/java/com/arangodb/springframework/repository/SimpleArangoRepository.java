@@ -29,6 +29,7 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.util.AqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.domain.*;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.repository.query.FluentQuery;
@@ -155,7 +156,11 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public void deleteById(final ID id) {
-		arangoOperations.delete(id, domainClass);
+		try {
+			arangoOperations.delete(id, domainClass);
+		} catch (InvalidDataAccessResourceUsageException notFound) {
+			// ignored by contract
+		}
 	}
 
 	/**
