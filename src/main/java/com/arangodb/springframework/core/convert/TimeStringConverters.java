@@ -74,7 +74,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final Date source) {
-			return source == null ? null : JavaTimeUtil.format(source);
+			return JavaTimeUtil.format(source);
 		}
 	}
 
@@ -94,7 +94,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final Instant source) {
-			return source == null ? null : JavaTimeUtil.format(source);
+			return JavaTimeUtil.format(source);
 		}
 	}
 
@@ -104,7 +104,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final LocalDate source) {
-			return source == null ? null : JavaTimeUtil.format(source);
+			return JavaTimeUtil.format(source);
 		}
 	}
 
@@ -114,7 +114,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final LocalDateTime source) {
-			return source == null ? null : JavaTimeUtil.format(source);
+			return JavaTimeUtil.format(source);
 		}
 	}
 
@@ -124,7 +124,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final LocalTime source) {
-			return source == null ? null : JavaTimeUtil.format(source);
+			return JavaTimeUtil.format(source);
 		}
 	}
 
@@ -134,7 +134,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final OffsetDateTime source) {
-			return source == null ? null : JavaTimeUtil.format(source);
+			return JavaTimeUtil.format(source);
 		}
 	}
 
@@ -144,7 +144,7 @@ public class TimeStringConverters {
 
 		@Override
 		public String convert(final ZonedDateTime source) {
-			return source == null ? null : JavaTimeUtil.format(source);
+			return JavaTimeUtil.format(source);
 		}
 	}
 
@@ -154,7 +154,7 @@ public class TimeStringConverters {
 
 		@Override
 		public Instant convert(final String source) {
-			return source == null ? null : JavaTimeUtil.parseInstant(source);
+			return JavaTimeUtil.parseInstant(source);
 		}
 	}
 
@@ -164,7 +164,7 @@ public class TimeStringConverters {
 
 		@Override
 		public LocalDate convert(final String source) {
-			return source == null ? null : JavaTimeUtil.parseLocalDate(source);
+			return JavaTimeUtil.parseLocalDate(source);
 		}
 	}
 
@@ -174,7 +174,7 @@ public class TimeStringConverters {
 
 		@Override
 		public LocalDateTime convert(final String source) {
-			return source == null ? null : JavaTimeUtil.parseLocalDateTime(source);
+			return JavaTimeUtil.parseLocalDateTime(source);
 		}
 	}
 
@@ -184,7 +184,7 @@ public class TimeStringConverters {
 
 		@Override
 		public LocalTime convert(final String source) {
-			return source == null ? null : JavaTimeUtil.parseLocalTime(source);
+			return JavaTimeUtil.parseLocalTime(source);
 		}
 	}
 
@@ -194,7 +194,7 @@ public class TimeStringConverters {
 
 		@Override
 		public OffsetDateTime convert(final String source) {
-			return source == null ? null : JavaTimeUtil.parseOffsetDateTime(source);
+			return JavaTimeUtil.parseOffsetDateTime(source);
 		}
 	}
 
@@ -204,7 +204,7 @@ public class TimeStringConverters {
 
 		@Override
 		public ZonedDateTime convert(final String source) {
-			return source == null ? null : JavaTimeUtil.parseZonedDateTime(source);
+			return JavaTimeUtil.parseZonedDateTime(source);
 		}
 	}
 
