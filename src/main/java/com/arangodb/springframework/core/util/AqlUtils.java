@@ -144,7 +144,10 @@ public final class AqlUtils {
 				.collect(Collectors.toList());
 		return Sort.by(orders);
 	}
-
+	public static String escapeProperty(final String str)
+	{
+		return escapeSortProperty(str);
+	}
 	private static String escapeSortProperty(final String str) {
 		// dots are not allowed at start/end
 		if (str.charAt(0) == '.' || str.charAt(str.length() - 1) == '.') {

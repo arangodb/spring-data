@@ -76,7 +76,7 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 	}
 
 	private ArangoParameters(final List<ArangoParameter> parameters, final int queryOptionsIndex,
-		final int bindVarsIndex) {
+		final int bindVarsIndex, final Map<String, Integer> filterIndexes, final int searchIndex) {
 		super(parameters);
 		this.queryOptionsIndex = queryOptionsIndex;
 		this.bindVarsIndex = bindVarsIndex;
