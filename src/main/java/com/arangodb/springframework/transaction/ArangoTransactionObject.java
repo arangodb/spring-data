@@ -25,6 +25,7 @@ import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.StreamTransactionStatus;
 import com.arangodb.model.StreamTransactionOptions;
 import com.arangodb.springframework.core.template.CollectionCallback;
+import com.arangodb.springframework.core.util.AqlUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.Nullable;
@@ -35,6 +36,7 @@ import org.springframework.transaction.support.SmartTransactionObject;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.transaction.TransactionDefinition.TIMEOUT_DEFAULT;
 
@@ -67,7 +69,9 @@ class ArangoTransactionObject implements SmartTransactionObject {
             this.timeout = definition.getTimeout();
         }
         if (definition instanceof TransactionAttribute) {
-            addCollections(((TransactionAttribute) definition).getLabels());
+            addCollections(((TransactionAttribute) definition).getLabels().stream()
+                    .map(AqlUtils::buildCollectionName)
+                    .collect(Collectors.toList()));
         }
     }
 
