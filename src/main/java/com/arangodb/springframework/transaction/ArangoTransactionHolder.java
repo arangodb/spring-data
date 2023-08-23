@@ -34,6 +34,7 @@ import java.util.Set;
  *
  * @see TransactionSynchronizationManager#bindResource(Object, Object)
  * @see ArangoTransactionObject
+ * @author Arne Burmeister
  */
 class ArangoTransactionHolder {
 

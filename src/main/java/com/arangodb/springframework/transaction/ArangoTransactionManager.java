@@ -45,6 +45,8 @@ import java.util.function.Function;
  * {@linkplain TransactionDefinition#getIsolationLevel() isolation}
  * {@linkplain TransactionDefinition#ISOLATION_SERIALIZABLE serializable} are
  * supported.
+ *
+ * @author Arne Burmeister
  */
 public class ArangoTransactionManager extends AbstractPlatformTransactionManager implements InitializingBean {
 
