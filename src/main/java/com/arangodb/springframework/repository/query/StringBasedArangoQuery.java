@@ -21,15 +21,12 @@
 package com.arangodb.springframework.repository.query;
 
 import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameters.ArangoParameter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -111,22 +108,17 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 		bindVars.entrySet().stream()
 				.filter(entry -> entry.getKey().startsWith("@"))
 				.map(Map.Entry::getValue)
-				.map(value -> value instanceof Class ? getCollectionName((Class<?>) value): value.toString())
-				.filter(Objects::nonNull)
+				.map(this::asCollectionName)
+				.map(AqlUtils::buildCollectionName)
 				.forEach(allCollections::add);
 		return allCollections;
 	}
 
-	private String getCollectionName(Class<?> value) {
-		Document document = AnnotationUtils.findAnnotation(value, Document.class);
-		if (document != null) {
-			return document.value();
+	private String asCollectionName(Object value) {
+		if (value instanceof Class<?>) {
+			return mappingContext.getRequiredPersistentEntity((Class<?>) value).getCollection();
 		}
-		Edge edge = AnnotationUtils.findAnnotation(value, Edge.class);
-		if (edge != null) {
-			return edge.value();
-		}
-		return null;
+		return value.toString();
 	}
 
 	@Override
