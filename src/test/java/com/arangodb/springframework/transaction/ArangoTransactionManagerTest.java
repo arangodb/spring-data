@@ -43,16 +43,12 @@ import static org.springframework.beans.PropertyAccessorFactory.forDirectFieldAc
 @RunWith(MockitoJUnitRunner.class)
 public class ArangoTransactionManagerTest {
 
-    private static final DbName DATABASE_NAME = DbName.of("test");
-
     @Mock
     private ArangoOperations operations;
     @Mock
     private QueryTransactionBridge bridge;
     @InjectMocks
     private ArangoTransactionManager underTest;
-    @Mock
-    private ArangoDB driver;
     @Mock
     private ArangoDatabase database;
     @Mock
@@ -64,17 +60,13 @@ public class ArangoTransactionManagerTest {
 
     @Before
     public void setupMocks() {
-        when(operations.getDatabaseName())
-                .thenReturn(DATABASE_NAME);
-        when(operations.driver())
-                .thenReturn(driver);
-        when(driver.db(any(DbName.class)))
+        when(operations.db())
                 .thenReturn(database);
     }
 
     @After
     public void cleanupSync() {
-        TransactionSynchronizationManager.unbindResourceIfPossible(DATABASE_NAME);
+        TransactionSynchronizationManager.unbindResourceIfPossible(underTest);
         TransactionSynchronizationManager.clear();
     }
 
@@ -82,9 +74,8 @@ public class ArangoTransactionManagerTest {
     public void getTransactionReturnsNewTransactionWithoutStreamTransaction() {
         TransactionStatus status = underTest.getTransaction(new DefaultTransactionAttribute());
         assertThat(status.isNewTransaction(), is(true));
-        verify(driver).db(DATABASE_NAME);
         verify(bridge).setCurrentTransaction(any());
-        ArangoTransactionHolder resource = (ArangoTransactionHolder) TransactionSynchronizationManager.getResource(DATABASE_NAME);
+        ArangoTransactionHolder resource = (ArangoTransactionHolder) TransactionSynchronizationManager.getResource(underTest);
         assertThat(resource.getStreamTransactionId(), nullValue());
         assertThat(resource.getCollectionNames(), empty());
         assertThat(resource.isRollbackOnly(), is(false));
@@ -113,7 +104,7 @@ public class ArangoTransactionManagerTest {
         try {
             underTest.commit(outer);
         } finally {
-            assertThat(TransactionSynchronizationManager.getResource(DATABASE_NAME), nullValue());
+            assertThat(TransactionSynchronizationManager.getResource(underTest), nullValue());
         }
     }
 
@@ -159,7 +150,7 @@ public class ArangoTransactionManagerTest {
         underTest.commit(inner2);
         underTest.commit(outer);
         verify(database).commitStreamTransaction("123");
-        assertThat(TransactionSynchronizationManager.getResource(DATABASE_NAME), nullValue());
+        assertThat(TransactionSynchronizationManager.getResource(underTest), nullValue());
     }
 
     @Test
@@ -171,7 +162,7 @@ public class ArangoTransactionManagerTest {
         assertThat(empty.isNewTransaction(), is(false));
         underTest.commit(empty);
         verifyNoInteractions(database);
-        assertThat(TransactionSynchronizationManager.getResource(DATABASE_NAME), nullValue());
+        assertThat(TransactionSynchronizationManager.getResource(underTest), nullValue());
     }
 
     @Test
@@ -186,7 +177,7 @@ public class ArangoTransactionManagerTest {
         assertThat(inner.isNewTransaction(), is(false));
         underTest.commit(inner);
         ArangoTransactionObject transactionObject = getTransactionObject(inner);
-        assertThat(TransactionSynchronizationManager.getResource(DATABASE_NAME), is(transactionObject.getHolder()));
+        assertThat(TransactionSynchronizationManager.getResource(underTest), is(transactionObject.getHolder()));
         verifyNoInteractions(database);
     }
 

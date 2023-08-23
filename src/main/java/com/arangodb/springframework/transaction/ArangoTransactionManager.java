@@ -36,7 +36,7 @@ import java.util.function.Function;
 
 /**
  * Transaction manager using ArangoDB stream transactions on the
- * {@linkplain ArangoOperations#getDatabaseName() current database} of the
+ * {@linkplain ArangoOperations#db() current database} of the
  * template. A {@linkplain ArangoTransactionObject transaction object} using
  * a shared {@linkplain ArangoTransactionHolder holder} is used for the
  * {@link DefaultTransactionStatus}. Neither
@@ -79,10 +79,9 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
      */
     @Override
     protected ArangoTransactionObject doGetTransaction() {
-        DbName database = operations.getDatabaseName();
-        ArangoTransactionHolder holder = (ArangoTransactionHolder) TransactionSynchronizationManager.getResource(database);
+        ArangoTransactionHolder holder = (ArangoTransactionHolder) TransactionSynchronizationManager.getResource(this);
         try {
-            return new ArangoTransactionObject(operations.driver().db(database), getDefaultTimeout(), holder);
+            return new ArangoTransactionObject(operations.db(), getDefaultTimeout(), holder);
         } catch (ArangoDBException error) {
             throw new TransactionSystemException("Cannot create transaction object", error);
         }
@@ -173,7 +172,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
     @Override
     protected boolean isExistingTransaction(Object transaction) throws TransactionException {
         ArangoTransactionHolder holder = ((ArangoTransactionObject) transaction).getHolder();
-        return holder == TransactionSynchronizationManager.getResource(operations.getDatabaseName());
+        return holder == TransactionSynchronizationManager.getResource(this);
     }
 
     /**
@@ -210,12 +209,12 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
         super.prepareSynchronization(status, definition);
         if (status.isNewSynchronization()) {
             ArangoTransactionHolder holder = ((ArangoTransactionObject) status.getTransaction()).getHolder();
-            TransactionSynchronizationManager.bindResource(operations.getDatabaseName(), holder);
+            TransactionSynchronizationManager.bindResource(this, holder);
         }
     }
 
     private void afterCompletion() {
         bridge.clearCurrentTransaction();
-        TransactionSynchronizationManager.unbindResource(operations.getDatabaseName());
+        TransactionSynchronizationManager.unbindResource(this);
     }
 }

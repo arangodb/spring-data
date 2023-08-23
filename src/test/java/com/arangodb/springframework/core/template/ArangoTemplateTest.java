@@ -62,7 +62,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(version.getLicense(), is(notNullValue()));
 		assertThat(version.getServer(), is(notNullValue()));
 		assertThat(version.getVersion(), is(notNullValue()));
-		assertThat(template.getDatabaseName(), is(notNullValue()));
+		assertThat(template.db(), is(notNullValue()));
 	}
 
 	@Test
