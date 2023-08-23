@@ -43,6 +43,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
@@ -127,23 +128,23 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         });
     }
 
-    private ArangoCollection _collection(final String name) {
-        return _collection(name, null, null);
+	private ArangoCollection _collection(final String name, boolean transactional) {
+		return _collection(name, null, null, transactional);
     }
 
-    private ArangoCollection _collection(final Class<?> entityClass) {
-        return _collection(entityClass, null);
+	private ArangoCollection _collection(final Class<?> entityClass, boolean transactional) {
+		return _collection(entityClass, null, transactional);
     }
 
-    private ArangoCollection _collection(final Class<?> entityClass, final Object id) {
+	private ArangoCollection _collection(final Class<?> entityClass, final Object id, boolean transactional) {
         final ArangoPersistentEntity<?> persistentEntity = converter.getMappingContext()
                 .getRequiredPersistentEntity(entityClass);
         final String name = determineCollectionFromId(id).orElse(persistentEntity.getCollection());
-        return _collection(name, persistentEntity, persistentEntity.getCollectionOptions());
+		return _collection(name, persistentEntity, persistentEntity.getCollectionOptions(), transactional);
     }
 
     private ArangoCollection _collection(final String name, final ArangoPersistentEntity<?> persistentEntity,
-                                         final CollectionCreateOptions options) {
+										 final CollectionCreateOptions options, boolean transactional) {
 
         final ArangoDatabase db = db();
         final Class<?> entityClass = persistentEntity != null ? persistentEntity.getType() : null;
@@ -151,7 +152,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
                 key -> {
                     final ArangoCollection collection = db.collection(name);
                     if (!collection.exists()) {
-
+						if (transactional) {
+							throw new InvalidDataAccessResourceUsageException("Missing collection cannot be created during transaction");
+						}
                         collection.create(options);
                     }
                     return new CollectionCacheValue(collection);
@@ -160,8 +163,10 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         final ArangoCollection collection = value.getCollection();
         if (persistentEntity != null && !entities.contains(entityClass)) {
             value.addEntityClass(entityClass);
+			if (!transactional) {
             ensureCollectionIndexes(collection(collection), persistentEntity);
         }
+		}
         return collection;
     }
 
@@ -287,18 +292,18 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars,
                                      final AqlQueryOptions options, final Class<T> entityClass) throws DataAccessException {
         try {
-            ArangoCursor<T> cursor = db().query(query, entityClass, bindVars == null ? null : prepareBindVars(bindVars), options);
+            ArangoCursor<T> cursor = db().query(query, entityClass, bindVars == null ? null : prepareBindVars(bindVars, false), options);
             return new ArangoExtCursor<>(cursor, entityClass, eventPublisher);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
     }
 
-    private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
+	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars, boolean transactional) {
         final Map<String, Object> prepared = new HashMap<>(bindVars.size());
         for (final Entry<String, Object> entry : bindVars.entrySet()) {
             if (entry.getKey().startsWith("@") && entry.getValue() instanceof Class<?> clazz) {
-                prepared.put(entry.getKey(), _collection(clazz).name());
+				prepared.put(entry.getKey(), _collection(clazz, transactional).name());
             } else {
                 prepared.put(entry.getKey(), entry.getValue());
             }
@@ -317,7 +322,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         MultiDocumentEntity<DocumentDeleteEntity<T>> result;
         try {
-            result = _collection(entityClass).deleteDocuments(toList(values), options, entityClass);
+			result = _collection(entityClass, options.getStreamTransactionId() != null).deleteDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -349,7 +354,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         DocumentDeleteEntity<T> result;
         try {
-            result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), options, entityClass);
+			result = _collection(entityClass, id, options.getStreamTransactionId() != null).deleteDocument(determineDocumentKeyFromId(id), options, entityClass);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -369,7 +374,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         MultiDocumentEntity<DocumentUpdateEntity<T>> result;
         try {
-            result = _collection(entityClass).updateDocuments(toList(values), options, entityClass);
+			result = _collection(entityClass, options.getStreamTransactionId() != null).updateDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -387,7 +392,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         DocumentUpdateEntity<T> result;
         try {
-            result = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id), value, options);
+			result = _collection(value.getClass(), id, options.getStreamTransactionId() != null).updateDocument(determineDocumentKeyFromId(id), value, options);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -408,7 +413,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         MultiDocumentEntity<DocumentUpdateEntity<T>> result;
         try {
-            result = _collection(entityClass).replaceDocuments(toList(values), options, entityClass);
+            result = _collection(entityClass, options.getStreamTransactionId() != null).replaceDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -425,7 +430,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         DocumentUpdateEntity<T> result;
         try {
-            result = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id), value, options);
+            result = _collection(value.getClass(), id, false).replaceDocument(determineDocumentKeyFromId(id), value, options);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -439,7 +444,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     public <T> Optional<T> find(final Object id, final Class<T> entityClass, final DocumentReadOptions options)
             throws DataAccessException {
         try {
-            T res = _collection(entityClass, id).getDocument(determineDocumentKeyFromId(id), entityClass, options);
+            T res = _collection(entityClass, id, options.getStreamTransactionId() != null).getDocument(determineDocumentKeyFromId(id), entityClass, options);
             if (res != null) {
                 potentiallyEmitEvent(new AfterLoadEvent<>(res));
             }
@@ -462,7 +467,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             final Collection<String> keys = new ArrayList<>();
             ids.forEach(id -> keys.add(determineDocumentKeyFromId(id)));
-			Collection<T> docs = _collection(entityClass).getDocuments(keys, entityClass).getDocuments();
+			Collection<T> docs = _collection(entityClass, options.getStreamTransactionId() != null).getDocuments(keys, entityClass).getDocuments();
             for (T doc : docs) {
                 if (doc != null) {
                     potentiallyEmitEvent(new AfterLoadEvent<>(doc));
@@ -482,7 +487,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         MultiDocumentEntity<DocumentCreateEntity<T>> result;
         try {
-            result = _collection(entityClass).insertDocuments(toList(values), options, entityClass);
+            result = _collection(entityClass, options.getStreamTransactionId() != null).insertDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -498,7 +503,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         DocumentCreateEntity<T> result;
         try {
-            result = _collection(value.getClass()).insertDocument(value, options);
+            result = _collection(value.getClass(), options.getStreamTransactionId() != null).insertDocument(value, options);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -511,7 +516,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     @Override
     public <T> T repsert(final T value, AqlQueryOptions options) throws DataAccessException {
         @SuppressWarnings("unchecked") final Class<T> clazz = (Class<T>) value.getClass();
-        final String collectionName = _collection(clazz).name();
+		final String collectionName = _collection(clazz, options.getStreamTransactionId() != null).name();
 
         potentiallyEmitEvent(new BeforeSaveEvent<>(value));
 
@@ -543,7 +548,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             return Collections.emptyList();
         }
 
-        final String collectionName = _collection(entityClass).name();
+		final String collectionName = _collection(entityClass, options.getStreamTransactionId() != null).name();
         potentiallyEmitBeforeSaveEvent(values);
 
         Map<String, Object> bindVars = new HashMap<>();
@@ -644,7 +649,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     @Override
 	public boolean exists(final Object id, final Class<?> entityClass, DocumentExistsOptions options) throws DataAccessException {
         try {
-			return _collection(entityClass).documentExists(determineDocumentKeyFromId(id), options);
+			return _collection(entityClass, options.getStreamTransactionId() != null).documentExists(determineDocumentKeyFromId(id), options);
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
@@ -665,13 +670,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
     @Override
     public CollectionOperations collection(final Class<?> entityClass) throws DataAccessException {
-        return collection(_collection(entityClass));
+		return collection(_collection(entityClass, false));
     }
 
     @Override
     public CollectionOperations collection(final String name, final CollectionCreateOptions options)
             throws DataAccessException {
-        return collection(_collection(name, null, options));
+		return collection(_collection(name, null, options, false));
     }
 
     private CollectionOperations collection(final ArangoCollection collection) {
