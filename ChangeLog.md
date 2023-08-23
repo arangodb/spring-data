@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - `CrudRepository.deleteById()` silently ignores an unknown id
 - drop support for Joda-Time
 - deprecated `AbstractArangoConfiguration` no longer exists
+- ArangoTemplate now send less ensure index requests and replaces indexes with same type and fields if options differ, any additional indexes will still not dropped
 - Fulltext Index support is now deprecated (same as Driver 7)
 
 ## [3.10.0] - 2023-05-17
