@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
  * @author Mark Vollmary
  * @author Christian Lechner
  * @author Michele Rastelli
+ * @author Arne Burmeister
  */
 public class StringBasedArangoQuery extends AbstractArangoQuery {
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();

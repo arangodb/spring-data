@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.transaction;
 
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.interceptor.TransactionAttribute;
@@ -34,6 +35,7 @@ import java.util.function.Predicate;
  * transaction exception handling in combination with a transaction manager using labels.
  *
  * @see ArangoTransactionManager
+ * @author Arne Burmeister
  */
 public class TransactionAttributeTemplate extends TransactionTemplate implements TransactionAttribute {
 
@@ -61,11 +63,12 @@ public class TransactionAttributeTemplate extends TransactionTemplate implements
     }
 
     @Override
+    @Nullable
     public String getQualifier() {
         return qualifier;
     }
 
-    public void setQualifier(String qualifier) {
+    public void setQualifier(@Nullable String qualifier) {
         this.qualifier = qualifier;
     }
 

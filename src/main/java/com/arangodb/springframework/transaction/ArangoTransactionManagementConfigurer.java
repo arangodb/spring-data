@@ -32,7 +32,9 @@ import com.arangodb.springframework.repository.query.QueryTransactionBridge;
  * To enable stream transactions for Arango Spring Data, create a
  * {@link org.springframework.context.annotation.Configuration} class annotated with
  * {@link org.springframework.transaction.annotation.EnableTransactionManagement} and
- * {@link org.springframework.context.annotation.Import} this one.
+ *{@link org.springframework.context.annotation.Import} this one.
+ *
+ * @author Arne Burmeister
  */
 public class ArangoTransactionManagementConfigurer implements TransactionManagementConfigurer {
 

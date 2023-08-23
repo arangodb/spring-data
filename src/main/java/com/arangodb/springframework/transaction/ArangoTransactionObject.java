@@ -41,8 +41,10 @@ import java.util.stream.Collectors;
 import static org.springframework.transaction.TransactionDefinition.TIMEOUT_DEFAULT;
 
 /**
- * Transaction object created by
- * {@link ArangoTransactionManager#doGetTransaction()}.
+ * Transaction object used for {@link org.springframework.transaction.support.DefaultTransactionStatus#getTransaction()}.
+ *
+ * @see ArangoTransactionManager#doGetTransaction()
+ * @author Arne Burmeister
  */
 class ArangoTransactionObject implements SmartTransactionObject {
 

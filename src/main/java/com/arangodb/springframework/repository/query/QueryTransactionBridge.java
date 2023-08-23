@@ -21,12 +21,15 @@
 package com.arangodb.springframework.repository.query;
 
 import org.springframework.core.NamedInheritableThreadLocal;
+import org.springframework.lang.Nullable;
 
 import java.util.Collection;
 import java.util.function.Function;
 
 /**
  * Bridge to postpone late transaction start to be able to inject collections from query side.
+ *
+ * @author Arne Burmeister
  */
 public class QueryTransactionBridge {
 
@@ -64,6 +67,7 @@ public class QueryTransactionBridge {
      * @see AbstractArangoQuery
      * @see com.arangodb.springframework.repository.SimpleArangoRepository
      */
+    @Nullable
     public String getCurrentTransaction(Collection<String> collections) {
         return CURRENT_TRANSACTION.get().apply(collections);
     }
