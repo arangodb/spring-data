@@ -22,6 +22,7 @@ package com.arangodb.springframework.core;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
+import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.*;
 import com.arangodb.model.*;
 import com.arangodb.springframework.core.convert.ArangoConverter;
@@ -54,7 +55,13 @@ public interface ArangoOperations {
 	 */
 	ArangoDBVersion getVersion() throws DataAccessException;
 
-	DbName getDatabaseName();
+	/**
+	 * Returns the underlying database. The database will be created if it does not exist.
+	 *
+	 * @return the database object
+	 * @throws DataAccessException
+	 */
+	ArangoDatabase db() throws DataAccessException;
 
 	/**
 	 * Performs a database query using the given {@code query} and {@code bindVars}, then returns a new
