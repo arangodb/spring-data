@@ -36,6 +36,8 @@ import com.arangodb.springframework.core.template.DefaultUserOperation.Collectio
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.springframework.core.util.MetadataUtils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -74,6 +76,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     private static final String REPSERT_QUERY = "LET doc = @doc " + REPSERT_QUERY_BODY;
     private static final String REPSERT_MANY_QUERY = "FOR doc IN @docs " + REPSERT_QUERY_BODY;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(ArangoTemplate.class);
     private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
     private volatile ArangoDBVersion version;
@@ -163,9 +166,11 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         final ArangoCollection collection = value.getCollection();
         if (persistentEntity != null && !entities.contains(entityClass)) {
             value.addEntityClass(entityClass);
-			if (!transactional) {
-            ensureCollectionIndexes(collection(collection), persistentEntity);
-        }
+			if (transactional) {
+				LOGGER.debug("Not ensuring any indexes of collection {} for {} during transaction", collection.name(), entityClass);
+			} else {
+            	ensureCollectionIndexes(collection(collection), persistentEntity);
+        	}
 		}
         return collection;
     }
