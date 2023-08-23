@@ -22,8 +22,8 @@ package com.arangodb.springframework.transaction;
 
 import com.arangodb.ArangoDBException;
 import com.arangodb.ArangoDatabase;
-import com.arangodb.DbName;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.template.CollectionCallback;
 import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.lang.Nullable;
@@ -67,10 +67,10 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
             throw new IllegalStateException("Nested transactions must not be allowed");
         }
         if (!isGlobalRollbackOnParticipationFailure()) {
-            throw new IllegalStateException("Global rollback on participating failure is needed");
+            throw new IllegalStateException("Global rollback on participating failure is required");
         }
         if (getTransactionSynchronization() == SYNCHRONIZATION_NEVER) {
-            throw new IllegalStateException("Transaction synchronization is needed always");
+            throw new IllegalStateException("Transaction synchronization must not be disabled");
         }
     }
 
@@ -81,7 +81,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
     protected ArangoTransactionObject doGetTransaction() {
         ArangoTransactionHolder holder = (ArangoTransactionHolder) TransactionSynchronizationManager.getResource(this);
         try {
-            return new ArangoTransactionObject(operations.db(), getDefaultTimeout(), holder);
+            return new ArangoTransactionObject(operations.db(), CollectionCallback.fromOperations(operations), getDefaultTimeout(), holder);
         } catch (ArangoDBException error) {
             throw new TransactionSystemException("Cannot create transaction object", error);
         }

@@ -1,8 +1,6 @@
 package com.arangodb.springframework.transaction;
 
-import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDatabase;
-import com.arangodb.DbName;
 import com.arangodb.entity.StreamTransactionEntity;
 import com.arangodb.entity.StreamTransactionStatus;
 import com.arangodb.model.StreamTransactionOptions;
@@ -72,7 +70,7 @@ public class ArangoTransactionManagerTest {
 
     @Test
     public void getTransactionReturnsNewTransactionWithoutStreamTransaction() {
-        TransactionStatus status = underTest.getTransaction(new DefaultTransactionAttribute());
+        TransactionStatus status = underTest.getTransaction(createTransactionAttribute("test"));
         assertThat(status.isNewTransaction(), is(true));
         verify(bridge).setCurrentTransaction(any());
         ArangoTransactionHolder resource = (ArangoTransactionHolder) TransactionSynchronizationManager.getResource(underTest);
@@ -84,12 +82,8 @@ public class ArangoTransactionManagerTest {
 
     @Test
     public void innerGetTransactionIsNotNewTransactionIncludingFormerCollections() {
-        DefaultTransactionAttribute first = new DefaultTransactionAttribute();
-        first.setLabels(Collections.singleton("foo"));
-        TransactionStatus outer = underTest.getTransaction(first);
-        DefaultTransactionAttribute second = new DefaultTransactionAttribute();
-        second.setLabels(Collections.singleton("bar"));
-        TransactionStatus inner = underTest.getTransaction(second);
+        TransactionStatus outer = underTest.getTransaction(createTransactionAttribute("outer", "foo"));
+        TransactionStatus inner = underTest.getTransaction(createTransactionAttribute("inner", "bar"));
         assertThat(inner.isNewTransaction(), is(false));
         ArangoTransactionObject transactionObject = getTransactionObject(inner);
         assertThat(transactionObject.getHolder().getCollectionNames(), hasItems("foo", "bar"));
@@ -98,8 +92,8 @@ public class ArangoTransactionManagerTest {
 
     @Test(expected = UnexpectedRollbackException.class)
     public void innerRollbackCausesUnexpectedRollbackOnOuterCommit() {
-        TransactionStatus outer = underTest.getTransaction(new DefaultTransactionAttribute());
-        TransactionStatus inner = underTest.getTransaction(new DefaultTransactionAttribute());
+        TransactionStatus outer = underTest.getTransaction(createTransactionAttribute("outer"));
+        TransactionStatus inner = underTest.getTransaction(createTransactionAttribute("inner"));
         underTest.rollback(inner);
         try {
             underTest.commit(outer);
@@ -110,8 +104,7 @@ public class ArangoTransactionManagerTest {
 
     @Test
     public void getTransactionReturnsTransactionCreatesStreamTransactionWithAllCollectionsOnBridgeBeginCall() {
-        DefaultTransactionAttribute definition = new DefaultTransactionAttribute();
-        definition.setLabels(Collections.singleton("baz"));
+        DefaultTransactionAttribute definition = createTransactionAttribute("timeout", "baz");
         definition.setTimeout(20);
         TransactionStatus status = underTest.getTransaction(definition);
         beginTransaction("123", "foo", "bar");
@@ -127,17 +120,14 @@ public class ArangoTransactionManagerTest {
 
     @Test
     public void nestedGetTransactionReturnsExistingTransactionWithFormerCollections() {
-        DefaultTransactionAttribute first = new DefaultTransactionAttribute();
-        first.setLabels(Collections.singleton("foo"));
-        TransactionStatus outer = underTest.getTransaction(first);
+        TransactionStatus outer = underTest.getTransaction(createTransactionAttribute("outer", "foo"));
         assertThat(outer.isNewTransaction(), is(true));
 
         beginTransaction("123", "foo", "bar");
         when(streamTransaction.getStatus())
                 .thenReturn(StreamTransactionStatus.running);
 
-        DefaultTransactionAttribute second = new DefaultTransactionAttribute();
-        second.setLabels(Collections.singleton("bar"));
+        DefaultTransactionAttribute second = createTransactionAttribute("inner", "bar");
         TransactionStatus inner1 = underTest.getTransaction(second);
         assertThat(inner1.isNewTransaction(), is(false));
         ArangoTransactionObject tx1 = getTransactionObject(inner1);
@@ -155,9 +145,8 @@ public class ArangoTransactionManagerTest {
 
     @Test
     public void getTransactionForPropagationSupportsWithoutExistingCreatesDummyTransaction() {
-        DefaultTransactionAttribute supports = new DefaultTransactionAttribute();
+        DefaultTransactionAttribute supports = createTransactionAttribute("test", "foo");
         supports.setPropagationBehavior(TransactionDefinition.PROPAGATION_SUPPORTS);
-        supports.setLabels(Collections.singleton("foo"));
         TransactionStatus empty = underTest.getTransaction(supports);
         assertThat(empty.isNewTransaction(), is(false));
         underTest.commit(empty);
@@ -167,12 +156,9 @@ public class ArangoTransactionManagerTest {
 
     @Test
     public void getTransactionForPropagationSupportsWithExistingCreatesInner() {
-        DefaultTransactionAttribute first = new DefaultTransactionAttribute();
-        first.setLabels(Collections.singleton("foo"));
-        TransactionStatus outer = underTest.getTransaction(first);
-        DefaultTransactionAttribute supports = new DefaultTransactionAttribute();
+        TransactionStatus outer = underTest.getTransaction(createTransactionAttribute("outer", "foo"));
+        DefaultTransactionAttribute supports = createTransactionAttribute("supports", "bar");
         supports.setPropagationBehavior(TransactionDefinition.PROPAGATION_SUPPORTS);
-        supports.setLabels(Collections.singleton("bar"));
         TransactionStatus inner = underTest.getTransaction(supports);
         assertThat(inner.isNewTransaction(), is(false));
         underTest.commit(inner);
@@ -183,10 +169,7 @@ public class ArangoTransactionManagerTest {
 
     @Test
     public void getTransactionWithMultipleBridgeCallsWorksForKnownCollections() {
-        DefaultTransactionAttribute definition = new DefaultTransactionAttribute();
-        definition.setLabels(Collections.singleton("baz"));
-        definition.setTimeout(20);
-        underTest.getTransaction(definition);
+        underTest.getTransaction(createTransactionAttribute("test", "baz"));
         beginTransaction("123", "foo");
         beginPassed.getValue().apply(Arrays.asList("foo", "baz"));
         verify(database).beginStreamTransaction(optionsPassed.capture());
@@ -196,10 +179,7 @@ public class ArangoTransactionManagerTest {
 
     @Test
     public void getTransactionWithMultipleBridgeCallsIgnoresAdditionalCollections() {
-        DefaultTransactionAttribute definition = new DefaultTransactionAttribute();
-        definition.setLabels(Collections.singleton("bar"));
-        definition.setTimeout(20);
-        TransactionStatus state = underTest.getTransaction(definition);
+        TransactionStatus state = underTest.getTransaction(createTransactionAttribute("test", "bar"));
         beginTransaction("123", "foo");
         beginPassed.getValue().apply(Collections.singletonList("baz"));
         assertThat(getTransactionObject(state).getHolder().getCollectionNames(), hasItems("foo", "bar"));
@@ -208,7 +188,7 @@ public class ArangoTransactionManagerTest {
 
     @Test(expected = InvalidIsolationLevelException.class)
     public void getTransactionThrowsInvalidIsolationLevelExceptionForIsolationSerializable() {
-        DefaultTransactionAttribute definition = new DefaultTransactionAttribute();
+        DefaultTransactionAttribute definition = createTransactionAttribute("serializable");
         definition.setIsolationLevel(TransactionDefinition.ISOLATION_SERIALIZABLE);
         underTest.getTransaction(definition);
     }
@@ -234,5 +214,12 @@ public class ArangoTransactionManagerTest {
 
     private TransactionCollectionOptions getCollections(StreamTransactionOptions options) {
         return (TransactionCollectionOptions) forDirectFieldAccess(options).getPropertyValue("collections");
+    }
+
+    private static DefaultTransactionAttribute createTransactionAttribute(String name, String... collections) {
+        DefaultTransactionAttribute transactionAttribute = new DefaultTransactionAttribute();
+        transactionAttribute.setName(name);
+        transactionAttribute.setLabels(Arrays.asList(collections));
+        return transactionAttribute;
     }
 }
