@@ -24,6 +24,7 @@ import com.arangodb.ArangoDBException;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.StreamTransactionStatus;
 import com.arangodb.model.StreamTransactionOptions;
+import com.arangodb.springframework.core.template.CollectionCallback;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.Nullable;
@@ -46,11 +47,13 @@ class ArangoTransactionObject implements SmartTransactionObject {
     private static final Log logger = LogFactory.getLog(ArangoTransactionObject.class);
 
     private final ArangoDatabase database;
+    private final CollectionCallback collectionCallback;
     private final ArangoTransactionHolder holder;
     private int timeout;
 
-    ArangoTransactionObject(ArangoDatabase database, int defaultTimeout, @Nullable ArangoTransactionHolder holder) {
+    ArangoTransactionObject(ArangoDatabase database, CollectionCallback collectionCallback, int defaultTimeout, @Nullable ArangoTransactionHolder holder) {
         this.database = database;
+        this.collectionCallback = collectionCallback;
         this.holder = holder == null ? new ArangoTransactionHolder() : holder;
         this.timeout = defaultTimeout;
     }
@@ -71,6 +74,7 @@ class ArangoTransactionObject implements SmartTransactionObject {
     ArangoTransactionHolder getOrBegin(Collection<String> collections) throws ArangoDBException {
         addCollections(collections);
         if (holder.getStreamTransactionId() == null) {
+            holder.getCollectionNames().forEach(collectionCallback::collection);
             StreamTransactionOptions options = new StreamTransactionOptions()
                     .allowImplicit(true)
                     .writeCollections(holder.getCollectionNames().toArray(new String[0]))

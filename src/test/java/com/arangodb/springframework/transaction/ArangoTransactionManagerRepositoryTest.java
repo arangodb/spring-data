@@ -4,7 +4,6 @@ import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTransactionalTestConfiguration;
 import com.arangodb.springframework.repository.ActorRepository;
 import com.arangodb.springframework.repository.MovieRepository;
-import com.arangodb.springframework.testdata.Actor;
 import com.arangodb.springframework.testdata.Movie;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ArangoTransactionManagerRepositoryTest extends AbstractArangoTest {
 
 	public ArangoTransactionManagerRepositoryTest() {
-		super(Movie.class, Actor.class);
+		super(Movie.class);
 	}
 
 	@Autowired
@@ -65,5 +64,11 @@ public class ArangoTransactionManagerRepositoryTest extends AbstractArangoTest {
 		TestTransaction.end();
 
 		assertThat(movieRepository.findById(starWars.getId())).isNotPresent();
+	}
+
+	@Test
+	@Transactional(label = "actors")
+	public void shouldCreateCollectionsBeforeTransaction() {
+		actorRepository.findAll();
 	}
 }
