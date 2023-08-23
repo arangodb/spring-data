@@ -53,6 +53,8 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ReflectionUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -178,73 +180,115 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     @SuppressWarnings("deprecation")
     private static void ensureCollectionIndexes(final CollectionOperations collection,
                                                 final ArangoPersistentEntity<?> persistentEntity) {
-        persistentEntity.getPersistentIndexes().forEach(index -> ensurePersistentIndex(collection, index));
-        persistentEntity.getPersistentIndexedProperties().forEach(p -> ensurePersistentIndex(collection, p));
-        persistentEntity.getGeoIndexes().forEach(index -> ensureGeoIndex(collection, index));
-        persistentEntity.getGeoIndexedProperties().forEach(p -> ensureGeoIndex(collection, p));
-        persistentEntity.getFulltextIndexes().forEach(index -> ensureFulltextIndex(collection, index));
-        persistentEntity.getFulltextIndexedProperties().forEach(p -> ensureFulltextIndex(collection, p));
-        persistentEntity.getTtlIndex().ifPresent(index -> ensureTtlIndex(collection, index));
-        persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p));
-        persistentEntity.getMDIndexes().forEach(index -> ensureMDIndex(collection, index));
-        persistentEntity.getMDPrefixedIndexes().forEach(index -> ensureMDPrefixedIndex(collection, index));
+        Collection<IndexEntity> existing = collection.getIndexes();
+        persistentEntity.getPersistentIndexes().forEach(index -> ensurePersistentIndex(collection, index, existing));
+        persistentEntity.getPersistentIndexedProperties().forEach(p -> ensurePersistentIndex(collection, p, existing));
+        persistentEntity.getGeoIndexes().forEach(index -> ensureGeoIndex(collection, index, existing));
+        persistentEntity.getGeoIndexedProperties().forEach(p -> ensureGeoIndex(collection, p, existing));
+        persistentEntity.getFulltextIndexes().forEach(index -> ensureFulltextIndex(collection, index, existing));
+        persistentEntity.getFulltextIndexedProperties().forEach(p -> ensureFulltextIndex(collection, p, existing));
+        persistentEntity.getTtlIndex().ifPresent(index -> ensureTtlIndex(collection, index, existing));
+        persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p, existing));
+        persistentEntity.getMDIndexes().forEach(index -> ensureMDIndex(collection, index, existing));
+        persistentEntity.getMDPrefixedIndexes().forEach(index -> ensureMDPrefixedIndex(collection, index, existing));
     }
 
-    private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation) {
-        collection.ensurePersistentIndex(Arrays.asList(annotation.fields()),
-                new PersistentIndexOptions()
+	private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation, Collection<IndexEntity> existing) {
+		PersistentIndexOptions options = new PersistentIndexOptions()
                         .unique(annotation.unique())
                         .sparse(annotation.sparse())
-                        .deduplicate(annotation.deduplicate()));
+				.deduplicate(annotation.deduplicate());
+		Collection<String> fields = Arrays.asList(annotation.fields());
+		if (existing.stream().noneMatch(index -> equalPersistentIndex(index, options, fields))) {
+			collection.ensurePersistentIndex(fields, options);
+		}
     }
 
     private static void ensurePersistentIndex(final CollectionOperations collection,
-                                              final ArangoPersistentProperty value) {
+			final ArangoPersistentProperty value, Collection<IndexEntity> existing) {
         final PersistentIndexOptions options = new PersistentIndexOptions();
         value.getPersistentIndexed().ifPresent(i -> options
                 .unique(i.unique())
                 .sparse(i.sparse())
                 .deduplicate(i.deduplicate()));
-        collection.ensurePersistentIndex(Collections.singleton(value.getFieldName()), options);
+		Collection<String> fields = Collections.singleton(value.getFieldName());
+		if (existing.stream().noneMatch(index -> equalPersistentIndex(index, options, fields))) {
+			collection.ensurePersistentIndex(fields, options);
+		}
+	}
+
+	private static boolean equalPersistentIndex(IndexEntity index, PersistentIndexOptions options, Collection<String> fields) {
+		return isIndexWithTypeAndFields(index, IndexType.persistent, fields)
+				&& isEqualOption(index.getUnique(), options.getUnique(), false)
+				&& isEqualOption(index.getSparse(), options.getSparse(), false)
+				&& isEqualOption(index.getDeduplicate(), options.getDeduplicate(), false);
     }
 
-    private static void ensureGeoIndex(final CollectionOperations collection, final GeoIndex annotation) {
-        collection.ensureGeoIndex(Arrays.asList(annotation.fields()),
-                new GeoIndexOptions().geoJson(annotation.geoJson()));
+	private static void ensureGeoIndex(final CollectionOperations collection, final GeoIndex annotation, Collection<IndexEntity> existing) {
+		GeoIndexOptions options = new GeoIndexOptions().geoJson(annotation.geoJson());
+		Collection<String> fields = Arrays.asList(annotation.fields());
+		if (existing.stream().noneMatch(index -> equalGeoIndex(index, options, fields))) {
+			collection.ensureGeoIndex(fields, options);
+		}
     }
 
-    private static void ensureGeoIndex(final CollectionOperations collection, final ArangoPersistentProperty value) {
+	private static void ensureGeoIndex(final CollectionOperations collection, final ArangoPersistentProperty value, Collection<IndexEntity> existing) {
         final GeoIndexOptions options = new GeoIndexOptions();
         value.getGeoIndexed().ifPresent(i -> options.geoJson(i.geoJson()));
-        collection.ensureGeoIndex(Collections.singleton(value.getFieldName()), options);
+		Collection<String> fields = Collections.singleton(value.getFieldName());
+		if (existing.stream().noneMatch(index -> equalGeoIndex(index, options, fields))) {
+			collection.ensureGeoIndex(fields, options);
+		}
+	}
+
+	private static boolean equalGeoIndex(IndexEntity index, GeoIndexOptions options, Collection<String> fields) {
+		return isIndexWithTypeAndFields(index, IndexType.geo, fields)
+				&& isEqualOption(index.getGeoJson(), options.getGeoJson(), false);
     }
 
     @SuppressWarnings("deprecation")
-    private static void ensureFulltextIndex(final CollectionOperations collection, final FulltextIndex annotation) {
-        collection.ensureFulltextIndex(Collections.singleton(annotation.field()),
-                new FulltextIndexOptions().minLength(annotation.minLength() > -1 ? annotation.minLength() : null));
+	private static void ensureFulltextIndex(final CollectionOperations collection, final FulltextIndex annotation, Collection<IndexEntity> existing) {
+		Collection<String> fields = Collections.singleton(annotation.field());
+		FulltextIndexOptions options = new FulltextIndexOptions().minLength(annotation.minLength() > -1 ? annotation.minLength() : null);
+		if (existing.stream().noneMatch(index -> equalFulltextIndex(index, options, fields))) {
+			collection.ensureFulltextIndex(fields, options);
+		}
     }
 
     @SuppressWarnings("deprecation")
     private static void ensureFulltextIndex(final CollectionOperations collection,
-                                            final ArangoPersistentProperty value) {
+											final ArangoPersistentProperty value, Collection<IndexEntity> existing) {
         final FulltextIndexOptions options = new FulltextIndexOptions();
         value.getFulltextIndexed().ifPresent(i -> options.minLength(i.minLength() > -1 ? i.minLength() : null));
-        collection.ensureFulltextIndex(Collections.singleton(value.getFieldName()), options);
+		Collection<String> fields = Collections.singleton(value.getFieldName());
+		if (existing.stream().noneMatch(index -> equalFulltextIndex(index, options, fields))) {
+			collection.ensureFulltextIndex(fields, options);
+		}
+	}
+
+	private static boolean equalFulltextIndex(IndexEntity index, FulltextIndexOptions options, Collection<String> fields) {
+		return isIndexWithTypeAndFields(index, IndexType.fulltext, fields)
+				&& isEqualOption(index.getMinLength(), options.getMinLength(), 0);
     }
 
-    private static void ensureTtlIndex(final CollectionOperations collection, final TtlIndex annotation) {
-        collection.ensureTtlIndex(Collections.singleton(annotation.field()),
-                new TtlIndexOptions().expireAfter(annotation.expireAfter()));
+	private static void ensureTtlIndex(final CollectionOperations collection, final TtlIndex annotation, Collection<IndexEntity> existing) {
+		TtlIndexOptions options = new TtlIndexOptions().expireAfter(annotation.expireAfter());
+		Collection<String> fields = Collections.singleton(annotation.field());
+		if (existing.stream().noneMatch(index -> equalTtlIndex(index, options, fields))) {
+			collection.ensureTtlIndex(fields, options);
+		}
     }
 
-    private static void ensureTtlIndex(final CollectionOperations collection, final ArangoPersistentProperty value) {
+	private static void ensureTtlIndex(final CollectionOperations collection, final ArangoPersistentProperty value, Collection<IndexEntity> existing) {
         final TtlIndexOptions options = new TtlIndexOptions();
         value.getTtlIndexed().ifPresent(i -> options.expireAfter(i.expireAfter()));
-        collection.ensureTtlIndex(Collections.singleton(value.getFieldName()), options);
-    }
+		Collection<String> fields = Collections.singleton(value.getFieldName());
+		if (existing.stream().noneMatch(index -> equalTtlIndex(index, options, fields))) {
+			collection.ensureTtlIndex(fields, options);
+		}
+	}
 
-    private static void ensureMDIndex(final CollectionOperations collection, final MDIndex annotation) {
+    private static void ensureMDIndex(final CollectionOperations collection, final MDIndex annotation, Collection<IndexEntity> existing) {
         collection.ensureMDIndex(Arrays.asList(annotation.fields()),
                 new MDIndexOptions()
                         .unique(annotation.unique())
@@ -253,7 +297,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         );
     }
 
-    private static void ensureMDPrefixedIndex(final CollectionOperations collection, final MDPrefixedIndex annotation) {
+    private static void ensureMDPrefixedIndex(final CollectionOperations collection, final MDPrefixedIndex annotation, Collection<IndexEntity> existing) {
         collection.ensureMDPrefixedIndex(Arrays.asList(annotation.fields()),
                 new MDPrefixedIndexOptions()
                         .prefixFields(Arrays.asList(annotation.prefixFields()))
@@ -261,6 +305,28 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
                         .fieldValueTypes(annotation.fieldValueTypes())
                         .sparse(annotation.sparse())
         );
+    }
+
+    private static boolean equalTtlIndex(IndexEntity index, TtlIndexOptions options, Collection<String> fields) {
+		return isIndexWithTypeAndFields(index, IndexType.ttl, fields)
+				&& isEqualOption(index.getExpireAfter(), getProtected(options, "getExpireAfter"), 0);
+	}
+
+	private static boolean isIndexWithTypeAndFields(IndexEntity index, IndexType type, Collection<String> fields) {
+		return index.getType() == type && index.getFields().size() == fields.size() && index.getFields().containsAll(fields);
+	}
+
+	private static <T> boolean isEqualOption(T value, @Nullable T optionalValue, T defaultValue) {
+		return value.equals(optionalValue == null ? defaultValue : optionalValue);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Deprecated
+	// can be removed  for driver 7 as all option getters are visible
+	private static <T> T getProtected(Object options, String getterName) {
+		Method getter = ReflectionUtils.findMethod(options.getClass(), getterName);
+		ReflectionUtils.makeAccessible(getter);
+		return (T) ReflectionUtils.invokeMethod(getter, options);
     }
 
     private Optional<String> determineCollectionFromId(final Object id) {
