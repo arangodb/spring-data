@@ -52,8 +52,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.lang.Nullable;
-import org.springframework.util.ReflectionUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -63,6 +61,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Mark Vollmary
  * @author Christian Lechner
  * @author Reşat SABIQ
+ * @author Arne Burmeister
  */
 public class ArangoTemplate implements ArangoOperations, CollectionCallback, ApplicationContextAware {
 
@@ -161,16 +160,14 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 						}
                         collection.create(options);
                     }
-                    return new CollectionCacheValue(collection);
+					return new CollectionCacheValue(collection, collection.getIndexes());
                 });
-        final Collection<Class<?>> entities = value.getEntities();
         final ArangoCollection collection = value.getCollection();
-        if (persistentEntity != null && !entities.contains(entityClass)) {
-            value.addEntityClass(entityClass);
+		if (persistentEntity != null && value.addEntityClass(entityClass)) {
 			if (transactional) {
 				LOGGER.debug("Not ensuring any indexes of collection {} for {} during transaction", name, entityClass);
 			} else {
-            	ensureCollectionIndexes(collection(collection), persistentEntity);
+				ensureCollectionIndexes(collection(collection), persistentEntity, value.getIndexes());
         	}
 		}
         return collection;
@@ -178,8 +175,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
     @SuppressWarnings("deprecation")
     private static void ensureCollectionIndexes(final CollectionOperations collection,
-                                                final ArangoPersistentEntity<?> persistentEntity) {
-        Collection<IndexEntity> existing = collection.getIndexes();
+			final ArangoPersistentEntity<?> persistentEntity, Collection<IndexEntity> existing) {
         persistentEntity.getPersistentIndexes().forEach(index -> ensurePersistentIndex(collection, index, existing));
         persistentEntity.getPersistentIndexedProperties().forEach(p -> ensurePersistentIndex(collection, p, existing));
         persistentEntity.getGeoIndexes().forEach(index -> ensureGeoIndex(collection, index, existing));
@@ -198,8 +194,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
                         .sparse(annotation.sparse())
 				.deduplicate(annotation.deduplicate());
 		Collection<String> fields = Arrays.asList(annotation.fields());
-		if (existing.stream().noneMatch(index -> equalPersistentIndex(index, options, fields))) {
-			collection.ensurePersistentIndex(fields, options);
+		if (createNewIndex(IndexType.persistent, fields, existing)) {
+			existing.add(collection.ensurePersistentIndex(fields, options));
 		}
     }
 
@@ -211,23 +207,16 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
                 .sparse(i.sparse())
                 .deduplicate(i.deduplicate()));
 		Collection<String> fields = Collections.singleton(value.getFieldName());
-		if (existing.stream().noneMatch(index -> equalPersistentIndex(index, options, fields))) {
-			collection.ensurePersistentIndex(fields, options);
+		if (createNewIndex(IndexType.persistent, fields, existing)) {
+			existing.add(collection.ensurePersistentIndex(fields, options));
 		}
 	}
-
-	private static boolean equalPersistentIndex(IndexEntity index, PersistentIndexOptions options, Collection<String> fields) {
-		return isIndexWithTypeAndFields(index, IndexType.persistent, fields)
-				&& isEqualOption(index.getUnique(), options.getUnique(), false)
-				&& isEqualOption(index.getSparse(), options.getSparse(), false)
-				&& isEqualOption(index.getDeduplicate(), options.getDeduplicate(), false);
-    }
 
 	private static void ensureGeoIndex(final CollectionOperations collection, final GeoIndex annotation, Collection<IndexEntity> existing) {
 		GeoIndexOptions options = new GeoIndexOptions().geoJson(annotation.geoJson());
 		Collection<String> fields = Arrays.asList(annotation.fields());
-		if (existing.stream().noneMatch(index -> equalGeoIndex(index, options, fields))) {
-			collection.ensureGeoIndex(fields, options);
+		if (createNewIndex(IndexType.geo, fields, existing)) {
+			existing.add(collection.ensureGeoIndex(fields, options));
 		}
     }
 
@@ -235,22 +224,17 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         final GeoIndexOptions options = new GeoIndexOptions();
         value.getGeoIndexed().ifPresent(i -> options.geoJson(i.geoJson()));
 		Collection<String> fields = Collections.singleton(value.getFieldName());
-		if (existing.stream().noneMatch(index -> equalGeoIndex(index, options, fields))) {
-			collection.ensureGeoIndex(fields, options);
+		if (createNewIndex(IndexType.geo, fields, existing)) {
+			existing.add(collection.ensureGeoIndex(fields, options));
 		}
 	}
-
-	private static boolean equalGeoIndex(IndexEntity index, GeoIndexOptions options, Collection<String> fields) {
-		return isIndexWithTypeAndFields(index, IndexType.geo, fields)
-				&& isEqualOption(index.getGeoJson(), options.getGeoJson(), false);
-    }
 
     @SuppressWarnings("deprecation")
 	private static void ensureFulltextIndex(final CollectionOperations collection, final FulltextIndex annotation, Collection<IndexEntity> existing) {
 		Collection<String> fields = Collections.singleton(annotation.field());
 		FulltextIndexOptions options = new FulltextIndexOptions().minLength(annotation.minLength() > -1 ? annotation.minLength() : null);
-		if (existing.stream().noneMatch(index -> equalFulltextIndex(index, options, fields))) {
-			collection.ensureFulltextIndex(fields, options);
+		if (createNewIndex(IndexType.fulltext, fields, existing)) {
+			existing.add(collection.ensureFulltextIndex(fields, options));
 		}
     }
 
@@ -260,21 +244,16 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         final FulltextIndexOptions options = new FulltextIndexOptions();
         value.getFulltextIndexed().ifPresent(i -> options.minLength(i.minLength() > -1 ? i.minLength() : null));
 		Collection<String> fields = Collections.singleton(value.getFieldName());
-		if (existing.stream().noneMatch(index -> equalFulltextIndex(index, options, fields))) {
-			collection.ensureFulltextIndex(fields, options);
+		if (createNewIndex(IndexType.fulltext, fields, existing)) {
+			existing.add(collection.ensureFulltextIndex(fields, options));
 		}
 	}
-
-	private static boolean equalFulltextIndex(IndexEntity index, FulltextIndexOptions options, Collection<String> fields) {
-		return isIndexWithTypeAndFields(index, IndexType.fulltext, fields)
-				&& isEqualOption(index.getMinLength(), options.getMinLength(), 0);
-    }
 
 	private static void ensureTtlIndex(final CollectionOperations collection, final TtlIndex annotation, Collection<IndexEntity> existing) {
 		TtlIndexOptions options = new TtlIndexOptions().expireAfter(annotation.expireAfter());
 		Collection<String> fields = Collections.singleton(annotation.field());
-		if (existing.stream().noneMatch(index -> equalTtlIndex(index, options, fields))) {
-			collection.ensureTtlIndex(fields, options);
+		if (createNewIndex(IndexType.ttl, fields, existing)) {
+			existing.add(collection.ensureTtlIndex(fields, options));
 		}
     }
 
@@ -282,8 +261,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         final TtlIndexOptions options = new TtlIndexOptions();
         value.getTtlIndexed().ifPresent(i -> options.expireAfter(i.expireAfter()));
 		Collection<String> fields = Collections.singleton(value.getFieldName());
-		if (existing.stream().noneMatch(index -> equalTtlIndex(index, options, fields))) {
-			collection.ensureTtlIndex(fields, options);
+		if (createNewIndex(IndexType.ttl, fields, existing)) {
+			existing.add(collection.ensureTtlIndex(fields, options));
 		}
 	}
 
@@ -306,27 +285,14 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         );
     }
 
-    private static boolean equalTtlIndex(IndexEntity index, TtlIndexOptions options, Collection<String> fields) {
-		return isIndexWithTypeAndFields(index, IndexType.ttl, fields)
-				&& isEqualOption(index.getExpireAfter(), getProtected(options, "getExpireAfter"), 0);
+	private static boolean createNewIndex(IndexType type, Collection<String> fields, Collection<IndexEntity> existing) {
+		return existing.stream()
+				.noneMatch(index -> isIndexWithTypeAndFields(index, type, fields));
 	}
 
 	private static boolean isIndexWithTypeAndFields(IndexEntity index, IndexType type, Collection<String> fields) {
 		return index.getType() == type && index.getFields().size() == fields.size() && index.getFields().containsAll(fields);
 	}
-
-	private static <T> boolean isEqualOption(T value, @Nullable T optionalValue, T defaultValue) {
-		return value.equals(optionalValue == null ? defaultValue : optionalValue);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Deprecated
-	// can be removed  for driver 7 as all option getters are visible
-	private static <T> T getProtected(Object options, String getterName) {
-		Method getter = ReflectionUtils.findMethod(options.getClass(), getterName);
-		ReflectionUtils.makeAccessible(getter);
-		return (T) ReflectionUtils.invokeMethod(getter, options);
-    }
 
     private Optional<String> determineCollectionFromId(final Object id) {
         return id != null ? Optional.ofNullable(MetadataUtils.determineCollectionFromId(converter.convertId(id)))
