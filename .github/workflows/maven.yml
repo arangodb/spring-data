@@ -30,8 +30,8 @@ jobs:
       matrix:
         docker-img:
           - docker.io/arangodb/arangodb:3.9.11
-          - docker.io/arangodb/arangodb:3.10.9
-          - docker.io/arangodb/arangodb:3.11.2
+          - docker.io/arangodb/arangodb:3.10.10
+          - docker.io/arangodb/arangodb:3.11.3
         topology:
           - single
           - cluster
