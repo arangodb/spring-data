@@ -48,6 +48,6 @@ public @interface PersistentIndexed {
 	/**
 	 * If {@literal true}, then set deduplicate to index
 	 */
-	boolean deduplicate() default false;
+	boolean deduplicate() default true;
 
 }
