@@ -29,7 +29,7 @@ import com.arangodb.springframework.ArangoUncategorizedException;
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- *
+ * @author Arne Burmeister
  */
 public class ArangoExceptionTranslator implements PersistenceExceptionTranslator {
 

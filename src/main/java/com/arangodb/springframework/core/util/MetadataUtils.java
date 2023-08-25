@@ -3,6 +3,8 @@
  */
 package com.arangodb.springframework.core.util;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Generic utilities for metadata, such as records' _keys.
  * 
@@ -35,6 +37,7 @@ public final class MetadataUtils {
 	 *            string consisting of concatenation of collection name, /, & _key.
 	 * @return collection name (or null if no key delimiter is present)
 	 */
+	@Nullable
 	public static String determineCollectionFromId(final String id) {
 		final int delimiter = id.indexOf(KEY_DELIMITER);
 		return delimiter == -1 ? null : id.substring(0, delimiter);
