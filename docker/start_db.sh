@@ -114,9 +114,3 @@ if [ "$STARTER_MODE" == "activefailover" ]; then
   echo "Leader: $SCHEME://$LEADER"
   echo ""
 fi
-
-cat > "$LOCATION/../src/test/resources/arangodb.properties" << EOF
-arangodb.hosts=${GW}:8529
-arangodb.password=test
-arangodb.acquireHostList=true
-EOF

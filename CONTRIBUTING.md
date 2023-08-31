@@ -16,7 +16,7 @@ and run using `mvn test`.
 To run tests integrated with a database server, the easiest way is to use docker to spin up a single server:
 
 ```
-docker run -e ARANGO_NO_AUTH=1 -p 8529:8529 arangodb:latest arangod
+./docker/start_db.sh
 ```
 
 More server versions and starter modes will be checked for a pull request. 
