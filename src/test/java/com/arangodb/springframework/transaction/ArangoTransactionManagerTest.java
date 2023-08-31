@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.lang.Nullable;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.*;
 import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 import org.springframework.transaction.support.DefaultTransactionStatus;
@@ -49,7 +50,6 @@ public class ArangoTransactionManagerTest {
     private ArangoTransactionManager underTest;
     @Mock
     private ArangoDatabase database;
-    @Mock
     private StreamTransactionEntity streamTransaction;
     @Captor
     private ArgumentCaptor<Function<Collection<String>, String>> beginPassed;
@@ -58,6 +58,7 @@ public class ArangoTransactionManagerTest {
 
     @Before
     public void setupMocks() {
+        streamTransaction = new StreamTransactionEntity();
         when(operations.db())
                 .thenReturn(database);
     }
@@ -124,8 +125,6 @@ public class ArangoTransactionManagerTest {
         assertThat(outer.isNewTransaction(), is(true));
 
         beginTransaction("123", "foo", "bar");
-        when(streamTransaction.getStatus())
-                .thenReturn(StreamTransactionStatus.running);
 
         DefaultTransactionAttribute second = createTransactionAttribute("inner", "bar");
         TransactionStatus inner1 = underTest.getTransaction(second);
@@ -194,8 +193,8 @@ public class ArangoTransactionManagerTest {
     }
 
     private void beginTransaction(String id, String... collectionNames) {
-        when(streamTransaction.getId())
-                .thenReturn(id);
+        ReflectionTestUtils.setField(streamTransaction, "id", id);
+        ReflectionTestUtils.setField(streamTransaction, "status", StreamTransactionStatus.running);
         when(database.beginStreamTransaction(any()))
                 .thenReturn(streamTransaction);
         lenient().when(database.getStreamTransaction(any()))
