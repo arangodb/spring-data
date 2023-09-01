@@ -4,7 +4,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.*;
@@ -86,7 +90,6 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		repository.deleteById(johnId);
 		assertThat(repository.existsById(bob.getId()), equalTo(true));
 		assertThat(repository.existsById(johnId), equalTo(false));
-		repository.deleteById("12345678");
 	}
 
 	@Test
