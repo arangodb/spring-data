@@ -1,31 +1,28 @@
 package com.arangodb.springframework.repository.query;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import com.arangodb.springframework.testdata.*;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
-
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDBException;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;
 import com.arangodb.springframework.repository.OverriddenCrudMethodsRepository;
+import com.arangodb.springframework.testdata.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  *
@@ -39,9 +36,9 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Autowired
 	protected OverriddenCrudMethodsRepository overriddenRepository;
 
-    @Test
-    public void dynamicFilter() {
-        repository.saveAll(customers);
+	@Test
+	public void dynamicFilter() {
+		repository.saveAll(customers);
 
 		Map<String, Object> filters = new HashMap<>();
 		filters.put("`customer-name`", "John");
@@ -60,7 +57,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdAqlWithNamedParameterTest() {
 		repository.saveAll(customers);
 		final Map<String, Object> retrieved = repository.findOneByIdAqlWithNamedParameter(john.getId(),
-			new AqlQueryOptions());
+				new AqlQueryOptions());
 		assertThat(retrieved, hasEntry("_key", john.getId()));
 		assertThat(retrieved, hasEntry("_rev", john.getRev()));
 		assertThat(retrieved, hasEntry("customer-name", john.getName()));
@@ -106,7 +103,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		List<Double> cursorNotMerged = repository.sequenceTo10K(0, new AqlQueryOptions()).asListRemaining();
 		assertThat(cursorNotMerged, hasSize(10_001));
 		assertThat(cursorNotMerged.get(0), nullValue());
-		assertThrows(InvalidDataAccessApiUsageException.class,
+		assertThrows(ArangoDBException.class,
 				()-> repository.sequenceTo10K(0, new AqlQueryOptions().failOnWarning(true)));
 	}
 
@@ -142,28 +139,28 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	@Test
 	public void findOneByIdInCollectionAqlWithUnusedParamTest() {
 		repository.saveAll(customers);
-		assertThrows(InvalidDataAccessApiUsageException.class,
+		assertThrows(ArangoDBException.class,
 				() -> repository.findOneByIdInCollectionAqlWithUnusedParam(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
 	@Test
 	public void findOneByIdInNamedCollectionAqlWithUnusedParamTest() {
 		repository.saveAll(customers);
-		assertThrows(InvalidDataAccessResourceUsageException.class,
+		assertThrows(ArangoDBException.class,
 				() -> repository.findOneByIdInNamedCollectionAqlWithUnusedParam(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
 	@Test
 	public void findOneByIdInIncorrectNamedCollectionAqlTest() {
 		repository.saveAll(customers);
-		assertThrows(InvalidDataAccessApiUsageException.class,
+		assertThrows(ArangoDBException.class,
 				() -> repository.findOneByIdInIncorrectNamedCollectionAql(john.getId().split("/")[0], john.getId(), john.getId()));
 	}
 
 	@Test
 	public void findOneByIdInNamedCollectionAqlRejectedTest() {
 		repository.saveAll(customers);
-		assertThrows(InvalidDataAccessApiUsageException.class,
+		assertThrows(ArangoDBException.class,
 				() -> repository.findOneByIdInNamedCollectionAqlRejected(john.getId().split("/")[0], john.getId()));
 	}
 
@@ -227,7 +224,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void findOneByIdWithDynamicProjectionTest() {
 		repository.saveAll(customers);
 		final CustomerNameProjection retrieved = repository.findOneByIdWithDynamicProjection(john.getId(),
-			CustomerNameProjection.class);
+				CustomerNameProjection.class);
 		assertThat(retrieved.getName(), equalTo(john.getName()));
 	}
 
