@@ -21,7 +21,6 @@
 package com.arangodb.springframework.core.template;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 
 import com.arangodb.ArangoDBException;
@@ -58,12 +57,16 @@ public class DefaultUserOperation implements UserOperations {
 		this.collectionCallback = collectionCallback;
 	}
 
+	private DataAccessException translateExceptionIfPossible(final RuntimeException exception) {
+		return exceptionTranslator.translateExceptionIfPossible(exception);
+	}
+
 	@Override
 	public UserEntity get() throws DataAccessException {
 		try {
 			return db.arango().getUser(username);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -72,7 +75,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			return db.arango().createUser(username, passwd);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -81,7 +84,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			return db.arango().updateUser(username, options);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -90,7 +93,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			return db.arango().replaceUser(username, options);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -99,7 +102,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			db.arango().deleteUser(username);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -108,7 +111,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			db.arango().grantDefaultDatabaseAccess(username, permissions);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -117,7 +120,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			db.grantAccess(username, permissions);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -126,7 +129,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			db.resetAccess(username);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -135,7 +138,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			db.grantDefaultCollectionAccess(username, permissions);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 
@@ -164,7 +167,7 @@ public class DefaultUserOperation implements UserOperations {
 		try {
 			return db.getPermissions(username);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateExceptionIfPossible(e);
 		}
 	}
 

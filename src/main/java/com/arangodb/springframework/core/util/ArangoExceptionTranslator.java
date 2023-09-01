@@ -20,7 +20,12 @@
 
 package com.arangodb.springframework.core.util;
 
-import org.springframework.dao.*;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 
 import com.arangodb.ArangoDBException;
@@ -29,48 +34,49 @@ import com.arangodb.springframework.ArangoUncategorizedException;
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- * @author Arne Burmeister
+ *
  */
 public class ArangoExceptionTranslator implements PersistenceExceptionTranslator {
 
-	private static final Integer ERROR_ARANGO_CONFLICT = 1200;
-
 	@Override
 	public DataAccessException translateExceptionIfPossible(final RuntimeException ex) {
-		if (ex instanceof DataAccessException dae) {
-			return dae;
-		}
-		if (ex instanceof ArangoDBException exception) {
+		DataAccessException dae = null;
+		if (ex instanceof DataAccessException) {
+			dae = DataAccessException.class.cast(ex);
+		} else if (ex instanceof ArangoDBException) {
+			final ArangoDBException exception = ArangoDBException.class.cast(ex);
 			final Integer responseCode = exception.getResponseCode();
-			if (responseCode == null) {
-				return null;
-			}
-			switch (responseCode) {
+			if (responseCode != null) {
+				switch (responseCode) {
 				case ArangoErrors.ERROR_HTTP_UNAUTHORIZED:
 				case ArangoErrors.ERROR_HTTP_FORBIDDEN:
-					return new PermissionDeniedDataAccessException(exception.getMessage(), exception);
+					dae = new PermissionDeniedDataAccessException(exception.getMessage(), exception);
+					break;
 				case ArangoErrors.ERROR_HTTP_BAD_PARAMETER:
 				case ArangoErrors.ERROR_HTTP_METHOD_NOT_ALLOWED:
-					return new InvalidDataAccessApiUsageException(exception.getMessage(), exception);
+					dae = new InvalidDataAccessApiUsageException(exception.getMessage(), exception);
+					break;
 				case ArangoErrors.ERROR_HTTP_NOT_FOUND:
-					return new InvalidDataAccessResourceUsageException(exception.getMessage(), exception);
+					dae = new InvalidDataAccessResourceUsageException(exception.getMessage(), exception);
+					break;
 				case ArangoErrors.ERROR_HTTP_CONFLICT:
-					if (ERROR_ARANGO_CONFLICT.equals(exception.getErrorNum()) && exception.getMessage().contains("_rev")) {
-						return new OptimisticLockingFailureException(exception.getMessage(), exception);
-					} else if (ERROR_ARANGO_CONFLICT.equals(exception.getErrorNum()) && exception.getMessage().contains("write-write conflict")) {
-						return new TransientDataAccessResourceException(exception.getMessage(), exception);
-					} else {
-						return new DataIntegrityViolationException(exception.getMessage(), exception);
-					}
+					dae = new DataIntegrityViolationException(exception.getMessage(), exception);
+					break;
 				case ArangoErrors.ERROR_HTTP_PRECONDITION_FAILED:
-					return new OptimisticLockingFailureException(exception.getMessage(), exception);
 				case ArangoErrors.ERROR_HTTP_SERVICE_UNAVAILABLE:
-					return new DataAccessResourceFailureException(exception.getMessage(), exception);
+					dae = new DataAccessResourceFailureException(exception.getMessage(), exception);
+					break;
+				case ArangoErrors.ERROR_HTTP_SERVER_ERROR:
 				default:
-					return new ArangoUncategorizedException(exception.getMessage(), exception);
+					dae = new ArangoUncategorizedException(exception.getMessage(), exception);
+					break;
+				}
 			}
 		}
-		return null;
+		if (dae == null) {
+			throw ex;
+		}
+		return dae;
 	}
 
 }
