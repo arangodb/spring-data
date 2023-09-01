@@ -6,13 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
-- upgraded dependency Spring 6 and Spring Data 3 (as from Spring Boot 3) including JDK 17 (#250)
-- exceptions during `ArangoOperations.query()` will be translated
-- `CrudRepository.deleteById()` silently ignores an unknown id
-- drop support for Joda-Time
-- deprecated `AbstractArangoConfiguration` no longer exists
-- Fulltext Index support is now deprecated (same as Driver 7)
-- in `@PersistentIndex` and `@PersistentIndexed` annotations, changed `deduplicate` field default value to `true` 
+- upgraded dependency Spring Framework 6 and Spring Data 3 (#250)
+- raised required minimum Java version to JDK 17
+- deprecated Fulltext Index support 
+- changed `deduplicate` default value to `true` in `@PersistentIndex` and `@PersistentIndexed` annotations 
+- removed deprecated `AbstractArangoConfiguration` in favor of `ArangoConfiguration` 
+- removed support for Joda-Time
 
 ## [3.10.0] - 2023-05-17
 
