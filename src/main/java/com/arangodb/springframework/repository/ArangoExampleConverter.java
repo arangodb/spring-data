@@ -79,15 +79,15 @@ public class ArangoExampleConverter<T> {
 			final Object value = accessor.getProperty(property);
 
 			if (property.isCollectionLike() && value != null) {
-				final ArangoPersistentEntity<?> persistentEntity = context
-						.getPersistentEntity(property.getActualType());
+				final Class<?> actualType = property.getActualType();
+				final ArangoPersistentEntity<?> persistentEntity = context.getPersistentEntity(actualType);
 				final StringBuilder predicateBuilderArray = new StringBuilder();
 				for (Object item : (Iterable<?>) value) {
 					final StringBuilder predicateBuilderArrayItem = new StringBuilder();
 					if (ClassUtils.isPrimitiveOrWrapper(item.getClass()) || item.getClass() == String.class) {
 						addPredicate(example, predicateBuilderArrayItem, bindVars, null, fullJavaPath, item, "CURRENT");
 					} else {
-						Assert.notNull(persistentEntity, "Missing persistent entity for " + property.getActualType());
+						Assert.notNull(persistentEntity, "Missing persistent entity for " + actualType);
 						traversePropertyTree(example, predicateBuilderArrayItem, bindVars, "", fullJavaPath,
 								persistentEntity, item, "CURRENT");
 					}
