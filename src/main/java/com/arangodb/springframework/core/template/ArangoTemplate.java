@@ -322,9 +322,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
 	@Override
 	public <T> ArangoCursor<T> query(final String query, final Map<String, Object> bindVars,
-			final AqlQueryOptions options, final Class<T> entityClass) throws DataAccessException {
+									 final AqlQueryOptions options, final Class<T> entityClass) throws DataAccessException {
+		try {
 			ArangoCursor<JsonNode> cursor = db().query(query, JsonNode.class, bindVars == null ? null : prepareBindVars(bindVars), options);
 			return new ArangoExtCursor<>(cursor, entityClass, converter, eventPublisher);
+		} catch (final ArangoDBException e) {
+			throw translateExceptionIfPossible(e);
+		}
 	}
 
 	private Map<String, Object> prepareBindVars(final Map<String, Object> bindVars) {
