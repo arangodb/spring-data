@@ -1,7 +1,6 @@
 package com.arangodb.springframework.repository.query;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.ArangoDBException;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.repository.AbstractArangoRepositoryTest;

@@ -324,7 +324,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 			ArangoCursor<JsonNode> cursor = db().query(query, JsonNode.class, bindVars == null ? null : prepareBindVars(bindVars), options);
 			return new ArangoExtCursor<>(cursor, entityClass, converter, eventPublisher);
 		} catch (final ArangoDBException e) {
-			throw translateExceptionIfPossible(e);
+			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 		}
 	}
 
