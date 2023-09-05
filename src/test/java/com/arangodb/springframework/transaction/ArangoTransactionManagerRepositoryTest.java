@@ -5,7 +5,7 @@ import com.arangodb.springframework.ArangoTransactionalTestConfiguration;
 import com.arangodb.springframework.repository.ActorRepository;
 import com.arangodb.springframework.repository.MovieRepository;
 import com.arangodb.springframework.testdata.Movie;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.transaction.TestTransaction;
