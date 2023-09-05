@@ -7,15 +7,15 @@ import com.arangodb.model.StreamTransactionOptions;
 import com.arangodb.model.TransactionCollectionOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.repository.query.QueryTransactionBridge;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.*;
@@ -35,11 +35,12 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.beans.PropertyAccessorFactory.forDirectFieldAccess;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ArangoTransactionManagerTest {
 
     @Mock
@@ -56,14 +57,14 @@ public class ArangoTransactionManagerTest {
     @Captor
     private ArgumentCaptor<StreamTransactionOptions> optionsPassed;
 
-    @Before
+    @BeforeEach
     public void setupMocks() {
         streamTransaction = new StreamTransactionEntity();
         when(operations.db())
                 .thenReturn(database);
     }
 
-    @After
+    @AfterEach
     public void cleanupSync() {
         TransactionSynchronizationManager.unbindResourceIfPossible(underTest);
         TransactionSynchronizationManager.clear();
@@ -91,16 +92,13 @@ public class ArangoTransactionManagerTest {
         verifyNoInteractions(database);
     }
 
-    @Test(expected = UnexpectedRollbackException.class)
+    @Test
     public void innerRollbackCausesUnexpectedRollbackOnOuterCommit() {
         TransactionStatus outer = underTest.getTransaction(createTransactionAttribute("outer"));
         TransactionStatus inner = underTest.getTransaction(createTransactionAttribute("inner"));
         underTest.rollback(inner);
-        try {
-            underTest.commit(outer);
-        } finally {
-            assertThat(TransactionSynchronizationManager.getResource(underTest), nullValue());
-        }
+        assertThrows(UnexpectedRollbackException.class, () -> underTest.commit(outer));
+        assertThat(TransactionSynchronizationManager.getResource(underTest), nullValue());
     }
 
     @Test
@@ -185,11 +183,11 @@ public class ArangoTransactionManagerTest {
         assertThat(getTransactionObject(state).getHolder().getCollectionNames(), not(hasItem("baz")));
     }
 
-    @Test(expected = InvalidIsolationLevelException.class)
+    @Test
     public void getTransactionThrowsInvalidIsolationLevelExceptionForIsolationSerializable() {
         DefaultTransactionAttribute definition = createTransactionAttribute("serializable");
         definition.setIsolationLevel(TransactionDefinition.ISOLATION_SERIALIZABLE);
-        underTest.getTransaction(definition);
+        assertThrows(InvalidIsolationLevelException.class, () -> underTest.getTransaction(definition));
     }
 
     private void beginTransaction(String id, String... collectionNames) {
