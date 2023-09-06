@@ -21,55 +21,71 @@
 package com.arangodb.springframework.core.util;
 
 /**
+ * @see <a href="https://github.com/arangodb/arangodb/blob/devel/lib/Basics/errors.dat">General ArangoDB storage errors</a>
  * @author Mark Vollmary
  * @author Christian Lechner
- *
+ * @author Arne Burmeister
  */
 public class ArangoErrors {
 
 	/**
-	 * bad parameter. Will be raised when the HTTP request does not fulfill the requirements.
+	 * Bad parameter, will be raised when the HTTP request does not fulfill the requirements.
 	 */
 	public static final int ERROR_HTTP_BAD_PARAMETER = 400;
 
 	/**
-	 * unauthorized. Will be raised when authorization is required but the user is not authorized.
+	 * Unauthorized, will be raised when authorization is required but the user is not authorized.
 	 */
 	public static final int ERROR_HTTP_UNAUTHORIZED = 401;
 
 	/**
-	 * forbidden. Will be raised when the operation is forbidden.
+	 * Forbidden, will be raised when the operation is forbidden.
 	 */
 	public static final int ERROR_HTTP_FORBIDDEN = 403;
 
 	/**
-	 * not found. Will be raised when an URI is unknown.
+	 * Not found, will be raised when an URI is unknown.
 	 */
 	public static final int ERROR_HTTP_NOT_FOUND = 404;
 
 	/**
-	 * method not supported. Will be raised when an unsupported HTTP method is used for an operation.
+	 * Method not supported, will be raised when an unsupported HTTP method is used for an operation.
 	 */
 	public static final int ERROR_HTTP_METHOD_NOT_ALLOWED = 405;
 
 	/**
-	 * conflict. Will be raised when a conflict is encountered.
+	 * Conflict, will be raised when a conflict is encountered.
 	 */
 	public static final int ERROR_HTTP_CONFLICT = 409;
 
 	/**
-	 * precondition failed. Will be raised when a precondition for an HTTP request is not met.
+	 * Precondition failed, will be raised when a precondition for an HTTP request is not met.
 	 */
 	public static final int ERROR_HTTP_PRECONDITION_FAILED = 412;
 
 	/**
-	 * internal server error. Will be raised when an internal server is encountered.
+	 * Internal server error, will be raised when an internal server is encountered.
 	 */
 	public static final int ERROR_HTTP_SERVER_ERROR = 500;
 
 	/**
-	 * service unavailable. Will be raised when a service is temporarily unavailable.
+	 * Service unavailable, will be raised when a service is temporarily unavailable.
 	 */
 	public static final int ERROR_HTTP_SERVICE_UNAVAILABLE = 503;
+
+	/**
+	 * Conflict, will be raised when updating or deleting a document and a conflict has been detected.
+	 */
+	public static final int ERROR_ARANGO_CONFLICT = 1200;
+
+	/**
+	 * Document not found, will be raised when a document with a given identifier is unknown.
+	 */
+	public static final int ERROR_ARANGO_DOCUMENT_NOT_FOUND = 1202;
+
+	/**
+	 * Unique constraint violated, will be raised when there is a unique constraint violation.
+	 */
+	public static final int ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED = 1210;
 
 }
