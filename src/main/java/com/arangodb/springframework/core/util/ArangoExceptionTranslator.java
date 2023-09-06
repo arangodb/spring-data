@@ -62,11 +62,13 @@ public class ArangoExceptionTranslator implements PersistenceExceptionTranslator
 						), InvalidDataAccessResourceUsageException::new);
 				case ERROR_HTTP_CONFLICT -> mostSpecific(exception, Map.ofEntries(
 							entry(hasErrorNumber(ERROR_ARANGO_CONFLICT).and(errorMessageContains("write-write")), TransientDataAccessResourceException::new),
+							// from AQL: {"code":409,"error":true,"errorMessage":"AQL: conflict, _rev values do not match (while executing)","errorNum":1200}
 							entry(hasErrorNumber(ERROR_ARANGO_CONFLICT).and(errorMessageContains("_rev")), OptimisticLockingFailureException::new),
 							entry(hasErrorNumber(ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED).and(errorMessageContains("_key")), DuplicateKeyException::new)
 						),
 						DataIntegrityViolationException::new);
 				case ERROR_HTTP_PRECONDITION_FAILED -> mostSpecific(exception, Map.ofEntries(
+								// from document API: {"error":true,"code":412,"errorNum":1200,"errorMessage":"conflict, _rev values do not match"}
 								entry(hasErrorNumber(ERROR_ARANGO_CONFLICT).and(errorMessageContains("_rev")), OptimisticLockingFailureException::new)
 						),
 						DataAccessResourceFailureException::new);

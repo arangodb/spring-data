@@ -27,17 +27,15 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.arangodb.model.DocumentUpdateOptions;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
@@ -97,6 +95,30 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(c2.getId(), is(notNullValue()));
 		assertThat(c3.getId(), is(notNullValue()));
 	}
+
+	@Test
+	public void repsertDocument() {
+		String id = "id-" + UUID.randomUUID();
+		Customer customer = new Customer("John", "Doe", 30);
+		customer.setId(id);
+		template.repsert(customer);
+		template.repsert(customer);
+		Customer read = template.find(id, Customer.class).orElseThrow();
+		assertThat(read.getId(), is(customer.getId()));
+		assertThat(read.getName(), is(customer.getName()));
+		assertThat(read.getSurname(), is(customer.getSurname()));
+		assertThat(read.getAge(), is(customer.getAge()));
+	}
+
+    @Test
+    public void repsertDocumentRevConflict() {
+        String id = "id-" + UUID.randomUUID();
+        Customer customer = new Customer("John", "Doe", 30);
+        customer.setId(id);
+        template.repsert(customer);
+        customer.setRev("foo");
+        assertThrows(OptimisticLockingFailureException.class, () -> template.repsert(customer));
+    }
 
 	@Test
 	public void insertDocumentWithCollName() {
@@ -194,6 +216,15 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customer.getSurname(), is("Doe"));
 		assertThat(customer.getAge(), is(26));
 	}
+
+    @Test
+    public void updateDocumentRevConflict() {
+        final DocumentEntity res = template.insert(new Customer("John", "Doe", 30));
+        Customer doc = new Customer("Jane", "Doe", 26);
+        doc.setRev("foo");
+        assertThrows(OptimisticLockingFailureException.class, () ->
+                template.update(res.getId(), doc, new DocumentUpdateOptions().ignoreRevs(false)));
+    }
 
 	@Test
 	public void updateDocuments() {
