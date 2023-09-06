@@ -53,6 +53,7 @@ public interface ArangoPersistentEntity<T>
 
 	Collection<GeoIndex> getGeoIndexes();
 
+	@Deprecated
 	Collection<FulltextIndex> getFulltextIndexes();
 
 	Optional<TtlIndex> getTtlIndex();
@@ -61,6 +62,7 @@ public interface ArangoPersistentEntity<T>
 
 	Collection<ArangoPersistentProperty> getGeoIndexedProperties();
 
+	@Deprecated
 	Collection<ArangoPersistentProperty> getFulltextIndexedProperties();
 
 	Optional<ArangoPersistentProperty> getTtlIndexedProperty();

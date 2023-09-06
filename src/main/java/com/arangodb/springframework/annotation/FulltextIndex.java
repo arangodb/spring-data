@@ -36,6 +36,7 @@ import java.lang.annotation.Target;
 @Repeatable(FulltextIndexes.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
+@Deprecated
 public @interface FulltextIndex {
 
 	/**

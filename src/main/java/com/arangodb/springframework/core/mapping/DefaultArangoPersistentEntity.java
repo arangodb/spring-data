@@ -221,6 +221,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	}
 
 	@Override
+	@Deprecated
 	public Collection<FulltextIndex> getFulltextIndexes() {
 		final Collection<FulltextIndex> indexes = getIndexes(FulltextIndex.class);
 		Optional.ofNullable(findAnnotation(FulltextIndexes.class))
@@ -253,6 +254,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	}
 
 	@Override
+	@Deprecated
 	public Collection<ArangoPersistentProperty> getFulltextIndexedProperties() {
 		return fulltextIndexedProperties;
 	}
