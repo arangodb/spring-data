@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ## [Unreleased]
 
 - upgraded dependency Spring Framework 6 and Spring Data 3 (#250)
+- exceptions during `ArangoOperations.query()` are now translated
+- improved exception translation, `OptimisticLockingFailureException` is now thrown in case of `_rev` conflict
 - raised required minimum Java version to JDK 17
 - deprecated Fulltext Index support 
 - changed `deduplicate` default value to `true` in `@PersistentIndex` and `@PersistentIndexed` annotations 
