@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
@@ -113,6 +115,13 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customer.getAge(), is(30));
 		assertThat(customer.getAddress(), is(notNullValue()));
 		assertThat(customer.getAddress().getZipCode(), is("22162–1010"));
+	}
+
+
+	@Test
+	public void deleteUnknownDocument() {
+		assertThrows(DataRetrievalFailureException.class,
+				() -> template.delete("9999", Customer.class));
 	}
 
 	@Test
@@ -261,6 +270,12 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customers.get(0).getName(), is("John"));
 		assertThat(customers.get(0).getSurname(), is("Doe"));
 		assertThat(customers.get(0).getAge(), is(30));
+	}
+
+	@Test
+	public void updateQueryForUnknown() {
+		assertThrows(DataRetrievalFailureException.class,
+				() -> template.query("UPDATE '9999' WITH { age: 99 } IN `test-customer` RETURN NEW", Customer.class));
 	}
 
 	@SuppressWarnings("rawtypes")
