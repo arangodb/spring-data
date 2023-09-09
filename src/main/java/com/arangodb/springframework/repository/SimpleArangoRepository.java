@@ -27,6 +27,7 @@ import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.util.AqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.data.domain.*;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.lang.Nullable;
@@ -152,7 +153,11 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public void deleteById(final ID id) {
-		arangoOperations.delete(id, domainClass);
+		try {
+			arangoOperations.delete(id, domainClass);
+		} catch (DataRetrievalFailureException unknown) {
+			// silently ignored
+		}
 	}
 
 	/**
