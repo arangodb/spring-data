@@ -451,7 +451,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	default <T> MultiDocumentEntity<DocumentCreateEntity<T>> insertAll(Iterable<T> values, Class<T> entityClass)
+	default <T> MultiDocumentEntity<DocumentCreateEntity<T>> insertAll(Iterable<? extends T> values, Class<T> entityClass)
 			throws DataAccessException {
 		return insertAll(values, new DocumentCreateOptions(), entityClass);
 	}
@@ -488,10 +488,10 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
-	<T> void repsert(T value, AqlQueryOptions options) throws DataAccessException;
+	<T> T repsert(T value, AqlQueryOptions options) throws DataAccessException;
 
 	default <T> T repsert(T value) throws DataAccessException {
-		repsert(value, new AqlQueryOptions());
+		return repsert(value, new AqlQueryOptions());
 	}
 
 	/**
@@ -505,9 +505,9 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
-	<T> Iterable<T> repsertAll(Iterable<? extends T> values, Class<T> entityClass, AqlQueryOptions options) throws DataAccessException;
+	<T> Iterable<T> repsertAll(Iterable<T> values, Class<? super T> entityClass, AqlQueryOptions options) throws DataAccessException;
 
-	default <T> Iterable<T> repsertAll(Iterable<? extends T> values, Class<T> entityClass) throws DataAccessException {
+	default <T> Iterable<T> repsertAll(Iterable<T> values, Class<? super T> entityClass) throws DataAccessException {
 		return repsertAll(values, entityClass, new AqlQueryOptions());
 	}
 
