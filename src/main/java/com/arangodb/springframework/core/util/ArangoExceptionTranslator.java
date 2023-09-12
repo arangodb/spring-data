@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.util;
 
+import com.arangodb.springframework.core.DocumentNotFoundException;
 import org.springframework.dao.*;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 
@@ -58,7 +59,7 @@ public class ArangoExceptionTranslator implements PersistenceExceptionTranslator
 				case ERROR_HTTP_UNAUTHORIZED, ERROR_HTTP_FORBIDDEN -> PermissionDeniedDataAccessException::new;
 				case ERROR_HTTP_BAD_PARAMETER, ERROR_HTTP_METHOD_NOT_ALLOWED -> InvalidDataAccessApiUsageException::new;
 				case ERROR_HTTP_NOT_FOUND -> mostSpecific(exception, Map.ofEntries(
-							entry(hasErrorNumber(ERROR_ARANGO_DOCUMENT_NOT_FOUND), DataRetrievalFailureException::new)
+							entry(hasErrorNumber(ERROR_ARANGO_DOCUMENT_NOT_FOUND), DocumentNotFoundException::new)
 						), InvalidDataAccessResourceUsageException::new);
 				case ERROR_HTTP_CONFLICT -> mostSpecific(exception, Map.ofEntries(
 							entry(hasErrorNumber(ERROR_ARANGO_CONFLICT).and(errorMessageContains("write-write")), TransientDataAccessResourceException::new),

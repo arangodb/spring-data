@@ -23,11 +23,11 @@ package com.arangodb.springframework.repository;
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.DocumentNotFoundException;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.util.AqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.data.domain.*;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.lang.Nullable;
@@ -155,8 +155,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	public void deleteById(final ID id) {
 		try {
 			arangoOperations.delete(id, domainClass);
-		} catch (DataRetrievalFailureException unknown) {
-			// silently ignored
+		} catch (DocumentNotFoundException unknown) {
+//			 silently ignored
 		}
 	}
 

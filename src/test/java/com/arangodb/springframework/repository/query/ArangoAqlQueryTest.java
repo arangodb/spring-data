@@ -276,7 +276,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 		repository.saveAll(customers);
 		repository.deleteById(john.getId());
 		assertThat(repository.findById(john.getId()).isPresent(), is(false));
-		repository.deleteById("9999");
+		repository.deleteById(john.getId());
 	}
 
 	@Test
