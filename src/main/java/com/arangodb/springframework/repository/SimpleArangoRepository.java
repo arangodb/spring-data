@@ -164,7 +164,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public void deleteById(final ID id) {
 		try {
-			arangoOperations.delete(id, domainClass, defaultDeleteOptions();
+			arangoOperations.delete(id, defaultDeleteOptions(), domainClass);
 		} catch (DocumentNotFoundException unknown) {
 //			 silently ignored
 		}
@@ -180,7 +180,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	public void delete(final T entity) {
 		String id = (String) arangoOperations.getConverter().getMappingContext()
 				.getRequiredPersistentEntity(domainClass).getIdentifierAccessor(entity).getRequiredIdentifier();
-		arangoOperations.delete(id, domainClass, defaultDeleteOptions());
+		arangoOperations.delete(id, defaultDeleteOptions(), domainClass);
 	}
 
     /**
@@ -188,7 +188,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @implNote do not add @Override annotation to keep backwards compatibility with spring-data-commons 2.4
      */
     public void deleteAllById(Iterable<? extends ID> ids) {
-        arangoOperations.deleteAll((Iterable<Object>) ids, domainClass, defaultDeleteOptions());
+        arangoOperations.deleteAll(ids, defaultDeleteOptions(), domainClass);
     }
 
 	/**
@@ -275,7 +275,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> findAll(final Example<S> example) {
-		return (ArangoCursor) findAllInternal((Pageable) null, example, new HashMap<>());
+		return (ArangoCursor<S>) findAllInternal((Pageable) null, example, new HashMap<>());
 	}
 
 	/**
