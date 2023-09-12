@@ -32,7 +32,6 @@ import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.mapping.event.*;
-import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.springframework.core.util.MetadataUtils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -721,6 +720,11 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     @Override
     public CollectionOperations collection(final Class<?> entityClass) throws DataAccessException {
 		return collection(_collection(entityClass, false));
+    }
+
+    @Override
+    public CollectionOperations collection(String name) throws DataAccessException {
+        return ArangoOperations.super.collection(name);
     }
 
     @Override

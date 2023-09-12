@@ -301,7 +301,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> findAll(final Example<S> example) {
-		return (ArangoCursor) findAllInternal((Pageable) null, example, new HashMap<>());
+		return (ArangoCursor<S>) findAllInternal((Pageable) null, example, new HashMap<>());
 	}
 
 	/**
