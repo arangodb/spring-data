@@ -23,6 +23,7 @@ package com.arangodb.springframework.repository;
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.DocumentNotFoundException;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.util.AqlUtils;
 import org.slf4j.Logger;
@@ -152,7 +153,11 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public void deleteById(final ID id) {
-		arangoOperations.delete(id, domainClass);
+		try {
+			arangoOperations.delete(id, domainClass);
+		} catch (DocumentNotFoundException unknown) {
+//			 silently ignored
+		}
 	}
 
 	/**
