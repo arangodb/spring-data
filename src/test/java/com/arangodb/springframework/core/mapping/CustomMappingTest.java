@@ -26,6 +26,8 @@ import static org.hamcrest.Matchers.nullValue;
 
 import java.util.Optional;
 
+import com.arangodb.ArangoCollection;
+import com.arangodb.springframework.ArangoTestConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.Test;
@@ -39,137 +41,170 @@ import com.arangodb.springframework.core.convert.DBDocumentEntity;
 
 /**
  * @author Mark Vollmary
- *
  */
 public class CustomMappingTest extends AbstractArangoTest {
 
-	static class TestEntity {
+    static class TestEntity {
 
-		private final String test;
+        private final String test;
 
-		public TestEntity(final String test) {
-			super();
-			this.test = test;
-		}
+        public TestEntity(final String test) {
+            super();
+            this.test = test;
+        }
 
-		public String getTest() {
-			return test;
-		}
+        public String getTest() {
+            return test;
+        }
 
-	}
+    }
 
-	private static final String FIELD = "test";
+    private static final String FIELD = "test";
 
-	@Document
-	public static class CustomJsonNodeTestEntity {
-		private String value;
+    @Document
+    public static class CustomJsonNodeTestEntity {
+        private String value;
 
-		public CustomJsonNodeTestEntity() {
-			super();
-		}
+        public CustomJsonNodeTestEntity() {
+            super();
+        }
 
-		public CustomJsonNodeTestEntity(final String value) {
-			super();
-			this.value = value;
-		}
+        public CustomJsonNodeTestEntity(final String value) {
+            super();
+            this.value = value;
+        }
 
-		public String getValue() {
-			return value;
-		}
+        public String getValue() {
+            return value;
+        }
 
-		public void setValue(final String value) {
-			this.value = value;
-		}
+        public void setValue(final String value) {
+            this.value = value;
+        }
 
-	}
+    }
 
-	public static class CustomJsonNodeWriteTestConverter implements Converter<CustomJsonNodeTestEntity, JsonNode> {
-		@Override
-		public JsonNode convert(final CustomJsonNodeTestEntity source) {
-			return JsonNodeFactory.instance.objectNode().put(FIELD, source.getValue());
-		}
-	}
+    public static class CustomJsonNodeWriteTestConverter implements Converter<CustomJsonNodeTestEntity, JsonNode> {
+        @Override
+        public JsonNode convert(final CustomJsonNodeTestEntity source) {
+            return JsonNodeFactory.instance.objectNode().put(FIELD, source.getValue());
+        }
+    }
 
-	public static class CustomJsonNodeReadTestConverter implements Converter<JsonNode, CustomJsonNodeTestEntity> {
-		@Override
-		public CustomJsonNodeTestEntity convert(final JsonNode source) {
-			return new CustomJsonNodeTestEntity(source.get(FIELD).textValue());
-		}
-	}
+    public static class CustomJsonNodeReadTestConverter implements Converter<JsonNode, CustomJsonNodeTestEntity> {
+        @Override
+        public CustomJsonNodeTestEntity convert(final JsonNode source) {
+            return new CustomJsonNodeTestEntity(source.get(FIELD).textValue());
+        }
+    }
 
-	@Test
-	public void customToJsonNode() {
-		final DocumentEntity meta = template.insert(new CustomJsonNodeTestEntity("abc"));
-		final Optional<BaseDocument> doc = template.find(meta.getId(), BaseDocument.class);
-		assertThat(doc.isPresent(), is(true));
-		assertThat(doc.get().getAttribute(FIELD), is("abc"));
-		assertThat(doc.get().getAttribute("value"), is(nullValue()));
-	}
+    @Test
+    public void customToJsonNode() {
+        final DocumentEntity meta = template.insert(new CustomJsonNodeTestEntity("abc"));
+        final Optional<BaseDocument> doc = template.find(meta.getId(), BaseDocument.class);
+        assertThat(doc.isPresent(), is(true));
+        assertThat(doc.get().getAttribute(FIELD), is("abc"));
+        assertThat(doc.get().getAttribute("value"), is(nullValue()));
+    }
 
-	@Test
-	public void jsonNodeToCustom() {
-		final DocumentEntity meta = template.insert(new TestEntity("abc"));
-		final Optional<CustomJsonNodeTestEntity> doc = template.find(meta.getId(), CustomJsonNodeTestEntity.class);
-		assertThat(doc.isPresent(), is(true));
-		assertThat(doc.get().getValue(), is("abc"));
-	}
+    @Test
+    public void jsonNodeToCustom() {
+        final DocumentEntity meta = template.insert(new TestEntity("abc"));
+        final Optional<CustomJsonNodeTestEntity> doc = template.find(meta.getId(), CustomJsonNodeTestEntity.class);
+        assertThat(doc.isPresent(), is(true));
+        assertThat(doc.get().getValue(), is("abc"));
+    }
 
-	@Document
-	public static class CustomDBEntityTestEntity {
-		private String value;
+    @Test
+    public void customToJsonNodeFromDriver() {
+        ArangoCollection col = template.driver().db(ArangoTestConfiguration.DB).collection("customJsonNodeTestEntity");
+        final DocumentEntity meta = col.insertDocument(new CustomJsonNodeTestEntity("abc"));
+        final BaseDocument doc = col.getDocument(meta.getKey(), BaseDocument.class);
+        assertThat(doc.getAttribute(FIELD), is("abc"));
+        assertThat(doc.getAttribute("value"), is(nullValue()));
+    }
 
-		public CustomDBEntityTestEntity() {
-			super();
-		}
+    @Test
+    public void jsonNodeToCustomFromDriver() {
+        ArangoCollection col = template.driver().db(ArangoTestConfiguration.DB).collection("testEntity");
+        final DocumentEntity meta = col.insertDocument(new TestEntity("abc"));
+        final CustomJsonNodeTestEntity doc = col.getDocument(meta.getKey(), CustomJsonNodeTestEntity.class);
+        assertThat(doc.getValue(), is("abc"));
+    }
 
-		public CustomDBEntityTestEntity(final String value) {
-			super();
-			this.value = value;
-		}
+    @Document()
+    public static class CustomDBEntityTestEntity {
+        private String value;
 
-		public String getValue() {
-			return value;
-		}
+        public CustomDBEntityTestEntity() {
+            super();
+        }
 
-		public void setValue(final String value) {
-			this.value = value;
-		}
+        public CustomDBEntityTestEntity(final String value) {
+            super();
+            this.value = value;
+        }
 
-	}
+        public String getValue() {
+            return value;
+        }
 
-	public static class CustomDBEntityWriteTestConverter
-			implements Converter<CustomDBEntityTestEntity, DBDocumentEntity> {
-		@Override
-		public DBDocumentEntity convert(final CustomDBEntityTestEntity source) {
-			final DBDocumentEntity entity = new DBDocumentEntity();
-			entity.put(FIELD, source.getValue());
-			return entity;
-		}
-	}
+        public void setValue(final String value) {
+            this.value = value;
+        }
 
-	public static class CustomDBEntityReadTestConverter
-			implements Converter<DBDocumentEntity, CustomDBEntityTestEntity> {
-		@Override
-		public CustomDBEntityTestEntity convert(final DBDocumentEntity source) {
-			return new CustomDBEntityTestEntity((String) source.get(FIELD));
-		}
-	}
+    }
 
-	@Test
-	public void customToDBEntity() {
-		final DocumentEntity meta = template.insert(new CustomDBEntityTestEntity("abc"));
-		final Optional<BaseDocument> doc = template.find(meta.getId(), BaseDocument.class);
-		assertThat(doc.isPresent(), is(true));
-		assertThat(doc.get().getAttribute(FIELD), is("abc"));
-		assertThat(doc.get().getAttribute("value"), is(nullValue()));
-	}
+    public static class CustomDBEntityWriteTestConverter
+            implements Converter<CustomDBEntityTestEntity, DBDocumentEntity> {
+        @Override
+        public DBDocumentEntity convert(final CustomDBEntityTestEntity source) {
+            final DBDocumentEntity entity = new DBDocumentEntity();
+            entity.put(FIELD, source.getValue());
+            return entity;
+        }
+    }
 
-	@Test
-	public void jsonNodeToDBEntity() {
-		final DocumentEntity meta = template.insert(new TestEntity("abc"));
-		final Optional<CustomDBEntityTestEntity> doc = template.find(meta.getId(), CustomDBEntityTestEntity.class);
-		assertThat(doc.isPresent(), is(true));
-		assertThat(doc.get().getValue(), is("abc"));
-	}
+    public static class CustomDBEntityReadTestConverter
+            implements Converter<DBDocumentEntity, CustomDBEntityTestEntity> {
+        @Override
+        public CustomDBEntityTestEntity convert(final DBDocumentEntity source) {
+            return new CustomDBEntityTestEntity((String) source.get(FIELD));
+        }
+    }
+
+    @Test
+    public void customToDBEntity() {
+        final DocumentEntity meta = template.insert(new CustomDBEntityTestEntity("abc"));
+        final Optional<BaseDocument> doc = template.find(meta.getId(), BaseDocument.class);
+        assertThat(doc.isPresent(), is(true));
+        assertThat(doc.get().getAttribute(FIELD), is("abc"));
+        assertThat(doc.get().getAttribute("value"), is(nullValue()));
+    }
+
+    @Test
+    public void jsonNodeToDBEntity() {
+        final DocumentEntity meta = template.insert(new TestEntity("abc"));
+        final Optional<CustomDBEntityTestEntity> doc = template.find(meta.getId(), CustomDBEntityTestEntity.class);
+        assertThat(doc.isPresent(), is(true));
+        assertThat(doc.get().getValue(), is("abc"));
+    }
+
+    @Test
+    public void customToDBEntityFromDriver() {
+        ArangoCollection col = template.driver().db(ArangoTestConfiguration.DB).collection("customDBEntityTestEntity");
+        final DocumentEntity meta = col.insertDocument(new CustomDBEntityTestEntity("abc"));
+        final BaseDocument doc = col.getDocument(meta.getKey(), BaseDocument.class);
+        assertThat(doc.getAttribute(FIELD), is("abc"));
+        assertThat(doc.getAttribute("value"), is(nullValue()));
+    }
+
+    @Test
+    public void jsonNodeToDBEntityFromDriver() {
+        ArangoCollection col = template.driver().db(ArangoTestConfiguration.DB).collection("testEntity");
+        final DocumentEntity meta = col.insertDocument(new TestEntity("abc"));
+        final CustomDBEntityTestEntity doc = col.getDocument(meta.getKey(), CustomDBEntityTestEntity.class);
+        assertThat(doc.getValue(), is("abc"));
+    }
 
 }
