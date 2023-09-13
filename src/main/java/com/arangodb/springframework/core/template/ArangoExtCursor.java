@@ -24,18 +24,13 @@ import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoIterator;
 import com.arangodb.entity.CursorStats;
 import com.arangodb.entity.CursorWarning;
-import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
 import com.arangodb.springframework.core.mapping.event.ArangoMappingEvent;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.function.Function;
 
 /**
  * @author Mark Vollmary
@@ -43,15 +38,13 @@ import java.util.stream.StreamSupport;
  */
 class ArangoExtCursor<T> implements ArangoCursor<T> {
 
-    private final ArangoCursor<JsonNode> delegate;
+    private final ArangoCursor<T> delegate;
     private final Class<T> type;
-    private final ArangoConverter converter;
     private final ApplicationEventPublisher eventPublisher;
 
-    public ArangoExtCursor(ArangoCursor<JsonNode> delegate, Class<T> type, ArangoConverter converter, ApplicationEventPublisher eventPublisher) {
+    public ArangoExtCursor(ArangoCursor<T> delegate, Class<T> type, ApplicationEventPublisher eventPublisher) {
         this.delegate = delegate;
         this.type = type;
-        this.converter = converter;
         this.eventPublisher = eventPublisher;
     }
 
@@ -86,13 +79,6 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
     }
 
     @Override
-    public List<T> asListRemaining() {
-        return delegate.asListRemaining().stream()
-                .map(this::convert)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public boolean isPotentialDirtyRead() {
         return delegate.isPotentialDirtyRead();
     }
@@ -108,11 +94,6 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
     }
 
     @Override
-    public Stream<T> stream() {
-        return StreamSupport.stream(spliterator(), false);
-    }
-
-    @Override
     public void close() throws IOException {
         delegate.close();
     }
@@ -124,20 +105,14 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
 
     @Override
     public T next() {
-        return convert(delegate.next());
-    }
-
-    private T convert(JsonNode value) {
-        final T result = converter.read(type, value);
-        if (result != null) {
-            potentiallyEmitEvent(new AfterLoadEvent<>(result));
-        }
+        T result = delegate.next();
+        potentiallyEmitEvent(result, AfterLoadEvent::new);
         return result;
     }
 
-    private void potentiallyEmitEvent(final ArangoMappingEvent<?> event) {
-        if (eventPublisher != null) {
-            eventPublisher.publishEvent(event);
+    private void potentiallyEmitEvent(Object o, Function<Object, ArangoMappingEvent<?>> constructor) {
+        if (eventPublisher != null && o != null) {
+            eventPublisher.publishEvent(constructor.apply(o));
         }
     }
 }

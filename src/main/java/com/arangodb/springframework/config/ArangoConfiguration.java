@@ -3,15 +3,20 @@
  */
 package com.arangodb.springframework.config;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
+import com.arangodb.serde.ArangoSerde;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 
@@ -44,107 +49,132 @@ import com.arangodb.springframework.core.template.ArangoTemplate;
 /**
  * Defines methods to customize the Java-based configuration for Spring Data
  * ArangoDB.
- * 
- * @author Mark Vollmary
  *
+ * @author Mark Vollmary
  */
 public interface ArangoConfiguration {
 
-	ArangoDB.Builder arango();
+    ArangoDB.Builder arango();
 
-	String database();
+    String database();
 
-	@Bean
-	default ArangoOperations arangoTemplate() throws Exception {
-		return new ArangoTemplate(arango().build(), database(), arangoConverter(), resolverFactory());
-	}
+    @Bean
+    default ArangoOperations arangoTemplate() throws Exception {
+        return new ArangoTemplate(arango().serde(serde()).build(), database(), arangoConverter(), resolverFactory());
+    }
 
-	@Bean
-	default ArangoMappingContext arangoMappingContext() throws Exception {
-		final ArangoMappingContext context = new ArangoMappingContext();
-		context.setInitialEntitySet(getInitialEntitySet());
-		context.setFieldNamingStrategy(fieldNamingStrategy());
-		context.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
-		return context;
-	}
+    @Bean
+    default ArangoSerde serde() throws Exception {
+        return new ArangoSerde() {
+            private final ObjectMapper om = new ObjectMapper();
+            private final ArangoConverter converter = arangoConverter();
 
-	@Bean
-	default ArangoConverter arangoConverter() throws Exception {
-		return new DefaultArangoConverter(arangoMappingContext(), customConversions(), resolverFactory(),
-				arangoTypeMapper());
-	}
+            @Override
+            public byte[] serialize(Object value) {
+                try {
+                    return om.writeValueAsBytes(converter.write(value));
+                } catch (JsonProcessingException e) {
+                    throw new MappingException("Exception while serializing.", e);
+                }
+            }
 
-	default CustomConversions customConversions() {
-		return new ArangoCustomConversions(customConverters());
-	}
+            @Override
+            public <T> T deserialize(byte[] content, Class<T> clazz) {
+                try {
+                    return converter.read(clazz, om.readTree(content));
+                } catch (IOException e) {
+                    throw new MappingException("Exception while deserializing.", e);
+                }
+            }
+        };
+    }
 
-	default Collection<Converter<?, ?>> customConverters() {
-		return Collections.emptyList();
-	}
+    @Bean
+    default ArangoMappingContext arangoMappingContext() throws Exception {
+        final ArangoMappingContext context = new ArangoMappingContext();
+        context.setInitialEntitySet(getInitialEntitySet());
+        context.setFieldNamingStrategy(fieldNamingStrategy());
+        context.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
+        return context;
+    }
 
-	default Set<? extends Class<?>> getInitialEntitySet() throws ClassNotFoundException {
-		return ArangoEntityClassScanner.scanForEntities(getEntityBasePackages());
-	}
+    @Bean
+    default ArangoConverter arangoConverter() throws Exception {
+        return new DefaultArangoConverter(arangoMappingContext(), customConversions(), resolverFactory(),
+                arangoTypeMapper());
+    }
 
-	default String[] getEntityBasePackages() {
-		return new String[] { getClass().getPackage().getName() };
-	}
+    default CustomConversions customConversions() {
+        return new ArangoCustomConversions(customConverters());
+    }
 
-	default FieldNamingStrategy fieldNamingStrategy() {
-		return PropertyNameFieldNamingStrategy.INSTANCE;
-	}
+    default Collection<Converter<?, ?>> customConverters() {
+        return Collections.emptyList();
+    }
 
-	default String typeKey() {
-		return DefaultArangoTypeMapper.DEFAULT_TYPE_KEY;
-	}
+    default Set<? extends Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+        return ArangoEntityClassScanner.scanForEntities(getEntityBasePackages());
+    }
 
-	default ArangoTypeMapper arangoTypeMapper() throws Exception {
-		return new DefaultArangoTypeMapper(typeKey(), arangoMappingContext());
-	}
+    default String[] getEntityBasePackages() {
+        return new String[]{getClass().getPackage().getName()};
+    }
 
-	default ResolverFactory resolverFactory() {
-		return new ResolverFactory() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public <A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(final A annotation) {
-				ReferenceResolver<A> resolver = null;
-				try {
-					if (annotation instanceof Ref) {
-						resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
-					}
-				} catch (final Exception e) {
-					throw new ArangoDBException(e);
-				}
-				return Optional.ofNullable(resolver);
-			}
+    default FieldNamingStrategy fieldNamingStrategy() {
+        return PropertyNameFieldNamingStrategy.INSTANCE;
+    }
 
-			@SuppressWarnings("unchecked")
-			@Override
-			public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final A annotation,
-					final Class<? extends Annotation> collectionType) {
-				RelationResolver<A> resolver = null;
-				try {
-					if (annotation instanceof From) {
-						if (collectionType == Edge.class) {
-							resolver = (RelationResolver<A>) new EdgeFromResolver(arangoTemplate());
-						} else if (collectionType == Document.class) {
-							resolver = (RelationResolver<A>) new DocumentFromResolver(arangoTemplate());
-						}
-					} else if (annotation instanceof To) {
-						if (collectionType == Edge.class) {
-							resolver = (RelationResolver<A>) new EdgeToResolver(arangoTemplate());
-						} else if (collectionType == Document.class) {
-							resolver = (RelationResolver<A>) new DocumentToResolver(arangoTemplate());
-						}
-					} else if (annotation instanceof Relations) {
-						resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
-					}
-				} catch (final Exception e) {
-					throw new ArangoDBException(e);
-				}
-				return Optional.ofNullable(resolver);
-			}
-		};
-	}
+    default String typeKey() {
+        return DefaultArangoTypeMapper.DEFAULT_TYPE_KEY;
+    }
+
+    default ArangoTypeMapper arangoTypeMapper() throws Exception {
+        return new DefaultArangoTypeMapper(typeKey(), arangoMappingContext());
+    }
+
+    default ResolverFactory resolverFactory() {
+        return new ResolverFactory() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public <A extends Annotation> Optional<ReferenceResolver<A>> getReferenceResolver(final A annotation) {
+                ReferenceResolver<A> resolver = null;
+                try {
+                    if (annotation instanceof Ref) {
+                        resolver = (ReferenceResolver<A>) new RefResolver(arangoTemplate());
+                    }
+                } catch (final Exception e) {
+                    throw new ArangoDBException(e);
+                }
+                return Optional.ofNullable(resolver);
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final A annotation,
+                                                                                            final Class<? extends Annotation> collectionType) {
+                RelationResolver<A> resolver = null;
+                try {
+                    if (annotation instanceof From) {
+                        if (collectionType == Edge.class) {
+                            resolver = (RelationResolver<A>) new EdgeFromResolver(arangoTemplate());
+                        } else if (collectionType == Document.class) {
+                            resolver = (RelationResolver<A>) new DocumentFromResolver(arangoTemplate());
+                        }
+                    } else if (annotation instanceof To) {
+                        if (collectionType == Edge.class) {
+                            resolver = (RelationResolver<A>) new EdgeToResolver(arangoTemplate());
+                        } else if (collectionType == Document.class) {
+                            resolver = (RelationResolver<A>) new DocumentToResolver(arangoTemplate());
+                        }
+                    } else if (annotation instanceof Relations) {
+                        resolver = (RelationResolver<A>) new RelationsResolver(arangoTemplate());
+                    }
+                } catch (final Exception e) {
+                    throw new ArangoDBException(e);
+                }
+                return Optional.ofNullable(resolver);
+            }
+        };
+    }
 
 }
