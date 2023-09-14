@@ -22,10 +22,7 @@ package com.arangodb.springframework.core;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
-import com.arangodb.entity.ArangoDBVersion;
-import com.arangodb.entity.DocumentEntity;
-import com.arangodb.entity.MultiDocumentEntity;
-import com.arangodb.entity.UserEntity;
+import com.arangodb.entity.*;
 import com.arangodb.model.*;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
@@ -372,10 +369,10 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> insert(
-		Iterable<T> values,
-		Class<T> entityClass,
-		DocumentCreateOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<DocumentCreateEntity<T>> insert(
+		Iterable<? extends T> values,
+		DocumentCreateOptions options,
+		Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
@@ -390,7 +387,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> insert(Iterable<T> values, Class<T> entityClass)
+	<T> MultiDocumentEntity<DocumentCreateEntity<Void>> insert(Iterable<? extends T> values, Class<T> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -403,7 +400,7 @@ public interface ArangoOperations {
 	 *            Additional options, can be null
 	 * @return information about the document
 	 */
-	<T> DocumentEntity insert(T value, DocumentCreateOptions options) throws DataAccessException;
+	<T> DocumentCreateEntity<T> insert(T value, DocumentCreateOptions options) throws DataAccessException;
 
 	/**
 	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
@@ -413,7 +410,7 @@ public interface ArangoOperations {
 	 *            A representation of a single document
 	 * @return information about the document
 	 */
-	<T> DocumentEntity insert(T value) throws DataAccessException;
+	DocumentCreateEntity<Void> insert(Object value) throws DataAccessException;
 
 	/**
 	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
@@ -428,7 +425,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	DocumentEntity insert(String collectionName, Object value, DocumentCreateOptions options)
+	<T> DocumentCreateEntity<T> insert(String collectionName, T value, DocumentCreateOptions options)
 			throws DataAccessException;
 
 	/**
@@ -443,7 +440,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	DocumentEntity insert(String collectionName, Object value) throws DataAccessException;
+	DocumentCreateEntity<Void> insert(String collectionName, Object value) throws DataAccessException;
 
 	/**
 	 * Creates a new document from the given document, unless there is already a document with the id given. In that

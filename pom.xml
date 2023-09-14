@@ -46,6 +46,13 @@
 		</repository>
 	</distributionManagement>
 
+	<repositories>
+		<repository>
+			<id>arangodb-snapshots</id>
+			<url>https://oss.sonatype.org/content/groups/staging</url>
+		</repository>
+	</repositories>
+
 	<properties>
 		<java-module-name>com.arangodb.springframework</java-module-name>
         <jaxb.version>2.3.1</jaxb.version> <!-- fix dependency convergence-->
