@@ -21,16 +21,15 @@
 package com.arangodb.springframework.core.template;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.arangodb.entity.*;
+import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
@@ -41,10 +40,6 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.entity.ArangoDBVersion;
-import com.arangodb.entity.BaseDocument;
-import com.arangodb.entity.DocumentEntity;
-import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.annotation.Document;
@@ -79,6 +74,18 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	}
 
 	@Test
+	public void insertDocumentReturnNew() {
+		Customer doc = new Customer("John", "Doe", 30);
+		final DocumentCreateEntity<Customer> res = template.insert(doc, new DocumentCreateOptions().returnNew(true));
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getId(), is(notNullValue()));
+		Customer read = res.getNew();
+		assertThat(read.getName(), is(doc.getName()));
+		assertThat(read.getSurname(), is(doc.getSurname()));
+		assertThat(read.getAge(), is(doc.getAge()));
+	}
+
+	@Test
 	public void insertDocuments() {
 		final Customer c1 = new Customer();
 		final Customer c2 = new Customer();
@@ -87,13 +94,37 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Customer c4 = new Customer();
 		c4.setId("3");
 		final MultiDocumentEntity<? extends DocumentEntity> res = template.insert(Arrays.asList(c1, c2, c3, c4),
-			Customer.class);
+				Customer.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(3));
 		assertThat(res.getErrors().size(), is(1));
 		assertThat(c1.getId(), is(notNullValue()));
 		assertThat(c2.getId(), is(notNullValue()));
 		assertThat(c3.getId(), is(notNullValue()));
+	}
+
+	@Test
+	public void insertDocumentsReturnNew() {
+		final Customer c1 = new Customer("John", "Doe", 30);
+		final Customer c2 = new Customer();
+		final Customer c3 = new Customer();
+		c3.setId("3");
+		final Customer c4 = new Customer();
+		c4.setId("3");
+		final MultiDocumentEntity<DocumentCreateEntity<Customer>> res = template.insert(
+				Arrays.asList(c1, c2, c3, c4),
+				new DocumentCreateOptions().returnNew(true),
+				Customer.class);
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getDocuments().size(), is(3));
+		assertThat(res.getErrors().size(), is(1));
+		assertThat(c1.getId(), is(notNullValue()));
+		assertThat(c2.getId(), is(notNullValue()));
+		assertThat(c3.getId(), is(notNullValue()));
+		Customer read = res.getDocuments().iterator().next().getNew();
+		assertThat(read.getName(), is(c1.getName()));
+		assertThat(read.getSurname(), is(c1.getSurname()));
+		assertThat(read.getAge(), is(c1.getAge()));
 	}
 
 	@Test
