@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.example.polymorphic.template;
 
+import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoCursor;
 import com.arangodb.entity.DocumentCreateEntity;
 import com.arangodb.entity.DocumentDeleteEntity;
@@ -27,15 +28,17 @@ import com.arangodb.entity.DocumentUpdateEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.DocumentDeleteOptions;
+import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.springframework.AbstractArangoTest;
+import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.example.polymorphic.entity.Animal;
 import com.arangodb.springframework.example.polymorphic.entity.Dog;
 import com.arangodb.springframework.example.polymorphic.entity.Eagle;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -45,6 +48,15 @@ import static org.hamcrest.Matchers.notNullValue;
  * @author Michele Rastelli
  */
 public class PolymorphicTemplate extends AbstractArangoTest {
+
+    private ArangoCollection col() {
+        return template.driver().db(ArangoTestConfiguration.DB).collection("animals");
+    }
+
+    @BeforeEach
+    void init() {
+        template.collection(Animal.class).truncate();
+    }
 
     @Test
     public void query() {
@@ -78,6 +90,8 @@ public class PolymorphicTemplate extends AbstractArangoTest {
 
         DocumentCreateEntity<Animal> res = template.insert(dog, new DocumentCreateOptions().returnNew(true));
         assertThat(res.getNew(), is(dog));
+
+        assertThat(col().documentExists(dog.getId()), is(true));
     }
 
     @Test
@@ -97,6 +111,9 @@ public class PolymorphicTemplate extends AbstractArangoTest {
         MultiDocumentEntity<DocumentCreateEntity<Animal>> res =
                 template.insertAll(dogs, new DocumentCreateOptions().returnNew(true), Animal.class);
         assertThat(res.getDocuments().stream().map(DocumentCreateEntity::getNew).toList().containsAll(dogs), is(true));
+
+        assertThat(col().documentExists(dog1.getId()), is(true));
+        assertThat(col().documentExists(dog2.getId()), is(true));
     }
 
     @Test
@@ -137,8 +154,8 @@ public class PolymorphicTemplate extends AbstractArangoTest {
         dog.setTeeths(11);
 
         template.insert(dog);
-        DocumentUpdateEntity<Animal> res = template.update(dog.getId(), dog, new DocumentUpdateOptions().returnNew(true));
-        assertThat(res.getNew(), is(dog));
+        DocumentUpdateEntity<Animal> res = template.update(dog.getId(), dog, new DocumentUpdateOptions().returnOld(true));
+        assertThat(res.getOld(), is(dog));
     }
 
     @Test
@@ -155,8 +172,38 @@ public class PolymorphicTemplate extends AbstractArangoTest {
 
         List<Dog> dogs = List.of(dog1, dog2);
         template.insertAll(dogs, Animal.class);
-        MultiDocumentEntity<DocumentUpdateEntity<Animal>> res = template.updateAll(dogs, new DocumentUpdateOptions().returnNew(true), Animal.class);
-        assertThat(res.getDocuments().stream().map(DocumentUpdateEntity::getNew).toList().containsAll(dogs), is(true));
+        MultiDocumentEntity<DocumentUpdateEntity<Animal>> res = template.updateAll(dogs, new DocumentUpdateOptions().returnOld(true), Animal.class);
+        assertThat(res.getDocuments().stream().map(DocumentUpdateEntity::getOld).toList().containsAll(dogs), is(true));
+    }
+
+    @Test
+    public void replaceVariance() {
+        Dog dog = new Dog();
+        dog.setId("1");
+        dog.setName("dog");
+        dog.setTeeths(11);
+
+        template.insert(dog);
+        DocumentUpdateEntity<Animal> res = template.replace(dog.getId(), dog, new DocumentReplaceOptions().returnOld(true));
+        assertThat(res.getOld(), is(dog));
+    }
+
+    @Test
+    public void replaceAllVariance() {
+        Dog dog1 = new Dog();
+        dog1.setId("1");
+        dog1.setName("dog1");
+        dog1.setTeeths(11);
+
+        Dog dog2 = new Dog();
+        dog1.setId("2");
+        dog1.setName("dog2");
+        dog1.setTeeths(22);
+
+        List<Dog> dogs = List.of(dog1, dog2);
+        template.insertAll(dogs, Animal.class);
+        MultiDocumentEntity<DocumentUpdateEntity<Animal>> res = template.replaceAll(dogs, new DocumentReplaceOptions().returnOld(true), Animal.class);
+        assertThat(res.getDocuments().stream().map(DocumentUpdateEntity::getOld).toList().containsAll(dogs), is(true));
     }
 
 }

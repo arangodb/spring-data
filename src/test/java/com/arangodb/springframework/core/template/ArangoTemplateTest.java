@@ -220,7 +220,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Product documentB = template.find(b.getId(), Product.class).get();
 		documentB.setName("bb");
 
-		final MultiDocumentEntity<? extends DocumentEntity> res = template.replace(Arrays.asList(documentA, documentB),
+		final MultiDocumentEntity<? extends DocumentEntity> res = template.replaceAll(Arrays.asList(documentA, documentB),
 			Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
