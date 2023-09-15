@@ -242,7 +242,19 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customer.getAge(), is(26));
 	}
 
-    @Test
+	@Test
+	public void updateDocumentReturnNew() {
+		Customer doc = new Customer("John", "Doe", 30);
+		Customer doc2 = new Customer("Jane", "Doe", 26);
+		final DocumentEntity res = template.insert(doc);
+		Customer customer = template.update(res.getId(), doc2, new DocumentUpdateOptions().returnNew(true)).getNew();
+		assertThat(customer, is(notNullValue()));
+		assertThat(customer.getName(), is("Jane"));
+		assertThat(customer.getSurname(), is("Doe"));
+		assertThat(customer.getAge(), is(26));
+	}
+
+	@Test
     public void updateDocumentRevConflict() {
         final DocumentEntity res = template.insert(new Customer("John", "Doe", 30));
         Customer doc = new Customer("Jane", "Doe", 26);
@@ -261,14 +273,37 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Product documentB = template.find(b.getId(), Product.class).get();
 		documentB.setName("bb");
 
-		final MultiDocumentEntity<? extends DocumentEntity> res = template.update(Arrays.asList(documentA, documentB),
-			Product.class);
+		final MultiDocumentEntity<? extends DocumentEntity> res = template.updateAll(Arrays.asList(documentA, documentB),
+				Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 
 		final Product newA = template.find(a.getId(), Product.class).get();
 		assertThat(newA.getName(), is("aa"));
 		final Product newB = template.find(b.getId(), Product.class).get();
+		assertThat(newB.getName(), is("bb"));
+	}
+
+	@Test
+	public void updateDocumentsReturnNew() {
+		final DocumentEntity a = template.insert(new Product("a"));
+		final DocumentEntity b = template.insert(new Product("b"));
+
+		final Product documentA = template.find(a.getId(), Product.class).get();
+		documentA.setName("aa");
+		final Product documentB = template.find(b.getId(), Product.class).get();
+		documentB.setName("bb");
+
+		final MultiDocumentEntity<DocumentUpdateEntity<Product>> res = template.updateAll(Arrays.asList(documentA, documentB),
+				new DocumentUpdateOptions().returnNew(true), Product.class);
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getDocuments().size(), is(2));
+
+		Iterator<DocumentUpdateEntity<Product>> resIt = res.getDocuments().iterator();
+
+		final Product newA = resIt.next().getNew();
+		assertThat(newA.getName(), is("aa"));
+		final Product newB = resIt.next().getNew();
 		assertThat(newB.getName(), is("bb"));
 	}
 

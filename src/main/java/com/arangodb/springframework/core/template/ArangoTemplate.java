@@ -345,14 +345,17 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> MultiDocumentEntity<? extends DocumentEntity> update(final Iterable<T> values,
-                                                                    final Class<T> entityClass, final DocumentUpdateOptions options) throws DataAccessException {
+    public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateAll(
+            final Iterable<T> values,
+            final DocumentUpdateOptions options,
+            final Class<T> entityClass
+    ) throws DataAccessException {
 
         potentiallyEmitBeforeSaveEvent(values);
 
-        final MultiDocumentEntity<? extends DocumentEntity> result;
+        MultiDocumentEntity<DocumentUpdateEntity<T>> result;
         try {
-            result = _collection(entityClass).updateDocuments(values, options);
+            result = _collection(entityClass).updateDocuments(values, options, entityClass);
         } catch (final ArangoDBException e) {
             throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
         }
@@ -363,18 +366,21 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> MultiDocumentEntity<? extends DocumentEntity> update(final Iterable<T> values,
-                                                                    final Class<T> entityClass) throws DataAccessException {
-        return update(values, entityClass, new DocumentUpdateOptions());
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public <T> MultiDocumentEntity<DocumentUpdateEntity<?>> updateAll(
+            final Iterable<T> values,
+            final Class<T> entityClass
+    ) throws DataAccessException {
+        return updateAll(values, new DocumentUpdateOptions(), (Class) entityClass);
     }
 
     @Override
-    public DocumentEntity update(final Object id, final Object value, final DocumentUpdateOptions options)
+    public <T> DocumentUpdateEntity<T> update(final Object id, final T value, final DocumentUpdateOptions options)
             throws DataAccessException {
 
         potentiallyEmitEvent(new BeforeSaveEvent<>(value));
 
-        final DocumentEntity result;
+        DocumentUpdateEntity<T> result;
         try {
             result = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id), value, options);
         } catch (final ArangoDBException e) {
@@ -387,7 +393,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public DocumentEntity update(final Object id, final Object value) throws DataAccessException {
+    public DocumentUpdateEntity<?> update(final Object id, final Object value) throws DataAccessException {
         return update(id, value, new DocumentUpdateOptions());
     }
 
