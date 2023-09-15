@@ -78,7 +78,7 @@ public class AfterLoadEventTest extends AbstractArangoTest {
 	@Test
 	public void findMultiAfterLoadEvent() {
 		template.insertAll(customers, Customer.class);
-		template.find(customers.stream().map(elem -> elem.getId()).collect(Collectors.toList()), Customer.class);
+		template.findAll(customers.stream().map(Customer::getId).collect(Collectors.toList()), Customer.class);
 		assertThat(listener.afterLoadEvents.size(), is(2));
 		for (final AfterLoadEvent<Customer> event : listener.afterLoadEvents) {
 			assertThat(event.getSource(), is(in(customers)));
