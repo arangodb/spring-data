@@ -476,7 +476,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> Iterable<T> find(final Iterable<?> ids, final Class<T> entityClass)
+    public <T> Iterable<T> findAll(final Iterable<?> ids, final Class<T> entityClass)
             throws DataAccessException {
         try {
             final Collection<String> keys = new ArrayList<>();

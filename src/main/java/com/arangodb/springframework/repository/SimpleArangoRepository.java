@@ -132,7 +132,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAllById(final Iterable<ID> ids) {
-		return arangoOperations.find(ids, domainClass);
+		return arangoOperations.findAll(ids, domainClass);
 	}
 
 	/**
