@@ -78,7 +78,7 @@ public class SaveEventTest extends AbstractArangoTest {
 	@Test
 	public void insertMultiSaveEvent() {
 		template.insert(john);
-		template.insert(customers, Customer.class);
+		template.insertAll(customers, Customer.class);
 
 		assertThat(listener.beforeSaveEvents.size(), is(3));
 		for (final BeforeSaveEvent<Customer> event : listener.beforeSaveEvents) {
@@ -108,7 +108,7 @@ public class SaveEventTest extends AbstractArangoTest {
 
 	@Test
 	public void updateMultiSaveEvent() {
-		template.insert(customers, Customer.class);
+		template.insertAll(customers, Customer.class);
 		listener.beforeSaveEvents.clear();
 		listener.afterSaveEvents.clear();
 		john.setId("non-existing-id");
@@ -141,7 +141,7 @@ public class SaveEventTest extends AbstractArangoTest {
 
 	@Test
 	public void replaceMultiSaveEvent() {
-		template.insert(customers, Customer.class);
+		template.insertAll(customers, Customer.class);
 		listener.beforeSaveEvents.clear();
 		listener.afterSaveEvents.clear();
 		john.setId("non-existing-id");

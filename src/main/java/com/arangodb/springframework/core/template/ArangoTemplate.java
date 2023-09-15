@@ -314,13 +314,12 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAll(
             final Iterable<?> values,
             final Class<?> entityClass
     ) throws DataAccessException {
-        return (MultiDocumentEntity<DocumentDeleteEntity<?>>) (MultiDocumentEntity<?>)
-                deleteAll(values, new DocumentDeleteOptions(), entityClass);
+        return deleteAll(values, new DocumentDeleteOptions(), (Class) entityClass);
     }
 
     @Override
@@ -483,7 +482,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> MultiDocumentEntity<DocumentCreateEntity<T>> insert(
+    public <T> MultiDocumentEntity<DocumentCreateEntity<T>> insertAll(
             final Iterable<? extends T> values, final DocumentCreateOptions options, final Class<T> entityClass) throws DataAccessException {
 
         potentiallyEmitBeforeSaveEvent(values);
@@ -501,63 +500,18 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> MultiDocumentEntity<DocumentCreateEntity<Void>> insert(
-            Iterable<? extends T> values, Class<T> entityClass) throws DataAccessException {
-        potentiallyEmitBeforeSaveEvent(values);
-
-        MultiDocumentEntity<DocumentCreateEntity<Void>> result;
-        try {
-            result = _collection(entityClass).insertDocuments(values);
-        } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
-        }
-
-        updateDBFields(values, result);
-        potentiallyEmitAfterSaveEvent(values, result);
-        return result;
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public MultiDocumentEntity<DocumentCreateEntity<?>> insertAll(Iterable<?> values, Class<?> entityClass) throws DataAccessException {
+        return insertAll(values, new DocumentCreateOptions(), (Class) entityClass);
     }
 
     @Override
     public <T> DocumentCreateEntity<T> insert(final T value, final DocumentCreateOptions options) throws DataAccessException {
-        return doInsertWithOptions(_collection(value.getClass()), value, options);
-    }
-
-    @Override
-    public DocumentCreateEntity<Void> insert(final Object value) throws DataAccessException {
-       return doInsert(_collection(value.getClass()), value);
-    }
-
-    @Override
-    public <T> DocumentCreateEntity<T> insert(final String collectionName, final T value, final DocumentCreateOptions options)
-            throws DataAccessException {
-        return doInsertWithOptions(_collection(collectionName), value, options);
-    }
-
-    @Override
-    public DocumentCreateEntity<Void> insert(final String collectionName, final Object value) throws DataAccessException {
-        return doInsert(_collection(collectionName), value);
-    }
-
-    private DocumentCreateEntity<Void> doInsert(ArangoCollection collection, Object value) throws DataAccessException {
-        potentiallyEmitEvent(new BeforeSaveEvent<>(value));
-        DocumentCreateEntity<Void> result;
-        try {
-            result = collection.insertDocument(value);
-        } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
-        }
-
-        updateDBFields(value, result);
-        potentiallyEmitEvent(new AfterSaveEvent<>(value));
-        return result;
-    }
-
-    private <T> DocumentCreateEntity<T> doInsertWithOptions(ArangoCollection collection, T value, DocumentCreateOptions options) throws DataAccessException {
         potentiallyEmitEvent(new BeforeSaveEvent<>(value));
 
         DocumentCreateEntity<T> result;
         try {
-            result = collection.insertDocument(value, options);
+            result = _collection(value.getClass()).insertDocument(value, options);
         } catch (final ArangoDBException e) {
             throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
         }
@@ -565,6 +519,11 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         updateDBFields(value, result);
         potentiallyEmitEvent(new AfterSaveEvent<>(value));
         return result;
+    }
+
+    @Override
+    public DocumentCreateEntity<?> insert(final Object value) throws DataAccessException {
+        return insert(value, new DocumentCreateOptions());
     }
 
     @Override

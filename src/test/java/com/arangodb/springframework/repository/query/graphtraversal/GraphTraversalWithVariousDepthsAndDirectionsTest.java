@@ -75,12 +75,12 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 		findByExample(ned).ifPresent(nedStark -> { // Requires Administrate permission on _system
 			findByExample(catelyn).ifPresent(catelynStark -> {
 				findByExample(robb).ifPresent(robbStark -> {
-					template.insert(
+					template.insertAll(
 						Arrays.asList(new ChildOf(robbStark, nedStark), new ChildOf(robbStark, catelynStark)),
 						ChildOf.class);
 				});
 				findByExample(sansa).ifPresent(sansaStark -> {
-					template.insert(
+					template.insertAll(
 						Arrays.asList(new ChildOf(sansaStark, nedStark), new ChildOf(sansaStark, catelynStark)),
 						ChildOf.class);
 				});
@@ -89,7 +89,7 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 		findByExample(jon).ifPresent(jonSnow -> {
 			findByExample(jaimie).ifPresent(jaimieLanister -> {
 				findByExample(emily).ifPresent(emilySnow -> {
-					template.insert(
+					template.insertAll(
 						Arrays.asList(new ChildOf(emilySnow, jonSnow), new ChildOf(emilySnow, jaimieLanister)),
 						ChildOf.class);
 				});
@@ -99,7 +99,7 @@ public class GraphTraversalWithVariousDepthsAndDirectionsTest extends AbstractAr
 		findByExample(robb).ifPresent(robbStark -> {
 			findByExample(emily).ifPresent(emilySnow -> {
 				findByExample(dude).ifPresent(dudeStark -> {
-					template.insert(Arrays.asList(new ChildOf(dudeStark, robbStark), new ChildOf(dudeStark, emilySnow)),
+					template.insertAll(Arrays.asList(new ChildOf(dudeStark, robbStark), new ChildOf(dudeStark, emilySnow)),
 						ChildOf.class);
 					findByExample(dudette).ifPresent(dudetteStark -> {
 						template.insert(new ChildOf(dudetteStark, dudeStark));
