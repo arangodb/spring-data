@@ -340,13 +340,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> DocumentDeleteEntity<T> delete(final Object id, final Class<T> entityClass) throws DataAccessException {
+    public DocumentDeleteEntity<?> delete(final Object id, final Class<?> entityClass) throws DataAccessException {
         return delete(id, new DocumentDeleteOptions(), entityClass);
     }
 
     @Override
     public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateAll(
-            final Iterable<T> values,
+            final Iterable<? extends T> values,
             final DocumentUpdateOptions options,
             final Class<T> entityClass
     ) throws DataAccessException {
