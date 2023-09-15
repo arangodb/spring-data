@@ -84,7 +84,7 @@ public class DeleteEventTest extends AbstractArangoTest {
 		final List<Object> ids = customers.stream().map(c -> c.getId()).collect(Collectors.toList());
 		ids.set(0, "non-existing-id");
 
-		template.delete(ids, Customer.class);
+		template.deleteAll(ids, Customer.class);
 
 		assertThat(listener.beforeDeleteEvents.size(), is(2));
 		for (final BeforeDeleteEvent<Customer> event : listener.beforeDeleteEvents) {

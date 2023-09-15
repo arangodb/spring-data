@@ -128,10 +128,10 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<? extends DocumentEntity> delete(
-		Iterable<Object> values,
-		Class<?> entityClass,
-		DocumentDeleteOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteAll(
+		Iterable<?> values,
+		DocumentDeleteOptions options,
+		Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Deletes multiple documents from a collection.
@@ -143,8 +143,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<? extends DocumentEntity> delete(Iterable<Object> values, Class<?> entityClass)
-			throws DataAccessException;
+	MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAll(Iterable<?> values, Class<?> entityClass) throws DataAccessException;
 
 	/**
 	 * Deletes the document with the given {@code id} from a collection.
@@ -158,7 +157,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	DocumentEntity delete(Object id, Class<?> entityClass, DocumentDeleteOptions options) throws DataAccessException;
+	<T> DocumentDeleteEntity<T> delete(Object id, DocumentDeleteOptions options, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Deletes the document with the given {@code id} from a collection.
@@ -170,7 +169,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	DocumentEntity delete(Object id, Class<?> entityClass) throws DataAccessException;
+	<T> DocumentDeleteEntity<T> delete(Object id, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
