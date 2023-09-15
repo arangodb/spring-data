@@ -188,10 +188,11 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> update(
-		Iterable<T> values,
-		Class<T> entityClass,
-		DocumentUpdateOptions options) throws DataAccessException;
+    <T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateAll(
+            Iterable<T> values,
+            DocumentUpdateOptions options,
+            Class<T> entityClass
+    ) throws DataAccessException;
 
 	/**
 	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
@@ -208,8 +209,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> update(Iterable<T> values, Class<T> entityClass)
-			throws DataAccessException;
+	<T> MultiDocumentEntity<DocumentUpdateEntity<?>> updateAll(Iterable<T> values, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Partially updates the document identified by document id or key. The value must contain a document with the
@@ -225,7 +225,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentEntity update(Object id, T value, DocumentUpdateOptions options) throws DataAccessException;
+	<T> DocumentUpdateEntity<T> update(Object id, T value, DocumentUpdateOptions options) throws DataAccessException;
 
 	/**
 	 * Partially updates the document identified by document id or key. The value must contain a document with the
@@ -239,7 +239,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentEntity update(Object id, T value) throws DataAccessException;
+	DocumentUpdateEntity<?> update(Object id, Object value) throws DataAccessException;
 
 	/**
 	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
