@@ -29,9 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.arangodb.entity.*;
-import com.arangodb.model.DocumentCreateOptions;
-import com.arangodb.model.DocumentDeleteOptions;
-import com.arangodb.model.DocumentUpdateOptions;
+import com.arangodb.model.*;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataRetrievalFailureException;
@@ -41,7 +39,6 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.testdata.Address;
@@ -210,6 +207,18 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(customer.getAge(), is(26));
 	}
 
+    @Test
+    public void replaceDocumentReturnNew() {
+        Customer doc1 = new Customer("John", "Doe", 30);
+        Customer doc2 = new Customer("Jane", "Doe", 26);
+        final DocumentEntity res = template.insert(doc1);
+        Customer replacedDocument = template.replace(res.getId(), doc2, new DocumentReplaceOptions().returnNew(true)).getNew();
+        assertThat(replacedDocument, is(notNullValue()));
+        assertThat(replacedDocument.getName(), is(doc2.getName()));
+        assertThat(replacedDocument.getSurname(), is(doc2.getSurname()));
+        assertThat(replacedDocument.getAge(), is(doc2.getAge()));
+    }
+
 	@Test
 	public void replaceDocuments() {
 		final DocumentEntity a = template.insert(new Product("a"));
@@ -221,13 +230,36 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		documentB.setName("bb");
 
 		final MultiDocumentEntity<? extends DocumentEntity> res = template.replaceAll(Arrays.asList(documentA, documentB),
-			Product.class);
+				Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 
 		final Product newA = template.find(a.getId(), Product.class).get();
 		assertThat(newA.getName(), is("aa"));
 		final Product newB = template.find(b.getId(), Product.class).get();
+		assertThat(newB.getName(), is("bb"));
+	}
+
+	@Test
+	public void replaceDocumentsReturnNew() {
+		final DocumentEntity a = template.insert(new Product("a"));
+		final DocumentEntity b = template.insert(new Product("b"));
+
+		final Product documentA = template.find(a.getId(), Product.class).get();
+		documentA.setName("aa");
+		final Product documentB = template.find(b.getId(), Product.class).get();
+		documentB.setName("bb");
+
+        MultiDocumentEntity<DocumentUpdateEntity<Product>> res = template.replaceAll(Arrays.asList(documentA, documentB),
+                new DocumentReplaceOptions().returnNew(true),
+                Product.class);
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getDocuments().size(), is(2));
+
+        Iterator<DocumentUpdateEntity<Product>> it = res.getDocuments().iterator();
+		final Product newA = it.next().getNew();
+		assertThat(newA.getName(), is("aa"));
+		final Product newB = it.next().getNew();
 		assertThat(newB.getName(), is("bb"));
 	}
 
