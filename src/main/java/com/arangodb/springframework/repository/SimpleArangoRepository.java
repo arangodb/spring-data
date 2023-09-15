@@ -183,7 +183,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @implNote do not add @Override annotation to keep backwards compatibility with spring-data-commons 2.4
      */
     public void deleteAllById(Iterable<? extends ID> ids) {
-        arangoOperations.delete((Iterable<Object>) ids, domainClass);
+        arangoOperations.deleteAll(ids, domainClass);
     }
 
 	/**

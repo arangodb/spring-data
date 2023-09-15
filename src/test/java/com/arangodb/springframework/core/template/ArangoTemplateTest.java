@@ -30,6 +30,7 @@ import java.util.stream.StreamSupport;
 
 import com.arangodb.entity.*;
 import com.arangodb.model.DocumentCreateOptions;
+import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
@@ -287,6 +288,18 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	}
 
 	@Test
+	public void deleteDocumentReturnOld() {
+		Customer doc = new Customer("John", "Doe", 30);
+		String id = template.insert(doc).getId();
+		Customer deleted = template.delete(id, new DocumentDeleteOptions().returnOld(true), Customer.class).getOld();
+		final Optional<Customer> customer = template.find(id, Customer.class);
+		assertThat(customer.isPresent(), is(false));
+		assertThat(deleted.getName(), is(doc.getName()));
+		assertThat(deleted.getSurname(), is(doc.getSurname()));
+		assertThat(deleted.getAge(), is(doc.getAge()));
+	}
+
+	@Test
 	public void deleteDocuments() {
 		final DocumentEntity a = template.insert(new Product("a"));
 		final DocumentEntity b = template.insert(new Product("b"));
@@ -294,8 +307,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Product documentA = template.find(a.getId(), Product.class).get();
 		final Product documentB = template.find(b.getId(), Product.class).get();
 
-		final MultiDocumentEntity<? extends DocumentEntity> res = template.delete(Arrays.asList(documentA, documentB),
-			Product.class);
+		final MultiDocumentEntity<DocumentDeleteEntity<?>> res = template.deleteAll(Arrays.asList(documentA, documentB), Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 
@@ -303,6 +315,31 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(deletedA.isPresent(), is(false));
 		final Optional<Product> deletedB = template.find(b.getId(), Product.class);
 		assertThat(deletedB.isPresent(), is(false));
+	}
+
+	@Test
+	public void deleteDocumentsReturnOld() {
+		final DocumentEntity a = template.insert(new Product("a"));
+		final DocumentEntity b = template.insert(new Product("b"));
+
+		final Product documentA = template.find(a.getId(), Product.class).get();
+		final Product documentB = template.find(b.getId(), Product.class).get();
+
+		final MultiDocumentEntity<DocumentDeleteEntity<Product>> res = template.deleteAll(
+				Arrays.asList(documentA, documentB), new DocumentDeleteOptions().returnOld(true), Product.class);
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getDocuments().size(), is(2));
+
+		final Optional<Product> deletedA = template.find(a.getId(), Product.class);
+		assertThat(deletedA.isPresent(), is(false));
+		final Optional<Product> deletedB = template.find(b.getId(), Product.class);
+		assertThat(deletedB.isPresent(), is(false));
+
+		Iterator<DocumentDeleteEntity<Product>> dit = res.getDocuments().iterator();
+		Product retA = dit.next().getOld();
+		assertThat(retA.getName(), is("a"));
+		Product retB = dit.next().getOld();
+		assertThat(retB.getName(), is("b"));
 	}
 
 	@Test

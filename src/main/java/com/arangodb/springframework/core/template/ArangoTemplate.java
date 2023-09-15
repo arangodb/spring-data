@@ -294,12 +294,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public MultiDocumentEntity<? extends DocumentEntity> delete(final Iterable<Object> values,
-                                                                final Class<?> entityClass, final DocumentDeleteOptions options) throws DataAccessException {
+    public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteAll(
+            final Iterable<?> values,
+            final DocumentDeleteOptions options,
+            final Class<T> entityClass
+    ) throws DataAccessException {
 
         potentiallyEmitBeforeDeleteEvent(values, entityClass);
 
-        MultiDocumentEntity<? extends DocumentEntity> result;
+        MultiDocumentEntity<DocumentDeleteEntity<T>> result;
         try {
             result = _collection(entityClass).deleteDocuments(values, options, entityClass);
         } catch (final ArangoDBException e) {
@@ -311,18 +314,22 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public MultiDocumentEntity<? extends DocumentEntity> delete(final Iterable<Object> values,
-                                                                final Class<?> entityClass) throws DataAccessException {
-        return delete(values, entityClass, new DocumentDeleteOptions());
+    @SuppressWarnings("unchecked")
+    public MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAll(
+            final Iterable<?> values,
+            final Class<?> entityClass
+    ) throws DataAccessException {
+        return (MultiDocumentEntity<DocumentDeleteEntity<?>>) (MultiDocumentEntity<?>)
+                deleteAll(values, new DocumentDeleteOptions(), entityClass);
     }
 
     @Override
-    public DocumentEntity delete(final Object id, final Class<?> entityClass, final DocumentDeleteOptions options)
+    public <T> DocumentDeleteEntity<T> delete(final Object id, final DocumentDeleteOptions options, final Class<T> entityClass)
             throws DataAccessException {
 
         potentiallyEmitEvent(new BeforeDeleteEvent<>(id, entityClass));
 
-        final DocumentEntity result;
+        DocumentDeleteEntity<T> result;
         try {
             result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), options, entityClass);
         } catch (final ArangoDBException e) {
@@ -334,8 +341,8 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public DocumentEntity delete(final Object id, final Class<?> entityClass) throws DataAccessException {
-        return delete(id, entityClass, new DocumentDeleteOptions());
+    public <T> DocumentDeleteEntity<T> delete(final Object id, final Class<T> entityClass) throws DataAccessException {
+        return delete(id, new DocumentDeleteOptions(), entityClass);
     }
 
     @Override
