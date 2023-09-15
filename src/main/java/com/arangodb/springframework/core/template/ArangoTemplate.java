@@ -368,7 +368,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public <T> MultiDocumentEntity<DocumentUpdateEntity<?>> updateAll(
-            final Iterable<T> values,
+            final Iterable<? extends T> values,
             final Class<T> entityClass
     ) throws DataAccessException {
         return updateAll(values, new DocumentUpdateOptions(), (Class) entityClass);
@@ -513,7 +513,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public MultiDocumentEntity<DocumentCreateEntity<?>> insertAll(Iterable<?> values, Class<?> entityClass) throws DataAccessException {
+    public <T> MultiDocumentEntity<DocumentCreateEntity<?>> insertAll(Iterable<? extends T> values, Class<T> entityClass) throws DataAccessException {
         return insertAll(values, new DocumentCreateOptions(), (Class) entityClass);
     }
 

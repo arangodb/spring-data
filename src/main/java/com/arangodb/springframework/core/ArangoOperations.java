@@ -209,7 +209,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentUpdateEntity<?>> updateAll(Iterable<T> values, Class<T> entityClass) throws DataAccessException;
+	<T> MultiDocumentEntity<DocumentUpdateEntity<?>> updateAll(Iterable<? extends T> values, Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Partially updates the document identified by document id or key. The value must contain a document with the
@@ -384,7 +384,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<DocumentCreateEntity<?>> insertAll(Iterable<?> values, Class<?> entityClass)
+	<T> MultiDocumentEntity<DocumentCreateEntity<?>> insertAll(Iterable<? extends T> values, Class<T> entityClass)
 			throws DataAccessException;
 
 	/**
