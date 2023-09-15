@@ -304,7 +304,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         MultiDocumentEntity<DocumentDeleteEntity<T>> result;
         try {
-            result = _collection(entityClass).deleteDocuments(values, options, entityClass);
+            result = _collection(entityClass).deleteDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
             throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
         }
@@ -355,7 +355,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         MultiDocumentEntity<DocumentUpdateEntity<T>> result;
         try {
-            result = _collection(entityClass).updateDocuments(values, options, entityClass);
+            result = _collection(entityClass).updateDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
             throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
         }
@@ -408,7 +408,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         MultiDocumentEntity<DocumentUpdateEntity<T>> result;
         try {
-            result = _collection(entityClass).replaceDocuments(values, options, entityClass);
+            result = _collection(entityClass).replaceDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
             throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
         }
@@ -501,7 +501,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         MultiDocumentEntity<DocumentCreateEntity<T>> result;
         try {
-            result = _collection(entityClass).insertDocuments(values, options, entityClass);
+            result = _collection(entityClass).insertDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
             throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
         }
@@ -783,4 +783,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         return this.resolverFactory;
     }
 
+    private <T> List<T> toList(Iterable<T> it) {
+        ArrayList<T> l = new ArrayList<>();
+        it.forEach(l::add);
+        return l;
+    }
 }

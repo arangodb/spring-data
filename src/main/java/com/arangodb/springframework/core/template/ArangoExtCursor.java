@@ -26,11 +26,16 @@ import com.arangodb.entity.CursorStats;
 import com.arangodb.entity.CursorWarning;
 import com.arangodb.springframework.core.mapping.event.AfterLoadEvent;
 import com.arangodb.springframework.core.mapping.event.ArangoMappingEvent;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Mark Vollmary
@@ -79,6 +84,20 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
     }
 
     @Override
+    public List<T> asListRemaining() {
+        final List<T> remaining = new ArrayList<>();
+        while (hasNext()) {
+            remaining.add(next());
+        }
+        try {
+            close();
+        } catch (final Exception e) {
+            LoggerFactory.getLogger(ArangoExtCursor.class).warn("Could not close cursor: ", e);
+        }
+        return remaining;
+    }
+
+    @Override
     public boolean isPotentialDirtyRead() {
         return delegate.isPotentialDirtyRead();
     }
@@ -91,6 +110,11 @@ class ArangoExtCursor<T> implements ArangoCursor<T> {
     @Override
     public ArangoIterator<T> iterator() {
         return this;
+    }
+
+    @Override
+    public Stream<T> stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
 
     @Override
