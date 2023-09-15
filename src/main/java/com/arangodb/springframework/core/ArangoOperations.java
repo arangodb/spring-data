@@ -256,10 +256,10 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> replace(
-		Iterable<T> values,
-		Class<T> entityClass,
-		DocumentReplaceOptions options) throws DataAccessException;
+	<T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceAll(
+		Iterable<? extends T> values,
+		DocumentReplaceOptions options,
+		Class<T> entityClass) throws DataAccessException;
 
 	/**
 	 * Replaces multiple documents in the specified collection with the ones in the values, the replaced documents are
@@ -274,7 +274,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<? extends DocumentEntity> replace(Iterable<T> values, Class<T> entityClass)
+	<T> MultiDocumentEntity<DocumentUpdateEntity<?>> replaceAll(Iterable<? extends T> values, Class<T> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -290,7 +290,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentEntity replace(Object id, T value, DocumentReplaceOptions options) throws DataAccessException;
+	<T> DocumentUpdateEntity<T> replace(Object id, T value, DocumentReplaceOptions options) throws DataAccessException;
 
 	/**
 	 * Replaces the document with {@code id} with the one in the body, provided there is such a document and no
@@ -303,7 +303,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentEntity replace(Object id, T value) throws DataAccessException;
+	DocumentUpdateEntity<?> replace(Object id, Object value) throws DataAccessException;
 
 	/**
 	 * Retrieves the document with the given {@code id} from a collection.
@@ -376,8 +376,6 @@ public interface ArangoOperations {
 	/**
 	 * Creates new documents from the given documents, unless there is already a document with the _key given. If no
 	 * _key is given, a new unique _key is generated automatically.
-	 *
-	 * @param <T>
 	 *
 	 * @param values
 	 *            A List of documents

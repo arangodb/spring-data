@@ -146,7 +146,7 @@ public class SaveEventTest extends AbstractArangoTest {
 		listener.afterSaveEvents.clear();
 		john.setId("non-existing-id");
 		bob.setAge(30);
-		template.replace(customers, Customer.class);
+		template.replaceAll(customers, Customer.class);
 
 		assertThat(listener.beforeSaveEvents.size(), is(2));
 		for (final BeforeSaveEvent<Customer> event : listener.beforeSaveEvents) {

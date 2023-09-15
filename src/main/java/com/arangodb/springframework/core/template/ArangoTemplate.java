@@ -398,14 +398,17 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> MultiDocumentEntity<? extends DocumentEntity> replace(final Iterable<T> values,
-                                                                     final Class<T> entityClass, final DocumentReplaceOptions options) throws DataAccessException {
+    public <T> MultiDocumentEntity<DocumentUpdateEntity<T>> replaceAll(
+            final Iterable<? extends T> values,
+            final DocumentReplaceOptions options,
+            final Class<T> entityClass
+    ) throws DataAccessException {
 
         potentiallyEmitBeforeSaveEvent(values);
 
-        final MultiDocumentEntity<? extends DocumentEntity> result;
+        MultiDocumentEntity<DocumentUpdateEntity<T>> result;
         try {
-            result = _collection(entityClass).replaceDocuments(values, options);
+            result = _collection(entityClass).replaceDocuments(values, options, entityClass);
         } catch (final ArangoDBException e) {
             throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
         }
@@ -416,17 +419,20 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> MultiDocumentEntity<? extends DocumentEntity> replace(final Iterable<T> values,
-                                                                     final Class<T> entityClass) throws DataAccessException {
-        return replace(values, entityClass, new DocumentReplaceOptions());
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public <T> MultiDocumentEntity<DocumentUpdateEntity<?>> replaceAll(
+            final Iterable<? extends T> values,
+            final Class<T> entityClass
+    ) throws DataAccessException {
+        return replaceAll(values, new DocumentReplaceOptions(), (Class) entityClass);
     }
 
     @Override
-    public DocumentEntity replace(final Object id, final Object value, final DocumentReplaceOptions options)
+    public <T> DocumentUpdateEntity<T> replace(final Object id, final T value, final DocumentReplaceOptions options)
             throws DataAccessException {
         potentiallyEmitEvent(new BeforeSaveEvent<>(value));
 
-        final DocumentEntity result;
+        DocumentUpdateEntity<T> result;
         try {
             result = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id), value, options);
         } catch (final ArangoDBException e) {
@@ -439,7 +445,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public DocumentEntity replace(final Object id, final Object value) throws DataAccessException {
+    public DocumentUpdateEntity<?> replace(final Object id, final Object value) throws DataAccessException {
         return replace(id, value, new DocumentReplaceOptions());
     }
 
