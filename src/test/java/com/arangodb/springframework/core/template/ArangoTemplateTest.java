@@ -94,7 +94,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		c3.setId("3");
 		final Customer c4 = new Customer();
 		c4.setId("3");
-		final MultiDocumentEntity<? extends DocumentEntity> res = template.insert(Arrays.asList(c1, c2, c3, c4),
+		final MultiDocumentEntity<? extends DocumentEntity> res = template.insertAll(Arrays.asList(c1, c2, c3, c4),
 				Customer.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(3));
@@ -112,7 +112,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		c3.setId("3");
 		final Customer c4 = new Customer();
 		c4.setId("3");
-		final MultiDocumentEntity<DocumentCreateEntity<Customer>> res = template.insert(
+		final MultiDocumentEntity<DocumentCreateEntity<Customer>> res = template.insertAll(
 				Arrays.asList(c1, c2, c3, c4),
 				new DocumentCreateOptions().returnNew(true),
 				Customer.class);
@@ -153,13 +153,6 @@ public class ArangoTemplateTest extends AbstractArangoTest {
     }
 
 	@Test
-	public void insertDocumentWithCollName() {
-		final DocumentEntity res = template.insert("test-customer", new Customer("John", "Doe", 30));
-		assertThat(res, is(notNullValue()));
-		assertThat(res.getId(), is(notNullValue()));
-	}
-
-	@Test
 	public void getDocument() {
 		final DocumentEntity res = template.insert(new Customer("John", "Doe", 30, new Address("22162–1010")));
 		final Customer customer = template.find(res.getId(), Customer.class).get();
@@ -182,7 +175,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public void getDocuments() {
 		final Customer c1 = new Customer("John", "Doe", 30);
 		final Customer c2 = new Customer("John2", "Doe", 30);
-		template.insert(Arrays.asList(c1, c2), Customer.class);
+		template.insertAll(Arrays.asList(c1, c2), Customer.class);
 		final Iterable<Customer> customers = template.find(Arrays.asList(c1.getId(), c2.getId()), Customer.class);
 		assertThat(customers, is(notNullValue()));
 		assertThat(
@@ -197,7 +190,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	public void getAllDocuments() {
 		final Customer c1 = new Customer("John", "Doe", 30);
 		final Customer c2 = new Customer("John2", "Doe", 30);
-		template.insert(Arrays.asList(c1, c2), Customer.class);
+		template.insertAll(Arrays.asList(c1, c2), Customer.class);
 		final Iterable<Customer> customers = template.findAll(Customer.class);
 		assertThat(customers, is(notNullValue()));
 		assertThat(

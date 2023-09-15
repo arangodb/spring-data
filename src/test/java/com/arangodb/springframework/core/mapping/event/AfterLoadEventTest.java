@@ -77,7 +77,7 @@ public class AfterLoadEventTest extends AbstractArangoTest {
 
 	@Test
 	public void findMultiAfterLoadEvent() {
-		template.insert(customers, Customer.class);
+		template.insertAll(customers, Customer.class);
 		template.find(customers.stream().map(elem -> elem.getId()).collect(Collectors.toList()), Customer.class);
 		assertThat(listener.afterLoadEvents.size(), is(2));
 		for (final AfterLoadEvent<Customer> event : listener.afterLoadEvents) {
@@ -87,7 +87,7 @@ public class AfterLoadEventTest extends AbstractArangoTest {
 
 	@Test
 	public void findAllAfterLoadEvent() {
-		template.insert(customers, Customer.class);
+		template.insertAll(customers, Customer.class);
 		template.findAll(Customer.class).forEach(elem -> { // trigger conversion
 		});
 		assertThat(listener.afterLoadEvents.size(), is(2));
@@ -98,7 +98,7 @@ public class AfterLoadEventTest extends AbstractArangoTest {
 
 	@Test
 	public void findByQueryAfterLoadEvent() {
-		template.insert(customers, Customer.class);
+		template.insertAll(customers, Customer.class);
 
 		Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("@collection", Customer.class);

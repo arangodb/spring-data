@@ -368,7 +368,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentCreateEntity<T>> insert(
+	<T> MultiDocumentEntity<DocumentCreateEntity<T>> insertAll(
 		Iterable<? extends T> values,
 		DocumentCreateOptions options,
 		Class<T> entityClass) throws DataAccessException;
@@ -386,7 +386,7 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	<T> MultiDocumentEntity<DocumentCreateEntity<Void>> insert(Iterable<? extends T> values, Class<T> entityClass)
+	MultiDocumentEntity<DocumentCreateEntity<?>> insertAll(Iterable<?> values, Class<?> entityClass)
 			throws DataAccessException;
 
 	/**
@@ -409,37 +409,7 @@ public interface ArangoOperations {
 	 *            A representation of a single document
 	 * @return information about the document
 	 */
-	DocumentCreateEntity<Void> insert(Object value) throws DataAccessException;
-
-	/**
-	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
-	 * _key is given, a new unique _key is generated automatically.
-	 *
-	 * @param collectionName
-	 *            Name of the collection in which the new document should be inserted
-	 * @param value
-	 *            A representation of a single document
-	 * @param options
-	 *            Additional options, can be null
-	 * @return information about the document
-	 * @throws DataAccessException
-	 */
-	<T> DocumentCreateEntity<T> insert(String collectionName, T value, DocumentCreateOptions options)
-			throws DataAccessException;
-
-	/**
-	 *
-	 * Creates a new document from the given document, unless there is already a document with the _key given. If no
-	 * _key is given, a new unique _key is generated automatically.
-	 *
-	 * @param collectionName
-	 *            Name of the collection in which the new document should be inserted
-	 * @param value
-	 *            A representation of a single document
-	 * @return information about the document
-	 * @throws DataAccessException
-	 */
-	DocumentCreateEntity<Void> insert(String collectionName, Object value) throws DataAccessException;
+	DocumentCreateEntity<?> insert(Object value) throws DataAccessException;
 
 	/**
 	 * Creates a new document from the given document, unless there is already a document with the id given. In that

@@ -80,7 +80,7 @@ public class DeleteEventTest extends AbstractArangoTest {
 
 	@Test
 	public void deleteMultiDeleteEvent() {
-		template.insert(customers, Customer.class);
+		template.insertAll(customers, Customer.class);
 		final List<Object> ids = customers.stream().map(c -> c.getId()).collect(Collectors.toList());
 		ids.set(0, "non-existing-id");
 

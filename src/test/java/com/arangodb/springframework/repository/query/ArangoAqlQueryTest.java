@@ -296,7 +296,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 
 		Product pa = new Product("a");
 		Product pb = new Product("b");
-		template.insert(Arrays.asList(pa, pb), Product.class);
+		template.insertAll(Arrays.asList(pa, pb), Product.class);
 		template.insert(new Contains(pa, wood));
 		template.insert(new Contains(pb, glass));
 
@@ -317,7 +317,7 @@ public class ArangoAqlQueryTest extends AbstractArangoRepositoryTest {
 	public void embeddedEntitiesNull() {
 		Product pa = new Product("a");
 		Product pb = new Product("b");
-		template.insert(Arrays.asList(pa, pb), Product.class);
+		template.insertAll(Arrays.asList(pa, pb), Product.class);
 
 		Customer owner = new Customer("A", "C", 4);
 		template.insert(owner);
