@@ -176,7 +176,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Customer c1 = new Customer("John", "Doe", 30);
 		final Customer c2 = new Customer("John2", "Doe", 30);
 		template.insertAll(Arrays.asList(c1, c2), Customer.class);
-		final Iterable<Customer> customers = template.find(Arrays.asList(c1.getId(), c2.getId()), Customer.class);
+		final Iterable<Customer> customers = template.findAll(Arrays.asList(c1.getId(), c2.getId()), Customer.class);
 		assertThat(customers, is(notNullValue()));
 		assertThat(
 			StreamSupport.stream(customers.spliterator(), false).map((e) -> e.getId()).collect(Collectors.toList()),
