@@ -169,7 +169,7 @@ public interface ArangoOperations {
 	 * @return information about the document
 	 * @throws DataAccessException
 	 */
-	<T> DocumentDeleteEntity<T> delete(Object id, Class<T> entityClass) throws DataAccessException;
+	DocumentDeleteEntity<?> delete(Object id, Class<?> entityClass) throws DataAccessException;
 
 	/**
 	 * Partially updates documents, the documents to update are specified by the _key attributes in the objects on
@@ -189,7 +189,7 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 */
     <T> MultiDocumentEntity<DocumentUpdateEntity<T>> updateAll(
-            Iterable<T> values,
+            Iterable<? extends T> values,
             DocumentUpdateOptions options,
             Class<T> entityClass
     ) throws DataAccessException;
