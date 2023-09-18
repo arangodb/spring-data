@@ -6,13 +6,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [4.0.0] - 2023-09-18
+
 - upgraded dependency Spring Framework 6 and Spring Data 3 (#250)
-- exceptions during `ArangoOperations.query()` are now translated
-- improved exception translation, `OptimisticLockingFailureException` is now thrown in case of `_rev` conflict
+- `CrudRepository.deleteById()` silently ignores an unknown id (#283)
+- exceptions during `ArangoOperations.query()` are now translated (#281)
+- improved exception translation `OptimisticLockingFailureException` is now thrown in case of `_rev` conflict (#282)
 - raised required minimum Java version to JDK 17
 - deprecated Fulltext Index support 
 - changed `deduplicate` default value to `true` in `@PersistentIndex` and `@PersistentIndexed` annotations 
-- removed deprecated `AbstractArangoConfiguration` in favor of `ArangoConfiguration` 
+- underlying Java driver (accessible via `com.arangodb.springframework.core.ArangoOperations#driver()`) uses
+  now `ArangoConverter` bean to serialize and deserialize user data (#284)
+- renamed `ArangoOperations` methods operating on multiple documents with `All` suffix (e.g. `insert(Iterable)` has been
+  renamed to `insertAll(Iterable)` (#284)
+- `ArangoOperations` methods for single document manipulation have now specific return
+  types (, `DocumentDeleteEntity<T>`, `DocumentUpdateEntity<T>`, `DocumentCreateEntity<T>`) (#284)
+- `ArangoOperations` methods for multiple documents manipulation have now specific return types as for single documents,
+  wrapped by `MultiDocumentEntity<>`  (#284)
+- `ArangoOperations` methods for documents manipulation accepting options `returnNew(boolean)` or `returnOld(boolean)`
+  return now the deserialized entity in the response (accessible via `getNew()` or `getOld()`) (#284)
+- changed the arguments order of some `ArangoOperations` methods for better API coherence (#284)
+- changed the arguments type of some `ArangoOperations` methods to be covariant (#284)
+- return updated entity from `ArangoOperations.repsert()` (#285)
+- removed deprecated `AbstractArangoConfiguration` in favor of `ArangoConfiguration`
 - removed support for Joda-Time
 
 ## [3.10.0] - 2023-05-17
