@@ -418,7 +418,7 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
-	<T> void repsert(T value) throws DataAccessException;
+	<T> T repsert(T value) throws DataAccessException;
 
 	/**
 	 * Creates new documents from the given documents, unless there already exists. In that case it replaces the
@@ -431,7 +431,7 @@ public interface ArangoOperations {
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
-	<T> void repsert(Iterable<? extends T> values, Class<T> entityClass) throws DataAccessException;
+	<T> Iterable<T> repsertAll(Iterable<T> values, Class<? super T> entityClass) throws DataAccessException;
 
 	/**
 	 * Checks whether the document exists by reading a single document head

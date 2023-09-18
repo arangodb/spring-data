@@ -127,27 +127,64 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 
 	@Test
 	public void repsertDocument() {
-		String id = "id-" + UUID.randomUUID();
 		Customer customer = new Customer("John", "Doe", 30);
-		customer.setId(id);
-		template.repsert(customer);
-		template.repsert(customer);
-		Customer read = template.find(id, Customer.class).orElseThrow();
+		Customer repsert1 = template.repsert(customer);
+		Customer repsert2 = template.repsert(customer);
+
+		// in place updates
+		assertThat(repsert1, sameInstance(customer));
+		assertThat(repsert2, sameInstance(customer));
+
+		Customer read = template.find(repsert1.getId(), Customer.class).orElseThrow();
 		assertThat(read.getId(), is(customer.getId()));
 		assertThat(read.getName(), is(customer.getName()));
 		assertThat(read.getSurname(), is(customer.getSurname()));
 		assertThat(read.getAge(), is(customer.getAge()));
 	}
 
-    @Test
-    public void repsertDocumentRevConflict() {
-        String id = "id-" + UUID.randomUUID();
-        Customer customer = new Customer("John", "Doe", 30);
-        customer.setId(id);
-        template.repsert(customer);
-        customer.setRev("foo");
-        assertThrows(OptimisticLockingFailureException.class, () -> template.repsert(customer));
-    }
+	@Test
+	public void repsertDocuments() {
+		Customer c1 = new Customer("John", "Doe", 11);
+		Customer c2 = new Customer("John2", "Doe2", 22);
+		Iterable<Customer> repsert1 = template.repsertAll(List.of(c1, c2), Customer.class);
+		Iterable<Customer> repsert2 = template.repsertAll(List.of(c1, c2), Customer.class);
+
+		Iterator<Customer> rit1 = repsert1.iterator();
+		Iterator<Customer> rit2 = repsert2.iterator();
+
+		// in place updates
+		assertThat(rit1.next(), sameInstance(c1));
+		assertThat(rit2.next(), sameInstance(c1));
+		assertThat(rit1.next(), sameInstance(c2));
+		assertThat(rit2.next(), sameInstance(c2));
+
+		List<String> ids = StreamSupport.stream(repsert1.spliterator(), false).map(Customer::getId).toList();
+
+		Iterable<Customer> read = template.findAll(ids, Customer.class);
+		Iterator<Customer> rit = read.iterator();
+
+		Customer read1 = rit.next();
+		assertThat(read1.getId(), is(c1.getId()));
+		assertThat(read1.getName(), is(c1.getName()));
+		assertThat(read1.getSurname(), is(c1.getSurname()));
+		assertThat(read1.getAge(), is(c1.getAge()));
+
+		Customer read2 = rit.next();
+		assertThat(read2.getId(), is(c2.getId()));
+		assertThat(read2.getName(), is(c2.getName()));
+		assertThat(read2.getSurname(), is(c2.getSurname()));
+		assertThat(read2.getAge(), is(c2.getAge()));
+	}
+
+	@Test
+	public void repsertDocumentRevConflict() {
+		String id = "id-" + UUID.randomUUID();
+		Customer customer = new Customer("John", "Doe", 30);
+		customer.setId(id);
+		template.repsert(customer);
+		customer.setRev("foo");
+		assertThrows(OptimisticLockingFailureException.class, () -> template.repsert(customer));
+	}
 
 	@Test
 	public void getDocument() {

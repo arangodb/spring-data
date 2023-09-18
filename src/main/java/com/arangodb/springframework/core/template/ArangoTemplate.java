@@ -539,7 +539,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-    public <T> void repsert(final T value) throws DataAccessException {
+    public <T> T repsert(final T value) throws DataAccessException {
         @SuppressWarnings("unchecked") final Class<T> clazz = (Class<T>) value.getClass();
         final String collectionName = _collection(clazz).name();
 
@@ -563,12 +563,14 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         updateDBFieldsFromObject(value, result);
         potentiallyEmitEvent(new AfterSaveEvent<>(result));
+        return value;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public <T> void repsert(final Iterable<? extends T> values, final Class<T> entityClass) throws DataAccessException {
+    public <T> Iterable<T> repsertAll(final Iterable<T> values, final Class<? super T> entityClass) throws DataAccessException {
         if (!values.iterator().hasNext()) {
-            return;
+            return Collections.emptyList();
         }
 
         final String collectionName = _collection(entityClass).name();
@@ -578,7 +580,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         bindVars.put("@col", collectionName);
         bindVars.put("docs", values);
 
-        final Iterable<? extends T> result;
+        List result;
         try {
             result = query(
                     REPSERT_MANY_QUERY,
@@ -591,6 +593,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         updateDBFieldsFromObjects(values, result);
         result.forEach(it -> potentiallyEmitEvent(new AfterSaveEvent<>(it)));
+        return values;
     }
 
     private void updateDBFieldsFromObjects(final Iterable<?> values, final Iterable<?> res) {
