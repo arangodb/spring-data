@@ -213,7 +213,7 @@ public class PolymorphicTemplate extends AbstractArangoTest {
         dog.setTeeths(11);
 
         Dog res = template.repsert(dog);
-        assertThat(res, sameInstance(dog));
+        assertThat(res, is(dog));
         assertThat(col().documentExists(dog.getId()), is(true));
     }
 

@@ -74,7 +74,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> S save(final S entity) {
-		return arangoOperations.repsert(entity);
+		arangoOperations.repsert(entity);
+		return entity;
 	}
 
 	/**
@@ -86,7 +87,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
-		return arangoOperations.repsertAll(entities, domainClass);
+		arangoOperations.repsertAll(entities, domainClass);
+		return entities;
 	}
 
 	/**

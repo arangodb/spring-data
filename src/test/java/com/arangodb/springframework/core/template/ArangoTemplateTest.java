@@ -131,49 +131,32 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		Customer repsert1 = template.repsert(customer);
 		Customer repsert2 = template.repsert(customer);
 
-		// in place updates
-		assertThat(repsert1, sameInstance(customer));
-		assertThat(repsert2, sameInstance(customer));
+		assertThat(repsert1.getId(), is(customer.getId()));
+		assertThat(repsert1.getName(), is(customer.getName()));
+		assertThat(repsert1.getSurname(), is(customer.getSurname()));
+		assertThat(repsert1.getAge(), is(customer.getAge()));
 
-		Customer read = template.find(repsert1.getId(), Customer.class).orElseThrow();
-		assertThat(read.getId(), is(customer.getId()));
-		assertThat(read.getName(), is(customer.getName()));
-		assertThat(read.getSurname(), is(customer.getSurname()));
-		assertThat(read.getAge(), is(customer.getAge()));
+		assertThat(repsert2.getId(), is(customer.getId()));
+		assertThat(repsert2.getName(), is(customer.getName()));
+		assertThat(repsert2.getSurname(), is(customer.getSurname()));
+		assertThat(repsert2.getAge(), is(customer.getAge()));
 	}
 
 	@Test
 	public void repsertDocuments() {
-		Customer c1 = new Customer("John", "Doe", 11);
-		Customer c2 = new Customer("John2", "Doe2", 22);
-		Iterable<Customer> repsert1 = template.repsertAll(List.of(c1, c2), Customer.class);
-		Iterable<Customer> repsert2 = template.repsertAll(List.of(c1, c2), Customer.class);
-
-		Iterator<Customer> rit1 = repsert1.iterator();
-		Iterator<Customer> rit2 = repsert2.iterator();
-
-		// in place updates
-		assertThat(rit1.next(), sameInstance(c1));
-		assertThat(rit2.next(), sameInstance(c1));
-		assertThat(rit1.next(), sameInstance(c2));
-		assertThat(rit2.next(), sameInstance(c2));
-
-		List<String> ids = StreamSupport.stream(repsert1.spliterator(), false).map(Customer::getId).toList();
-
-		Iterable<Customer> read = template.findAll(ids, Customer.class);
-		Iterator<Customer> rit = read.iterator();
-
-		Customer read1 = rit.next();
-		assertThat(read1.getId(), is(c1.getId()));
-		assertThat(read1.getName(), is(c1.getName()));
-		assertThat(read1.getSurname(), is(c1.getSurname()));
-		assertThat(read1.getAge(), is(c1.getAge()));
-
-		Customer read2 = rit.next();
-		assertThat(read2.getId(), is(c2.getId()));
-		assertThat(read2.getName(), is(c2.getName()));
-		assertThat(read2.getSurname(), is(c2.getSurname()));
-		assertThat(read2.getAge(), is(c2.getAge()));
+		List<Customer> customers = List.of(
+				new Customer("John", "Doe", 11),
+				new Customer("John2", "Doe2", 22)
+		);
+		Iterable<Customer> res = template.repsertAll(customers, Customer.class);
+		Iterator<Customer> cIt = customers.iterator();
+		for (Customer re : res) {
+			Customer c = cIt.next();
+			assertThat(re.getId(), is(c.getId()));
+			assertThat(re.getName(), is(c.getName()));
+			assertThat(re.getSurname(), is(c.getSurname()));
+			assertThat(re.getAge(), is(c.getAge()));
+		}
 	}
 
 	@Test

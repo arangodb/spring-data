@@ -563,7 +563,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         updateDBFieldsFromObject(value, result);
         potentiallyEmitEvent(new AfterSaveEvent<>(result));
-        return value;
+        return result;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -593,7 +593,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
         updateDBFieldsFromObjects(values, result);
         result.forEach(it -> potentiallyEmitEvent(new AfterSaveEvent<>(it)));
-        return values;
+        return result;
     }
 
     private void updateDBFieldsFromObjects(final Iterable<?> values, final Iterable<?> res) {
