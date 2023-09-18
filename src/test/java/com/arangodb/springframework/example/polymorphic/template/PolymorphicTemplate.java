@@ -41,8 +41,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 /**
  * @author Michele Rastelli
@@ -204,6 +203,35 @@ public class PolymorphicTemplate extends AbstractArangoTest {
         template.insertAll(dogs, Animal.class);
         MultiDocumentEntity<DocumentUpdateEntity<Animal>> res = template.replaceAll(dogs, new DocumentReplaceOptions().returnOld(true), Animal.class);
         assertThat(res.getDocuments().stream().map(DocumentUpdateEntity::getOld).toList().containsAll(dogs), is(true));
+    }
+
+    @Test
+    public void repsertVariance() {
+        Dog dog = new Dog();
+        dog.setId("1");
+        dog.setName("dog");
+        dog.setTeeths(11);
+
+        Dog res = template.repsert(dog);
+        assertThat(res, sameInstance(dog));
+        assertThat(col().documentExists(dog.getId()), is(true));
+    }
+
+    @Test
+    public void repsertAllVariance() {
+        Dog dog1 = new Dog();
+        dog1.setId("1");
+        dog1.setName("dog1");
+        dog1.setTeeths(11);
+
+        Dog dog2 = new Dog();
+        dog1.setId("2");
+        dog1.setName("dog2");
+        dog1.setTeeths(22);
+
+        List<Dog> dogs = List.of(dog1, dog2);
+        Iterable<Dog> res = template.repsertAll(dogs, Animal.class);
+        assertThat(res, containsInRelativeOrder(dog1, dog2));
     }
 
 }
