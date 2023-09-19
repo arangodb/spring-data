@@ -498,17 +498,15 @@ public interface ArangoOperations {
 	 * Creates new documents from the given documents, unless there already exists. In that case it replaces the
 	 * documents.
 	 *
-	 * @param values
-	 *            A List of documents
-	 * @param entityClass
-	 *            The entity class which represents the collection
+	 * @param values      A List of documents
+	 * @param entityClass The entity class which represents the collection
 	 * @throws DataAccessException
 	 * @since ArangoDB 3.4
 	 */
-	<T> Iterable<T> repsertAll(Iterable<T> values, Class<? super T> entityClass, AqlQueryOptions options) throws DataAccessException;
+	<T> Iterable<T> repsertAll(Iterable<T> values, AqlQueryOptions options, Class<? super T> entityClass) throws DataAccessException;
 
 	default <T> Iterable<T> repsertAll(Iterable<T> values, Class<? super T> entityClass) throws DataAccessException {
-		return repsertAll(values, entityClass, new AqlQueryOptions());
+		return repsertAll(values, new AqlQueryOptions(), entityClass);
 	}
 
 	/**
