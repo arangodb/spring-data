@@ -29,7 +29,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.annotation.Edge;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.annotation.Ref;
@@ -60,27 +59,26 @@ public class DefaultResolverFactory implements ResolverFactory, ApplicationConte
     @Override
     public <A extends Annotation> Optional<RelationResolver<A>> getRelationResolver(final A annotation,
                                                                                     final Class<? extends Annotation> collectionType) {
-        RelationResolver<A> resolver = null;
         try {
             if (annotation instanceof From) {
                 if (collectionType == Edge.class) {
-                    resolver = (RelationResolver<A>) new EdgeFromResolver(template.getObject(), null);
-                } else if (collectionType == Document.class) {
-                    resolver = (RelationResolver<A>) new DocumentFromResolver(template.getObject(), null);
+                    return Optional.of((RelationResolver<A>) new EdgeFromResolver(template.getObject(), transactionBridge.getIfUnique()));
                 }
-            } else if (annotation instanceof To) {
+                return Optional.of((RelationResolver<A>) new DocumentFromResolver(template.getObject(), transactionBridge.getIfUnique()));
+            }
+            if (annotation instanceof To) {
                 if (collectionType == Edge.class) {
-                    resolver = (RelationResolver<A>) new EdgeToResolver(template.getObject(), null);
-                } else if (collectionType == Document.class) {
-                    resolver = (RelationResolver<A>) new DocumentToResolver(template.getObject(), null);
+                    return Optional.of((RelationResolver<A>) new EdgeToResolver(template.getObject(), transactionBridge.getIfUnique()));
                 }
-            } else if (annotation instanceof Relations) {
-                resolver = (RelationResolver<A>) new RelationsResolver(template.getObject(), null);
+                return Optional.of((RelationResolver<A>) new DocumentToResolver(template.getObject(), transactionBridge.getIfUnique()));
+            }
+            if (annotation instanceof Relations) {
+                return Optional.of((RelationResolver<A>) new RelationsResolver(template.getObject(), transactionBridge.getIfUnique()));
             }
         } catch (final Exception e) {
             throw new ArangoDBException(e);
         }
-        return Optional.ofNullable(resolver);
+        return Optional.empty();
     }
 
     @Override
