@@ -52,7 +52,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     }
 
     private IndexType geoType(final IndexType type) {
-        return Integer.valueOf(template.getVersion().getVersion().split("\\.")[1]) >= 4 ? IndexType.geo : type;
+		return Integer.parseInt(template.getVersion().getVersion().split("\\.")[1]) >= 4 ? IndexType.geo : type;
     }
 
     public static class PersistentIndexedSingleFieldTestEntity {
@@ -309,6 +309,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
                 hasItems(IndexType.primary, IndexType.fulltext));
     }
 
+	@SuppressWarnings("deprecation")
     @FulltextIndex(field = "a")
     public static class FulltextIndexWithSingleFieldTestEntity {
     }
@@ -326,6 +327,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
                 hasItems("a"));
     }
 
+	@SuppressWarnings("deprecation")
     @FulltextIndex(field = "a")
     @FulltextIndex(field = "b")
     public static class FulltextIndexWithMultipleSingleFieldTestEntity {
@@ -341,6 +343,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
                 hasItems(IndexType.primary, IndexType.fulltext));
     }
 
+	@SuppressWarnings("deprecation")
     @FulltextIndexes({@FulltextIndex(field = "a"), @FulltextIndex(field = "b")})
     public static class FulltextIndexWithMultipleIndexesTestEntity {
     }
@@ -374,6 +377,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
                 hasItems(IndexType.primary, IndexType.persistent, geo1(), IndexType.fulltext, IndexType.ttl));
     }
 
+	@SuppressWarnings("deprecation")
     @PersistentIndex(fields = {"a"})
     @GeoIndex(fields = {"a"})
     @FulltextIndex(field = "a")
@@ -391,6 +395,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
                 hasItems(IndexType.primary, IndexType.persistent, geo1(), IndexType.fulltext));
     }
 
+	@SuppressWarnings("deprecation")
     @PersistentIndex(fields = {"a"})
     @PersistentIndex(fields = {"b"})
     @GeoIndex(fields = {"a"})
