@@ -97,7 +97,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
-		Iterable<S> saved = arangoOperations.repsertAll(entities, domainClass, defaultQueryOptions());
+		Iterable<S> saved = arangoOperations.repsertAll(entities, defaultQueryOptions(), domainClass);
 		return returnOriginalEntities ? entities : saved;
 	}
 

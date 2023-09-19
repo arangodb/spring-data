@@ -550,9 +550,9 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         return result;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings("unchecked")
     @Override
-    public <T> Iterable<T> repsertAll(final Iterable<T> values, final Class<? super T> entityClass, AqlQueryOptions options) throws DataAccessException {
+    public <T> Iterable<T> repsertAll(final Iterable<T> values, AqlQueryOptions options, final Class<? super T> entityClass) throws DataAccessException {
         if (!values.iterator().hasNext()) {
             return Collections.emptyList();
         }
@@ -565,6 +565,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         bindVars.put("@col", collectionName);
         bindVars.put("docs", values);
 
+        @SuppressWarnings("rawtypes")
         List result;
         try {
             result = query(
