@@ -776,4 +776,29 @@ public class GeneralMappingTest extends AbstractArangoTest {
         assertThat(nestedList.size(), is(2));
         assertThat(nestedList, is(nestedCollection));
     }
+
+    @Test
+    public void readObjectInMap() {
+        ObjectInMapTestEntity entity = new ObjectInMapTestEntity();
+        MapObject value = new MapObject();
+        value.put("first", "value1");
+        value.put("second", Collections.singletonMap("value2", "2"));
+        entity.value = value;
+
+        template.insert(entity);
+        Optional<ObjectInMapTestEntity> find = template.find(entity.id, ObjectInMapTestEntity.class);
+        assertThat(find.isPresent(), is(true));
+        assertThat(find.get().value, is(value));
+    }
+
+    @Document
+    static class ObjectInMapTestEntity {
+        @Id
+        private String id;
+        private MapObject value;
+    }
+
+    static class MapObject extends HashMap<String, Object> {
+    }
+
 }
