@@ -161,6 +161,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         return collection;
     }
 
+    @SuppressWarnings("deprecation")
     private static void ensureCollectionIndexes(final CollectionOperations collection,
                                                 final ArangoPersistentEntity<?> persistentEntity) {
         persistentEntity.getPersistentIndexes().forEach(index -> ensurePersistentIndex(collection, index));

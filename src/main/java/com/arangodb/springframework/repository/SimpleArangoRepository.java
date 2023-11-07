@@ -166,13 +166,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public void delete(final T entity) {
-		String id = null;
-		try {
-			id = (String) arangoOperations.getConverter().getMappingContext().getPersistentEntity(domainClass)
-					.getIdProperty().getField().get(entity);
-		} catch (final IllegalAccessException e) {
-			e.printStackTrace();
-		}
+		String id = (String) arangoOperations.getConverter().getMappingContext()
+				.getRequiredPersistentEntity(domainClass).getIdentifierAccessor(entity).getRequiredIdentifier();
 		arangoOperations.delete(id, domainClass);
 	}
 
@@ -268,8 +263,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> findAll(final Example<S> example) {
-		final ArangoCursor cursor = findAllInternal((Pageable) null, example, new HashMap<>());
-		return cursor;
+		return (ArangoCursor) findAllInternal((Pageable) null, example, new HashMap<>());
 	}
 
 	/**
@@ -283,8 +277,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> findAll(final Example<S> example, final Sort sort) {
-		final ArangoCursor cursor = findAllInternal(sort, example, new HashMap());
-		return cursor;
+		return findAllInternal(sort, example, new HashMap());
 	}
 
 	/**

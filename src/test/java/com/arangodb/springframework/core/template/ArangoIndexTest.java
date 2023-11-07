@@ -50,6 +50,7 @@ import static org.hamcrest.Matchers.*;
  * @author Mark Vollmary
  *
  */
+@SuppressWarnings("deprecation")
 public class ArangoIndexTest extends AbstractArangoTest {
 
 	private IndexType geo1() {
