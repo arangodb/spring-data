@@ -59,6 +59,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final ArangoOperations arangoOperations;
 	private final ApplicationContext applicationContext;
+	private boolean returnOriginalEntities = true;
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
 	public ArangoRepositoryFactory(final ArangoOperations arangoOperations, final ApplicationContext applicationContext) {
@@ -74,10 +75,21 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 				(ArangoPersistentEntity<T>) context.getRequiredPersistentEntity(domainClass));
 	}
 
+	/**
+	 * Change the behaviour of {@link org.springframework.data.repository.CrudRepository#save(Object)} and
+	 * {@link org.springframework.data.repository.CrudRepository#saveAll(Iterable)} to either return the original
+	 * entities passed or those returned from the server using proxies for lazy evaluation.
+	 *
+	 * @see org.springframework.data.repository.core.support.RepositoryFactoryCustomizer
+	 */
+	public void setReturnOriginalEntities(boolean returnOriginalEntities) {
+		this.returnOriginalEntities = returnOriginalEntities;
+	}
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	protected Object getTargetRepository(final RepositoryInformation metadata) {
-		return new SimpleArangoRepository(arangoOperations, metadata.getDomainType());
+		return new SimpleArangoRepository(arangoOperations, metadata.getDomainType(), returnOriginalEntities);
 	}
 
 	@Override

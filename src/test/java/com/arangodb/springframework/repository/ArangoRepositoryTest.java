@@ -6,7 +6,9 @@ import static org.hamcrest.Matchers.*;
 import java.util.*;
 
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 
@@ -14,18 +16,70 @@ import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.ShoppingCart;
 import org.springframework.data.util.Streamable;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 /**
  * Created by F625633 on 06/07/2017.
  */
 public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 
-	@Test
-	public void saveTest() {
-		Customer res = repository.save(john);
-		assertThat(res, not(sameInstance(john)));
-		assertThat(res.getId(), is(notNullValue()));
-		assertThat(res.getId(), equalTo(john.getId()));
+	@Nested
+	public class ReturnOriginalEntities {
+
+		@Autowired
+		protected CustomerRepository repository;
+
+		@Test
+		public void saveTest() {
+			Customer res = repository.save(john);
+			assertThat(res, sameInstance(john));
+			assertThat(res.getId(), is(notNullValue()));
+			assertThat(res.getId(), equalTo(john.getId()));
+		}
+
+		@Test
+		public void saveAllTest() {
+			Iterable<Customer> res = repository.saveAll(customers);
+			Iterator<Customer> cIt = customers.iterator();
+			for (Customer re : res) {
+				assertThat(re, sameInstance(cIt.next()));
+			}
+			Iterable<Customer> docs = repository.findAll();
+			docs.forEach(d -> d.setName("saveAllTest"));
+			repository.saveAll(docs);
+			repository.findAll().forEach(it -> assertThat("name does not match", it.getName(), equalTo("saveAllTest")));
+		}
+	}
+
+	@Nested
+	@TestPropertySource(properties = "returnOriginalEntities=false")
+	public class ReturnServerResult {
+
+		@Autowired
+		protected CustomerRepository repository;
+
+		@Test
+		public void saveTest() {
+			Customer res = repository.save(john);
+			assertThat(res, not(sameInstance(john)));
+			assertThat(res.getId(), is(notNullValue()));
+			assertThat(res.getId(), equalTo(john.getId()));
+		}
+
+		@Test
+		public void saveAllTest() {
+			List<Customer> res = Streamable.of(repository.saveAll(customers)).toList();
+			assertThat(res, Matchers.hasSize(customers.size()));
+			assertThat(res, Matchers.hasItems(customers.toArray(Customer[]::new)));
+			for (Customer original : customers) {
+				assertThat(res, everyItem(not(sameInstance(original))));
+			}
+			Iterable<Customer> docs = repository.findAll();
+			docs.forEach(d -> d.setName("saveAllTest"));
+			repository.saveAll(docs);
+			repository.findAll().forEach(it -> assertThat("name does not match", it.getName(), equalTo("saveAllTest")));
+		}
 	}
 
 	@Test
@@ -38,17 +92,6 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
 		repository.save(john);
 		customer = repository.findById(id).get();
 		assertThat("customers do not match", customer, equalTo(john));
-	}
-
-	@Test
-	public void saveAllTest() {
-		List<Customer> res = Streamable.of(repository.saveAll(customers)).toList();
-		assertThat(res, Matchers.hasSize(customers.size()));
-		assertThat(res, Matchers.hasItems(customers.toArray(Customer[]::new)));
-        Iterable<Customer> docs = repository.findAll();
-		docs.forEach(d -> d.setName("saveAllTest"));
-		repository.saveAll(docs);
-		repository.findAll().forEach(it -> assertThat("name does not match", it.getName(), equalTo("saveAllTest")));
 	}
 
 	@Test

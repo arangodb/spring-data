@@ -51,17 +51,20 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	private final ArangoMappingContext mappingContext;
 	private final ArangoExampleConverter exampleConverter;
 	private final Class<T> domainClass;
+	private final boolean returnOriginalEntities;
 
 	/**
-	 *
-	 * @param arangoOperations The template used to execute much of the
-	 *                         functionality of this class
-	 * @param domainClass      the class type of this repository
+	 * @param arangoOperations       The template used to execute much of the
+	 *                               functionality of this class
+	 * @param domainClass            the class type of this repository
+	 * @param returnOriginalEntities whether save and saveAll should return the
+	 *                               original entities passed or the server ones
 	 */
-	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass) {
+	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass, boolean returnOriginalEntities) {
 		super();
 		this.arangoOperations = arangoOperations;
 		this.domainClass = domainClass;
+		this.returnOriginalEntities = returnOriginalEntities;
 		mappingContext = (ArangoMappingContext) arangoOperations.getConverter().getMappingContext();
 		exampleConverter = new ArangoExampleConverter(mappingContext, arangoOperations.getResolverFactory());
 	}
@@ -74,7 +77,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> S save(final S entity) {
-		return arangoOperations.repsert(entity);
+		S saved = arangoOperations.repsert(entity);
+		return returnOriginalEntities ? entity : saved;
 	}
 
 	/**
@@ -86,7 +90,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
-		return arangoOperations.repsertAll(entities, domainClass);
+		Iterable<S> saved = arangoOperations.repsertAll(entities, domainClass);
+		return returnOriginalEntities ? entities : saved;
 	}
 
 	/**
