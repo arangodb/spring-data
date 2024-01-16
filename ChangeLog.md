@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [4.0.1] - 2024-01-16
+
+- updated `arangodb-java-driver` to version `7.1.1`
+- fixed returning `com.arangodb.internal.InternalArangoDBBuilder` from public API
+
 ## [4.0.0] - 2023-09-18
 
 - upgraded dependency Spring Framework 6 and Spring Data 3 (#250)
