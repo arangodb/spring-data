@@ -10,7 +10,9 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
+import com.arangodb.ContentType;
 import com.arangodb.serde.ArangoSerde;
+import com.arangodb.serde.jackson.internal.JacksonMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
@@ -58,6 +60,10 @@ public interface ArangoConfiguration {
 
     String database();
 
+    default ContentType contentType() {
+        return ContentType.JSON;
+    }
+
     @Bean
     default ArangoOperations arangoTemplate() throws Exception {
         return new ArangoTemplate(arango().serde(serde()).build(), database(), arangoConverter(), resolverFactory());
@@ -66,7 +72,7 @@ public interface ArangoConfiguration {
     @Bean
     default ArangoSerde serde() throws Exception {
         return new ArangoSerde() {
-            private final ObjectMapper om = new ObjectMapper();
+            private final ObjectMapper om = JacksonMapperProvider.of(contentType());
             private final ArangoConverter converter = arangoConverter();
 
             @Override
