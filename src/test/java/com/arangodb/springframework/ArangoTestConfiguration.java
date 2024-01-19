@@ -21,12 +21,16 @@
 package com.arangodb.springframework;
 
 import com.arangodb.ArangoDB;
+import com.arangodb.ContentType;
+import com.arangodb.Protocol;
 import com.arangodb.config.ArangoConfigProperties;
+import com.arangodb.internal.serde.ContentTypeFactory;
 import com.arangodb.springframework.annotation.EnableArangoAuditing;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.ArangoConfiguration;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
 import com.arangodb.springframework.testdata.Person;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -37,44 +41,53 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- *
  * @author Mark Vollmary
  * @author Christian Lechner
  */
 @Configuration
-@ComponentScan({ "com.arangodb.springframework.component", "com.arangodb.springframework.core.mapping.event" })
+@ComponentScan({"com.arangodb.springframework.component", "com.arangodb.springframework.core.mapping.event"})
 @EnableArangoRepositories(basePackages = {
-		"com.arangodb.springframework.repository",
-		"com.arangodb.springframework.example.polymorphic.repository",
-		"com.arangodb.springframework.debug.repository"},
-						  namedQueriesLocation = "classpath*:arango-named-queries-test.properties")
+        "com.arangodb.springframework.repository",
+        "com.arangodb.springframework.example.polymorphic.repository",
+        "com.arangodb.springframework.debug.repository"},
+        namedQueriesLocation = "classpath*:arango-named-queries-test.properties")
 @EnableArangoAuditing(auditorAwareRef = "auditorProvider")
 public class ArangoTestConfiguration implements ArangoConfiguration {
 
-	public static final String DB = "spring-test-db";
+    public static final String DB = "spring-test-db";
 
-	@Override
-	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder().loadProperties(ArangoConfigProperties.fromFile());
-	}
+    @Value("${arangodb.protocol:HTTP2_JSON}")
+    private Protocol protocol;
 
-	@Override
-	public String database() {
-		return DB;
-	}
+    @Override
+    public ArangoDB.Builder arango() {
+        return new ArangoDB.Builder()
+                .loadProperties(ArangoConfigProperties.fromFile())
+                .protocol(protocol);
+    }
 
-	@Override
-	public Collection<Converter<?, ?>> customConverters() {
-		final Collection<Converter<?, ?>> converters = new ArrayList<>();
-		converters.add(new CustomMappingTest.CustomJsonNodeReadTestConverter());
-		converters.add(new CustomMappingTest.CustomJsonNodeWriteTestConverter());
-		converters.add(new CustomMappingTest.CustomDBEntityReadTestConverter());
-		converters.add(new CustomMappingTest.CustomDBEntityWriteTestConverter());
-		return converters;
-	}
+    @Override
+    public ContentType contentType() {
+        return ContentTypeFactory.of(protocol);
+    }
 
-	@Bean
-	public AuditorAware<Person> auditorProvider() {
-		return new AuditorProvider();
-	}
+    @Override
+    public String database() {
+        return DB;
+    }
+
+    @Override
+    public Collection<Converter<?, ?>> customConverters() {
+        final Collection<Converter<?, ?>> converters = new ArrayList<>();
+        converters.add(new CustomMappingTest.CustomJsonNodeReadTestConverter());
+        converters.add(new CustomMappingTest.CustomJsonNodeWriteTestConverter());
+        converters.add(new CustomMappingTest.CustomDBEntityReadTestConverter());
+        converters.add(new CustomMappingTest.CustomDBEntityWriteTestConverter());
+        return converters;
+    }
+
+    @Bean
+    public AuditorAware<Person> auditorProvider() {
+        return new AuditorProvider();
+    }
 }
