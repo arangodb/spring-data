@@ -60,6 +60,14 @@ public interface ArangoConfiguration {
 
     String database();
 
+    /**
+     * Override to set the data format to use in {@link #serde()}. It must match the content-type required by the
+     * protocol used in the driver, e.g. set to {@link ContentType#VPACK} for protocols
+     * {@link com.arangodb.Protocol#VST}, {@link com.arangodb.Protocol#HTTP_VPACK} and
+     * {@link com.arangodb.Protocol#HTTP2_VPACK}, or set to {@link ContentType#VPACK} otherwise.
+     *
+     * @return the content-type to use in {@link #serde()}
+     */
     default ContentType contentType() {
         return ContentType.JSON;
     }
