@@ -56,7 +56,7 @@
     <properties>
         <java-module-name>com.arangodb.springframework</java-module-name>
         <jaxb.version>2.3.1</jaxb.version> <!-- fix dependency convergence-->
-        <arangodb.version>7.4.0</arangodb.version>
+        <arangodb.version>7.5.0</arangodb.version>
         <slf4j>2.0.7</slf4j>
     </properties>
 

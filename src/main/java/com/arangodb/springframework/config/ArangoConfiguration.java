@@ -12,7 +12,7 @@ import java.util.Set;
 
 import com.arangodb.ContentType;
 import com.arangodb.serde.ArangoSerde;
-import com.arangodb.serde.jackson.internal.JacksonMapperProvider;
+import com.arangodb.serde.jackson.JacksonMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
