@@ -96,8 +96,8 @@ jobs:
       fail-fast: false
       matrix:
         spring-boot-version:
-          - 3.0.10
-          - 3.1.3
+          - 3.1.8
+          - 3.2.2
 
     steps:
       - uses: actions/checkout@v3
@@ -106,7 +106,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: 17
+          java-version: 21
           distribution: 'adopt'
           cache: maven
       - name: Start Database
