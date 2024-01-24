@@ -29,13 +29,11 @@ jobs:
       fail-fast: false
       matrix:
         docker-img:
-          - docker.io/arangodb/arangodb:3.9.11
-          - docker.io/arangodb/arangodb:3.10.10
-          - docker.io/arangodb/arangodb:3.11.3
+          - docker.io/arangodb/arangodb:3.10.12
+          - docker.io/arangodb/arangodb:3.11.6
         topology:
           - single
           - cluster
-          - activefailover
 
     steps:
       - uses: actions/checkout@v3
@@ -50,13 +48,44 @@ jobs:
       - name: Start Database
         run: ./docker/start_db.sh
         env:
-          ARANGO_LICENSE_KEY: ${{ secrets.ARANGO_LICENSE_KEY }}
           STARTER_MODE: ${{ matrix.topology }}
           DOCKER_IMAGE: ${{ matrix.docker-img }}
       - name: Info
         run: mvn -version
       - name: Test
         run: mvn --no-transfer-progress test
+
+  test-protocols:
+
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        protocol:
+          - 'VST'
+          - 'HTTP_VPACK'
+          - 'HTTP_JSON'
+          - 'HTTP2_VPACK'
+          - 'HTTP2_JSON'
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'adopt'
+          cache: maven
+      - name: Start Database
+        run: ./docker/start_db.sh
+      - name: Info
+        run: mvn -version
+      - name: Test
+        run: mvn --no-transfer-progress test -Darangodb.protocol=${{matrix.protocol}}
 
   test-spring-boot-versions:
 
@@ -66,11 +95,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        docker-img:
-          - docker.io/arangodb/arangodb:3.11.3
-        topology:
-          - single
-          - cluster
         spring-boot-version:
           - 3.0.10
           - 3.1.3
@@ -87,10 +111,6 @@ jobs:
           cache: maven
       - name: Start Database
         run: ./docker/start_db.sh
-        env:
-          ARANGO_LICENSE_KEY: ${{ secrets.ARANGO_LICENSE_KEY }}
-          STARTER_MODE: ${{ matrix.topology }}
-          DOCKER_IMAGE: ${{ matrix.docker-img }}
       - name: Info
         run: mvn -version
       - name: Install
