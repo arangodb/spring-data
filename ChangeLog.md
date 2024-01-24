@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [4.1.0] - 2024-01-24
+
+- updated `arangodb-java-driver` to version `7.5.1`
+- updated to Spring Data 3.2 (DE-767)
+- fixed `VPACK` support (DE-707, #297)
+- fixed type information equality (#288)
+
+
 ## [4.0.0] - 2023-09-18
 
 - upgraded dependency Spring Framework 6 and Spring Data 3 (#250)
