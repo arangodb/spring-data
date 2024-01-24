@@ -75,6 +75,7 @@
                         </goals>
                         <configuration>
                             <rules>
+                                <requireExplicitDependencyScope/>
                                 <dependencyConvergence/>
                             </rules>
                         </configuration>
@@ -232,22 +233,26 @@
         <dependency>
             <groupId>com.arangodb</groupId>
             <artifactId>arangodb-java-driver</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <!-- Spring -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <!-- Spring Data -->
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <!-- Test -->
