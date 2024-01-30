@@ -190,27 +190,19 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
 
     /**
      * Any transaction object is configured according to the definition upfront.
-     *
-     * @see ArangoTransactionObject#configure(TransactionDefinition)
-     */
-    @Override
-    protected DefaultTransactionStatus newTransactionStatus(TransactionDefinition definition, @Nullable Object transaction, boolean newTransaction, boolean newSynchronization, boolean debug, @Nullable Object suspendedResources) {
-        if (transaction instanceof ArangoTransactionObject) {
-            ((ArangoTransactionObject) transaction).configure(definition);
-        }
-        return super.newTransactionStatus(definition, transaction, newTransaction, newSynchronization, debug, suspendedResources);
-    }
-
-    /**
      * Bind the holder for the first new transaction created.
      *
      * @see ArangoTransactionHolder
      */
     @Override
     protected void prepareSynchronization(DefaultTransactionStatus status, TransactionDefinition definition) {
+        ArangoTransactionObject transaction = status.hasTransaction() ? (ArangoTransactionObject) status.getTransaction() : null;
+        if (transaction != null) {
+            transaction.configure(definition);
+        }
         super.prepareSynchronization(status, definition);
-        if (status.isNewSynchronization()) {
-            ArangoTransactionHolder holder = ((ArangoTransactionObject) status.getTransaction()).getHolder();
+        if (transaction != null && status.isNewSynchronization()) {
+            ArangoTransactionHolder holder = transaction.getHolder();
             TransactionSynchronizationManager.bindResource(this, holder);
         }
     }
