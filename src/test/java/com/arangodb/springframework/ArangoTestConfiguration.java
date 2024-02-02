@@ -32,7 +32,7 @@ import com.arangodb.springframework.core.mapping.CustomMappingTest;
 import com.arangodb.springframework.repository.ArangoRepositoryFactory;
 import com.arangodb.springframework.testdata.Person;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -62,19 +62,23 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 
     public static final String DB = "spring-test-db";
 
-    @Value("${arangodb.protocol:HTTP2_JSON}")
-    private Protocol protocol;
+    @Autowired
+    private Environment env;
+
+    private Protocol getProtocol() {
+        return env.getProperty("arangodb.protocol", Protocol.class, Protocol.HTTP2_JSON);
+    }
 
     @Override
     public ArangoDB.Builder arango() {
         return new ArangoDB.Builder()
                 .loadProperties(ArangoConfigProperties.fromFile())
-                .protocol(protocol);
+                .protocol(getProtocol());
     }
 
     @Override
     public ContentType contentType() {
-        return ContentTypeFactory.of(protocol);
+        return ContentTypeFactory.of(getProtocol());
     }
 
     @Override
@@ -98,7 +102,7 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 	}
 
 	@Bean
-	public BeanPostProcessor repositoryFactoryCustomizerRegistrar(Environment env) {
+	public BeanPostProcessor repositoryFactoryCustomizerRegistrar() {
 		boolean returnOriginalEntities = env.getProperty("returnOriginalEntities", Boolean.class, true);
 		return new BeanPostProcessor() {
 			@Override
