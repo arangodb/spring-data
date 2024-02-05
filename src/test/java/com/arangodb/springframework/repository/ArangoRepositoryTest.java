@@ -4,6 +4,7 @@ import com.arangodb.springframework.testdata.Address;
 import com.arangodb.springframework.testdata.Customer;
 import com.arangodb.springframework.testdata.ShoppingCart;
 import com.arangodb.springframework.testdata.UserRecord;
+import com.arangodb.springframework.testdata.UserImmutable;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -120,6 +121,48 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
             assertThat(o.get(1).rev(), is(notNullValue()));
             assertThat(o.get(1).name(), equalTo(i.get(1).name()));
             assertThat(o.get(1).age(), equalTo(i.get(1).age()));
+        }
+    }
+
+    @Nested
+    @TestPropertySource(properties = "returnOriginalEntities=false")
+    public class ImmutableEntity {
+
+        @Autowired
+        protected UserImmutableRepository repository;
+
+        @Test
+        public void saveTest() {
+            UserImmutable i = new UserImmutable("mike", 22);
+            UserImmutable o = repository.save(i);
+            assertThat(o, not(sameInstance(i)));
+            assertThat(o.getKey(), is(notNullValue()));
+            assertThat(o.getId(), is(notNullValue()));
+            assertThat(o.getRev(), is(notNullValue()));
+            assertThat(o.getName(), equalTo(i.getName()));
+            assertThat(o.getAge(), equalTo(i.getAge()));
+        }
+
+        @Test
+        public void saveAllTest() {
+            List<UserImmutable> i = List.of(
+                    new UserImmutable("mike", 22),
+                    new UserImmutable("mary", 33)
+            );
+            List<UserImmutable> o = Streamable.of(repository.saveAll(i)).toList();
+            assertThat(o, Matchers.hasSize(i.size()));
+
+            assertThat(o.get(0).getKey(), is(notNullValue()));
+            assertThat(o.get(0).getId(), is(notNullValue()));
+            assertThat(o.get(0).getRev(), is(notNullValue()));
+            assertThat(o.get(0).getName(), equalTo(i.get(0).getName()));
+            assertThat(o.get(0).getAge(), equalTo(i.get(0).getAge()));
+
+            assertThat(o.get(1).getKey(), is(notNullValue()));
+            assertThat(o.get(1).getId(), is(notNullValue()));
+            assertThat(o.get(1).getRev(), is(notNullValue()));
+            assertThat(o.get(1).getName(), equalTo(i.get(1).getName()));
+            assertThat(o.get(1).getAge(), equalTo(i.get(1).getAge()));
         }
     }
 
