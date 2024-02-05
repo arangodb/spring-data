@@ -29,19 +29,13 @@ import com.arangodb.springframework.annotation.EnableArangoAuditing;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.ArangoConfiguration;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
-import com.arangodb.springframework.repository.ArangoRepositoryFactory;
 import com.arangodb.springframework.testdata.Person;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.env.Environment;
 import org.springframework.data.domain.AuditorAware;
-import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
-import org.springframework.data.repository.core.support.RepositoryFactoryCustomizer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,23 +56,22 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 
     public static final String DB = "spring-test-db";
 
-    @Autowired
-    private Environment env;
+    @Value("${returnOriginalEntities:true}")
+    private boolean returnOriginalEntities;
 
-    private Protocol getProtocol() {
-        return env.getProperty("arangodb.protocol", Protocol.class, Protocol.HTTP2_JSON);
-    }
+    @Value("${arangodb.protocol:HTTP2_JSON}")
+    private Protocol protocol;
 
     @Override
     public ArangoDB.Builder arango() {
         return new ArangoDB.Builder()
                 .loadProperties(ArangoConfigProperties.fromFile())
-                .protocol(getProtocol());
+                .protocol(protocol);
     }
 
     @Override
     public ContentType contentType() {
-        return ContentTypeFactory.of(getProtocol());
+        return ContentTypeFactory.of(protocol);
     }
 
     @Override
@@ -96,26 +89,13 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
         return converters;
     }
 
-	@Bean
-	public AuditorAware<Person> auditorProvider() {
-		return new AuditorProvider();
-	}
+    @Override
+    public boolean returnOriginalEntities() {
+        return returnOriginalEntities;
+    }
 
-	@Bean
-	public BeanPostProcessor repositoryFactoryCustomizerRegistrar() {
-		boolean returnOriginalEntities = env.getProperty("returnOriginalEntities", Boolean.class, true);
-		return new BeanPostProcessor() {
-			@Override
-			public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-				if (bean instanceof RepositoryFactoryBeanSupport<?, ?, ?> repoFactoryBean) {
-					repoFactoryBean.addRepositoryFactoryCustomizer(repositoryFactoryCustomizer(returnOriginalEntities));
-				}
-				return bean;
-			}
-		};
-	}
-
-	private static RepositoryFactoryCustomizer repositoryFactoryCustomizer(boolean returnOriginalEntities) {
-		return factory -> ((ArangoRepositoryFactory) factory).setReturnOriginalEntities(returnOriginalEntities);
-	}
+    @Bean
+    public AuditorAware<Person> auditorProvider() {
+        return new AuditorProvider();
+    }
 }

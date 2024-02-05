@@ -58,7 +58,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 *                               functionality of this class
 	 * @param domainClass            the class type of this repository
 	 * @param returnOriginalEntities whether save and saveAll should return the
-	 *                               original entities passed or the server ones
+	 *                               original entities or new ones
 	 */
 	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass, boolean returnOriginalEntities) {
 		super();

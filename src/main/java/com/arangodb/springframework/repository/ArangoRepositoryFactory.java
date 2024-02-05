@@ -23,6 +23,7 @@ package com.arangodb.springframework.repository;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import com.arangodb.springframework.config.ArangoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
@@ -59,31 +60,23 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final ArangoOperations arangoOperations;
 	private final ApplicationContext applicationContext;
-	private boolean returnOriginalEntities = true;
+	private final boolean returnOriginalEntities;
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
-	public ArangoRepositoryFactory(final ArangoOperations arangoOperations, final ApplicationContext applicationContext) {
-		this.arangoOperations = arangoOperations;
-		this.applicationContext = applicationContext;
-		this.context = arangoOperations.getConverter().getMappingContext();
-	}
+    public ArangoRepositoryFactory(final ArangoOperations arangoOperations,
+                                   final ApplicationContext applicationContext,
+                                   final ArangoConfiguration arangoConfiguration) {
+        this.arangoOperations = arangoOperations;
+        this.applicationContext = applicationContext;
+        this.context = arangoOperations.getConverter().getMappingContext();
+        returnOriginalEntities = arangoConfiguration.returnOriginalEntities();
+    }
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T, ID> ArangoEntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
 		return new ArangoPersistentEntityInformation<>(
 				(ArangoPersistentEntity<T>) context.getRequiredPersistentEntity(domainClass));
-	}
-
-	/**
-	 * Change the behaviour of {@link org.springframework.data.repository.CrudRepository#save(Object)} and
-	 * {@link org.springframework.data.repository.CrudRepository#saveAll(Iterable)} to either return the original
-	 * entities passed or those returned from the server using proxies for lazy evaluation.
-	 *
-	 * @see org.springframework.data.repository.core.support.RepositoryFactoryCustomizer
-	 */
-	public void setReturnOriginalEntities(boolean returnOriginalEntities) {
-		this.returnOriginalEntities = returnOriginalEntities;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

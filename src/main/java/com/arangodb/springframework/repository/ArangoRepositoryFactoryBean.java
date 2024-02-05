@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.repository;
 
+import com.arangodb.springframework.config.ArangoConfiguration;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -39,6 +40,7 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 
 	private ArangoOperations arangoOperations;
 	private ApplicationContext applicationContext;
+	private ArangoConfiguration arangoConfiguration;
 
 	@Autowired
 	public ArangoRepositoryFactoryBean(final Class<? extends T> repositoryInterface) {
@@ -50,10 +52,15 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 		this.arangoOperations = arangoOperations;
 	}
 
+	@Autowired
+	public void setArangoConfiguration(final ArangoConfiguration arangoConfiguration) {
+		this.arangoConfiguration = arangoConfiguration;
+	}
+
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
 		Assert.notNull(arangoOperations, "arangoOperations not configured");
-		return new ArangoRepositoryFactory(arangoOperations, applicationContext);
+		return new ArangoRepositoryFactory(arangoOperations, applicationContext, arangoConfiguration);
 	}
 
 	@Override
