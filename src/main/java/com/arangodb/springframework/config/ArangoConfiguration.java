@@ -61,6 +61,16 @@ public interface ArangoConfiguration {
     String database();
 
     /**
+     * Configures the behaviour of {@link com.arangodb.springframework.repository.ArangoRepository#save(Object)} and
+     * {@link com.arangodb.springframework.repository.ArangoRepository#saveAll(Iterable)} to either return the original
+     * entities (updated where possible) or new ones.
+     * Set to {@code false} to use immutable entity classes or java records.
+     */
+    default boolean returnOriginalEntities() {
+        return true;
+    }
+
+    /**
      * Override to set the data format to use in {@link #serde()}. It must match the content-type required by the
      * protocol used in the driver, e.g. set to {@link ContentType#VPACK} for protocols
      * {@link com.arangodb.Protocol#VST}, {@link com.arangodb.Protocol#HTTP_VPACK} and

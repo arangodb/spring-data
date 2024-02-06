@@ -56,6 +56,9 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 
     public static final String DB = "spring-test-db";
 
+    @Value("${returnOriginalEntities:true}")
+    private boolean returnOriginalEntities;
+
     @Value("${arangodb.protocol:HTTP2_JSON}")
     private Protocol protocol;
 
@@ -84,6 +87,11 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
         converters.add(new CustomMappingTest.CustomDBEntityReadTestConverter());
         converters.add(new CustomMappingTest.CustomDBEntityWriteTestConverter());
         return converters;
+    }
+
+    @Override
+    public boolean returnOriginalEntities() {
+        return returnOriginalEntities;
     }
 
     @Bean

@@ -23,6 +23,7 @@ package com.arangodb.springframework.repository;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import com.arangodb.springframework.config.ArangoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
@@ -59,13 +60,17 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final ArangoOperations arangoOperations;
 	private final ApplicationContext applicationContext;
+	private final boolean returnOriginalEntities;
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
-	public ArangoRepositoryFactory(final ArangoOperations arangoOperations, final ApplicationContext applicationContext) {
-		this.arangoOperations = arangoOperations;
-		this.applicationContext = applicationContext;
-		this.context = arangoOperations.getConverter().getMappingContext();
-	}
+    public ArangoRepositoryFactory(final ArangoOperations arangoOperations,
+                                   final ApplicationContext applicationContext,
+                                   final ArangoConfiguration arangoConfiguration) {
+        this.arangoOperations = arangoOperations;
+        this.applicationContext = applicationContext;
+        this.context = arangoOperations.getConverter().getMappingContext();
+        returnOriginalEntities = arangoConfiguration.returnOriginalEntities();
+    }
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -77,7 +82,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	protected Object getTargetRepository(final RepositoryInformation metadata) {
-		return new SimpleArangoRepository(arangoOperations, metadata.getDomainType());
+		return new SimpleArangoRepository(arangoOperations, metadata.getDomainType(), returnOriginalEntities);
 	}
 
 	@Override
