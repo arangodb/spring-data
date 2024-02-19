@@ -33,5 +33,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface ComputedValue {
-
+    String expression() default "";
+    boolean overwrite() default false;
+    com.arangodb.model.ComputedValue.ComputeOn[] computeOn() default {};
+    boolean keepNull() default true;
+    boolean failOnWarning() default false;
 }
