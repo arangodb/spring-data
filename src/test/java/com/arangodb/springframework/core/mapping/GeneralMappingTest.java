@@ -539,15 +539,9 @@ public class GeneralMappingTest extends AbstractArangoTest {
         private String id;
 
         @Field("compVal")
-        @ComputedValue(
+        @ComputedValueField(
                 expression = "RETURN \"foo\"",
-                computeOn = {
-                        com.arangodb.model.ComputedValue.ComputeOn.update,
-                        com.arangodb.model.ComputedValue.ComputeOn.replace,
-                        com.arangodb.model.ComputedValue.ComputeOn.insert
-                },
-                overwrite = true
-        )
+                overwrite = true)
         private String value;
     }
 
@@ -574,26 +568,18 @@ public class GeneralMappingTest extends AbstractArangoTest {
             String id,
 
             @Field("compVal")
-            @ComputedValue(
-                    expression = "RETURN \"foo\"",
-                    computeOn = {
-                            com.arangodb.model.ComputedValue.ComputeOn.update,
-                            com.arangodb.model.ComputedValue.ComputeOn.replace,
-                            com.arangodb.model.ComputedValue.ComputeOn.insert
-                    },
-                    overwrite = true
-            )
+            @ComputedValueField("RETURN \"foo\"")
             String value
     ) {
     }
 
     @Test
     public void computedValueImmutableProp() {
-        ComputedValueImmutable entity = new ComputedValueImmutable(null, "bar");
+        ComputedValueImmutable entity = new ComputedValueImmutable(null, null);
         ComputedValueImmutable saved = template.repsert(entity);
         assertThat(entity.id, is(nullValue()));
         assertThat(saved.id, is(notNullValue()));
-        assertThat(entity.value, is("bar"));
+        assertThat(entity.value, is(nullValue()));
         assertThat(saved.value, is("foo"));
     }
 
