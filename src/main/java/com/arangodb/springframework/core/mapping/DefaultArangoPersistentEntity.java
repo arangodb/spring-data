@@ -76,6 +76,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	private ArangoPersistentProperty arangoIdProperty;
 	private ArangoPersistentProperty revProperty;
 	private ArangoPersistentProperty ttlIndexedProperty;
+	private final Map<String, ArangoPersistentProperty> computedValueProperties;
 	private final Collection<ArangoPersistentProperty> persistentIndexedProperties;
 	private final Collection<ArangoPersistentProperty> geoIndexedProperties;
 	private final Collection<ArangoPersistentProperty> fulltextIndexedProperties;
@@ -88,6 +89,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 		super(information);
 		collection = StringUtils.uncapitalize(information.getType().getSimpleName());
 		context = new StandardEvaluationContext();
+		computedValueProperties = new HashMap<>();
 		persistentIndexedProperties = new ArrayList<>();
 		geoIndexedProperties = new ArrayList<>();
 		fulltextIndexedProperties = new ArrayList<>();
@@ -185,6 +187,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 			}
 			ttlIndexedProperty = property;
 		}
+		property.getComputedValue().ifPresent(i -> computedValueProperties.put(property.getName(), property));
 		property.getPersistentIndexed().ifPresent(i -> persistentIndexedProperties.add(property));
 		property.getGeoIndexed().ifPresent(i -> geoIndexedProperties.add(property));
 		property.getFulltextIndexed().ifPresent(i -> fulltextIndexedProperties.add(property));
@@ -241,6 +244,11 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
 	public <A extends Annotation> Collection<A> getIndexes(final Class<A> annotation) {
 		return findAnnotations(annotation).stream().filter(annotation::isInstance)
 				.map(annotation::cast).collect(Collectors.toList());
+	}
+
+	@Override
+	public Map<String, ArangoPersistentProperty> getComputedValuesProperties() {
+		return computedValueProperties;
 	}
 
 	@Override

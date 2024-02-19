@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.mapping;
 import java.util.Optional;
 
 import com.arangodb.entity.CollectionType;
+import com.arangodb.springframework.annotation.*;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -30,18 +31,6 @@ import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.StringUtils;
-
-import com.arangodb.springframework.annotation.ArangoId;
-import com.arangodb.springframework.annotation.Field;
-import com.arangodb.springframework.annotation.From;
-import com.arangodb.springframework.annotation.FulltextIndexed;
-import com.arangodb.springframework.annotation.GeoIndexed;
-import com.arangodb.springframework.annotation.PersistentIndexed;
-import com.arangodb.springframework.annotation.Ref;
-import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.annotation.Rev;
-import com.arangodb.springframework.annotation.To;
-import com.arangodb.springframework.annotation.TtlIndexed;
 
 /**
  * @author Mark Vollmary
@@ -122,6 +111,11 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	private Optional<String> getAnnotatedFieldName() {
 		return Optional.ofNullable(findAnnotation(Field.class))
 				.map(f -> StringUtils.hasText(f.value()) ? f.value() : null);
+	}
+
+	@Override
+	public Optional<ComputedValue> getComputedValue() {
+		return Optional.ofNullable(findAnnotation(ComputedValue.class));
 	}
 
 	@Override

@@ -631,6 +631,13 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             entityToModify.getRevProperty().filter(rev -> !rev.isImmutable())
                     .ifPresent(rev -> accessorToWrite.setProperty(rev, accessorToRead.getProperty(revPropertyToRead)));
         }
+
+        for (ArangoPersistentProperty propRead : entityToRead.getComputedValuesProperties().values()) {
+            ArangoPersistentProperty propWrite = entityToModify.getComputedValuesProperties().get(propRead.getName());
+            if (propWrite != null && !propWrite.isImmutable()) {
+                accessorToWrite.setProperty(propWrite, accessorToRead.getProperty(propRead));
+            }
+        }
     }
 
     private <T> void updateDBFields(final Iterable<T> values, final MultiDocumentEntity<? extends DocumentEntity> res) {
