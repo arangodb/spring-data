@@ -22,16 +22,8 @@ package com.arangodb.springframework.core.mapping;
 
 import java.util.Optional;
 
+import com.arangodb.springframework.annotation.*;
 import org.springframework.data.mapping.PersistentProperty;
-
-import com.arangodb.springframework.annotation.From;
-import com.arangodb.springframework.annotation.FulltextIndexed;
-import com.arangodb.springframework.annotation.GeoIndexed;
-import com.arangodb.springframework.annotation.PersistentIndexed;
-import com.arangodb.springframework.annotation.Ref;
-import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.annotation.To;
-import com.arangodb.springframework.annotation.TtlIndexed;
 
 /**
  * @author Mark Vollmary
@@ -55,6 +47,8 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 	Optional<From> getFrom();
 
 	Optional<To> getTo();
+
+    Optional<ComputedValue> getComputedValue();
 
 	Optional<PersistentIndexed> getPersistentIndexed();
 

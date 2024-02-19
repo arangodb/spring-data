@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core.mapping;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 import com.arangodb.springframework.annotation.TtlIndex;
@@ -57,6 +58,8 @@ public interface ArangoPersistentEntity<T>
 	Collection<FulltextIndex> getFulltextIndexes();
 
 	Optional<TtlIndex> getTtlIndex();
+
+	Map<String, ArangoPersistentProperty> getComputedValuesProperties();
 
 	Collection<ArangoPersistentProperty> getPersistentIndexedProperties();
 

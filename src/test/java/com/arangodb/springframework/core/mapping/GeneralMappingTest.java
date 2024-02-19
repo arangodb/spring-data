@@ -20,15 +20,14 @@
 
 package com.arangodb.springframework.core.mapping;
 
+import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.springframework.AbstractArangoTest;
 import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.AuditorProvider;
-import com.arangodb.springframework.annotation.ArangoId;
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Field;
-import com.arangodb.springframework.annotation.Ref;
+import com.arangodb.springframework.annotation.*;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.geo.*;
 import com.arangodb.springframework.core.mapping.testdata.BasicTestEntity;
@@ -534,6 +533,86 @@ public class GeneralMappingTest extends AbstractArangoTest {
         assertThat(entity.id, is("test"));
         assertThat(template.find(entity.id, ArangoIdAndIdTestEntity.class).isPresent(), is(true));
         assertThat(template.find(entity.arangoId, ArangoIdAndIdTestEntity.class).isPresent(), is(true));
+    }
+
+    private static final String COMPUTED_VALUE_COLL = "compValues";
+
+    @Document(COMPUTED_VALUE_COLL)
+    static class ComputedValueMutable {
+        @Id
+        private String id;
+
+        @ComputedValue
+        private String value;
+    }
+
+    @Test
+    public void computedValueMutableProp() {
+        ArangoDatabase db = template.driver().db(ArangoTestConfiguration.DB);
+        db.createCollection(COMPUTED_VALUE_COLL, new CollectionCreateOptions().computedValues(
+                new com.arangodb.model.ComputedValue()
+                        .name("value")
+                        .computeOn(
+                                com.arangodb.model.ComputedValue.ComputeOn.update,
+                                com.arangodb.model.ComputedValue.ComputeOn.replace,
+                                com.arangodb.model.ComputedValue.ComputeOn.insert
+                        )
+                        .expression("RETURN \"foo\"")
+                        .overwrite(true)
+        ));
+
+        final ComputedValueMutable entity = new ComputedValueMutable();
+        ComputedValueMutable saved;
+
+        saved = template.repsert(entity);
+        assertThat(entity.id, is(notNullValue()));
+        assertThat(saved.id, is(entity.id));
+        assertThat(entity.value, is("foo"));
+        assertThat(saved.value, is(entity.value));
+
+        entity.value = "bar";
+        saved = template.repsert(entity);
+        assertThat(entity.value, is("foo"));
+        assertThat(saved.value, is(entity.value));
+
+        db.collection(COMPUTED_VALUE_COLL).drop();
+    }
+
+    private static final String COMPUTED_VALUE_COLL_REC = "compValuesRec";
+
+    @Document(COMPUTED_VALUE_COLL_REC)
+    record ComputedValueImmutable(
+            @Id
+            String id,
+
+            @ComputedValue
+            String value
+    ) {
+    }
+
+    @Test
+    public void computedValueImmutableProp() {
+        ArangoDatabase db = template.driver().db(ArangoTestConfiguration.DB);
+        db.createCollection(COMPUTED_VALUE_COLL_REC, new CollectionCreateOptions().computedValues(
+                new com.arangodb.model.ComputedValue()
+                        .name("value")
+                        .computeOn(
+                                com.arangodb.model.ComputedValue.ComputeOn.update,
+                                com.arangodb.model.ComputedValue.ComputeOn.replace,
+                                com.arangodb.model.ComputedValue.ComputeOn.insert
+                        )
+                        .expression("RETURN \"foo\"")
+                        .overwrite(true)
+        ));
+
+        ComputedValueImmutable entity = new ComputedValueImmutable(null, "bar");
+        ComputedValueImmutable saved = template.repsert(entity);
+        assertThat(entity.id, is(nullValue()));
+        assertThat(saved.id, is(notNullValue()));
+        assertThat(entity.value, is("bar"));
+        assertThat(saved.value, is("foo"));
+
+        db.collection(COMPUTED_VALUE_COLL_REC).drop();
     }
 
     @Document
