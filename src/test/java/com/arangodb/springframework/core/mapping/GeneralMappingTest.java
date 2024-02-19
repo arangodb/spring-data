@@ -563,12 +563,12 @@ public class GeneralMappingTest extends AbstractArangoTest {
     }
 
     @Document
+    @ComputedValueEntry(
+            name = "value",
+            expression = "RETURN \"foo\"")
     record ComputedValueImmutable(
             @Id
             String id,
-
-            @Field("compVal")
-            @ComputedValueField("RETURN \"foo\"")
             String value
     ) {
     }
