@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.mapping;
 import com.arangodb.entity.CollectionType;
 import com.arangodb.entity.ReplicationFactor;
 import com.arangodb.model.CollectionCreateOptions;
+import com.arangodb.model.ComputedValue;
 import com.arangodb.springframework.annotation.*;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -200,10 +201,33 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
             options = new CollectionCreateOptions().type(CollectionType.DOCUMENT);
         }
 
+        getComputedValues().forEach(options::computedValues);
+        return options;
+    }
+
+    private List<ComputedValue> getComputedValues() {
+        List<ComputedValue> res = new ArrayList<>();
+
+        // computed values from entity annotations
+        Collection<ComputedValueEntry> computedValueEntries = getIndexes(ComputedValueEntry.class);
+        Optional.ofNullable(findAnnotation(ComputedValues.class))
+                .ifPresent(i -> computedValueEntries.addAll(Arrays.asList(i.value())));
+        computedValueEntries.stream()
+                .map(it -> new ComputedValue()
+                        .name(it.name())
+                        .expression(it.expression())
+                        .overwrite(it.overwrite())
+                        .computeOn(it.computeOn())
+                        .keepNull(it.keepNull())
+                        .failOnWarning(it.failOnWarning())
+                )
+                .forEach(res::add);
+
+        // computed values from fields annotations
         computedValueProperties.values().stream()
                 .flatMap(it -> it.getComputedValue()
                         .filter(cv -> !cv.expression().isEmpty())
-                        .map(cv -> new com.arangodb.model.ComputedValue()
+                        .map(cv -> new ComputedValue()
                                 .name(it.getFieldName())
                                 .expression(cv.expression())
                                 .overwrite(cv.overwrite())
@@ -213,9 +237,9 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
                         )
                         .stream()
                 )
-                .forEach(options::computedValues);
+                .forEach(res::add);
 
-        return options;
+        return res;
     }
 
     @Override
