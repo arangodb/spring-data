@@ -148,6 +148,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
                 key -> {
                     final ArangoCollection collection = db.collection(name);
                     if (!collection.exists()) {
+
                         collection.create(options);
                     }
                     return new CollectionCacheValue(collection);
