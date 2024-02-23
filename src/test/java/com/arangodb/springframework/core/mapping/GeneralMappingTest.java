@@ -539,7 +539,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
         private String id;
 
         @Field("compVal")
-        @ComputedValueField(
+        @ArangoComputedValue(
                 expression = "RETURN \"foo\"",
                 overwrite = true)
         private String value;
@@ -563,7 +563,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
     }
 
     @Document
-    @ComputedValueEntry(
+    @ArangoComputedValueDefinition(
             name = "value",
             expression = "RETURN \"foo\"")
     record ComputedValueImmutable(

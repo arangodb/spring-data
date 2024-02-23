@@ -48,7 +48,7 @@ public interface ArangoPersistentProperty extends PersistentProperty<ArangoPersi
 
 	Optional<To> getTo();
 
-    Optional<ComputedValueField> getComputedValue();
+    Optional<ArangoComputedValue> getComputedValue();
 
 	Optional<PersistentIndexed> getPersistentIndexed();
 

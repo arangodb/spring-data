@@ -114,8 +114,8 @@ public class DefaultArangoPersistentProperty extends AnnotationBasedPersistentPr
 	}
 
 	@Override
-	public Optional<ComputedValueField> getComputedValue() {
-		return Optional.ofNullable(findAnnotation(ComputedValueField.class));
+	public Optional<ArangoComputedValue> getComputedValue() {
+		return Optional.ofNullable(findAnnotation(ArangoComputedValue.class));
 	}
 
 	@Override

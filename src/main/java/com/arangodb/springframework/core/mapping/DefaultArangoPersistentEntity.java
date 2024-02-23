@@ -209,8 +209,8 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
         List<ComputedValue> res = new ArrayList<>();
 
         // computed values from entity annotations
-        Collection<ComputedValueEntry> computedValueEntries = getIndexes(ComputedValueEntry.class);
-        Optional.ofNullable(findAnnotation(ComputedValues.class))
+        Collection<ArangoComputedValueDefinition> computedValueEntries = getIndexes(ArangoComputedValueDefinition.class);
+        Optional.ofNullable(findAnnotation(ArangoComputedValueDefinitions.class))
                 .ifPresent(i -> computedValueEntries.addAll(Arrays.asList(i.value())));
         computedValueEntries.stream()
                 .map(it -> new ComputedValue()

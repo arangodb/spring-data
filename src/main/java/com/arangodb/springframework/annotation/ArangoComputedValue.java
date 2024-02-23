@@ -21,31 +21,39 @@
 package com.arangodb.springframework.annotation;
 
 import com.arangodb.model.ComputedValue;
+import org.springframework.core.annotation.AliasFor;
 
-import java.lang.annotation.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Annotation to define computed values of a collection.
+ * Annotation to mark a field representing an ArangoDB computed value.
+ * If the property is mutable, then the field is automatically updated in place with the value coming from the server
+ * for the following operations:
+ * <ul>
+ *     <li>{@link com.arangodb.springframework.core.ArangoOperations#repsert(Object)}</li>
+ *     <li>{@link com.arangodb.springframework.core.ArangoOperations#repsertAll(Iterable, Class)}</li>
+ *     <li>{@link com.arangodb.springframework.repository.ArangoRepository#save(Object)}</li>
+ *     <li>{@link com.arangodb.springframework.repository.ArangoRepository#saveAll(Iterable)}</li>
+ * </ul>
  *
  * @see <a href="https://docs.arangodb.com/stable/concepts/data-structure/documents/computed-values">Reference Doc</a>
  */
-@Repeatable(ComputedValues.class)
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface ComputedValueEntry {
+@Target({ElementType.FIELD})
+public @interface ArangoComputedValue {
 
-    /**
-     * @return The name of the target attribute. Can only be a top-level attribute, but you may return a nested object.
-     * Cannot be _key, _id, _rev, _from, _to, or a shard key attribute.
-     * @see ComputedValue#name(String)
-     */
-    String name() default "";
+    @AliasFor("expression")
+    String value() default "";
 
     /**
      * @return An AQL RETURN operation with an expression that computes the desired value. If empty, the computed value
      * data definition will not be set on collection creation.
      * @see ComputedValue#expression(String)
      */
+    @AliasFor("value")
     String expression() default "";
 
     /**
