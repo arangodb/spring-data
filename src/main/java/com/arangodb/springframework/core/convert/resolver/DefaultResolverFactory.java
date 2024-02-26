@@ -50,7 +50,7 @@ public class DefaultResolverFactory implements ResolverFactory, ApplicationConte
                 return Optional.of((ReferenceResolver<A>) new RefResolver(template.getObject(), transactionBridge.getIfUnique()));
             }
         } catch (final Exception e) {
-            throw new ArangoDBException(e);
+            throw ArangoDBException.of(e);
         }
         return Optional.empty();
     }
@@ -76,7 +76,7 @@ public class DefaultResolverFactory implements ResolverFactory, ApplicationConte
                 return Optional.of((RelationResolver<A>) new RelationsResolver(template.getObject(), transactionBridge.getIfUnique()));
             }
         } catch (final Exception e) {
-            throw new ArangoDBException(e);
+            throw ArangoDBException.of(e);
         }
         return Optional.empty();
     }
