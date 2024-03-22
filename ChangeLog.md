@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- updated `arangodb-java-driver` to version `7.6.0`
+
 ## [4.1.0] - 2024-01-24
 
 - updated `arangodb-java-driver` to version `7.5.1`
