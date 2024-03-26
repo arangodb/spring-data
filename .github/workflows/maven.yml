@@ -5,12 +5,10 @@ on:
   pull_request:
     types: [ opened, synchronize, reopened ]
     branches:
-      - master
-      - next
+      - main
   push:
     branches:
-      - master
-      - next
+      - main
     paths-ignore:
       - '.github/**'
       - 'docker/**'

@@ -29,13 +29,13 @@ To contribute code:
 2. create a branch on the fork
 3. commit and push your changes to your branch
 4. make sure the tests run on your local machine
-5. create a pull request from your branch to `master` of this repository
+5. create a pull request from your branch to `main` of this repository
 6. make sure all checks are green for your pull request (only with CLA signed) 
 
-Do not change the project version, this will be done after merge on master.
+Do not change the project version, this will be done after merge on main.
 
 To accept external contributions, we need you to fill out and sign our
-[Individual Contributor License Agreement](https://www.arangodb.com/documents/cla.pdf) (CLA). We use an Apache 2 CLA
+[CLA](https://arangodb.com/community/#contribute). We use an Apache 2 CLA
 for ArangoDB. You can scan and email the CLA PDF file to [cla@arangodb.com](mailto:cla@arangodb.com) or send it via fax
 to +49-221-2722999-88.
 
