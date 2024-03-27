@@ -27,6 +27,7 @@ import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
 import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.ArangoParameterAccessor;
+import com.arangodb.springframework.repository.query.QueryWithCollections;
 import com.arangodb.springframework.repository.query.derived.geo.Ring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
 /**
  * Creates a full AQL query from a PartTree and ArangoParameterAccessor
  */
-public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> {
+public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollections, Criteria> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DerivedQueryCreator.class);
 	private static final Set<Part.Type> UNSUPPORTED_IGNORE_CASE = new HashSet<>();
@@ -120,7 +121,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 	 * @return
 	 */
 	@Override
-	protected String complete(final Criteria criteria, final Sort sort) {
+	protected QueryWithCollections complete(final Criteria criteria, final Sort sort) {
 		if (tree.isDistinct() && !tree.isCountProjection()) {
 			LOGGER.debug("Use of 'Distinct' is meaningful only in count queries");
 		}
@@ -191,7 +192,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<String, Criteria> 
 				}
 			}
 		}
-		return query.toString();
+		return new QueryWithCollections(query.toString(), withCollections);
 	}
 
 	public double[] getUniquePoint() {

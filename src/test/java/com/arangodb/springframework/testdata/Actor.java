@@ -22,6 +22,7 @@ package com.arangodb.springframework.testdata;
 
 import java.util.List;
 
+import com.arangodb.springframework.annotation.PersistentIndex;
 import org.springframework.data.annotation.Id;
 
 import com.arangodb.springframework.annotation.Document;
@@ -33,6 +34,7 @@ import com.arangodb.springframework.annotation.Relations;
  * @author Christian Lechner
  */
 @Document("actors")
+@PersistentIndex(fields = "name")
 public class Actor {
 
 	@Id

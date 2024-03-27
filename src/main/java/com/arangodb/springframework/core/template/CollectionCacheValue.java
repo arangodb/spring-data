@@ -4,16 +4,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.arangodb.ArangoCollection;
+import com.arangodb.entity.IndexEntity;
 
 class CollectionCacheValue {
 
 	private final ArangoCollection collection;
 	private final Collection<Class<?>> entities;
+	private final Collection<IndexEntity> indexes;
 
-	public CollectionCacheValue(final ArangoCollection collection) {
+	public CollectionCacheValue(final ArangoCollection collection, Collection<IndexEntity> indexes) {
 		super();
 		this.collection = collection;
 		this.entities = new ArrayList<>();
+		this.indexes = indexes;
 	}
 
 	public ArangoCollection getCollection() {
@@ -24,8 +27,11 @@ class CollectionCacheValue {
 		return entities;
 	}
 
-	public void addEntityClass(final Class<?> entityClass) {
-		entities.add(entityClass);
+	public Collection<IndexEntity> getIndexes() {
+		return indexes;
+	}
+	public boolean addEntityClass(final Class<?> entityClass) {
+		return entities.add(entityClass);
 	}
 
 }

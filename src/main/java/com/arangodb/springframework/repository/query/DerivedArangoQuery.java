@@ -28,6 +28,7 @@ import com.arangodb.springframework.repository.query.derived.BindParameterBindin
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 import org.springframework.data.repository.query.parser.PartTree;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,15 +45,16 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 	private final PartTree tree;
 	private final List<String> geoFields;
 
-	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
-		super(method, operations);
+	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations,
+							  final QueryTransactionBridge transactionBridge) {
+		super(method, operations, transactionBridge);
 		tree = new PartTree(method.getName(), domainClass);
 		geoFields = getGeoFields();
 	}
 
 	@Override
-	protected String createQuery(
-		final ArangoParameterAccessor accessor,
+	protected QueryWithCollections createQuery(
+            final ArangoParameterAccessor accessor,
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options) {
 

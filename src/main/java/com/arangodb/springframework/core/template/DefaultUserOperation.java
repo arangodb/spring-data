@@ -30,7 +30,6 @@ import com.arangodb.entity.Permissions;
 import com.arangodb.entity.UserEntity;
 import com.arangodb.model.UserCreateOptions;
 import com.arangodb.model.UserUpdateOptions;
-import com.arangodb.springframework.core.CollectionOperations;
 import com.arangodb.springframework.core.UserOperations;
 
 /**
@@ -38,12 +37,6 @@ import com.arangodb.springframework.core.UserOperations;
  *
  */
 public class DefaultUserOperation implements UserOperations {
-
-	public interface CollectionCallback {
-		CollectionOperations collection(Class<?> type);
-
-		CollectionOperations collection(String name);
-	}
 
 	private final ArangoDatabase db;
 	private final String username;

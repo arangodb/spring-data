@@ -23,7 +23,12 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Collections;
 
+import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.model.DocumentReadOptions;
+import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
@@ -56,11 +61,13 @@ public abstract class AbstractResolver<A extends Annotation> {
 	}
 
 	private final ObjenesisStd objenesis;
-	private final ConversionService conversionService;
+	protected final ArangoOperations template;
+	private final QueryTransactionBridge transactionBridge;
 
-	protected AbstractResolver(final ConversionService conversionService) {
+	protected AbstractResolver(final ArangoOperations template, final QueryTransactionBridge transactionBridge) {
 		super();
-		this.conversionService = conversionService;
+		this.template = template;
+		this.transactionBridge = transactionBridge;
 		this.objenesis = new ObjenesisStd(true);
 	}
 
@@ -76,7 +83,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 		final TypeInformation<?> type,
 		final A annotation,
 		final ResolverCallback<A> callback) {
-		final ProxyInterceptor interceptor = new ProxyInterceptor(id, type, annotation, callback, conversionService);
+		final ProxyInterceptor interceptor = new ProxyInterceptor(id, type, annotation, callback, template.getConverter().getConversionService());
 		if (type.getType().isInterface()) {
 			final ProxyFactory proxyFactory = new ProxyFactory(new Class<?>[] { type.getType() });
 			for (final Class<?> interf : type.getType().getInterfaces()) {
@@ -98,6 +105,22 @@ public abstract class AbstractResolver<A extends Annotation> {
 		enhancer.setCallbackType(org.springframework.cglib.proxy.MethodInterceptor.class);
 		enhancer.setInterfaces(new Class[] { LazyLoadingProxy.class });
 		return enhancer.createClass();
+	}
+
+	protected DocumentReadOptions defaultReadOptions() {
+		DocumentReadOptions options = new DocumentReadOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.emptySet()));
+		}
+		return options;
+	}
+
+	protected AqlQueryOptions defaultQueryOptions() {
+		AqlQueryOptions options = new AqlQueryOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.emptySet()));
+		}
+		return options;
 	}
 
 	static class ProxyInterceptor<A extends Annotation> implements Serializable,

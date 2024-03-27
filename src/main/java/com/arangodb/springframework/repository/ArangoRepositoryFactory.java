@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 
 import com.arangodb.springframework.config.ArangoConfiguration;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
@@ -60,14 +61,17 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final ArangoOperations arangoOperations;
 	private final ApplicationContext applicationContext;
+	private final QueryTransactionBridge transactionBridge;
 	private final boolean returnOriginalEntities;
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
     public ArangoRepositoryFactory(final ArangoOperations arangoOperations,
-                                   final ApplicationContext applicationContext,
+								   final ApplicationContext applicationContext,
+								   final QueryTransactionBridge transactionBridge,
                                    final ArangoConfiguration arangoConfiguration) {
         this.arangoOperations = arangoOperations;
         this.applicationContext = applicationContext;
+		this.transactionBridge = transactionBridge;
         this.context = arangoOperations.getConverter().getMappingContext();
         returnOriginalEntities = arangoConfiguration.returnOriginalEntities();
     }
@@ -82,7 +86,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	protected Object getTargetRepository(final RepositoryInformation metadata) {
-		return new SimpleArangoRepository(arangoOperations, metadata.getDomainType(), returnOriginalEntities);
+		return new SimpleArangoRepository(arangoOperations, metadata.getDomainType(), returnOriginalEntities, transactionBridge);
 	}
 
 	@Override
@@ -109,7 +113,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 		QueryLookupStrategy strategy = null;
 		switch (key) {
 		case CREATE_IF_NOT_FOUND:
-			strategy = new DefaultArangoQueryLookupStrategy(arangoOperations, applicationContext);
+			strategy = new DefaultArangoQueryLookupStrategy(arangoOperations, transactionBridge, applicationContext);
 			break;
 		case CREATE:
 			break;
@@ -123,11 +127,13 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 		private final ArangoOperations operations;
 		private final ApplicationContext applicationContext;
+		private final QueryTransactionBridge transactionBridge;
 
 		public DefaultArangoQueryLookupStrategy(final ArangoOperations operations,
-												final ApplicationContext applicationContext) {
+												final QueryTransactionBridge transactionBridge, final ApplicationContext applicationContext) {
 			this.operations = operations;
 			this.applicationContext = applicationContext;
+			this.transactionBridge = transactionBridge;
 		}
 
 		@Override
@@ -142,11 +148,11 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				final String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedArangoQuery(namedQuery, queryMethod, operations, applicationContext);
+				return new StringBasedArangoQuery(namedQuery, queryMethod, operations, transactionBridge, applicationContext);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedArangoQuery(queryMethod, operations, applicationContext);
+				return new StringBasedArangoQuery(queryMethod, operations, transactionBridge, applicationContext);
 			} else {
-				return new DerivedArangoQuery(queryMethod, operations);
+				return new DerivedArangoQuery(queryMethod, operations, transactionBridge);
 			}
 		}
 
