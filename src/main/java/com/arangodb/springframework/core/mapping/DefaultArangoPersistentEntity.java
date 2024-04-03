@@ -44,6 +44,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -78,7 +79,7 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
         persistentIndexedProperties = new ArrayList<>();
         geoIndexedProperties = new ArrayList<>();
         fulltextIndexedProperties = new ArrayList<>();
-        repeatableAnnotationCache = new HashMap<>();
+        repeatableAnnotationCache = new ConcurrentHashMap<>();
         documentAnnotation = findAnnotation(Document.class);
         edgeAnnotation = findAnnotation(Edge.class);
         String col = StringUtils.uncapitalize(information.getType().getSimpleName());
