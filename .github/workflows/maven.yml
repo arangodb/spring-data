@@ -61,6 +61,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        docker-img:
+          - docker.io/arangodb/arangodb:3.11
         protocol:
           - 'VST'
           - 'HTTP_VPACK'
@@ -80,6 +82,8 @@ jobs:
           cache: maven
       - name: Start Database
         run: ./docker/start_db.sh
+        env:
+          DOCKER_IMAGE: ${{ matrix.docker-img }}
       - name: Info
         run: mvn -version
       - name: Test
