@@ -64,6 +64,7 @@ public class ArangoMultiTenancyRepositoryTestConfiguration implements ArangoConf
 		converters.add(new CustomMappingTest.CustomJsonNodeWriteTestConverter());
 		converters.add(new CustomMappingTest.CustomDBEntityReadTestConverter());
 		converters.add(new CustomMappingTest.CustomDBEntityWriteTestConverter());
+		converters.add(new CustomMappingTest.CustomArangoJsonNodeReadTestConverter());
 		return converters;
 	}
 

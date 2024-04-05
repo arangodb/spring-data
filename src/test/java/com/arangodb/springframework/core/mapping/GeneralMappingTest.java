@@ -23,7 +23,6 @@ package com.arangodb.springframework.core.mapping;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.AuditorProvider;
 import com.arangodb.springframework.annotation.*;
 import com.arangodb.springframework.core.convert.ArangoConverter;

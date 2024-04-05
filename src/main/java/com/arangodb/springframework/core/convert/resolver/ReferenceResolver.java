@@ -24,13 +24,14 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.TransactionMappingContext;
 import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Mark Vollmary
  */
 public interface ReferenceResolver<A extends Annotation> {
-	Object resolveOne(String id, TypeInformation<?> type, A annotation);
-	Object resolveMultiple(Collection<String> ids, TypeInformation<?> type, A annotation);
+	Object resolveOne(String id, TypeInformation<?> type, A annotation, TransactionMappingContext ctx);
+	Object resolveMultiple(Collection<String> ids, TypeInformation<?> type, A annotation, TransactionMappingContext ctx);
 	String write(Object source, ArangoPersistentEntity<?> entity, Object id);
 }

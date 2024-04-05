@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
+import com.arangodb.springframework.core.mapping.TransactionMappingContext;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.ArangoCursor;
@@ -47,33 +48,36 @@ public class DocumentToResolver extends AbstractResolver implements RelationReso
 
     @Override
     public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
-                             final To annotation) {
-        Supplier<Object> supplier = () -> _resolveOne(id, type);
+                             final To annotation, final TransactionMappingContext ctx) {
+        Supplier<Object> supplier = () -> _resolveOne(id, type, ctx);
         return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
     }
 
-    private Object _resolveOne(final String id, final TypeInformation<?> type) {
-        ArangoCursor<?> it = _resolve(id, type.getType(), true);
+    private Object _resolveOne(final String id, final TypeInformation<?> type, final TransactionMappingContext ctx) {
+        ArangoCursor<?> it = _resolve(id, type.getType(), true, ctx);
         return it.hasNext() ? it.next() : null;
     }
 
     @Override
     public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
-                                  final To annotation) {
-        Supplier<Object> supplier = () -> _resolveMultiple(id, type);
+                                  final To annotation, final TransactionMappingContext ctx) {
+        Supplier<Object> supplier = () -> _resolveMultiple(id, type, ctx);
         return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
     }
 
-    private Object _resolveMultiple(final String id, final TypeInformation<?> type) {
-        return _resolve(id, getNonNullComponentType(type).getType(), false).asListRemaining();
+    private Object _resolveMultiple(final String id, final TypeInformation<?> type, final TransactionMappingContext ctx) {
+        return _resolve(id, getNonNullComponentType(type).getType(), false, ctx).asListRemaining();
     }
 
-    private ArangoCursor<?> _resolve(final String id, final Class<?> type, final boolean limit) {
+    private ArangoCursor<?> _resolve(final String id, final Class<?> type, final boolean limit, final TransactionMappingContext ctx) {
         final String query = String.format("FOR e IN @@edge FILTER e._to == @id %s RETURN e", limit ? "LIMIT 1" : "");
         Map<String, Object> bindVars = new HashMap<>();
         bindVars.put("@edge", type);
         bindVars.put("id", id);
-        return template.query(query, bindVars, new AqlQueryOptions(), type);
+
+        AqlQueryOptions opts = new AqlQueryOptions();
+        ctx.getStreamTransactionId().ifPresent(opts::streamTransactionId);
+        return template.query(query, bindVars, opts, type);
     }
 
 }

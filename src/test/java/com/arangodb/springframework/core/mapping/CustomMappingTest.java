@@ -27,9 +27,11 @@ import static org.hamcrest.Matchers.nullValue;
 import java.util.Optional;
 
 import com.arangodb.ArangoCollection;
-import com.arangodb.springframework.ArangoTestConfiguration;
+import com.arangodb.springframework.core.convert.ArangoJsonNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.converter.Converter;
 
@@ -84,6 +86,13 @@ public class CustomMappingTest extends AbstractArangoTest {
 
     }
 
+    @Data
+    @AllArgsConstructor
+    @Document
+    public static class CustomArangoJsonNodeTestEntity {
+        private String value;
+    }
+
     public static class CustomJsonNodeWriteTestConverter implements Converter<CustomJsonNodeTestEntity, JsonNode> {
         @Override
         public JsonNode convert(final CustomJsonNodeTestEntity source) {
@@ -95,6 +104,13 @@ public class CustomMappingTest extends AbstractArangoTest {
         @Override
         public CustomJsonNodeTestEntity convert(final JsonNode source) {
             return new CustomJsonNodeTestEntity(source.get(FIELD).textValue());
+        }
+    }
+
+    public static class CustomArangoJsonNodeReadTestConverter implements Converter<ArangoJsonNode, CustomArangoJsonNodeTestEntity> {
+        @Override
+        public CustomArangoJsonNodeTestEntity convert(final ArangoJsonNode source) {
+            return new CustomArangoJsonNodeTestEntity(source.value().get(FIELD).textValue());
         }
     }
 
@@ -116,6 +132,14 @@ public class CustomMappingTest extends AbstractArangoTest {
     }
 
     @Test
+    public void arangoJsonNodeToCustom() {
+        final DocumentEntity meta = template.insert(new TestEntity("abc"));
+        final Optional<CustomArangoJsonNodeTestEntity> doc = template.find(meta.getId(), CustomArangoJsonNodeTestEntity.class);
+        assertThat(doc.isPresent(), is(true));
+        assertThat(doc.get().getValue(), is("abc"));
+    }
+
+    @Test
     public void customToJsonNodeFromDriver() {
         ArangoCollection col = db.collection("customJsonNodeTestEntity");
         final DocumentEntity meta = col.insertDocument(new CustomJsonNodeTestEntity("abc"));
@@ -129,6 +153,14 @@ public class CustomMappingTest extends AbstractArangoTest {
         ArangoCollection col = db.collection("testEntity");
         final DocumentEntity meta = col.insertDocument(new TestEntity("abc"));
         final CustomJsonNodeTestEntity doc = col.getDocument(meta.getKey(), CustomJsonNodeTestEntity.class);
+        assertThat(doc.getValue(), is("abc"));
+    }
+
+    @Test
+    public void arangoJsonNodeToCustomFromDriver() {
+        ArangoCollection col = db.collection("testEntity");
+        final DocumentEntity meta = col.insertDocument(new TestEntity("abc"));
+        final CustomArangoJsonNodeTestEntity doc = col.getDocument(meta.getKey(), CustomArangoJsonNodeTestEntity.class);
         assertThat(doc.getValue(), is("abc"));
     }
 

@@ -20,14 +20,18 @@
 
 package com.arangodb.springframework.core.convert;
 
-import org.springframework.data.convert.EntityReader;
-
+import com.arangodb.springframework.core.mapping.TransactionMappingContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.data.convert.EntityReader;
 
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
  */
-public interface ArangoEntityReader extends EntityReader<Object, JsonNode> {
+public interface ArangoEntityReader extends EntityReader<Object, ArangoJsonNode> {
+
+    default <R> R read(Class<R> type, JsonNode source) {
+        return read(type, new ArangoJsonNode(source, TransactionMappingContext.EMPTY));
+    }
 
 }

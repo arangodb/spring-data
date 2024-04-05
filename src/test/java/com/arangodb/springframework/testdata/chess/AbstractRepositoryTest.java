@@ -1,6 +1,6 @@
 package com.arangodb.springframework.testdata.chess;
 
-import com.arangodb.springframework.AbstractArangoTest;
+import com.arangodb.springframework.AbstractTxTest;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.testdata.chess.entity.Player;
 import com.arangodb.springframework.testdata.chess.entity.Score;
@@ -12,7 +12,7 @@ import org.springframework.data.geo.Point;
 import java.time.LocalDate;
 import java.util.List;
 
-abstract class AbstractRepositoryTest extends AbstractArangoTest {
+abstract class AbstractRepositoryTest extends AbstractTxTest {
 
     @Autowired
     private ArangoOperations ops;
@@ -67,15 +67,15 @@ abstract class AbstractRepositoryTest extends AbstractArangoTest {
             new Score(players.get(0), tournaments.get(2), 6)
     );
 
-    protected AbstractRepositoryTest() {
-        super(Player.class, Score.class, Tournament.class);
+    protected AbstractRepositoryTest(boolean withinTx) {
+        super(withinTx, Player.class, Score.class, Tournament.class);
     }
 
     @BeforeEach
     void importData() {
-        ops.insertAll(players, Player.class);
-        ops.insertAll(tournaments, Tournament.class);
-        ops.insertAll(scores, Score.class);
+        ops.insertAll(players, insertOpts, Player.class);
+        ops.insertAll(tournaments, insertOpts, Tournament.class);
+        ops.insertAll(scores, insertOpts, Score.class);
     }
 
 }

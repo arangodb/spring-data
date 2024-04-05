@@ -23,13 +23,13 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 
+import com.arangodb.springframework.core.mapping.TransactionMappingContext;
 import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Mark Vollmary
  */
 public interface RelationResolver<A extends Annotation> {
-	Object resolveOne(String id, TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, A annotation);
-	Object resolveMultiple(String id, TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, A annotation);
-
+	Object resolveOne(String id, TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, A annotation, TransactionMappingContext ctx);
+	Object resolveMultiple(String id, TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, A annotation, TransactionMappingContext ctx);
 }
