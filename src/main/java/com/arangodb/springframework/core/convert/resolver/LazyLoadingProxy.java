@@ -41,4 +41,9 @@ public interface LazyLoadingProxy {
 	 */
 	String getRefId();
 
+	/**
+	 * @return whether the proxy is resolved
+	 */
+	boolean isResolved();
+
 }

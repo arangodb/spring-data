@@ -45,11 +45,13 @@ public abstract class AbstractResolver<A extends Annotation> {
 
 	private static final Method GET_ENTITY_METHOD;
 	private static final Method GET_REF_ID_METHOD;
+	private static final Method IS_RESOLVED;
 
 	static {
 		try {
 			GET_ENTITY_METHOD = LazyLoadingProxy.class.getMethod("getEntity");
 			GET_REF_ID_METHOD = LazyLoadingProxy.class.getMethod("getRefId");
+			IS_RESOLVED = LazyLoadingProxy.class.getMethod("isResolved");
 		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -140,6 +142,11 @@ public abstract class AbstractResolver<A extends Annotation> {
 			if (GET_REF_ID_METHOD.equals(method)) {
 				return id;
 			}
+
+			if (IS_RESOLVED.equals(method)) {
+				return resolved;
+			}
+
 			if (method.getName().equals("canEqual")) {
 				return proxyCanEqual(ensureResolved(), args[0]);
 			}
