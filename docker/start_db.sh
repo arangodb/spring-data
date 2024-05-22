@@ -66,6 +66,7 @@ docker run -d \
     -e ARANGO_LICENSE_KEY="$ARANGO_LICENSE_KEY" \
     $STARTER_DOCKER_IMAGE \
     $STARTER_ARGS \
+    --docker.net-mode=default \
     --docker.container=adb \
     --auth.jwt-secret=/jwtSecret \
     --starter.address="${GW}" \
