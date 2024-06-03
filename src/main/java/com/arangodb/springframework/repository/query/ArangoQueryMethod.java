@@ -67,7 +67,7 @@ public class ArangoQueryMethod extends QueryMethod {
 	}
 
 	@Override
-	protected Parameters<?, ?> createParameters(ParametersSource parametersSource) {
+	protected ArangoParameters createParameters(ParametersSource parametersSource) {
 		return new ArangoParameters(parametersSource);
 	}
 
