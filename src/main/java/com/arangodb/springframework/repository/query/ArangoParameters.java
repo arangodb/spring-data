@@ -54,6 +54,17 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 	private final int queryOptionsIndex;
 	private final int bindVarsIndex;
 
+	public ArangoParameters(final Method method) {
+		super(method, ArangoParameter::new);
+		assertSingleSpecialParameter(ArangoParameter::isQueryOptions,
+				"Multiple AqlQueryOptions parameters are not allowed! Offending method: " + method);
+		assertSingleSpecialParameter(ArangoParameter::isBindVars,
+				"Multiple @BindVars parameters are not allowed! Offending method: " + method);
+		assertNonDuplicateParamNames(method);
+		this.queryOptionsIndex = getIndexOfSpecialParameter(ArangoParameter::isQueryOptions);
+		this.bindVarsIndex = getIndexOfSpecialParameter(ArangoParameter::isBindVars);
+	}
+
 	public ArangoParameters(final ParametersSource parametersSource) {
 		super(parametersSource, ArangoParameter::new);
 		assertSingleSpecialParameter(ArangoParameter::isQueryOptions,
