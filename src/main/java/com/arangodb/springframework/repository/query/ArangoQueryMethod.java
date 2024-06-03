@@ -71,6 +71,10 @@ public class ArangoQueryMethod extends QueryMethod {
 		return new ArangoParameters(parametersSource);
 	}
 
+	public ArangoParameters createParameters(final Method method) {
+		return new ArangoParameters(ParametersSource.of(method));
+	}
+
 	public boolean hasAnnotatedQuery() {
 		return getQueryAnnotationValue().isPresent();
 	}

@@ -72,6 +72,10 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		this.bindVarsIndex = bindVarsIndex;
 	}
 
+	protected ArangoParameter createParameter(final MethodParameter parameter) {
+		return new ArangoParameter(parameter);
+	}
+
 	@Override
 	protected ArangoParameters createFrom(final List<ArangoParameter> parameters) {
 		return new ArangoParameters(parameters, this.queryOptionsIndex, this.bindVarsIndex);
