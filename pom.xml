@@ -50,12 +50,19 @@
         <repository>
             <id>arangodb-snapshots</id>
             <url>https://oss.sonatype.org/content/groups/staging</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
         </repository>
+
     </repositories>
 
     <properties>
         <java-module-name>com.arangodb.springframework</java-module-name>
-        <arangodb.version>7.6.0</arangodb.version>
+        <arangodb.version>7.7.0</arangodb.version>
 
         <!-- enforce dependencies convergence -->
         <slf4j>2.0.11</slf4j>
