@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -35,6 +36,7 @@ import com.arangodb.springframework.annotation.SpelParam;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.arangodb.model.AqlQueryOptions;
@@ -49,11 +51,13 @@ import com.arangodb.springframework.annotation.BindVars;
  */
 public class ArangoParameters extends Parameters<ArangoParameters, ArangoParameters.ArangoParameter> {
 
+	private static final Function<MethodParameter, ArangoParameters.ArangoParameter> PARAMETER_FACTORY = parameter -> new ArangoParameter(parameter, TypeInformation.of(ArangoParameter.class));
+
 	private final int queryOptionsIndex;
 	private final int bindVarsIndex;
 
 	public ArangoParameters(final Method method) {
-		super(method);
+		super(method, PARAMETER_FACTORY);
 		assertSingleSpecialParameter(ArangoParameter::isQueryOptions,
 			"Multiple AqlQueryOptions parameters are not allowed! Offending method: " + method);
 		assertSingleSpecialParameter(ArangoParameter::isBindVars,
@@ -68,11 +72,6 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		super(parameters);
 		this.queryOptionsIndex = queryOptionsIndex;
 		this.bindVarsIndex = bindVarsIndex;
-	}
-
-	@Override
-	protected ArangoParameter createParameter(final MethodParameter parameter) {
-		return new ArangoParameter(parameter);
 	}
 
 	@Override
@@ -140,8 +139,8 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 
 		private final MethodParameter parameter;
 
-		public ArangoParameter(final MethodParameter parameter) {
-			super(parameter);
+		public ArangoParameter(final MethodParameter parameter, final TypeInformation<?> domainType) {
+			super(parameter, domainType);
 			this.parameter = parameter;
 			assertCorrectBindParamPattern();
 			assertCorrectBindVarsType();

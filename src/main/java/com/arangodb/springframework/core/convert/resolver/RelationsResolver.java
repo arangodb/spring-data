@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.ArangoCursor;
@@ -36,11 +37,8 @@ import com.arangodb.springframework.core.ArangoOperations;
  */
 public class RelationsResolver extends AbstractResolver<Relations> implements RelationResolver<Relations> {
 
-	private final ArangoOperations template;
-
-	public RelationsResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
+	public RelationsResolver(final ArangoOperations template, QueryTransactionBridge transactionBridge) {
+		super(template, transactionBridge);
 	}
 
 	@Override
@@ -104,7 +102,7 @@ public class RelationsResolver extends AbstractResolver<Relations> implements Re
 				edges, //
 				limit ? "LIMIT 1" : "");
 
-		return template.query(query, bindVars, type);
+		return template.query(query, bindVars, defaultQueryOptions(), type);
 	}
 
 }

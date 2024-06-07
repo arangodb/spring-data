@@ -22,10 +22,14 @@ package com.arangodb.springframework.repository;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.model.DocumentDeleteOptions;
+import com.arangodb.model.DocumentExistsOptions;
+import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.DocumentNotFoundException;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.util.AqlUtils;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -52,6 +56,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	private final ArangoExampleConverter exampleConverter;
 	private final Class<T> domainClass;
 	private final boolean returnOriginalEntities;
+	private final QueryTransactionBridge transactionBridge;
 
 	/**
 	 * @param arangoOperations       The template used to execute much of the
@@ -59,12 +64,14 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @param domainClass            the class type of this repository
 	 * @param returnOriginalEntities whether save and saveAll should return the
 	 *                               original entities or new ones
+	 * @param transactionBridge the optional transaction bridge
 	 */
-	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass, boolean returnOriginalEntities) {
+	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass, boolean returnOriginalEntities, final QueryTransactionBridge transactionBridge) {
 		super();
 		this.arangoOperations = arangoOperations;
 		this.domainClass = domainClass;
 		this.returnOriginalEntities = returnOriginalEntities;
+		this.transactionBridge = transactionBridge;
 		mappingContext = (ArangoMappingContext) arangoOperations.getConverter().getMappingContext();
 		exampleConverter = new ArangoExampleConverter(mappingContext, arangoOperations.getResolverFactory());
 	}
@@ -77,7 +84,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> S save(final S entity) {
-		S saved = arangoOperations.repsert(entity);
+		S saved = arangoOperations.repsert(entity, defaultQueryOptions());
 		return returnOriginalEntities ? entity : saved;
 	}
 
@@ -90,7 +97,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
-		Iterable<S> saved = arangoOperations.repsertAll(entities, domainClass);
+		Iterable<S> saved = arangoOperations.repsertAll(entities, defaultQueryOptions(), domainClass);
 		return returnOriginalEntities ? entities : saved;
 	}
 
@@ -102,7 +109,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Optional<T> findById(final ID id) {
-		return arangoOperations.find(id, domainClass);
+		return arangoOperations.find(id, domainClass, defaultReadOptions());
 	}
 
 	/**
@@ -113,7 +120,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public boolean existsById(final ID id) {
-		return arangoOperations.exists(id, domainClass);
+		return arangoOperations.exists(id, domainClass, defaultExistsOptions());
 	}
 
 	/**
@@ -123,7 +130,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAll() {
-		return arangoOperations.findAll(domainClass);
+		return arangoOperations.findAll(domainClass, defaultReadOptions());
 	}
 
 	/**
@@ -135,7 +142,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAllById(final Iterable<ID> ids) {
-		return arangoOperations.findAll(ids, domainClass);
+		return arangoOperations.findAll(ids, domainClass, defaultReadOptions());
 	}
 
 	/**
@@ -157,7 +164,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public void deleteById(final ID id) {
 		try {
-			arangoOperations.delete(id, domainClass);
+			arangoOperations.delete(id, defaultDeleteOptions(), domainClass);
 		} catch (DocumentNotFoundException unknown) {
 //			 silently ignored
 		}
@@ -173,7 +180,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	public void delete(final T entity) {
 		String id = (String) arangoOperations.getConverter().getMappingContext()
 				.getRequiredPersistentEntity(domainClass).getIdentifierAccessor(entity).getRequiredIdentifier();
-		arangoOperations.delete(id, domainClass);
+		arangoOperations.delete(id, defaultDeleteOptions(), domainClass);
 	}
 
     /**
@@ -181,7 +188,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @implNote do not add @Override annotation to keep backwards compatibility with spring-data-commons 2.4
      */
     public void deleteAllById(Iterable<? extends ID> ids) {
-        arangoOperations.deleteAll(ids, domainClass);
+        arangoOperations.deleteAll(ids, defaultDeleteOptions(), domainClass);
     }
 
 	/**
@@ -268,7 +275,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> findAll(final Example<S> example) {
-		return (ArangoCursor) findAllInternal((Pageable) null, example, new HashMap<>());
+		return (ArangoCursor<S>) findAllInternal((Pageable) null, example, new HashMap<>());
 	}
 
 	/**
@@ -316,7 +323,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
 		final String query = String.format("FOR e IN @@col %s COLLECT WITH COUNT INTO length RETURN length", filter);
 		arangoOperations.collection(domainClass);
-		final ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
+		final ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, defaultQueryOptions(), Long.class);
 		return cursor.next();
 	}
 
@@ -342,7 +349,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final String query = String.format("FOR e IN @@col %s %s RETURN e",
 				buildFilterClause(example, bindVars), buildSortClause(sort, "e"));
 		arangoOperations.collection(domainClass);
-		return arangoOperations.query(query, bindVars, null, domainClass);
+		return arangoOperations.query(query, bindVars, defaultQueryOptions(), domainClass);
 	}
 
 	private <S extends T> ArangoCursor<T> findAllInternal(final Pageable pageable, @Nullable final Example<S> example,
@@ -352,7 +359,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 				buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
 		arangoOperations.collection(domainClass);
 		return arangoOperations.query(query, bindVars,
-				pageable != null ? new AqlQueryOptions().fullCount(true) : null, domainClass);
+				pageable != null ? new AqlQueryOptions().fullCount(true) : defaultQueryOptions(), domainClass);
 	}
 
 	private <S extends T> String buildFilterClause(final Example<S> example, final Map<String, Object> bindVars) {
@@ -379,5 +386,37 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
     private String buildSortClause(final Sort sort, final String varName) {
         return sort == null ? "" : AqlUtils.buildSortClause(AqlUtils.toPersistentSort(sort, mappingContext, domainClass), varName);
     }
+
+	private DocumentReadOptions defaultReadOptions() {
+		DocumentReadOptions options = new DocumentReadOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
+		}
+		return options;
+	}
+
+	private AqlQueryOptions defaultQueryOptions() {
+		AqlQueryOptions options = new AqlQueryOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
+		}
+		return options;
+	}
+
+	private DocumentExistsOptions defaultExistsOptions() {
+		DocumentExistsOptions options = new DocumentExistsOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
+		}
+		return options;
+	}
+
+	private DocumentDeleteOptions defaultDeleteOptions() {
+		DocumentDeleteOptions options = new DocumentDeleteOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
+		}
+		return options;
+	}
 
 }
