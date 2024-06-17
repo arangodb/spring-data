@@ -195,5 +195,5 @@ workflows:
           matrix:
             parameters:
               spring-boot-version:
-                - '3.1.8'
                 - '3.2.6'
+                - '3.3.0'
