@@ -18,7 +18,7 @@ commands:
           command: |
             sleep <<parameters.duration>>
             echo "Cancelling job as <<parameters.duration>> has elapsed"
-            curl -X POST -H "Circle-Token: ${CIRCLE_TOKEN}" "https://circleci.com/api/v2/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/job/${CIRCLE_BUILD_NUM}/cancel"
+            curl --fail -X POST -H "Circle-Token: ${CIRCLE_TOKEN}" "https://circleci.com/api/v2/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/job/${CIRCLE_BUILD_NUM}/cancel"
   start-db:
     parameters:
       docker-img:
@@ -45,6 +45,7 @@ commands:
           command: mvn --version
       - run:
           name: mvn dependency:tree
+          working_directory: <<parameters.working_directory>>
           command: mvn --no-transfer-progress dependency:tree
   mvn-install:
     steps:
@@ -178,3 +179,4 @@ workflows:
               spring-boot-version:
                 - '3.1.8'
                 - '3.2.6'
+                - '3.3.0'
