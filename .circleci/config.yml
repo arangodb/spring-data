@@ -148,7 +148,20 @@ jobs:
           working_directory: integration-tests
       - report
       - store_cache
-
+  deploy:
+    executor: 'j17'
+    steps:
+      - timeout
+      - checkout
+      - load_cache
+      - mvn-info
+      - run:
+          name: Add GPG key
+          command: echo $GPG_PRIVATE_KEY | base64 --decode | gpg --batch --no-tty --import --yes
+      - run:
+          name: Deploy to Apache Maven Central
+          command: mvn -s .circleci/maven-release-settings.xml -DskipTests deploy
+      - store_cache
 workflows:
   test-adb-version:
     when:
@@ -197,3 +210,11 @@ workflows:
               spring-boot-version:
                 - '3.2.6'
                 - '3.3.0'
+  deploy:
+    jobs:
+      - deploy:
+          filters:
+            tags:
+              only: /^deploy.*/
+            branches:
+              ignore: /.*/
