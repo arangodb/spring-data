@@ -164,6 +164,8 @@ workflows:
           name: test-<<matrix.protocol>>
           matrix:
             parameters:
+              docker-img:
+                - 'docker.io/arangodb/arangodb:3.11'
               protocol:
                 - 'VST'
                 - 'HTTP_VPACK'
@@ -179,4 +181,3 @@ workflows:
               spring-boot-version:
                 - '3.1.8'
                 - '3.2.6'
-                - '3.3.0'
