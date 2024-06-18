@@ -4,7 +4,7 @@
 #   STARTER_MODE:             (single|cluster|activefailover), default single
 #   DOCKER_IMAGE:             ArangoDB docker image, default docker.io/arangodb/arangodb:latest
 #   SSL:                      (true|false), default false
-#   DATABASE_EXTENDED_NAMES:  (true|false), default false
+#   EXTENDED_NAMES:           (true|false), default false
 #   ARANGO_LICENSE_KEY:       only required for ArangoDB Enterprise
 
 # EXAMPLE:
@@ -13,7 +13,7 @@
 STARTER_MODE=${STARTER_MODE:=single}
 DOCKER_IMAGE=${DOCKER_IMAGE:=docker.io/arangodb/arangodb:latest}
 SSL=${SSL:=false}
-DATABASE_EXTENDED_NAMES=${DATABASE_EXTENDED_NAMES:=false}
+EXTENDED_NAMES=${EXTENDED_NAMES:=false}
 
 STARTER_DOCKER_IMAGE=docker.io/arangodb/arangodb-starter:latest
 GW=172.28.0.1
@@ -26,9 +26,6 @@ docker pull $STARTER_DOCKER_IMAGE
 docker pull $DOCKER_IMAGE
 
 LOCATION=$(pwd)/$(dirname "$0")
-
-echo "Averysecretword" > "$LOCATION"/jwtSecret
-docker run --rm -v "$LOCATION"/jwtSecret:/jwtSecret "$STARTER_DOCKER_IMAGE" auth header --auth.jwt-secret /jwtSecret > "$LOCATION"/jwtHeader
 AUTHORIZATION_HEADER=$(cat "$LOCATION"/jwtHeader)
 
 STARTER_ARGS=
@@ -41,34 +38,31 @@ if [ "$STARTER_MODE" == "single" ]; then
 fi
 
 if [ "$SSL" == "true" ]; then
-    STARTER_ARGS="$STARTER_ARGS --ssl.keyfile=server.pem"
+    STARTER_ARGS="$STARTER_ARGS --ssl.keyfile=/data/server.pem"
     SCHEME=https
     ARANGOSH_SCHEME=http+ssl
 fi
 
-if [ "$DATABASE_EXTENDED_NAMES" == "true" ]; then
-    STARTER_ARGS="${STARTER_ARGS} --all.database.extended-names-databases=true"
+if [ "$EXTENDED_NAMES" == "true" ]; then
+    STARTER_ARGS="${STARTER_ARGS} --all.database.extended-names=true"
 fi
 
-if [ "$USE_MOUNTED_DATA" == "true" ]; then
-    STARTER_ARGS="${STARTER_ARGS} --starter.data-dir=/data"
-    MOUNT_DATA="-v $LOCATION/data:/data"
-    echo $MOUNT_DATA
-fi
+# data volume
+docker create -v /data --name arangodb-data alpine:3 /bin/true
+docker cp "$LOCATION"/jwtSecret arangodb-data:/data
+docker cp "$LOCATION"/server.pem arangodb-data:/data
 
 docker run -d \
     --name=adb \
     -p 8528:8528 \
-    -v "$LOCATION"/server.pem:/server.pem \
-    -v "$LOCATION"/jwtSecret:/jwtSecret \
-    $MOUNT_DATA \
+    --volumes-from arangodb-data \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -e ARANGO_LICENSE_KEY="$ARANGO_LICENSE_KEY" \
     $STARTER_DOCKER_IMAGE \
     $STARTER_ARGS \
     --docker.net-mode=default \
     --docker.container=adb \
-    --auth.jwt-secret=/jwtSecret \
+    --auth.jwt-secret=/data/jwtSecret \
     --starter.address="${GW}" \
     --docker.image="${DOCKER_IMAGE}" \
     --starter.local --starter.mode=${STARTER_MODE} --all.log.level=debug --all.log.output=+ --log.verbose --all.server.descriptors-minimum=1024
