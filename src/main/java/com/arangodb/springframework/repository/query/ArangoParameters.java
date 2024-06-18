@@ -35,6 +35,8 @@ import com.arangodb.springframework.annotation.SpelParam;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.repository.query.ParametersSource;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.arangodb.model.AqlQueryOptions;
@@ -52,13 +54,13 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 	private final int queryOptionsIndex;
 	private final int bindVarsIndex;
 
-	public ArangoParameters(final Method method) {
-		super(method);
+	public ArangoParameters(final ParametersSource parametersSource) {
+		super(parametersSource, ArangoParameter::new);
 		assertSingleSpecialParameter(ArangoParameter::isQueryOptions,
-			"Multiple AqlQueryOptions parameters are not allowed! Offending method: " + method);
+			"Multiple AqlQueryOptions parameters are not allowed! Offending method: " + parametersSource.getMethod());
 		assertSingleSpecialParameter(ArangoParameter::isBindVars,
-			"Multiple @BindVars parameters are not allowed! Offending method: " + method);
-		assertNonDuplicateParamNames(method);
+			"Multiple @BindVars parameters are not allowed! Offending method: " + parametersSource.getMethod());
+		assertNonDuplicateParamNames(parametersSource.getMethod());
 		this.queryOptionsIndex = getIndexOfSpecialParameter(ArangoParameter::isQueryOptions);
 		this.bindVarsIndex = getIndexOfSpecialParameter(ArangoParameter::isBindVars);
 	}
@@ -68,11 +70,6 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		super(parameters);
 		this.queryOptionsIndex = queryOptionsIndex;
 		this.bindVarsIndex = bindVarsIndex;
-	}
-
-	@Override
-	protected ArangoParameter createParameter(final MethodParameter parameter) {
-		return new ArangoParameter(parameter);
 	}
 
 	@Override
@@ -141,7 +138,7 @@ public class ArangoParameters extends Parameters<ArangoParameters, ArangoParamet
 		private final MethodParameter parameter;
 
 		public ArangoParameter(final MethodParameter parameter) {
-			super(parameter);
+			super(parameter, TypeInformation.of(ArangoParameter.class));
 			this.parameter = parameter;
 			assertCorrectBindParamPattern();
 			assertCorrectBindVarsType();

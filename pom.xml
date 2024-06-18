@@ -11,7 +11,7 @@
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>3.2.2</version>
+        <version>3.3.0</version>
         <relativePath/>
     </parent>
 
@@ -65,7 +65,7 @@
         <arangodb.version>7.7.1</arangodb.version>
 
         <!-- enforce dependencies convergence -->
-        <slf4j>2.0.11</slf4j>
+        <slf4j>2.0.13</slf4j>
     </properties>
 
     <build>
@@ -165,18 +165,6 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <executions>
                     <execution>
@@ -266,7 +254,7 @@
         <dependency>
             <groupId>com.arangodb</groupId>
             <artifactId>jackson-dataformat-velocypack</artifactId>
-            <version>4.2.0</version>
+            <version>4.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
