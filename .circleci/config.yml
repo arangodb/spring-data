@@ -46,12 +46,12 @@ commands:
       - run:
           name: mvn dependency:tree
           working_directory: <<parameters.working_directory>>
-          command: mvn --no-transfer-progress dependency:tree
+          command: mvn dependency:tree
   mvn-install:
     steps:
       - run:
           name: mvn install
-          command: mvn --no-transfer-progress install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true
+          command: mvn install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true
   test:
     parameters:
       working_directory:
@@ -64,14 +64,27 @@ commands:
       - run:
           name: Test
           working_directory: <<parameters.working_directory>>
-          command: mvn --no-transfer-progress -Darangodb.protocol=<<parameters.protocol>> test
+          command: mvn -Darangodb.protocol=<<parameters.protocol>> test
   report:
     steps:
       - run:
           name: Create reports
-          command: mvn -e --no-transfer-progress surefire-report:report-only
+          command: mvn -e surefire-report:report-only
       - store_artifacts:
           path: target/site
+  load_cache:
+    steps:
+      - run:
+          name: Generate Cache Checksum
+          command: find . -name 'pom.xml' | sort | xargs cat > /tmp/maven_cache_seed
+      - restore_cache:
+          key: maven-{{ checksum "/tmp/maven_cache_seed" }}
+  store_cache:
+    steps:
+      - save_cache:
+          key: maven-{{ checksum "/tmp/maven_cache_seed" }}
+          paths:
+            - ~/.m2/repository
 
 executors:
   j17:
@@ -101,10 +114,12 @@ jobs:
       - start-db:
           docker-img: <<parameters.docker-img>>
           topology: <<parameters.topology>>
+      - load_cache
       - mvn-info
       - test:
           protocol: <<parameters.protocol>>
       - report
+      - store_cache
 
   integration-test:
     parameters:
@@ -121,17 +136,18 @@ jobs:
       - setup_remote_docker
       - start-db:
           docker-img: <<parameters.docker-img>>
-      - mvn-info
-      - mvn-install
       - run:
           name: Set Spring version
           working_directory: integration-tests
           command: sed -i "0,/<version>.*<\/version>/s//<version><<parameters.spring-boot-version>><\/version>/" pom.xml
+      - load_cache
+      - mvn-install
       - mvn-info:
           working_directory: integration-tests
       - test:
           working_directory: integration-tests
       - report
+      - store_cache
 
 workflows:
   test-adb-version:
