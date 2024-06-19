@@ -213,6 +213,7 @@ workflows:
   deploy:
     jobs:
       - deploy:
+          context: java-release
           filters:
             tags:
               only: /^deploy.*/
