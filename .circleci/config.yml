@@ -78,11 +78,11 @@ commands:
           name: Generate Cache Checksum
           command: find . -name 'pom.xml' | sort | xargs cat > /tmp/maven_cache_seed
       - restore_cache:
-          key: maven-${CIRCLE_JOB}-{{ checksum "/tmp/maven_cache_seed" }}
+          key: maven-{{ .Environment.CIRCLE_JOB }}-{{ checksum "/tmp/maven_cache_seed" }}
   store_cache:
     steps:
       - save_cache:
-          key: maven-${CIRCLE_JOB}-{{ checksum "/tmp/maven_cache_seed" }}
+          key: maven-{{ .Environment.CIRCLE_JOB }}-{{ checksum "/tmp/maven_cache_seed" }}
           paths:
             - ~/.m2/repository
 
