@@ -21,6 +21,7 @@
 package com.arangodb.springframework.core.convert.resolver;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
@@ -33,43 +34,37 @@ import com.arangodb.springframework.core.ArangoOperations;
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- *
  */
-public class RefResolver extends AbstractResolver<Ref>
-		implements ReferenceResolver<Ref>, AbstractResolver.ResolverCallback<Ref> {
+public class RefResolver extends AbstractResolver implements ReferenceResolver<Ref> {
 
-	private final ArangoOperations template;
+    private final ArangoOperations template;
 
-	public RefResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
-	}
+    public RefResolver(final ArangoOperations template) {
+        super(template.getConverter().getConversionService());
+        this.template = template;
+    }
 
-	@Override
-	public Object resolveOne(final String id, final TypeInformation<?> type, final Ref annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, this) : _resolve(id, type);
-	}
+    @Override
+    public Object resolveOne(final String id, final TypeInformation<?> type, final Ref annotation) {
+        Supplier<Object> supplier = () -> _resolve(id, type);
+        return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
+    }
 
-	@Override
-	public Object resolveMultiple(final Collection<String> ids, final TypeInformation<?> type, final Ref annotation) {
-		return ids.stream().map(id -> resolveOne(id, getNonNullComponentType(type), annotation))
-				.collect(Collectors.toList());
-	}
+    @Override
+    public Object resolveMultiple(final Collection<String> ids, final TypeInformation<?> type, final Ref annotation) {
+        return ids.stream()
+                .map(id -> resolveOne(id, getNonNullComponentType(type), annotation))
+                .collect(Collectors.toList());
+    }
 
-	@Override
-	public Object resolve(final String id, final TypeInformation<?> type, final Ref annotation) {
-		return _resolve(id, type);
-	}
+    private Object _resolve(final String id, final TypeInformation<?> type) {
+        return template.find(id, type.getType())
+                .orElseThrow(() -> cannotResolveException(id, type));
+    }
 
-	public Object _resolve(final String id, final TypeInformation<?> type) {
-		return template.find(id, type.getType())
-				.orElseThrow(() -> cannotResolveException(id, type));
-	}
-
-	@Override
-	public String write(final Object source, final ArangoPersistentEntity<?> entity, final Object id, final Ref annotation) {
-		return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), String.valueOf(id));
-	}
-
+    @Override
+    public String write(final Object source, final ArangoPersistentEntity<?> entity, final Object id) {
+        return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), String.valueOf(id));
+    }
 
 }

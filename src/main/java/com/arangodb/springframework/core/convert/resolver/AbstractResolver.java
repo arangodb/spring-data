@@ -21,8 +21,8 @@
 package com.arangodb.springframework.core.convert.resolver;
 
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.function.Supplier;
 
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactory;
@@ -39,9 +39,8 @@ import org.springframework.util.ReflectionUtils;
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- *
  */
-public abstract class AbstractResolver<A extends Annotation> {
+public abstract class AbstractResolver {
 
 	private static final Method GET_ENTITY_METHOD;
 	private static final Method GET_REF_ID_METHOD;
@@ -66,19 +65,11 @@ public abstract class AbstractResolver<A extends Annotation> {
 		this.objenesis = new ObjenesisStd(true);
 	}
 
-	public interface ResolverCallback<A extends Annotation> {
-
-		Object resolve(String id, TypeInformation<?> type, A annotation);
-
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Object proxy(
 		final String id,
 		final TypeInformation<?> type,
-		final A annotation,
-		final ResolverCallback<A> callback) {
-		final ProxyInterceptor interceptor = new ProxyInterceptor(id, type, annotation, callback, conversionService);
+		final Supplier<Object> callback) {
+        final ProxyInterceptor interceptor = new ProxyInterceptor(id, type, callback, conversionService);
 		if (type.getType().isInterface()) {
 			final ProxyFactory proxyFactory = new ProxyFactory(new Class<?>[] { type.getType() });
 			for (final Class<?> interf : type.getType().getInterfaces()) {
@@ -102,24 +93,22 @@ public abstract class AbstractResolver<A extends Annotation> {
 		return enhancer.createClass();
 	}
 
-	static class ProxyInterceptor<A extends Annotation> implements Serializable,
+    static class ProxyInterceptor implements Serializable,
 			org.springframework.cglib.proxy.MethodInterceptor, org.aopalliance.intercept.MethodInterceptor {
 
 		private static final long serialVersionUID = -6722757823918987065L;
 		private final String id;
 		final TypeInformation<?> type;
-		private final A annotation;
-		private final ResolverCallback<A> callback;
+        private final Supplier<Object> callback;
 		private volatile boolean resolved;
 		private Object result;
 		private final ConversionService conversionService;
 
-		public ProxyInterceptor(final String id, final TypeInformation<?> type, final A annotation,
-			final ResolverCallback<A> callback, final ConversionService conversionService) {
+        public ProxyInterceptor(final String id, final TypeInformation<?> type,
+                                final Supplier<Object> callback, final ConversionService conversionService) {
 			super();
 			this.id = id;
 			this.type = type;
-			this.annotation = annotation;
 			this.callback = callback;
 			this.conversionService = conversionService;
 			result = null;
@@ -178,7 +167,7 @@ public abstract class AbstractResolver<A extends Annotation> {
 
 		private synchronized Object resolve() {
 			if (!resolved) {
-				return convertIfNecessary(callback.resolve(id, type, annotation), type.getType());
+                return convertIfNecessary(callback.get(), type.getType());
 			}
 			return result;
 		}

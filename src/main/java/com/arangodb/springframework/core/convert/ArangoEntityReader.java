@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- *
  */
 public interface ArangoEntityReader extends EntityReader<Object, JsonNode> {
 

@@ -27,12 +27,9 @@ import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Mark Vollmary
- *
  */
 public interface RelationResolver<A extends Annotation> {
-
 	Object resolveOne(String id, TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, A annotation);
-
 	Object resolveMultiple(String id, TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, A annotation);
 
 }

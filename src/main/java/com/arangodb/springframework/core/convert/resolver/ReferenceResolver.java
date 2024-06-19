@@ -23,20 +23,14 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 
-import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Mark Vollmary
- *
  */
 public interface ReferenceResolver<A extends Annotation> {
-
 	Object resolveOne(String id, TypeInformation<?> type, A annotation);
-
 	Object resolveMultiple(Collection<String> ids, TypeInformation<?> type, A annotation);
-
-	public String write(Object source, ArangoPersistentEntity<?> entity, Object id, Ref annotation);
-
+	String write(Object source, ArangoPersistentEntity<?> entity, Object id);
 }

@@ -26,12 +26,12 @@ import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.core.ArangoOperations;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 
 /**
  * @author Mark Vollmary
- *
  */
-public class EdgeFromResolver extends AbstractResolver<From> implements RelationResolver<From> {
+public class EdgeFromResolver extends AbstractResolver implements RelationResolver<From> {
 
 	private final ArangoOperations template;
 
@@ -41,8 +41,10 @@ public class EdgeFromResolver extends AbstractResolver<From> implements Relation
 	}
 
 	@Override
-	public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final From annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t)) : _resolveOne(id, type);
+    public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
+                             final From annotation) {
+        Supplier<Object> supplier = () -> _resolveOne(id, type);
+        return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
 	}
 
 	private Object _resolveOne(final String id, final TypeInformation<?> type) {
@@ -51,7 +53,8 @@ public class EdgeFromResolver extends AbstractResolver<From> implements Relation
 	}
 
 	@Override
-	public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final From annotation) {
+    public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
+                                  final From annotation) {
 		throw new UnsupportedOperationException("Edges with multiple 'from' values are not supported.");
 	}
 
