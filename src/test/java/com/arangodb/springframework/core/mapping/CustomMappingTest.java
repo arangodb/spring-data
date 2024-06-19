@@ -117,7 +117,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 
     @Test
     public void customToJsonNodeFromDriver() {
-        ArangoCollection col = template.driver().db(ArangoTestConfiguration.DB).collection("customJsonNodeTestEntity");
+        ArangoCollection col = db.collection("customJsonNodeTestEntity");
         final DocumentEntity meta = col.insertDocument(new CustomJsonNodeTestEntity("abc"));
         final BaseDocument doc = col.getDocument(meta.getKey(), BaseDocument.class);
         assertThat(doc.getAttribute(FIELD), is("abc"));
@@ -126,7 +126,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 
     @Test
     public void jsonNodeToCustomFromDriver() {
-        ArangoCollection col = template.driver().db(ArangoTestConfiguration.DB).collection("testEntity");
+        ArangoCollection col = db.collection("testEntity");
         final DocumentEntity meta = col.insertDocument(new TestEntity("abc"));
         final CustomJsonNodeTestEntity doc = col.getDocument(meta.getKey(), CustomJsonNodeTestEntity.class);
         assertThat(doc.getValue(), is("abc"));
@@ -192,7 +192,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 
     @Test
     public void customToDBEntityFromDriver() {
-        ArangoCollection col = template.driver().db(ArangoTestConfiguration.DB).collection("customDBEntityTestEntity");
+        ArangoCollection col = db.collection("customDBEntityTestEntity");
         final DocumentEntity meta = col.insertDocument(new CustomDBEntityTestEntity("abc"));
         final BaseDocument doc = col.getDocument(meta.getKey(), BaseDocument.class);
         assertThat(doc.getAttribute(FIELD), is("abc"));
@@ -201,7 +201,7 @@ public class CustomMappingTest extends AbstractArangoTest {
 
     @Test
     public void jsonNodeToDBEntityFromDriver() {
-        ArangoCollection col = template.driver().db(ArangoTestConfiguration.DB).collection("testEntity");
+        ArangoCollection col = db.collection("testEntity");
         final DocumentEntity meta = col.insertDocument(new TestEntity("abc"));
         final CustomDBEntityTestEntity doc = col.getDocument(meta.getKey(), CustomDBEntityTestEntity.class);
         assertThat(doc.getValue(), is("abc"));

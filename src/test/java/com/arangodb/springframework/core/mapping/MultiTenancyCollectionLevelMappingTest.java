@@ -50,20 +50,20 @@ public class MultiTenancyCollectionLevelMappingTest extends AbstractArangoTest {
 		{
 			tenantProvider.setId("tenant00");
 			template.insert(new MultiTenancyTestEntity());
-			assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("tenant00_collection").exists(),
+			assertThat(db.collection("tenant00_collection").exists(),
 				is(true));
 		}
 		{
 			tenantProvider.setId("tenant01");
 			template.insert(new MultiTenancyTestEntity());
-			assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("tenant01_collection").exists(),
+			assertThat(db.collection("tenant01_collection").exists(),
 				is(true));
 		}
 		assertThat(
-			template.driver().db(ArangoTestConfiguration.DB).collection("tenant00_collection").count().getCount(),
+			db.collection("tenant00_collection").count().getCount(),
 			is(1L));
 		assertThat(
-			template.driver().db(ArangoTestConfiguration.DB).collection("tenant01_collection").count().getCount(),
+			db.collection("tenant01_collection").count().getCount(),
 			is(1L));
 	}
 

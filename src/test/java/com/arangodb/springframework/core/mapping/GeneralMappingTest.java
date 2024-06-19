@@ -97,7 +97,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
         entity.test = "1234";
         final DocumentEntity res = template.insert(entity);
         String colName = res.getId().split("/")[0];
-        final ObjectNode slice = template.driver().db(ArangoTestConfiguration.DB)
+        final ObjectNode slice = db
                 .collection(colName)
                 .getDocument(res.getKey(), ObjectNode.class);
         assertThat(slice, is(notNullValue()));
@@ -632,7 +632,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
             assertThat(find.modifiedBy.getId(), is(createID));
         }
 
-        final ObjectNode doc = template.driver().db(ArangoTestConfiguration.DB).collection("auditingTestEntity")
+        final ObjectNode doc = db.collection("auditingTestEntity")
                 .getDocument(value.id, ObjectNode.class);
         assertThat(doc, is(notNullValue()));
         assertThat(doc.get("createdBy").isObject(), is(true));
