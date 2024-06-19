@@ -13,10 +13,14 @@ abstract class ScoreRepositoryAbstract extends AbstractRepositoryTest {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     ScoreRepository repo;
 
+    ScoreRepositoryAbstract(boolean withinTx) {
+        super(withinTx);
+    }
+
     @Test
     @Disabled("BTS-1859")
     void findAll() {
-        assertThat(repo.findAll())
+        assertThat(repo.findAll(queryOpts))
                 .hasSize(scores.size())
                 .containsExactlyInAnyOrderElementsOf(scores);
     }

@@ -20,12 +20,11 @@
 
 package com.arangodb.springframework.repository.query;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.arangodb.springframework.core.convert.ArangoJsonNode;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -187,7 +186,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		}
 
 		if (method.isGeoQuery()) {
-			return JsonNode.class;
+			return ArangoJsonNode.class;
 		}
 
 		final Class<?> typeToRead = processor.getReturnedType().getTypeToRead();

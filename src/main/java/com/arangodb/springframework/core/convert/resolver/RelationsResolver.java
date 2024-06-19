@@ -24,6 +24,8 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.arangodb.model.AqlQueryOptions;
+import com.arangodb.springframework.core.mapping.TransactionMappingContext;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.ArangoCursor;
@@ -45,35 +47,35 @@ public class RelationsResolver extends AbstractResolver implements RelationResol
 
     @Override
     public Object resolveOne(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes,
-                             final Relations annotation) {
-        Supplier<Object> supplier = () -> _resolveOne(id, type, traversedTypes, annotation);
+                             final Relations annotation, final TransactionMappingContext ctx) {
+        Supplier<Object> supplier = () -> _resolveOne(id, type, traversedTypes, annotation, ctx);
         return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
     }
 
     @Override
     public Object resolveMultiple(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes,
-                                  final Relations annotation) {
-        Supplier<Object> supplier = () -> _resolveMultiple(id, type, traversedTypes, annotation);
+                                  final Relations annotation, final TransactionMappingContext ctx) {
+        Supplier<Object> supplier = () -> _resolveMultiple(id, type, traversedTypes, annotation, ctx);
         return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
     }
 
     private Object _resolveOne(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes,
-                               final Relations annotation) {
+                               final Relations annotation, final TransactionMappingContext ctx) {
         Collection<Class<?>> rawTypes = new ArrayList<>();
         for (TypeInformation<?> it : traversedTypes) {
             rawTypes.add(it.getType());
         }
-        ArangoCursor<?> it = _resolve(id, type.getType(), rawTypes, annotation, true);
+        ArangoCursor<?> it = _resolve(id, type.getType(), rawTypes, annotation, true, ctx);
         return it.hasNext() ? it.next() : null;
     }
 
     private Object _resolveMultiple(final String id, final TypeInformation<?> type, final Collection<TypeInformation<?>> traversedTypes,
-                                    final Relations annotation) {
+                                    final Relations annotation, final TransactionMappingContext ctx) {
         Collection<Class<?>> rawTypes = new ArrayList<>();
         for (TypeInformation<?> it : traversedTypes) {
             rawTypes.add(it.getType());
         }
-        return _resolve(id, getNonNullComponentType(type).getType(), rawTypes, annotation, false).asListRemaining();
+        return _resolve(id, getNonNullComponentType(type).getType(), rawTypes, annotation, false, ctx).asListRemaining();
     }
 
     private ArangoCursor<?> _resolve(
@@ -81,7 +83,8 @@ public class RelationsResolver extends AbstractResolver implements RelationResol
             final Class<?> type,
             final Collection<Class<?>> traversedTypes,
             final Relations annotation,
-            final boolean limit) {
+            final boolean limit,
+            final TransactionMappingContext ctx) {
 
         final String edges = Arrays.stream(annotation.edges()).map(e -> template.collection(e).name())
                 .collect(Collectors.joining(","));
@@ -108,7 +111,9 @@ public class RelationsResolver extends AbstractResolver implements RelationResol
                 edges, //
                 limit ? "LIMIT 1" : "");
 
-        return template.query(query, bindVars, type);
+        AqlQueryOptions opts = new AqlQueryOptions();
+        ctx.getStreamTransactionId().ifPresent(opts::streamTransactionId);
+        return template.query(query, bindVars, opts, type);
     }
 
 }

@@ -32,9 +32,7 @@ import com.arangodb.springframework.core.convert.resolver.LazyLoadingProxy;
 import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
 import com.arangodb.springframework.core.convert.resolver.RelationResolver;
 import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
-import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
-import com.arangodb.springframework.core.mapping.ArangoSimpleTypes;
+import com.arangodb.springframework.core.mapping.*;
 import com.arangodb.springframework.core.util.MetadataUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -116,32 +114,41 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <R> R read(final Class<R> type, final JsonNode source) {
+    public <R> R read(Class<R> type, ArangoJsonNode source) {
         return (R) readInternal(TypeInformation.of(type), source);
     }
 
-    private Object readInternal(final TypeInformation<?> type, final JsonNode source) {
-        if (source == null) {
+    private Object readInternal(final TypeInformation<?> type, final ArangoJsonNode source) {
+        JsonNode value = source.value();
+        if (value == null) {
             return null;
         }
 
-        if (JsonNode.class.isAssignableFrom(type.getType())) {
+        if (ArangoJsonNode.class.isAssignableFrom(type.getType())) {
             return source;
         }
 
-        TypeInformation<?> typeToUse = (source.isArray() || source.isObject()) ? typeMapper.readType(source, type)
+        if (JsonNode.class.isAssignableFrom(type.getType())) {
+            return value;
+        }
+
+        TypeInformation<?> typeToUse = (value.isArray() || value.isObject()) ? typeMapper.readType(value, type)
                 : type;
         Class<?> rawTypeToUse = typeToUse.getType();
 
-        if (conversions.hasCustomReadTarget(JsonNode.class, typeToUse.getType())) {
+        if (conversions.hasCustomReadTarget(ArangoJsonNode.class, typeToUse.getType())) {
             return conversionService.convert(source, rawTypeToUse);
+        }
+
+        if (conversions.hasCustomReadTarget(JsonNode.class, typeToUse.getType())) {
+            return conversionService.convert(value, rawTypeToUse);
         }
 
         if (conversions.hasCustomReadTarget(DBDocumentEntity.class, typeToUse.getType())) {
             return conversionService.convert(readSimple(DBDocumentEntity.class, source), rawTypeToUse);
         }
 
-        if (!source.isArray() && !source.isObject()) {
+        if (!value.isArray() && !value.isObject()) {
             return convertIfNecessary(readSimple(rawTypeToUse, source), rawTypeToUse);
         }
 
@@ -161,8 +168,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             return readMap(typeToUse, source);
         }
 
-		if (!source.isArray() && (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class))) {
-			return readMap(TypeInformation.MAP, source);
+        if (!value.isArray() && (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class))) {
+            return readMap(TypeInformation.MAP, source);
         }
 
         if (typeToUse.getType().isArray()) {
@@ -173,8 +180,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             return readCollection(typeToUse, source);
         }
 
-		if (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class)) {
-			return readCollection(TypeInformation.COLLECTION, source);
+        if (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class)) {
+            return readCollection(TypeInformation.COLLECTION, source);
         }
 
         ArangoPersistentEntity<?> entity = context.getRequiredPersistentEntity(rawTypeToUse);
@@ -183,12 +190,13 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     private Object readEntity(
             final TypeInformation<?> type,
-            final JsonNode source,
-            final ArangoPersistentEntity<?> entity) {
-
-        if (!source.isObject()) {
+            final ArangoJsonNode source,
+            final ArangoPersistentEntity<?> entity
+    ) {
+        JsonNode value = source.value();
+        if (!value.isObject()) {
             throw new MappingException(
-                    String.format("Can't read entity type %s from type %s!", type, source.getNodeType()));
+                    String.format("Can't read entity type %s from type %s!", type, value.getNodeType()));
         }
 
         EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
@@ -196,21 +204,21 @@ public class DefaultArangoConverter implements ArangoConverter {
         Object instance = instantiator.createInstance(entity, provider);
         PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(instance);
 
-        JsonNode idNode = getOrMissing(source, _ID);
+        JsonNode idNode = getOrMissing(value, _ID);
         String id = idNode.isTextual() ? idNode.textValue() : null;
 
         entity.doWithProperties((ArangoPersistentProperty property) -> {
             if (!entity.isCreatorArgument(property)) {
-                JsonNode value = getOrMissing(source, property.getFieldName());
-                readProperty(entity, id, accessor, value, property);
+                JsonNode propValue = getOrMissing(value, property.getFieldName());
+                readProperty(entity, id, accessor, new ArangoJsonNode(propValue, source.transactionContext()), property);
             }
         });
 
         entity.doWithAssociations((Association<ArangoPersistentProperty> association) -> {
             ArangoPersistentProperty property = association.getInverse();
             if (!entity.isCreatorArgument(property)) {
-                JsonNode value = getOrMissing(source, property.getFieldName());
-                readProperty(entity, id, accessor, value, property);
+                JsonNode propValue = getOrMissing(value, property.getFieldName());
+                readProperty(entity, id, accessor, new ArangoJsonNode(propValue, source.transactionContext()), property);
             }
         });
 
@@ -221,7 +229,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             final ArangoPersistentEntity<?> entity,
             final String parentId,
             final PersistentPropertyAccessor<?> accessor,
-            final JsonNode source,
+            final ArangoJsonNode source,
             final ArangoPersistentProperty property
     ) {
         Object propertyValue = readPropertyValue(entity, parentId, source, property);
@@ -233,7 +241,7 @@ public class DefaultArangoConverter implements ArangoConverter {
     private Object readPropertyValue(
             final ArangoPersistentEntity<?> entity,
             final String parentId,
-            final JsonNode source,
+            final ArangoJsonNode source,
             final ArangoPersistentProperty property
     ) {
         Optional<Ref> ref = property.getRef();
@@ -259,13 +267,14 @@ public class DefaultArangoConverter implements ArangoConverter {
         return readInternal(property.getTypeInformation(), source);
     }
 
-    private Map<?, ?> readMap(final TypeInformation<?> type, final JsonNode source) {
-        if (!source.isObject()) {
+    private Map<?, ?> readMap(final TypeInformation<?> type, final ArangoJsonNode source) {
+        JsonNode value = source.value();
+        if (!value.isObject()) {
             throw new MappingException(
-                    String.format("Can't read map type %s from type %s!", type, source.getNodeType()));
+                    String.format("Can't read map type %s from type %s!", type, value.getNodeType()));
         }
 
-        ObjectNode node = (ObjectNode) source;
+        ObjectNode node = (ObjectNode) value;
         Class<?> keyType = getNonNullComponentType(type).getType();
         TypeInformation<?> valueType = getNonNullMapValueType(type);
         Map<Object, Object> map = CollectionFactory.createMap(type.getType(), keyType, node.size());
@@ -278,21 +287,21 @@ public class DefaultArangoConverter implements ArangoConverter {
             }
 
             Object key = convertIfNecessary(entry.getKey(), keyType);
-            JsonNode value = entry.getValue();
-
-            map.put(key, readInternal(valueType, value));
+            JsonNode entryValue = entry.getValue();
+            map.put(key, readInternal(valueType, new ArangoJsonNode(entryValue, source.transactionContext())));
         }
 
         return map;
     }
 
-    private Collection<?> readCollection(final TypeInformation<?> type, final JsonNode source) {
-        if (!source.isArray()) {
+    private Collection<?> readCollection(final TypeInformation<?> type, final ArangoJsonNode source) {
+        JsonNode value = source.value();
+        if (!value.isArray()) {
             throw new MappingException(
-                    String.format("Can't read collection type %s from type %s!", type, source.getNodeType()));
+                    String.format("Can't read collection type %s from type %s!", type, value.getNodeType()));
         }
 
-        ArrayNode node = (ArrayNode) source;
+        ArrayNode node = (ArrayNode) value;
         TypeInformation<?> componentType = getNonNullComponentType(type);
         Class<?> collectionType = Iterable.class.equals(type.getType()) ? Collection.class : type.getType();
 
@@ -300,26 +309,27 @@ public class DefaultArangoConverter implements ArangoConverter {
                 new ArrayList<>(node.size()) :
                 CollectionFactory.createCollection(collectionType, componentType.getType(), node.size());
 
-        for (JsonNode elem : source) {
-            collection.add(readInternal(componentType, elem));
+        for (JsonNode elem : value) {
+            collection.add(readInternal(componentType, new ArangoJsonNode(elem, source.transactionContext())));
         }
 
         return collection;
     }
 
-    private Object readArray(final TypeInformation<?> type, final JsonNode source) {
-        if (!source.isArray()) {
+    private Object readArray(final TypeInformation<?> type, final ArangoJsonNode source) {
+        JsonNode value = source.value();
+        if (!value.isArray()) {
             throw new MappingException(
-                    String.format("Can't read array type %s from type %s!", type, source.getNodeType()));
+                    String.format("Can't read array type %s from type %s!", type, value.getNodeType()));
         }
 
-        ArrayNode node = (ArrayNode) source;
+        ArrayNode node = (ArrayNode) value;
         TypeInformation<?> componentType = getNonNullComponentType(type);
         int length = node.size();
         Object array = Array.newInstance(componentType.getType(), length);
 
         for (int i = 0; i < length; ++i) {
-            Array.set(array, i, readInternal(componentType, node.get(i)));
+            Array.set(array, i, readInternal(componentType, new ArangoJsonNode(node.get(i), source.transactionContext())));
         }
 
         return array;
@@ -327,15 +337,16 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     @SuppressWarnings("unchecked")
     private Optional<Object> readReference(
-            final JsonNode source,
+            final ArangoJsonNode source,
             final ArangoPersistentProperty property,
             final Annotation annotation
     ) {
-		if (source.isMissingNode() || source.isNull()) {
-			return Optional.empty();
-		}
+        JsonNode value = source.value();
+        if (value.isMissingNode() || value.isNull()) {
+            return Optional.empty();
+        }
 
-		Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
+        Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
 
         if (resolver.isEmpty()) {
             return Optional.empty();
@@ -347,28 +358,29 @@ public class DefaultArangoConverter implements ArangoConverter {
                 throw new MappingException("All references must be of type String!", e);
             }
 
-            return resolver.map(res -> res.resolveMultiple(ids, property.getTypeInformation(), annotation));
-        } else if (source.isObject()) {
-			// source contains target
-			return Optional.of(readInternal(property.getTypeInformation(), source));
-		} else {
-            if (!source.isTextual()) {
+            return resolver.map(res -> res.resolveMultiple(ids, property.getTypeInformation(), annotation, source.transactionContext()));
+        } else if (value.isObject()) {
+            // value contains target
+            return Optional.of(readInternal(property.getTypeInformation(), source));
+        } else {
+            if (!value.isTextual()) {
                 throw new MappingException(
-                        String.format("A reference must be of type String, but got type %s!", source.getNodeType()));
+                        String.format("A reference must be of type String, but got type %s!", value.getNodeType()));
             }
 
-            return resolver.map(res -> res.resolveOne(source.textValue(), property.getTypeInformation(), annotation));
+            return resolver.map(res -> res.resolveOne(value.textValue(), property.getTypeInformation(), annotation, source.transactionContext()));
         }
     }
 
     private <A extends Annotation> Optional<Object> readRelation(
             final ArangoPersistentEntity<?> entity,
             final String parentId,
-            final JsonNode source,
+            final ArangoJsonNode source,
             final ArangoPersistentProperty property,
             final A annotation
     ) {
-        if (source.isNull()) {
+        JsonNode value = source.value();
+        if (value.isNull()) {
             return Optional.empty();
         }
 
@@ -383,103 +395,104 @@ public class DefaultArangoConverter implements ArangoConverter {
         if (resolver.isEmpty()) {
             return Optional.empty();
         } else if (property.isCollectionLike()) {
-            if (source.isArray()) {
-                // source contains target array
+            if (value.isArray()) {
+                // value contains target array
                 return Optional.of(readInternal(property.getTypeInformation(), source));
             }
             if (parentId == null) {
                 return Optional.empty();
             }
-            return resolver.map(res -> res.resolveMultiple(parentId, property.getTypeInformation(), traversedTypes, annotation));
-        } else if (source.isTextual()) {
-            return resolver.map(res -> res.resolveOne(source.textValue(), property.getTypeInformation(), traversedTypes, annotation));
-        } else if (source.isObject()) {
-            // source contains target
+            return resolver.map(res -> res.resolveMultiple(parentId, property.getTypeInformation(), traversedTypes, annotation, source.transactionContext()));
+        } else if (value.isTextual()) {
+            return resolver.map(res -> res.resolveOne(value.textValue(), property.getTypeInformation(), traversedTypes, annotation, source.transactionContext()));
+        } else if (value.isObject()) {
+            // value contains target
             return Optional.of(readInternal(property.getTypeInformation(), source));
         } else {
-            return resolver.map(res -> res.resolveOne(parentId, property.getTypeInformation(), traversedTypes, annotation));
+            return resolver.map(res -> res.resolveOne(parentId, property.getTypeInformation(), traversedTypes, annotation, source.transactionContext()));
         }
 
     }
 
-    private Object readSimple(final Class<?> type, final JsonNode source) {
-        if (source.isMissingNode() || source.isNull()) {
+    private Object readSimple(final Class<?> type, final ArangoJsonNode source) {
+        JsonNode value = source.value();
+        if (value.isMissingNode() || value.isNull()) {
             return null;
         }
 
-        if (source.isBoolean()) {
-            return source.booleanValue();
+        if (value.isBoolean()) {
+            return value.booleanValue();
         }
 
-        if (source.isNumber()) {
+        if (value.isNumber()) {
             if (byte.class.isAssignableFrom(type) || Byte.class.isAssignableFrom(type)) {
-                return source.numberValue().byteValue();
+                return value.numberValue().byteValue();
             } else if (short.class.isAssignableFrom(type) || Short.class.isAssignableFrom(type)) {
-                return source.shortValue();
+                return value.shortValue();
             } else if (int.class.isAssignableFrom(type) || Integer.class.isAssignableFrom(type)) {
-                return source.intValue();
+                return value.intValue();
             } else if (long.class.isAssignableFrom(type) || Long.class.isAssignableFrom(type)) {
-                return source.longValue();
+                return value.longValue();
             } else if (float.class.isAssignableFrom(type) || Float.class.isAssignableFrom(type)) {
-                return source.floatValue();
+                return value.floatValue();
             } else if (double.class.isAssignableFrom(type) || Double.class.isAssignableFrom(type)) {
-                return source.doubleValue();
-            } else if (BigInteger.class.isAssignableFrom(type) && (source.isIntegralNumber())) {
-                return source.bigIntegerValue();
-            } else if (BigDecimal.class.isAssignableFrom(type) && source.isFloatingPointNumber()) {
-                return source.decimalValue();
+                return value.doubleValue();
+            } else if (BigInteger.class.isAssignableFrom(type) && (value.isIntegralNumber())) {
+                return value.bigIntegerValue();
+            } else if (BigDecimal.class.isAssignableFrom(type) && value.isFloatingPointNumber()) {
+                return value.decimalValue();
             } else {
-                return source.numberValue();
+                return value.numberValue();
             }
         }
 
-        if (source.isTextual()) {
-            String value = source.textValue();
+        if (value.isTextual()) {
+            String textValue = value.textValue();
             if (Class.class.isAssignableFrom(type)) {
                 try {
-                    return Class.forName(value);
+                    return Class.forName(textValue);
                 } catch (ClassNotFoundException e) {
-                    throw new MappingException(String.format("Could not load type %s!", value), e);
+                    throw new MappingException(String.format("Could not load type %s!", textValue), e);
                 }
             } else if (Enum.class.isAssignableFrom(type)) {
                 @SuppressWarnings({"unchecked", "rawtypes"})
-                Enum<?> e = Enum.valueOf((Class<? extends Enum>) type, value);
+                Enum<?> e = Enum.valueOf((Class<? extends Enum>) type, textValue);
                 return e;
             } else if (byte[].class.isAssignableFrom(type)) {
-				return Base64.getDecoder().decode(value);
+                return Base64.getDecoder().decode(textValue);
             } else if (java.sql.Date.class.isAssignableFrom(type)) {
-                return new java.sql.Date(parseDate(value).getTime());
+                return new java.sql.Date(parseDate(textValue).getTime());
             } else if (Timestamp.class.isAssignableFrom(type)) {
-                return new Timestamp(parseDate(value).getTime());
+                return new Timestamp(parseDate(textValue).getTime());
             } else if (Date.class.isAssignableFrom(type)) {
-                return parseDate(value);
+                return parseDate(textValue);
             } else if (BigInteger.class.isAssignableFrom(type)) {
-                return new BigInteger(value);
+                return new BigInteger(textValue);
             } else if (BigDecimal.class.isAssignableFrom(type)) {
-                return new BigDecimal(value);
+                return new BigDecimal(textValue);
             } else if (Instant.class.isAssignableFrom(type)) {
-                return JavaTimeUtil.parseInstant(value);
+                return JavaTimeUtil.parseInstant(textValue);
             } else if (LocalDate.class.isAssignableFrom(type)) {
-                return JavaTimeUtil.parseLocalDate(value);
+                return JavaTimeUtil.parseLocalDate(textValue);
             } else if (LocalDateTime.class.isAssignableFrom(type)) {
-                return JavaTimeUtil.parseLocalDateTime(value);
+                return JavaTimeUtil.parseLocalDateTime(textValue);
             } else if (OffsetDateTime.class.isAssignableFrom(type)) {
-                return JavaTimeUtil.parseOffsetDateTime(value);
+                return JavaTimeUtil.parseOffsetDateTime(textValue);
             } else if (ZonedDateTime.class.isAssignableFrom(type)) {
-                return JavaTimeUtil.parseZonedDateTime(value);
+                return JavaTimeUtil.parseZonedDateTime(textValue);
             } else {
-                return value;
+                return textValue;
             }
         }
 
-        if (source.isObject() && DBDocumentEntity.class.isAssignableFrom(type)) {
+        if (value.isObject() && DBDocumentEntity.class.isAssignableFrom(type)) {
             return readDBDocumentEntity(source);
         }
 
-        throw new MappingException(String.format("Can't read type %s from type %s!", type, source.getNodeType()));
+        throw new MappingException(String.format("Can't read type %s from type %s!", type, value.getNodeType()));
     }
 
-    private BaseDocument readBaseDocument(final Class<?> type, final JsonNode source) {
+    private BaseDocument readBaseDocument(final Class<?> type, final ArangoJsonNode source) {
         if (BaseDocument.class.equals(type)) {
             @SuppressWarnings("unchecked")
             Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
@@ -488,7 +501,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         throw new MappingException(String.format("Can't read type %s as %s!", type, BaseDocument.class));
     }
 
-    private BaseEdgeDocument readBaseEdgeDocument(final Class<?> type, final JsonNode source) {
+    private BaseEdgeDocument readBaseEdgeDocument(final Class<?> type, final ArangoJsonNode source) {
         if (BaseEdgeDocument.class.equals(type)) {
             @SuppressWarnings("unchecked")
             Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
@@ -497,7 +510,7 @@ public class DefaultArangoConverter implements ArangoConverter {
         throw new MappingException(String.format("Can't read type %s as %s!", type, BaseEdgeDocument.class));
     }
 
-    private DBDocumentEntity readDBDocumentEntity(final JsonNode source) {
+    private DBDocumentEntity readDBDocumentEntity(final ArangoJsonNode source) {
         @SuppressWarnings("unchecked")
         Map<String, Object> properties = (Map<String, Object>) readMap(TypeInformation.MAP, source);
         return new DBDocumentEntity(properties);
@@ -505,7 +518,7 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     private ParameterValueProvider<ArangoPersistentProperty> getParameterProvider(
             final ArangoPersistentEntity<?> entity,
-            final JsonNode source
+            final ArangoJsonNode source
     ) {
         PropertyValueProvider<ArangoPersistentProperty> provider = new ArangoPropertyValueProvider(entity, source);
         return new PersistentEntityParameterValueProvider<>(entity, provider, null);
@@ -514,21 +527,23 @@ public class DefaultArangoConverter implements ArangoConverter {
     private class ArangoPropertyValueProvider implements PropertyValueProvider<ArangoPersistentProperty> {
 
         private final ArangoPersistentEntity<?> entity;
-        private final JsonNode source;
+        private final JsonNode value;
         private final String id;
+        private final TransactionMappingContext ctx;
 
-        public ArangoPropertyValueProvider(final ArangoPersistentEntity<?> entity, final JsonNode source) {
+        public ArangoPropertyValueProvider(final ArangoPersistentEntity<?> entity, final ArangoJsonNode source) {
             this.entity = entity;
-            this.source = source;
-            JsonNode idNode = getOrMissing(source, _ID);
+            this.value = source.value();
+            this.ctx = source.transactionContext();
+            JsonNode idNode = getOrMissing(value, _ID);
             this.id = idNode.isTextual() ? idNode.textValue() : null;
         }
 
         @SuppressWarnings("unchecked")
         @Override
         public <T> T getPropertyValue(final ArangoPersistentProperty property) {
-            JsonNode value = getOrMissing(source, property.getFieldName());
-            return (T) readPropertyValue(entity, id, value, property);
+            JsonNode propValue = getOrMissing(value, property.getFieldName());
+            return (T) readPropertyValue(entity, id, new ArangoJsonNode(propValue, ctx), property);
         }
 
     }
@@ -778,16 +793,16 @@ public class DefaultArangoConverter implements ArangoConverter {
         }
 
         return Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier())
-            .map(key -> {
-                if (annotation != null) {
-                    return resolverFactory.getReferenceResolver(annotation)
-                            .map(resolver -> resolver.write(source, entity, convertId(key)))
-                            .orElseThrow(() -> new IllegalArgumentException("Missing reference resolver for " + annotation));
-                } else {
-                    return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key));
-                }
-            })
-            .or(() -> Optional.ofNullable((String) entity.getArangoIdAccessor(source).getIdentifier()));
+                .map(key -> {
+                    if (annotation != null) {
+                        return resolverFactory.getReferenceResolver(annotation)
+                                .map(resolver -> resolver.write(source, entity, convertId(key)))
+                                .orElseThrow(() -> new IllegalArgumentException("Missing reference resolver for " + annotation));
+                    } else {
+                        return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key));
+                    }
+                })
+                .or(() -> Optional.ofNullable((String) entity.getArangoIdAccessor(source).getIdentifier()));
     }
 
     private static Collection<?> asCollection(final Object source) {

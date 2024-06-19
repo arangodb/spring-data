@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.annotation.Document;
 import com.arangodb.springframework.component.TenantProvider;
 

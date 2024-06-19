@@ -3,16 +3,19 @@
  */
 package com.arangodb.springframework.config;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
-
+import com.arangodb.ArangoDB;
+import com.arangodb.ArangoDBException;
 import com.arangodb.ContentType;
+import com.arangodb.RequestContext;
 import com.arangodb.serde.ArangoSerde;
 import com.arangodb.serde.jackson.JacksonMapperProvider;
+import com.arangodb.springframework.annotation.*;
+import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.springframework.core.convert.*;
+import com.arangodb.springframework.core.convert.resolver.*;
+import com.arangodb.springframework.core.mapping.ArangoMappingContext;
+import com.arangodb.springframework.core.mapping.TransactionMappingContext;
+import com.arangodb.springframework.core.template.ArangoTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
@@ -22,31 +25,11 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 
-import com.arangodb.ArangoDB;
-import com.arangodb.ArangoDBException;
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Edge;
-import com.arangodb.springframework.annotation.From;
-import com.arangodb.springframework.annotation.Ref;
-import com.arangodb.springframework.annotation.Relations;
-import com.arangodb.springframework.annotation.To;
-import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.core.convert.ArangoConverter;
-import com.arangodb.springframework.core.convert.ArangoCustomConversions;
-import com.arangodb.springframework.core.convert.ArangoTypeMapper;
-import com.arangodb.springframework.core.convert.DefaultArangoConverter;
-import com.arangodb.springframework.core.convert.DefaultArangoTypeMapper;
-import com.arangodb.springframework.core.convert.resolver.DocumentFromResolver;
-import com.arangodb.springframework.core.convert.resolver.DocumentToResolver;
-import com.arangodb.springframework.core.convert.resolver.EdgeFromResolver;
-import com.arangodb.springframework.core.convert.resolver.EdgeToResolver;
-import com.arangodb.springframework.core.convert.resolver.RefResolver;
-import com.arangodb.springframework.core.convert.resolver.ReferenceResolver;
-import com.arangodb.springframework.core.convert.resolver.RelationResolver;
-import com.arangodb.springframework.core.convert.resolver.RelationsResolver;
-import com.arangodb.springframework.core.convert.resolver.ResolverFactory;
-import com.arangodb.springframework.core.mapping.ArangoMappingContext;
-import com.arangodb.springframework.core.template.ArangoTemplate;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Defines methods to customize the Java-based configuration for Spring Data
@@ -104,9 +87,14 @@ public interface ArangoConfiguration {
 
             @Override
             public <T> T deserialize(byte[] content, Class<T> clazz) {
+                return deserialize(content, clazz, RequestContext.EMPTY);
+            }
+
+            @Override
+            public <T> T deserialize(byte[] content, Class<T> clazz, RequestContext ctx) {
                 try {
-                    return converter.read(clazz, om.readTree(content));
-                } catch (IOException e) {
+                    return converter.read(clazz, new ArangoJsonNode(om.readTree(content), new TransactionMappingContext(ctx)));
+                } catch (Exception e) {
                     throw new MappingException("Exception while deserializing.", e);
                 }
             }

@@ -87,6 +87,7 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
         converters.add(new CustomMappingTest.CustomJsonNodeWriteTestConverter());
         converters.add(new CustomMappingTest.CustomDBEntityReadTestConverter());
         converters.add(new CustomMappingTest.CustomDBEntityWriteTestConverter());
+        converters.add(new CustomMappingTest.CustomArangoJsonNodeReadTestConverter());
         return converters;
     }
 

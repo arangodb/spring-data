@@ -24,7 +24,9 @@ import java.util.Collection;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.mapping.TransactionMappingContext;
 import com.arangodb.springframework.core.util.MetadataUtils;
 import org.springframework.data.util.TypeInformation;
 
@@ -45,20 +47,22 @@ public class RefResolver extends AbstractResolver implements ReferenceResolver<R
     }
 
     @Override
-    public Object resolveOne(final String id, final TypeInformation<?> type, final Ref annotation) {
-        Supplier<Object> supplier = () -> _resolve(id, type);
+    public Object resolveOne(final String id, final TypeInformation<?> type, final Ref annotation, final TransactionMappingContext ctx) {
+        Supplier<Object> supplier = () -> _resolve(id, type, ctx);
         return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
     }
 
     @Override
-    public Object resolveMultiple(final Collection<String> ids, final TypeInformation<?> type, final Ref annotation) {
+    public Object resolveMultiple(final Collection<String> ids, final TypeInformation<?> type, final Ref annotation, final TransactionMappingContext ctx) {
         return ids.stream()
-                .map(id -> resolveOne(id, getNonNullComponentType(type), annotation))
+                .map(id -> resolveOne(id, getNonNullComponentType(type), annotation, ctx))
                 .collect(Collectors.toList());
     }
 
-    private Object _resolve(final String id, final TypeInformation<?> type) {
-        return template.find(id, type.getType())
+    private Object _resolve(final String id, final TypeInformation<?> type, final TransactionMappingContext ctx) {
+        DocumentReadOptions opts = new DocumentReadOptions();
+        ctx.getStreamTransactionId().ifPresent(opts::streamTransactionId);
+        return template.find(id, type.getType(), opts)
                 .orElseThrow(() -> cannotResolveException(id, type));
     }
 

@@ -20,6 +20,8 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
+import com.arangodb.model.DocumentReadOptions;
+import com.arangodb.springframework.core.mapping.TransactionMappingContext;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.springframework.annotation.From;
@@ -33,29 +35,31 @@ import java.util.function.Supplier;
  */
 public class EdgeFromResolver extends AbstractResolver implements RelationResolver<From> {
 
-	private final ArangoOperations template;
+    private final ArangoOperations template;
 
-	public EdgeFromResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
-	}
+    public EdgeFromResolver(final ArangoOperations template) {
+        super(template.getConverter().getConversionService());
+        this.template = template;
+    }
 
-	@Override
+    @Override
     public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
-                             final From annotation) {
-        Supplier<Object> supplier = () -> _resolveOne(id, type);
+                             final From annotation, final TransactionMappingContext ctx) {
+        Supplier<Object> supplier = () -> _resolveOne(id, type, ctx);
         return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
-	}
+    }
 
-	private Object _resolveOne(final String id, final TypeInformation<?> type) {
-		return template.find(id, type.getType())
-				.orElseThrow(() -> cannotResolveException(id, type));
-	}
+    private Object _resolveOne(final String id, final TypeInformation<?> type, final TransactionMappingContext ctx) {
+        DocumentReadOptions opts = new DocumentReadOptions();
+        ctx.getStreamTransactionId().ifPresent(opts::streamTransactionId);
+        return template.find(id, type.getType(), opts)
+                .orElseThrow(() -> cannotResolveException(id, type));
+    }
 
-	@Override
+    @Override
     public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
-                                  final From annotation) {
-		throw new UnsupportedOperationException("Edges with multiple 'from' values are not supported.");
-	}
+                                  final From annotation, final TransactionMappingContext ctx) {
+        throw new UnsupportedOperationException("Edges with multiple 'from' values are not supported.");
+    }
 
 }

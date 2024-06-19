@@ -24,6 +24,10 @@ abstract class TournamentRepositoryAbstract extends AbstractRepositoryTest {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     TournamentRepository repo;
 
+    TournamentRepositoryAbstract(boolean withinTx) {
+        super(withinTx);
+    }
+
     // equirectangular approximation
     static Distance calculateDistance(Point p1, Point p2) {
         double lat1Rad = Math.toRadians(p1.getY());
@@ -46,7 +50,7 @@ abstract class TournamentRepositoryAbstract extends AbstractRepositoryTest {
                 .filter(it -> it.getDate().isAfter(start))
                 .filter(it -> it.getDate().isBefore(end))
                 .toList();
-        List<Tournament> found = repo.findAllByDateBetween(start, end);
+        List<Tournament> found = repo.findAllByDateBetween(start, end, queryOpts);
         assertThat(found)
                 .hasSize(expected.size())
                 .containsExactlyInAnyOrderElementsOf(expected);
@@ -59,7 +63,7 @@ abstract class TournamentRepositoryAbstract extends AbstractRepositoryTest {
         List<Tournament> expected = tournaments.stream()
                 .filter(it -> it.getName().contains(match))
                 .toList();
-        Iterable<Tournament> found = repo.findByNameContainingIgnoreCase(match);
+        Iterable<Tournament> found = repo.findByNameContainingIgnoreCase(match, queryOpts);
         assertThat(found)
                 .hasSize(expected.size())
                 .containsExactlyInAnyOrderElementsOf(expected);
@@ -75,7 +79,7 @@ abstract class TournamentRepositoryAbstract extends AbstractRepositoryTest {
                 .filter(it -> calculateDistance(p, it.getLocation()).compareTo(d) < 0)
                 .toList();
 
-        List<Tournament> found = repo.findAllByLocationWithin(p, d);
+        List<Tournament> found = repo.findAllByLocationWithin(p, d, queryOpts);
         assertThat(found)
                 .hasSize(expected.size())
                 .containsExactlyInAnyOrderElementsOf(expected);
@@ -94,7 +98,7 @@ abstract class TournamentRepositoryAbstract extends AbstractRepositoryTest {
                 .toList();
 
         for (int i = 0; i < expected.size(); i++) {
-            GeoPage<Tournament> page = repo.findAllByLocationWithin(PageRequest.of(i, 1), p, d);
+            GeoPage<Tournament> page = repo.findAllByLocationWithin(PageRequest.of(i, 1), p, d, queryOpts);
             assertThat(page.getTotalElements()).isEqualTo(expected.size());
             assertThat(page.getTotalPages()).isEqualTo(expected.size());
             GeoResult<Tournament> current = page.iterator().next();

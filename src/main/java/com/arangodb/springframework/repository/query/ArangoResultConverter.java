@@ -29,6 +29,7 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.arangodb.springframework.core.convert.ArangoJsonNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -46,7 +47,7 @@ import com.arangodb.springframework.core.ArangoOperations;
 
 /**
  * Converts the result returned from the ArangoDB Java driver to the desired type.
- * 
+ *
  * @author Audrius Malele
  * @author Mark McCormick
  * @author Mark Vollmary
@@ -54,37 +55,37 @@ import com.arangodb.springframework.core.ArangoOperations;
  */
 public class ArangoResultConverter<T> {
 
-	private final static String MISSING_FULL_COUNT = "Query result does not contain the full result count! "
-			+ "The most likely cause is a forgotten LIMIT clause in the query.";
+    private final static String MISSING_FULL_COUNT = "Query result does not contain the full result count! "
+            + "The most likely cause is a forgotten LIMIT clause in the query.";
 
-	private final ArangoParameterAccessor accessor;
-	private final ArangoCursor<?> result;
-	private final ArangoOperations operations;
+    private final ArangoParameterAccessor accessor;
+    private final ArangoCursor<?> result;
+    private final ArangoOperations operations;
     private final Class<T> domainClass;
 
 
-	/**
-	 * @param accessor
+    /**
+     * @param accessor
      * @param result      the query result returned by the driver
      * @param operations  instance of arangoTemplate
      * @param domainClass class type of documents
-	 */
-	public ArangoResultConverter(final ArangoParameterAccessor accessor, final ArangoCursor<?> result,
+     */
+    public ArangoResultConverter(final ArangoParameterAccessor accessor, final ArangoCursor<?> result,
                                  final ArangoOperations operations, final Class<T> domainClass) {
-		this.accessor = accessor;
-		this.result = result;
-		this.operations = operations;
-		this.domainClass = domainClass;
-	}
+        this.accessor = accessor;
+        this.result = result;
+        this.operations = operations;
+        this.domainClass = domainClass;
+    }
 
-	/**
-	 * Called to convert result from ArangoCursor to given type, by invoking the appropriate converter method
-	 * 
-	 * @param type
-	 * @return result in desired type
-	 */
-	public Object convertResult(final Class<?> type) {
-		try {
+    /**
+     * Called to convert result from ArangoCursor to given type, by invoking the appropriate converter method
+     *
+     * @param type
+     * @return result in desired type
+     */
+    public Object convertResult(final Class<?> type) {
+        try {
             return convert(type);
         } catch (final Exception e) {
             throw new MappingException(String.format("Can't convert result to type %s!", type.getName()), e);
@@ -92,7 +93,7 @@ public class ArangoResultConverter<T> {
     }
 
     private Object convert(Class<?> type) {
-			if (type.isArray()) {
+        if (type.isArray()) {
             return convertArray();
         } else if (List.class.equals(type) || Iterable.class.equals(type) || Collection.class.equals(type)) {
             return convertList();
@@ -111,102 +112,103 @@ public class ArangoResultConverter<T> {
         } else if (Optional.class.equals(type)) {
             return convertOptional();
         } else {
-				return getNext(result);
-			}
-	}
+            return getNext(result);
+        }
+    }
 
-	/**
-	 * Creates a Set return type from the given cursor
-	 * 
+    /**
+     * Creates a Set return type from the given cursor
+     *
      * @param cursor query result from driver
-	 * @return Set containing the results
-	 */
-	private Set<?> buildSet(final ArangoCursor<?> cursor) {
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(cursor, 0), false).collect(Collectors.toSet());
-	}
+     * @return Set containing the results
+     */
+    private Set<?> buildSet(final ArangoCursor<?> cursor) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(cursor, 0), false).collect(Collectors.toSet());
+    }
 
-	/**
-	 * Build a GeoResult from the given ArangoCursor
-	 *
+    /**
+     * Build a GeoResult from the given ArangoCursor
+     *
      * @param cursor query result from driver
-	 * @return GeoResult object
-	 */
-    private GeoResult<T> buildGeoResult(final ArangoCursor<JsonNode> cursor) {
+     * @return GeoResult object
+     */
+    private GeoResult<T> buildGeoResult(final ArangoCursor<ArangoJsonNode> cursor) {
         return buildGeoResult(cursor.next());
-	}
+    }
 
-	/**
-	 * Construct a GeoResult from the given object
-	 *
-     * @param slice object representing one document in the result
-	 * @return GeoResult object
-	 */
-    private GeoResult<T> buildGeoResult(final JsonNode slice) {
+    /**
+     * Construct a GeoResult from the given object
+     *
+     * @param data object representing one document in the result
+     * @return GeoResult object
+     */
+    private GeoResult<T> buildGeoResult(final ArangoJsonNode data) {
+        JsonNode slice = data.value();
         JsonNode distSlice = slice.get("_distance");
         Double distanceInMeters = distSlice.isDouble() ? distSlice.doubleValue() : null;
-        T entity = operations.getConverter().read(domainClass, slice);
-		// FIXME: Unboxing of 'distanceInMeters' may produce 'NullPointerException'
+        T entity = operations.getConverter().read(domainClass, data);
+        // FIXME: Unboxing of 'distanceInMeters' may produce 'NullPointerException'
         Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
-		return new GeoResult<>(entity, distance);
-	}
+        return new GeoResult<>(entity, distance);
+    }
 
-	/**
-	 * Build a GeoResults object with the ArangoCursor returned by query execution
-	 *
+    /**
+     * Build a GeoResults object with the ArangoCursor returned by query execution
+     *
      * @param cursor ArangoCursor containing query results
-	 * @return GeoResults object with all results
-	 */
-    private GeoResults<T> buildGeoResults(final ArangoCursor<JsonNode> cursor) {
+     * @return GeoResults object with all results
+     */
+    private GeoResults<T> buildGeoResults(final ArangoCursor<ArangoJsonNode> cursor) {
         final List<GeoResult<T>> list = new LinkedList<>();
         cursor.forEachRemaining(o -> list.add(buildGeoResult(o)));
         // FIXME: DE-803
         //        convert geoResults to Metrics.NEUTRAL before
         //        invoking GeoResults.GeoResults(java.util.List<? extends org.springframework.data.geo.GeoResult<T>>)
         return new GeoResults<>(list);
-	}
+    }
 
-	public Optional<?> convertOptional() {
-		return Optional.ofNullable(getNext(result));
-	}
+    public Optional<?> convertOptional() {
+        return Optional.ofNullable(getNext(result));
+    }
 
-	public List<?> convertList() {
-		return result.asListRemaining();
-	}
+    public List<?> convertList() {
+        return result.asListRemaining();
+    }
 
-	public PageImpl<?> convertPage() {
-		Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
-		return new PageImpl<>(result.asListRemaining(), accessor.getPageable(), ((Number) result.getStats().getFullCount()).longValue());
-	}
+    public PageImpl<?> convertPage() {
+        Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
+        return new PageImpl<>(result.asListRemaining(), accessor.getPageable(), ((Number) result.getStats().getFullCount()).longValue());
+    }
 
-	public Set<?> convertSet() {
-		return buildSet(result);
-	}
+    public Set<?> convertSet() {
+        return buildSet(result);
+    }
 
-	public ArangoCursor<?> convertArangoCursor() {
-		return result;
-	}
+    public ArangoCursor<?> convertArangoCursor() {
+        return result;
+    }
 
     @SuppressWarnings("unchecked")
     public GeoResult<T> convertGeoResult() {
-        return buildGeoResult((ArangoCursor<JsonNode>) result);
-	}
+        return buildGeoResult((ArangoCursor<ArangoJsonNode>) result);
+    }
 
     @SuppressWarnings("unchecked")
     public GeoResults<T> convertGeoResults() {
-        return buildGeoResults((ArangoCursor<JsonNode>) result);
-	}
+        return buildGeoResults((ArangoCursor<ArangoJsonNode>) result);
+    }
 
     @SuppressWarnings("unchecked")
     public GeoPage<T> convertGeoPage() {
-		Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
-        return new GeoPage<>(buildGeoResults((ArangoCursor<JsonNode>) result), accessor.getPageable(), ((Number) result.getStats().getFullCount()).longValue());
-	}
+        Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
+        return new GeoPage<>(buildGeoResults((ArangoCursor<ArangoJsonNode>) result), accessor.getPageable(), ((Number) result.getStats().getFullCount()).longValue());
+    }
 
-	public Object convertArray() {
-		return result.asListRemaining().toArray();
-	}
+    public Object convertArray() {
+        return result.asListRemaining().toArray();
+    }
 
-	private Object getNext(final ArangoCursor<?> cursor) {
-		return cursor.hasNext() ? cursor.next() : null;
-	}
+    private Object getNext(final ArangoCursor<?> cursor) {
+        return cursor.hasNext() ? cursor.next() : null;
+    }
 }

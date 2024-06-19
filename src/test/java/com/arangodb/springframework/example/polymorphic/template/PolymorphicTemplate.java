@@ -31,7 +31,6 @@ import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReplaceOptions;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.example.polymorphic.entity.Animal;
 import com.arangodb.springframework.example.polymorphic.entity.Dog;
 import com.arangodb.springframework.example.polymorphic.entity.Eagle;

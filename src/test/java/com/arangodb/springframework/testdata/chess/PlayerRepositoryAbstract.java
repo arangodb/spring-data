@@ -18,12 +18,16 @@ abstract class PlayerRepositoryAbstract extends AbstractRepositoryTest {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     PlayerRepository repo;
 
+    PlayerRepositoryAbstract(boolean withinTx) {
+        super(withinTx);
+    }
+
     @Test
     void findAllByCountry() {
         List<Player> expected = players.stream()
                 .filter(it -> "US".equals(it.getCountry()))
                 .toList();
-        Iterable<Player> found = repo.findAllByCountry("US");
+        Iterable<Player> found = repo.findAllByCountry("US", queryOpts);
         assertThat(found).containsExactlyInAnyOrderElementsOf(expected);
         found.forEach(this::checkRefs);
     }
@@ -37,7 +41,7 @@ abstract class PlayerRepositoryAbstract extends AbstractRepositoryTest {
                 .toList();
 
         for (int i = 0; i < expected.size(); i++) {
-            Page<Player> page = repo.findAllByRatingGreaterThanOrderByRatingDesc(PageRequest.of(i, 1), rating);
+            Page<Player> page = repo.findAllByRatingGreaterThanOrderByRatingDesc(PageRequest.of(i, 1), rating, queryOpts);
             assertThat(page.getTotalElements()).isEqualTo(expected.size());
             assertThat(page.getTotalPages()).isEqualTo(expected.size());
             Player current = page.iterator().next();

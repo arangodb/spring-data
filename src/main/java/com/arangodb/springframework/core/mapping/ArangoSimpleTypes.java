@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.arangodb.springframework.core.convert.ArangoJsonNode;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 import com.arangodb.springframework.core.convert.DBDocumentEntity;
@@ -54,6 +55,7 @@ public final class ArangoSimpleTypes {
 		simpleTypes.add(JsonNode.class);
 
 		// com.arangodb.*
+		simpleTypes.add(ArangoJsonNode.class);
 		simpleTypes.add(DBDocumentEntity.class);
 
 		// java.math.*
