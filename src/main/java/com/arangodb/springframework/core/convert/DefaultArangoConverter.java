@@ -222,8 +222,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             final String parentId,
             final PersistentPropertyAccessor<?> accessor,
             final JsonNode source,
-            final ArangoPersistentProperty property) {
-
+            final ArangoPersistentProperty property
+    ) {
         Object propertyValue = readPropertyValue(entity, parentId, source, property);
         if (propertyValue != null || !property.getType().isPrimitive()) {
             accessor.setProperty(property, propertyValue);
@@ -234,8 +234,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             final ArangoPersistentEntity<?> entity,
             final String parentId,
             final JsonNode source,
-            final ArangoPersistentProperty property) {
-
+            final ArangoPersistentProperty property
+    ) {
         Optional<Ref> ref = property.getRef();
         if (ref.isPresent()) {
             return readReference(source, property, ref.get()).orElse(null);
@@ -329,8 +329,8 @@ public class DefaultArangoConverter implements ArangoConverter {
     private Optional<Object> readReference(
             final JsonNode source,
             final ArangoPersistentProperty property,
-            final Annotation annotation) {
-
+            final Annotation annotation
+    ) {
 		if (source.isMissingNode() || source.isNull()) {
 			return Optional.empty();
 		}
@@ -366,8 +366,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             final String parentId,
             final JsonNode source,
             final ArangoPersistentProperty property,
-            final A annotation) {
-
+            final A annotation
+    ) {
         if (source.isNull()) {
             return Optional.empty();
         }
@@ -505,8 +505,8 @@ public class DefaultArangoConverter implements ArangoConverter {
 
     private ParameterValueProvider<ArangoPersistentProperty> getParameterProvider(
             final ArangoPersistentEntity<?> entity,
-            final JsonNode source) {
-
+            final JsonNode source
+    ) {
         PropertyValueProvider<ArangoPersistentProperty> provider = new ArangoPropertyValueProvider(entity, source);
         return new PersistentEntityParameterValueProvider<>(entity, provider, null);
     }
@@ -781,7 +781,7 @@ public class DefaultArangoConverter implements ArangoConverter {
             .map(key -> {
                 if (annotation != null) {
                     return resolverFactory.getReferenceResolver(annotation)
-                            .map(resolver -> resolver.write(source, entity, convertId(key), annotation))
+                            .map(resolver -> resolver.write(source, entity, convertId(key)))
                             .orElseThrow(() -> new IllegalArgumentException("Missing reference resolver for " + annotation));
                 } else {
                     return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key));

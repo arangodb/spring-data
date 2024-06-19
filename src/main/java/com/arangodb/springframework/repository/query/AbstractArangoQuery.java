@@ -201,8 +201,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 			}
 			return (Integer) result.next() > 0;
 		}
-		final ArangoResultConverter resultConverter = new ArangoResultConverter(accessor, result, operations,
-				domainClass);
+		final ArangoResultConverter<?> resultConverter = new ArangoResultConverter<>(accessor, result, operations, domainClass);
 		return resultConverter.convertResult(method.getReturnType().getType());
 	}
 

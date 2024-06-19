@@ -49,7 +49,7 @@ import static org.hamcrest.Matchers.*;
 public class PolymorphicTemplate extends AbstractArangoTest {
 
     private ArangoCollection col() {
-        return template.driver().db(ArangoTestConfiguration.DB).collection("animals");
+        return db.collection("animals");
     }
 
     @BeforeEach

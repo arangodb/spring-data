@@ -51,8 +51,9 @@ public final class ArangoSimpleTypes {
 	static {
 		final Set<Class<?>> simpleTypes = new HashSet<>();
 
-		// com.arangodb.*
 		simpleTypes.add(JsonNode.class);
+
+		// com.arangodb.*
 		simpleTypes.add(DBDocumentEntity.class);
 
 		// java.math.*

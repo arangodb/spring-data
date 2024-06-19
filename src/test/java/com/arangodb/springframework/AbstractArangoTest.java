@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework;
 
+import com.arangodb.ArangoDatabase;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,7 @@ public abstract class AbstractArangoTest {
 
 	@Autowired
 	protected ArangoOperations template;
+	protected ArangoDatabase db;
 	protected final Class<?>[] collections;
 
 	protected AbstractArangoTest(final Class<?>... collections) {
@@ -50,6 +52,7 @@ public abstract class AbstractArangoTest {
 			template.collection(collection).truncate();
 		}
 		AbstractArangoTest.staticTemplate = template;
+		db = template.driver().db(ArangoTestConfiguration.DB);
 	}
 
 	@AfterAll

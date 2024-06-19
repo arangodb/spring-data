@@ -130,7 +130,7 @@ public class ArangoExampleConverter<T> {
 				if (property.getRef().isPresent()) {
 					final Optional<ReferenceResolver<Annotation>> resolver = resolverFactory
 							.getReferenceResolver(property.getRef().get());
-					refIdValue = resolver.get().write(value, persistentEntity, idValue, property.getRef().get());
+					refIdValue = resolver.get().write(value, persistentEntity, idValue);
 				} else {
 					refIdValue = String.format("%s/%s", persistentEntity.getCollection(), idValue);
 				}

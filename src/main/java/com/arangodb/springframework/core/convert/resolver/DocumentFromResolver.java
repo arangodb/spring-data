@@ -30,49 +30,50 @@ import com.arangodb.springframework.core.ArangoOperations;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * @author Mark Vollmary
  * @author Christian Lechner
- *
  */
-public class DocumentFromResolver extends AbstractResolver<From> implements RelationResolver<From> {
+public class DocumentFromResolver extends AbstractResolver implements RelationResolver<From> {
 
-	private final ArangoOperations template;
+    private final ArangoOperations template;
 
-	public DocumentFromResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
-		this.template = template;
-	}
+    public DocumentFromResolver(final ArangoOperations template) {
+        super(template.getConverter().getConversionService());
+        this.template = template;
+    }
 
-	@Override
-	public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final From annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t))
-				: _resolveOne(id, type);
-	}
+    @Override
+    public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
+                             final From annotation) {
+        Supplier<Object> supplier = () -> _resolveOne(id, type);
+        return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
+    }
 
-	private Object _resolveOne(final String id, final TypeInformation<?> type) {
-		ArangoCursor<?> it = _resolve(id, type.getType(), true);
-		return it.hasNext() ? it.next() : null;
-	}
+    private Object _resolveOne(final String id, final TypeInformation<?> type) {
+        ArangoCursor<?> it = _resolve(id, type.getType(), true);
+        return it.hasNext() ? it.next() : null;
+    }
 
-	@Override
-	public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final From annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveMultiple(i, t))
-				: _resolveMultiple(id, type);
-	}
+    @Override
+    public Object resolveMultiple(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
+                                  final From annotation) {
+        Supplier<Object> supplier = () -> _resolveMultiple(id, type);
+        return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
+    }
 
-	private Object _resolveMultiple(final String id, final TypeInformation<?> type) {
-		return _resolve(id, getNonNullComponentType(type).getType(), false).asListRemaining();
-	}
+    private Object _resolveMultiple(final String id, final TypeInformation<?> type) {
+        return _resolve(id, getNonNullComponentType(type).getType(), false).asListRemaining();
+    }
 
-	private ArangoCursor<?> _resolve(final String id, final Class<?> type, final boolean limit) {
-		final String query = String.format("FOR e IN @@edge FILTER e._from == @id %s RETURN e", limit ? "LIMIT 1" : "");
-		Map<String, Object> bindVars = new HashMap<>();
-		bindVars.put("@edge", type);
-		bindVars.put("id", id);
-		return template.query(query, bindVars, new AqlQueryOptions(),
-			type);
-	}
+    private ArangoCursor<?> _resolve(final String id, final Class<?> type, final boolean limit) {
+        final String query = String.format("FOR e IN @@edge FILTER e._from == @id %s RETURN e", limit ? "LIMIT 1" : "");
+        Map<String, Object> bindVars = new HashMap<>();
+        bindVars.put("@edge", type);
+        bindVars.put("id", id);
+        return template.query(query, bindVars, new AqlQueryOptions(), type);
+    }
 
 }

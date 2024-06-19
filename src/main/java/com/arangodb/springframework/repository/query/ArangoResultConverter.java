@@ -20,12 +20,9 @@
 
 package com.arangodb.springframework.repository.query;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterators;
@@ -55,7 +52,7 @@ import com.arangodb.springframework.core.ArangoOperations;
  * @author Mark Vollmary
  * @author Christian Lechner
  */
-public class ArangoResultConverter {
+public class ArangoResultConverter<T> {
 
 	private final static String MISSING_FULL_COUNT = "Query result does not contain the full result count! "
 			+ "The most likely cause is a forgotten LIMIT clause in the query.";
@@ -63,43 +60,17 @@ public class ArangoResultConverter {
 	private final ArangoParameterAccessor accessor;
 	private final ArangoCursor<?> result;
 	private final ArangoOperations operations;
-	private final Class<?> domainClass;
+    private final Class<T> domainClass;
 
-	private static Map<Object, Method> TYPE_MAP = new HashMap<>();
-
-	/**
-	 * Build static map of all supported return types and the method used to convert them
-	 */
-	static {
-		try {
-			TYPE_MAP.put(List.class, ArangoResultConverter.class.getMethod("convertList"));
-			TYPE_MAP.put(Iterable.class, ArangoResultConverter.class.getMethod("convertList"));
-			TYPE_MAP.put(Collection.class, ArangoResultConverter.class.getMethod("convertList"));
-			TYPE_MAP.put(Page.class, ArangoResultConverter.class.getMethod("convertPage"));
-			TYPE_MAP.put(Slice.class, ArangoResultConverter.class.getMethod("convertPage"));
-			TYPE_MAP.put(Set.class, ArangoResultConverter.class.getMethod("convertSet"));
-			TYPE_MAP.put(ArangoCursor.class, ArangoResultConverter.class.getMethod("convertArangoCursor"));
-			TYPE_MAP.put(GeoResult.class, ArangoResultConverter.class.getMethod("convertGeoResult"));
-			TYPE_MAP.put(GeoResults.class, ArangoResultConverter.class.getMethod("convertGeoResults"));
-			TYPE_MAP.put(GeoPage.class, ArangoResultConverter.class.getMethod("convertGeoPage"));
-			TYPE_MAP.put(Optional.class, ArangoResultConverter.class.getMethod("convertOptional"));
-			TYPE_MAP.put("array", ArangoResultConverter.class.getMethod("convertArray"));
-		} catch (final NoSuchMethodException e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * @param accessor
-	 * @param result
-	 *            the query result returned by the driver
-	 * @param operations
-	 *            instance of arangoTemplate
-	 * @param domainClass
-	 *            class type of documents
+     * @param result      the query result returned by the driver
+     * @param operations  instance of arangoTemplate
+     * @param domainClass class type of documents
 	 */
 	public ArangoResultConverter(final ArangoParameterAccessor accessor, final ArangoCursor<?> result,
-		final ArangoOperations operations, final Class<?> domainClass) {
+                                 final ArangoOperations operations, final Class<T> domainClass) {
 		this.accessor = accessor;
 		this.result = result;
 		this.operations = operations;
@@ -114,23 +85,40 @@ public class ArangoResultConverter {
 	 */
 	public Object convertResult(final Class<?> type) {
 		try {
+            return convert(type);
+        } catch (final Exception e) {
+            throw new MappingException(String.format("Can't convert result to type %s!", type.getName()), e);
+        }
+    }
+
+    private Object convert(Class<?> type) {
 			if (type.isArray()) {
-				return TYPE_MAP.get("array").invoke(this);
-			}
-			if (!TYPE_MAP.containsKey(type)) {
+            return convertArray();
+        } else if (List.class.equals(type) || Iterable.class.equals(type) || Collection.class.equals(type)) {
+            return convertList();
+        } else if (Page.class.equals(type) || Slice.class.equals(type)) {
+            return convertPage();
+        } else if (Set.class.equals(type)) {
+            return convertSet();
+        } else if (ArangoCursor.class.equals(type)) {
+            return convertArangoCursor();
+        } else if (GeoResult.class.equals(type)) {
+            return convertGeoResult();
+        } else if (GeoResults.class.equals(type)) {
+            return convertGeoResults();
+        } else if (GeoPage.class.equals(type)) {
+            return convertGeoPage();
+        } else if (Optional.class.equals(type)) {
+            return convertOptional();
+        } else {
 				return getNext(result);
 			}
-			return TYPE_MAP.get(type).invoke(this);
-		} catch (final Exception e) {
-			throw new MappingException(String.format("Can't convert result to type %s!", type.getName()), e);
-		}
 	}
 
 	/**
 	 * Creates a Set return type from the given cursor
 	 * 
-	 * @param cursor
-	 *            query result from driver
+     * @param cursor query result from driver
 	 * @return Set containing the results
 	 */
 	private Set<?> buildSet(final ArangoCursor<?> cursor) {
@@ -140,73 +128,41 @@ public class ArangoResultConverter {
 	/**
 	 * Build a GeoResult from the given ArangoCursor
 	 *
-	 * @param cursor
-	 *            query result from driver
+     * @param cursor query result from driver
 	 * @return GeoResult object
 	 */
-	private GeoResult<?> buildGeoResult(final ArangoCursor<?> cursor) {
-		GeoResult<?> geoResult = null;
-		while (cursor.hasNext() && geoResult == null) {
-			final Object object = cursor.next();
-			if (!(object instanceof JsonNode)) {
-				continue;
-			}
-
-			final JsonNode slice = (JsonNode) object;
-			final JsonNode distSlice = slice.get("_distance");
-			final Double distanceInMeters = distSlice.isDouble() ? distSlice.doubleValue() : null;
-			if (distanceInMeters == null) {
-				continue;
-			}
-
-			final Object entity = operations.getConverter().read(domainClass, slice);
-			final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
-			geoResult = new GeoResult<>(entity, distance);
-		}
-		return geoResult;
+    private GeoResult<T> buildGeoResult(final ArangoCursor<JsonNode> cursor) {
+        return buildGeoResult(cursor.next());
 	}
 
 	/**
 	 * Construct a GeoResult from the given object
 	 *
-	 * @param object
-	 *            object representing one document in the result
+     * @param slice object representing one document in the result
 	 * @return GeoResult object
 	 */
-	private GeoResult<?> buildGeoResult(final Object object) {
-		if (object == null || !(object instanceof JsonNode)) {
-			return null;
-		}
-
-		final JsonNode slice = (JsonNode) object;
-		final JsonNode distSlice = slice.get("_distance");
-		final Double distanceInMeters = distSlice.isDouble() ? distSlice.doubleValue() : null;
-		if (distanceInMeters == null) {
-			return null;
-		}
-
-		final Object entity = operations.getConverter().read(domainClass, slice);
-		final Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
+    private GeoResult<T> buildGeoResult(final JsonNode slice) {
+        JsonNode distSlice = slice.get("_distance");
+        Double distanceInMeters = distSlice.isDouble() ? distSlice.doubleValue() : null;
+        T entity = operations.getConverter().read(domainClass, slice);
+		// FIXME: Unboxing of 'distanceInMeters' may produce 'NullPointerException'
+        Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
 		return new GeoResult<>(entity, distance);
 	}
 
 	/**
 	 * Build a GeoResults object with the ArangoCursor returned by query execution
 	 *
-	 * @param cursor
-	 *            ArangoCursor containing query results
+     * @param cursor ArangoCursor containing query results
 	 * @return GeoResults object with all results
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private GeoResults<?> buildGeoResults(final ArangoCursor<?> cursor) {
-		final List<GeoResult<?>> list = new LinkedList<>();
-		cursor.forEachRemaining(o -> {
-			final GeoResult<?> geoResult = buildGeoResult(o);
-			if (geoResult != null) {
-				list.add(geoResult);
-			}
-		});
-		return new GeoResults(list);
+    private GeoResults<T> buildGeoResults(final ArangoCursor<JsonNode> cursor) {
+        final List<GeoResult<T>> list = new LinkedList<>();
+        cursor.forEachRemaining(o -> list.add(buildGeoResult(o)));
+        // FIXME: DE-803
+        //        convert geoResults to Metrics.NEUTRAL before
+        //        invoking GeoResults.GeoResults(java.util.List<? extends org.springframework.data.geo.GeoResult<T>>)
+        return new GeoResults<>(list);
 	}
 
 	public Optional<?> convertOptional() {
@@ -230,17 +186,20 @@ public class ArangoResultConverter {
 		return result;
 	}
 
-	public GeoResult<?> convertGeoResult() {
-		return buildGeoResult(result);
+    @SuppressWarnings("unchecked")
+    public GeoResult<T> convertGeoResult() {
+        return buildGeoResult((ArangoCursor<JsonNode>) result);
 	}
 
-	public GeoResults<?> convertGeoResults() {
-		return buildGeoResults(result);
+    @SuppressWarnings("unchecked")
+    public GeoResults<T> convertGeoResults() {
+        return buildGeoResults((ArangoCursor<JsonNode>) result);
 	}
 
-	public GeoPage<?> convertGeoPage() {
+    @SuppressWarnings("unchecked")
+    public GeoPage<T> convertGeoPage() {
 		Assert.notNull(result.getStats().getFullCount(), MISSING_FULL_COUNT);
-		return new GeoPage<>(buildGeoResults(result), accessor.getPageable(), ((Number) result.getStats().getFullCount()).longValue());
+        return new GeoPage<>(buildGeoResults((ArangoCursor<JsonNode>) result), accessor.getPageable(), ((Number) result.getStats().getFullCount()).longValue());
 	}
 
 	public Object convertArray() {

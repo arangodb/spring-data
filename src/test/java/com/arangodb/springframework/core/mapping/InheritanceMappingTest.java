@@ -331,8 +331,8 @@ public class InheritanceMappingTest extends AbstractArangoTest {
 	public void overrideDocumentAnnotation() {
 		final SubClassWithOwnDocumentAnnotation doc = new SubClassWithOwnDocumentAnnotation();
 		template.insert(doc);
-		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("overrideDocAn").exists(), is(true));
-		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("overrideDocAn").count().getCount(),
+		assertThat(db.collection("overrideDocAn").exists(), is(true));
+		assertThat(db.collection("overrideDocAn").count().getCount(),
 			is(1L));
 	}
 
@@ -351,8 +351,8 @@ public class InheritanceMappingTest extends AbstractArangoTest {
 		edge.from = from;
 		edge.to = to;
 		template.insert(edge);
-		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("overrideEdgeAn").exists(), is(true));
-		assertThat(template.driver().db(ArangoTestConfiguration.DB).collection("overrideEdgeAn").count().getCount(),
+		assertThat(db.collection("overrideEdgeAn").exists(), is(true));
+		assertThat(db.collection("overrideEdgeAn").count().getCount(),
 			is(1L));
 	}
 

@@ -26,12 +26,12 @@ import com.arangodb.springframework.annotation.To;
 import com.arangodb.springframework.core.ArangoOperations;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 
 /**
  * @author Mark Vollmary
- *
  */
-public class EdgeToResolver extends AbstractResolver<To> implements RelationResolver<To> {
+public class EdgeToResolver extends AbstractResolver implements RelationResolver<To> {
 
 	private final ArangoOperations template;
 
@@ -41,8 +41,10 @@ public class EdgeToResolver extends AbstractResolver<To> implements RelationReso
 	}
 
 	@Override
-	public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes, final To annotation) {
-		return annotation.lazy() ? proxy(id, type, annotation, (i, t, a) -> _resolveOne(i, t)) : _resolveOne(id, type);
+    public Object resolveOne(final String id, final TypeInformation<?> type, Collection<TypeInformation<?>> traversedTypes,
+                             final To annotation) {
+        Supplier<Object> supplier = () -> _resolveOne(id, type);
+        return annotation.lazy() ? proxy(id, type, supplier) : supplier.get();
 	}
 
 	private Object _resolveOne(final String id, final TypeInformation<?> type) {
