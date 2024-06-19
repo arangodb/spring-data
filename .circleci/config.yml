@@ -18,7 +18,7 @@ commands:
           command: |
             sleep <<parameters.duration>>
             echo "Cancelling job as <<parameters.duration>> has elapsed"
-            curl --fail -X POST -H "Circle-Token: ${CIRCLE_TOKEN}" "https://circleci.com/api/v2/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/job/${CIRCLE_BUILD_NUM}/cancel"
+            curl --fail -X POST -H "Circle-Token: ${CIRCLE_TOKEN}" "https://circleci.com/api/v1.1/project/github/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/cancel"
   start-db:
     parameters:
       docker-img:
@@ -78,11 +78,11 @@ commands:
           name: Generate Cache Checksum
           command: find . -name 'pom.xml' | sort | xargs cat > /tmp/maven_cache_seed
       - restore_cache:
-          key: maven-{{ checksum "/tmp/maven_cache_seed" }}
+          key: maven-{{ .Environment.CIRCLE_JOB }}-{{ checksum "/tmp/maven_cache_seed" }}
   store_cache:
     steps:
       - save_cache:
-          key: maven-{{ checksum "/tmp/maven_cache_seed" }}
+          key: maven-{{ .Environment.CIRCLE_JOB }}-{{ checksum "/tmp/maven_cache_seed" }}
           paths:
             - ~/.m2/repository
 
@@ -213,6 +213,7 @@ workflows:
   deploy:
     jobs:
       - deploy:
+          context: java-release
           filters:
             tags:
               only: /^deploy.*/

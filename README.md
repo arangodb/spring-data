@@ -1,10 +1,10 @@
-![ArangoDB_Logo_RGB_Full_Color_Black-f](https://user-images.githubusercontent.com/7775349/211683174-7113fe7f-3707-4d15-b180-bf2ddaa86617.jpg)
+![ArangoDB-Logo](https://www.arangodb.com/wp-content/uploads/2016/05/ArangoDB_logo_@2.png)
 
 
 # Spring Data ArangoDB
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.arangodb/arangodb-spring-data)
-[![Actions Status](https://github.com/arangodb/spring-data/workflows/Java%20CI/badge.svg)](https://github.com/arangodb/spring-data/actions)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/arangodb/spring-data/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/arangodb/spring-data/tree/main)
 
 - [Reference](https://www.arangodb.com/docs/stable/drivers/spring-data-reference.html)
 - [Tutorial](https://university.arangodb.com/courses/spring-data-tutorial)
