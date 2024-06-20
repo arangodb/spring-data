@@ -101,8 +101,7 @@ abstract class TournamentRepositoryAbstract extends AbstractRepositoryTest {
             double expectedDistKm = distances.get(current.getContent()).in(Metrics.KILOMETERS).getValue();
             assertThat(current.getContent()).isEqualTo(expected.get(i));
             assertThat(current.getDistance().in(Metrics.KILOMETERS).getValue()).isCloseTo(expectedDistKm, withinPercentage(.01));
-            // FIXME: DE-803
-            // assertThat(page.getAverageDistance().in(Metrics.KILOMETERS).getValue()).isCloseTo(expectedDistKm, withinPercentage(.01));
+            assertThat(page.getAverageDistance().in(Metrics.KILOMETERS).getValue()).isCloseTo(expectedDistKm, withinPercentage(.01));
             checkRefs(current.getContent());
         }
     }

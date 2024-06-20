@@ -143,10 +143,8 @@ public class ArangoResultConverter<T> {
 	 */
     private GeoResult<T> buildGeoResult(final JsonNode slice) {
         JsonNode distSlice = slice.get("_distance");
-        Double distanceInMeters = distSlice.isDouble() ? distSlice.doubleValue() : null;
         T entity = operations.getConverter().read(domainClass, slice);
-		// FIXME: Unboxing of 'distanceInMeters' may produce 'NullPointerException'
-        Distance distance = new Distance(distanceInMeters / 1000, Metrics.KILOMETERS);
+		Distance distance = new Distance(distSlice.doubleValue() / 1000, Metrics.KILOMETERS).in(Metrics.NEUTRAL);
 		return new GeoResult<>(entity, distance);
 	}
 
@@ -159,9 +157,6 @@ public class ArangoResultConverter<T> {
     private GeoResults<T> buildGeoResults(final ArangoCursor<JsonNode> cursor) {
         final List<GeoResult<T>> list = new LinkedList<>();
         cursor.forEachRemaining(o -> list.add(buildGeoResult(o)));
-        // FIXME: DE-803
-        //        convert geoResults to Metrics.NEUTRAL before
-        //        invoking GeoResults.GeoResults(java.util.List<? extends org.springframework.data.geo.GeoResult<T>>)
         return new GeoResults<>(list);
 	}
 
