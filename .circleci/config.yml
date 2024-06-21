@@ -51,7 +51,7 @@ commands:
     steps:
       - run:
           name: mvn install
-          command: mvn install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true
+          command: mvn install -Dmaven.test.skip=true -Dgpg.skip=true -Dmaven.javadoc.skip=true
   test:
     parameters:
       working_directory:
@@ -94,12 +94,12 @@ commands:
     steps:
       - run:
           name: Deploy to Apache Maven Central
-          command: mvn -s .circleci/maven-release-settings.xml -DskipTests deploy
+          command: mvn -s .circleci/maven-release-settings.xml -Dmaven.test.skip=true deploy
   release:
     steps:
       - run:
           name: Release to Apache Maven Central
-          command: mvn -Dmaven.test.skip=true nexus-staging:release
+          command: mvn -s .circleci/maven-release-settings.xml -Dmaven.test.skip=true nexus-staging:release
 
 executors:
   j17:
