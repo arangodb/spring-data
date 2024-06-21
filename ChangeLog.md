@@ -6,7 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
-- updated `arangodb-java-driver` to version `7.6.0`
+## [4.2.0] - 2024-06-21
+
+- added support to Spring Data `3.3` (DE-816, #306)
+- added `LazyLoadingProxy.isResolved()` to check whether a lazy proxy has been already resolved or not (DE-805, #271)
+- added support conputed values in data definitions (DE-779, [docs-hugo#477](https://github.com/arangodb/docs-hugo/pull/477))
+- added support mapping of computed values (DE-604, [docs-hugo#477](https://github.com/arangodb/docs-hugo/pull/477))
+- added configuration for changing `ArangoRepository#save()` behavior returning new entity instances instead of original ones (DE-539, #295, [docs-hugo#476](https://github.com/arangodb/docs-hugo/pull/476))
+- added support for Java records, Kotlin data classes and immutable entities (DE-539, #295, [docs-hugo#476](https://github.com/arangodb/docs-hugo/pull/476))
+- updated `arangodb-java-driver` to version `7.7.1`
+- fixed unit of measure of GeoResults distance (DE-803)
+- fixed concurrency in annotation cache (#302)
+- dropped support for Spring Data `3.1` (DE-816, #306)
+- moved CI to CircleCI (DE-823, #308)
+
 
 ## [4.1.0] - 2024-01-24
 
