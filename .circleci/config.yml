@@ -33,6 +33,7 @@ commands:
           command: ./docker/start_db.sh
           environment:
             DOCKER_IMAGE: <<parameters.docker-img>>
+            STARTER_MODE: <<parameters.topology>>
   mvn-info:
     parameters:
       working_directory:
