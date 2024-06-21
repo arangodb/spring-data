@@ -29,10 +29,10 @@ commands:
         default: 'single'
     steps:
       - run:
-          environment:
-            DOCKER_IMAGE: <<parameters.docker-img>>
           name: Start Database
           command: ./docker/start_db.sh
+          environment:
+            DOCKER_IMAGE: <<parameters.docker-img>>
   mvn-info:
     parameters:
       working_directory:
@@ -100,6 +100,9 @@ commands:
       - run:
           name: Release to Apache Maven Central
           command: mvn -s .circleci/maven-release-settings.xml -Dmaven.test.skip=true nexus-staging:release
+          environment:
+            MAVEN_OPTS: "--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED"
+
 
 executors:
   j17:
