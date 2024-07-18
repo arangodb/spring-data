@@ -26,7 +26,6 @@ import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.template.CollectionCallback;
 import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.*;
 import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionStatus;
@@ -80,7 +79,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
      * Creates a new transaction object. Any holder bound will be reused.
      */
     @Override
-    protected ArangoTransactionObject doGetTransaction() {
+    protected Object doGetTransaction() {
         ArangoTransactionHolder holder = (ArangoTransactionHolder) TransactionSynchronizationManager.getResource(this);
         try {
             return new ArangoTransactionObject(operations.db(), CollectionCallback.fromOperations(operations), getDefaultTimeout(), holder);

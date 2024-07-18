@@ -54,8 +54,7 @@ public class TransactionAttributeTemplate extends TransactionTemplate implements
 
     public TransactionAttributeTemplate(PlatformTransactionManager transactionManager, TransactionDefinition transactionDefinition) {
         super(transactionManager, transactionDefinition);
-        if (transactionDefinition instanceof TransactionAttribute) {
-            TransactionAttribute transactionAttribute = (TransactionAttribute) transactionDefinition;
+        if (transactionDefinition instanceof TransactionAttribute transactionAttribute) {
             setQualifier(transactionAttribute.getQualifier());
             setLabels(transactionAttribute.getLabels());
             setRollbackOn(transactionAttribute::rollbackOn);
