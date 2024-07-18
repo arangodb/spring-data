@@ -130,10 +130,6 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         });
     }
 
-	private ArangoCollection _collection(final String name, boolean transactional) {
-		return _collection(name, null, null, transactional);
-    }
-
 	private ArangoCollection _collection(final Class<?> entityClass, boolean transactional) {
 		return _collection(entityClass, null, transactional);
     }

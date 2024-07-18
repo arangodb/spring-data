@@ -46,7 +46,6 @@ import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Creates a full AQL query from a PartTree and ArangoParameterAccessor
@@ -89,7 +88,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 		super(tree, accessor);
 		this.context = context;
 		this.domainClass = domainClass;
-		collectionName = AqlUtils.buildCollectionName(context.getPersistentEntity(domainClass).getCollection());
+		collectionName = AqlUtils.buildCollectionName(context.getRequiredPersistentEntity(domainClass).getCollection());
 		this.tree = tree;
 		this.accessor = accessor;
 		this.geoFields = geoFields;
@@ -127,7 +126,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 		}
 		final StringBuilder query = new StringBuilder();
 
-		final String with = withCollections.stream().collect(Collectors.joining(", "));
+		final String with = String.join(", ", withCollections);
 		if (!with.isEmpty()) {
 			query.append("WITH ").append(with).append(" ");
 		}
@@ -160,7 +159,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 			if (sort.isUnsorted()) {
 				sortString = distanceSortKey;
 			} else {
-				sortString = distanceSortKey + ", " + sortString.substring(5, sortString.length());
+				sortString = distanceSortKey + ", " + sortString.substring(5);
 			}
 		}
 		query.append(sortString);
@@ -170,7 +169,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 		}
 
 		final Pageable pageable = accessor.getPageable();
-		if (pageable != null && pageable.isPaged()) {
+		if (pageable.isPaged()) {
 			query.append(" ").append(AqlUtils.buildLimitClause(pageable));
 		}
 		if (tree.isDelete()) {
@@ -261,7 +260,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 			--propertiesLeft;
 			final ArangoPersistentProperty property = (ArangoPersistentProperty) object;
 			if (propertiesLeft == 0) {
-				simpleProperties.append("." + AqlUtils.buildFieldName(property.getFieldName()));
+				simpleProperties.append(".").append(AqlUtils.buildFieldName(property.getFieldName()));
 				break;
 			}
 			if (property.getRelations().isPresent()) {
@@ -274,11 +273,11 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 				final Class<?>[] edgeClasses = relations.edges();
 				final StringBuilder edgesBuilder = new StringBuilder();
 				for (final Class<?> edge : edgeClasses) {
-					String collection = context.getPersistentEntity(edge).getCollection();
+					String collection = context.getRequiredPersistentEntity(edge).getCollection();
 					if (collection.split("-").length > 1) {
 						collection = "`" + collection + "`";
 					}
-					edgesBuilder.append((edgesBuilder.length() == 0 ? "" : ", ") + collection);
+					edgesBuilder.append(edgesBuilder.isEmpty() ? "" : ", ").append(collection);
 				}
 				final String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
 				final String entity = "e" + Integer.toString(++varsUsed);
@@ -286,22 +285,22 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 				simpleProperties = new StringBuilder();
 				final String iteration = format(TEMPLATE, entity, depths, direction, prevEntity, nested, edges);
 				final String predicate = format(PREDICATE_TEMPLATE, iteration);
-				predicateTemplate = predicateTemplate.length() == 0 ? predicate : format(predicateTemplate, predicate);
+				predicateTemplate = predicateTemplate.isEmpty() ? predicate : format(predicateTemplate, predicate);
 			} else if (property.isCollectionLike()) {
 				if (property.getRef().isPresent()) {
 					// collection of references
 					final String TEMPLATE = "FOR %s IN %s FILTER %s._id IN %s%s";
 					final String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
 					final String entity = "e" + Integer.toString(++varsUsed);
-					String collection = context.getPersistentEntity(property.getComponentType()).getCollection();
+					String collection = context.getRequiredPersistentEntity(property).getCollection();
 					if (collection.split("-").length > 1) {
 						collection = "`" + collection + "`";
 					}
-					final String name = simpleProperties.toString() + "." + AqlUtils.buildFieldName(property.getFieldName());
+					final String name = simpleProperties + "." + AqlUtils.buildFieldName(property.getFieldName());
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate
+					predicateTemplate = predicateTemplate.isEmpty() ? predicate
 							: format(predicateTemplate, predicate);
 				} else {
 					// collection
@@ -312,7 +311,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate
+					predicateTemplate = predicateTemplate.isEmpty() ? predicate
 							: format(predicateTemplate, predicate);
 				}
 			} else {
@@ -320,20 +319,20 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 					// single reference
 					final String TEMPLATE = "FOR %s IN %s FILTER %s._id == %s%s";
 					final String prevEntity = "e" + (varsUsed == 0 ? "" : Integer.toString(varsUsed));
-					final String entity = "e" + Integer.toString(++varsUsed);
-					String collection = context.getPersistentEntity(property.getType()).getCollection();
+					final String entity = "e" + ++varsUsed;
+					String collection = context.getRequiredPersistentEntity(property).getCollection();
 					if (collection.split("-").length > 1) {
 						collection = "`" + collection + "`";
 					}
-					final String name = simpleProperties.toString() + "." + AqlUtils.buildFieldName(property.getFieldName());
+					final String name = simpleProperties + "." + AqlUtils.buildFieldName(property.getFieldName());
 					simpleProperties = new StringBuilder();
 					final String iteration = format(TEMPLATE, entity, collection, entity, prevEntity, name);
 					final String predicate = format(PREDICATE_TEMPLATE, iteration);
-					predicateTemplate = predicateTemplate.length() == 0 ? predicate
+					predicateTemplate = predicateTemplate.isEmpty() ? predicate
 							: format(predicateTemplate, predicate);
 				} else {
 					// simple property
-					simpleProperties.append("." + AqlUtils.buildFieldName(property.getFieldName()));
+					simpleProperties.append(".").append(AqlUtils.buildFieldName(property.getFieldName()));
 				}
 			}
 		}
@@ -385,7 +384,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 	 * @param part
 	 */
 	private void checkUniqueLocation(final Part part) {
-		isUnique = isUnique == null ? true : isUnique;
+		isUnique = isUnique == null || isUnique;
 		isUnique = (uniqueLocation == null || uniqueLocation.equals(ignorePropertyCase(part))) ? isUnique : false;
 		if (!geoFields.isEmpty()) {
 			Assert.isTrue(isUnique, "Different location fields are used - Distance is ambiguous");
@@ -398,8 +397,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 		final String[] templateAndProperty = createPredicateTemplateAndPropertyString(part);
 		final String template = templateAndProperty[0];
 		final String property = templateAndProperty[1];
-		Criteria criteria = null;
-		final boolean checkUnique = part.getProperty().toDotPath().split(".").length <= 1;
+		final boolean checkUnique = part.getProperty().toDotPath().split("\\.").length <= 1;
 		Class<?> type = part.getProperty().getType();
 
 		// whether the current field type is a type encoded as geoJson
@@ -410,6 +408,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 			hasGeoJsonType = true;
 		}
 
+		Criteria criteria = null;
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:
 			criteria = Criteria.eql(ignorePropertyCase(part, property), bind(part, iterator));
@@ -431,7 +430,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 			break;
 		case EXISTS:
 			final String document = property.substring(0, property.lastIndexOf("."));
-			final String attribute = property.substring(property.lastIndexOf(".") + 1, property.length());
+			final String attribute = property.substring(property.lastIndexOf(".") + 1);
 			criteria = Criteria.exists(document, attribute);
 			break;
 		case BEFORE:
@@ -492,10 +491,9 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 			if (nearValue instanceof Point point) {
 				checkUniquePoint(point);
 			} else {
-				bindingCounter = binding.bind(nearValue, shouldIgnoreCase(part), null, point -> checkUniquePoint(point),
+				bindingCounter = binding.bind(nearValue, shouldIgnoreCase(part), null, this::checkUniquePoint,
 						bindingCounter);
 			}
-			criteria = null;
 			break;
 		case WITHIN:
 			if (checkUnique) {
@@ -588,24 +586,24 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 
 	private int bind(final Part part, final Object value, final Boolean borderStatus) {
 		final int index = bindingCounter;
-		bindingCounter = binding.bind(value, shouldIgnoreCase(part), borderStatus, point -> checkUniquePoint(point),
+		bindingCounter = binding.bind(value, shouldIgnoreCase(part), borderStatus, this::checkUniquePoint,
 			bindingCounter);
 		return index;
 	}
 
 	private int bind(final Object value) {
 		final int index = bindingCounter;
-		bindingCounter = binding.bind(value, false, null, point -> checkUniquePoint(point), bindingCounter);
+		bindingCounter = binding.bind(value, false, null, this::checkUniquePoint, bindingCounter);
 		return index;
 	}
 
 	private void bindPoint(final Part part, final Object value, final boolean toGeoJson) {
-		bindingCounter = binding.bindPoint(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
+		bindingCounter = binding.bindPoint(value, shouldIgnoreCase(part), this::checkUniquePoint,
 			bindingCounter, toGeoJson);
 	}
 
 	private void bindCircle(final Part part, final Object value, final boolean toGeoJson) {
-		bindingCounter = binding.bindCircle(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
+		bindingCounter = binding.bindCircle(value, shouldIgnoreCase(part), this::checkUniquePoint,
 			bindingCounter, toGeoJson);
 	}
 
@@ -614,7 +612,7 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 	}
 
 	private void bindRing(final Part part, final Object value, final boolean toGeoJson) {
-		bindingCounter = binding.bindRing(value, shouldIgnoreCase(part), point -> checkUniquePoint(point),
+		bindingCounter = binding.bindRing(value, shouldIgnoreCase(part), this::checkUniquePoint,
 			bindingCounter, toGeoJson);
 	}
 
@@ -632,7 +630,6 @@ public class DerivedQueryCreator extends AbstractQueryCreator<QueryWithCollectio
 		propertyPath.stream()
 				.filter(property -> {
 					ArangoPersistentProperty p = context.getPersistentPropertyPath(property).getBaseProperty();
-					if (p == null) return false;
 					Optional<Ref> ref = p.getRef();
 					Optional<Relations> rels = p.getRelations();
 					return ref.isPresent() || rels.isPresent();

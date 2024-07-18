@@ -33,7 +33,7 @@ import java.util.function.Function;
  */
 public class QueryTransactionBridge {
 
-    private static final ThreadLocal<Function<Collection<String>, String>> CURRENT_TRANSACTION = new NamedInheritableThreadLocal<Function<Collection<String>, String>>("ArangoTransactionBegin") {
+    private static final ThreadLocal<Function<Collection<String>, String>> CURRENT_TRANSACTION = new NamedInheritableThreadLocal<>("ArangoTransactionBegin") {
         @Override
         protected Function<Collection<String>, String> initialValue() {
             return any -> null;
