@@ -34,8 +34,11 @@ import java.util.function.Supplier;
  */
 public class EdgeToResolver extends AbstractResolver implements RelationResolver<To> {
 
+	private final ArangoOperations template;
+
 	public EdgeToResolver(final ArangoOperations template, QueryTransactionBridge transactionBridge) {
-		super(template, transactionBridge);
+		super(template.getConverter().getConversionService(), transactionBridge);
+		this.template = template;
 	}
 
 	@Override

@@ -498,14 +498,14 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-	public <T> Iterable<T> findAll(final Class<T> entityClass, DocumentReadOptions options) throws DataAccessException {
+	public <T> Iterable<T> findAll(DocumentReadOptions options, final Class<T> entityClass) throws DataAccessException {
         final String query = "FOR entity IN @@col RETURN entity";
         final Map<String, Object> bindVars = Collections.singletonMap("@col", entityClass);
 		return query(query, bindVars, asQueryOptions(options), entityClass).asListRemaining();
     }
 
     @Override
-	public <T> Iterable<T> findAll(final Iterable<?> ids, final Class<T> entityClass, DocumentReadOptions options)
+	public <T> Iterable<T> findAll(final Iterable<?> ids, DocumentReadOptions options, final Class<T> entityClass)
             throws DataAccessException {
         try {
             final Collection<String> keys = new ArrayList<>();
@@ -696,7 +696,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
-	public boolean exists(final Object id, final Class<?> entityClass, DocumentExistsOptions options) throws DataAccessException {
+	public boolean exists(final Object id, DocumentExistsOptions options, final Class<?> entityClass) throws DataAccessException {
         try {
 			boolean transactional = options != null && options.getStreamTransactionId() != null;
 			return _collection(entityClass, transactional).documentExists(determineDocumentKeyFromId(id), options);

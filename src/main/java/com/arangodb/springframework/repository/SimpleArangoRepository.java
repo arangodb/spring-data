@@ -36,8 +36,6 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.template.ArangoTemplate;
 import com.arangodb.springframework.core.util.AqlUtils;
 import com.arangodb.springframework.repository.query.QueryTransactionBridge;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.*;
 import org.springframework.data.repository.query.FluentQuery;
@@ -55,8 +53,6 @@ import java.util.function.Function;
 @Repository
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleArangoRepository.class);
 
 	private final ArangoTemplate arangoTemplate;
 	private final ArangoConverter converter;
@@ -108,7 +104,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
-		Iterable<S> saved = arangoTemplate.repsertAll(entities, domainClass, defaultQueryOptions());
+		Iterable<S> saved = arangoTemplate.repsertAll(entities, defaultQueryOptions(), domainClass);
 		return returnOriginalEntities ? entities : saved;
 	}
 
@@ -131,7 +127,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public boolean existsById(final ID id) {
-		return arangoTemplate.exists(id, domainClass, defaultExistsOptions());
+		return arangoTemplate.exists(id, defaultExistsOptions(), domainClass);
 	}
 
 	/**
@@ -141,7 +137,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAll() {
-		return arangoTemplate.findAll(domainClass, defaultReadOptions());
+		return arangoTemplate.findAll(defaultReadOptions(), domainClass);
 	}
 
 	/**
@@ -153,7 +149,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAllById(final Iterable<ID> ids) {
-		return arangoTemplate.findAll(ids, domainClass, defaultReadOptions());
+		return arangoTemplate.findAll(ids, defaultReadOptions(), domainClass);
 	}
 
 	/**
@@ -175,7 +171,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public void deleteById(final ID id) {
 		try {
-			arangoTemplate.delete(id, domainClass, defaultDeleteOptions());
+			arangoTemplate.delete(id, defaultDeleteOptions(), domainClass);
 		} catch (DocumentNotFoundException unknown) {
 //			 silently ignored
 		}
@@ -190,14 +186,14 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
     @Override
     public void delete(final T entity) {
 		Object id = persistentEntity.getIdentifierAccessor(entity).getRequiredIdentifier();
-        DocumentDeleteOptions opts = new DocumentDeleteOptions();
+        DocumentDeleteOptions opts = defaultDeleteOptions();
 		persistentEntity.getRevProperty()
                 .map(persistentEntity.getPropertyAccessor(entity)::getProperty)
 				.map(r -> converter.convertIfNecessary(r, String.class))
                 .ifPresent(opts::ifMatch);
 
         try {
-            arangoTemplate.delete(id, opts, domainClass, defaultDeleteOptions());
+            arangoTemplate.delete(id, opts, domainClass);
         } catch (DocumentNotFoundException e) {
             throw new OptimisticLockingFailureException(e.getMessage(), e);
         }
@@ -208,7 +204,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @implNote do not add @Override annotation to keep backwards compatibility with spring-data-commons 2.4
      */
 	public void deleteAllById(Iterable<? extends ID> ids) {
-		MultiDocumentEntity<DocumentDeleteEntity<?>> res = arangoTemplate.deleteAllById(ids, domainClass, defaultDeleteOptions());
+		MultiDocumentEntity<DocumentDeleteEntity<T>> res = arangoTemplate.deleteAllById(ids, defaultDeleteOptions(), domainClass);
 		for (ErrorEntity error : res.getErrors()) {
 			// Entities that aren't found in the persistence store are silently ignored.
 			if (error.getErrorNum() != 1202) {
