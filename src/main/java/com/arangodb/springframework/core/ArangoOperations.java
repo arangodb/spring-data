@@ -105,6 +105,8 @@ public interface ArangoOperations {
 	 *
 	 * @param query
 	 *            An AQL query string
+	 * @param options
+	 *            Additional options that will be passed to the query API, can be null
 	 * @param entityClass
 	 *            The entity type of the result
 	 * @return cursor of the results
@@ -189,7 +191,9 @@ public interface ArangoOperations {
 	 * @return information about the documents
 	 * @throws DataAccessException
 	 */
-	MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAllById(Iterable<?> ids, Class<?> entityClass) throws DataAccessException;
+	default <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteAllById(Iterable<?> ids, Class<T> entityClass) throws DataAccessException {
+		return deleteAllById(ids, new DocumentDeleteOptions(), entityClass);
+	}
 
 	/**
 	 * Deletes the document with the given {@code id} from a collection.
@@ -365,12 +369,9 @@ public interface ArangoOperations {
 	/**
 	 * Retrieves the document with the given {@code id} from a collection.
 	 *
-	 * @param id
-	 *            The id or key of the document
-	 * @param entityClass
-	 *            The entity class which represents the collection
-	 * @param options
-	 *            Additional options, can be null
+	 * @param id          The id or key of the document
+	 * @param entityClass The entity class which represents the collection
+	 * @param options     Additional options, can be null
 	 * @return the document identified by the id
 	 * @throws DataAccessException
 	 */
@@ -393,31 +394,28 @@ public interface ArangoOperations {
 	/**
 	 * Retrieves all documents from a collection.
 	 *
-	 * @param entityClass
-	 *            The entity class which represents the collection
+	 * @param entityClass The entity class which represents the collection
 	 * @return the documents
 	 * @throws DataAccessException
 	 */
-	<T> Iterable<T> findAll(Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
+	<T> Iterable<T> findAll(DocumentReadOptions options, Class<T> entityClass) throws DataAccessException;
 
 	default <T> Iterable<T> findAll(Class<T> entityClass) throws DataAccessException {
-		return findAll(entityClass, new DocumentReadOptions());
+		return findAll(new DocumentReadOptions(), entityClass);
 	}
 
 	/**
 	 * Retrieves multiple documents with the given {@code ids} from a collection.
 	 *
-	 * @param ids
-	 *            The ids or keys of the documents
-	 * @param entityClass
-	 *            The entity class which represents the collection
+	 * @param ids         The ids or keys of the documents
+	 * @param entityClass The entity class which represents the collection
 	 * @return the documents
 	 * @throws DataAccessException
 	 */
-	<T> Iterable<T> findAll(final Iterable<?> ids, final Class<T> entityClass, DocumentReadOptions options) throws DataAccessException;
+	<T> Iterable<T> findAll(final Iterable<?> ids, DocumentReadOptions options, final Class<T> entityClass) throws DataAccessException;
 
 	default <T> Iterable<T> findAll(final Iterable<?> ids, final Class<T> entityClass) throws DataAccessException {
-		return findAll(ids, entityClass, new DocumentReadOptions());
+		return findAll(ids, new DocumentReadOptions(), entityClass);
 	}
 
 	/**
@@ -512,17 +510,15 @@ public interface ArangoOperations {
 	/**
 	 * Checks whether the document exists by reading a single document head
 	 *
-	 * @param id
-	 *            The id or key of the document
-	 * @param entityClass
-	 *            The entity type representing the collection
+	 * @param id          The id or key of the document
+	 * @param entityClass The entity type representing the collection
 	 * @return true if the document exists, false if not
 	 * @throws DataAccessException
 	 */
-	boolean exists(Object id, Class<?> entityClass, DocumentExistsOptions options) throws DataAccessException;
+	boolean exists(Object id, DocumentExistsOptions options, Class<?> entityClass) throws DataAccessException;
 
 	default boolean exists(Object id, Class<?> entityClass) throws DataAccessException {
-		return exists(id, entityClass, new DocumentExistsOptions());
+		return exists(id, new DocumentExistsOptions(), entityClass);
 	}
 
 	/**
