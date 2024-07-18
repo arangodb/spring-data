@@ -114,7 +114,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
 
     /**
      * Commit the current stream transaction. The query bridge is cleared
-     * afterwards.
+     * afterward.
      *
      * @see ArangoDatabase#commitStreamTransaction(String)
      * @see QueryTransactionBridge#clearCurrentTransaction()
@@ -147,7 +147,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
 
     /**
      * Roll back the current stream transaction. The query bridge is cleared
-     * afterwards.
+     * afterward.
      *
      * @see ArangoDatabase#abortStreamTransaction(String)
      * @see QueryTransactionBridge#clearCurrentTransaction()
@@ -169,7 +169,7 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
 
     /**
      * Check if the transaction object has the bound holder. For new
-     * transactions the holder will be bound afterwards.
+     * transactions the holder will be bound afterward.
      */
     @Override
     protected boolean isExistingTransaction(Object transaction) throws TransactionException {
@@ -189,7 +189,6 @@ public class ArangoTransactionManager extends AbstractPlatformTransactionManager
     }
 
     /**
-     * Any transaction object is configured according to the definition upfront.
      * Bind the holder for the first new transaction created.
      *
      * @see ArangoTransactionHolder
