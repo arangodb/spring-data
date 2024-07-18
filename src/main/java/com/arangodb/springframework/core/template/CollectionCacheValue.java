@@ -30,6 +30,7 @@ class CollectionCacheValue {
 	public Collection<IndexEntity> getIndexes() {
 		return indexes;
 	}
+
 	public boolean addEntityClass(final Class<?> entityClass) {
 		return entities.add(entityClass);
 	}

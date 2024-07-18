@@ -171,7 +171,7 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 			final ArangoParameter param = bindableParams.getParameter(i);
 			final Object value = accessor.getBindableValue(i);
 			if (param.isNamedParameter()) {
-				bindVars.put(param.getName().get(), value);
+				param.getName().ifPresent(name -> bindVars.put(name, value));
 			} else {
 				final String key = String.valueOf(param.getIndex());
 				final String collectionKey = "@" + key;

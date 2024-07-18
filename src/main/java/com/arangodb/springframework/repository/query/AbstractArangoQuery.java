@@ -20,7 +20,6 @@
 
 package com.arangodb.springframework.repository.query;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -94,7 +93,7 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 
 	private void logWarningsIfNecessary(final ArangoCursor<?> result) {
 		result.getWarnings().forEach(warning -> {
-			LOGGER.warn("Query warning at [" + method + "]: " + warning.getCode() + " - " + warning.getMessage());
+			LOGGER.warn("Query warning at [{}]: {} - {}", method, warning.getCode(), warning.getMessage());
 		});
 	}
 

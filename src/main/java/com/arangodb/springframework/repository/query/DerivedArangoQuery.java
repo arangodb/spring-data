@@ -28,7 +28,6 @@ import com.arangodb.springframework.repository.query.derived.BindParameterBindin
 import com.arangodb.springframework.repository.query.derived.DerivedQueryCreator;
 import org.springframework.data.repository.query.parser.PartTree;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
