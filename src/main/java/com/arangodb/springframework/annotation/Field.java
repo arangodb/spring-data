@@ -32,12 +32,12 @@ import java.lang.annotation.Target;
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface Field {
 
-	/**
-	 * The field-name to be used to store the field inside the document.
-	 */
-	String value() default "";
+    /**
+     * The field-name to be used to store the field inside the document.
+     */
+    String value() default "";
 
 }

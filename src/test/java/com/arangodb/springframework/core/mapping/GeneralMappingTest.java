@@ -23,7 +23,6 @@ package com.arangodb.springframework.core.mapping;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.ArangoTestConfiguration;
 import com.arangodb.springframework.AuditorProvider;
 import com.arangodb.springframework.annotation.*;
 import com.arangodb.springframework.core.convert.ArangoConverter;
@@ -42,10 +41,15 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
@@ -86,23 +90,114 @@ public class GeneralMappingTest extends AbstractArangoTest {
         assertThat(result.get(0).getRev(), is(nullValue()));
     }
 
-    public static class FieldNameTestEntity extends BasicTestEntity {
+    public static class FieldNameTestEntityOnField extends BasicTestEntity {
         @Field("alt-test")
         private String test;
     }
 
     @Test
-    public void fieldNameAnnotation() {
-        final FieldNameTestEntity entity = new FieldNameTestEntity();
+    public void fieldNameAnnotationOnField() {
+        final FieldNameTestEntityOnField entity = new FieldNameTestEntityOnField();
         entity.test = "1234";
         final DocumentEntity res = template.insert(entity);
         String colName = res.getId().split("/")[0];
-        final ObjectNode slice = db
+        final FieldNameTestEntityOnField read = db
                 .collection(colName)
-                .getDocument(res.getKey(), ObjectNode.class);
-        assertThat(slice, is(notNullValue()));
-        assertThat(slice.get("alt-test").isTextual(), is(true));
-        assertThat(slice.get("alt-test").textValue(), is(entity.test));
+                .getDocument(res.getKey(), FieldNameTestEntityOnField.class);
+        assertThat(read, is(notNullValue()));
+        assertThat(read.test, is("1234"));
+    }
+
+    public static class FieldNameTestEntityOnGetter extends BasicTestEntity {
+        private String test;
+
+        @Field("alt-test")
+        public String getTest() {
+            return test;
+        }
+    }
+
+    @Test
+    public void fieldNameAnnotationOnGetter() {
+        final FieldNameTestEntityOnGetter entity = new FieldNameTestEntityOnGetter();
+        entity.test = "1234";
+        final DocumentEntity res = template.insert(entity);
+        String colName = res.getId().split("/")[0];
+        final FieldNameTestEntityOnGetter read = db
+                .collection(colName)
+                .getDocument(res.getKey(), FieldNameTestEntityOnGetter.class);
+        assertThat(read, is(notNullValue()));
+        assertThat(read.getTest(), is("1234"));
+    }
+
+    public static class FieldNameTestEntityOnSetter extends BasicTestEntity {
+        private String test;
+
+        @Field("alt-test")
+        public void setTest(String test) {
+            this.test = test;
+        }
+    }
+
+    @Test
+    public void fieldNameAnnotationOnSetter() {
+        final FieldNameTestEntityOnSetter entity = new FieldNameTestEntityOnSetter();
+        entity.setTest("1234");
+        final DocumentEntity res = template.insert(entity);
+        String colName = res.getId().split("/")[0];
+        final FieldNameTestEntityOnSetter read = db
+                .collection(colName)
+                .getDocument(res.getKey(), FieldNameTestEntityOnSetter.class);
+        assertThat(read, is(notNullValue()));
+        assertThat(read.test, is("1234"));
+    }
+
+    @Document
+    public record FieldNameTestOnRecordField(
+            @Id
+            String id,
+
+            @Field("alt-test")
+            String test
+    ) {
+    }
+
+    @Test
+    public void fieldNameAnnotationOnRecord() {
+        final FieldNameTestOnRecordField entity = new FieldNameTestOnRecordField("1234", "1234");
+        final DocumentEntity res = template.insert(entity);
+        String colName = res.getId().split("/")[0];
+        final FieldNameTestOnRecordField read = db
+                .collection(colName)
+                .getDocument(res.getKey(), FieldNameTestOnRecordField.class);
+        assertThat(read, is(notNullValue()));
+        assertThat(read.test, is("1234"));
+    }
+
+    @Field
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.FIELD})
+    public @interface MyField {
+        @AliasFor(annotation = Field.class, attribute = "value")
+        String value() default "";
+    }
+
+    public static class FieldNameTestEntityOnFieldMeta extends BasicTestEntity {
+        @MyField("alt-test")
+        private String test;
+    }
+
+    @Test
+    public void fieldNameAnnotationOnFieldMeta() {
+        final FieldNameTestEntityOnFieldMeta entity = new FieldNameTestEntityOnFieldMeta();
+        entity.test = "1234";
+        final DocumentEntity res = template.insert(entity);
+        String colName = res.getId().split("/")[0];
+        final FieldNameTestEntityOnFieldMeta read = db
+                .collection(colName)
+                .getDocument(res.getKey(), FieldNameTestEntityOnFieldMeta.class);
+        assertThat(read, is(notNullValue()));
+        assertThat(read.test, is("1234"));
     }
 
     public static class ConstructorWithParamTestEntity extends BasicTestEntity {
@@ -173,6 +268,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
         private GeoJsonMultiPolygon geoJsonMultiPolygon;
     }
 
+    @SuppressWarnings("Json5StandardCompliance")
     @Test
     public void geoMapping() throws JSONException, JsonProcessingException {
         ArangoConverter converter = template.getConverter();
@@ -599,6 +695,7 @@ public class GeneralMappingTest extends AbstractArangoTest {
     }
 
     @Autowired
+    @SuppressWarnings({"SpringJavaInjectionPointsAutowiringInspection"})
     AuditorProvider auditorProvider;
 
     @Test

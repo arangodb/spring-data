@@ -36,7 +36,7 @@ import org.springframework.data.annotation.Reference;
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Reference
 public @interface Ref {
 
