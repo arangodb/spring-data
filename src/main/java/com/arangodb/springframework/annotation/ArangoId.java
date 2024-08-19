@@ -34,7 +34,7 @@ import org.springframework.data.annotation.ReadOnlyProperty;
  * @author Mark Vollmary
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @ReadOnlyProperty
 public @interface ArangoId {
 

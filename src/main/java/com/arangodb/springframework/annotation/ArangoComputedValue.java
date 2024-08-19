@@ -42,7 +42,7 @@ import java.lang.annotation.Target;
  * @see <a href="https://docs.arangodb.com/stable/concepts/data-structure/documents/computed-values">Reference Doc</a>
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface ArangoComputedValue {
 
     @AliasFor("expression")
