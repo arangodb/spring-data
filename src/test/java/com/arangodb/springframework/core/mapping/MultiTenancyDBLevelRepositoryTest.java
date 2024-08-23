@@ -25,6 +25,8 @@ import static org.hamcrest.Matchers.is;
 
 import java.util.Optional;
 
+import com.arangodb.springframework.repository.StringIdTestEntity;
+import com.arangodb.springframework.repository.StringIdTestRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,53 +39,50 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.arangodb.springframework.ArangoMultiTenancyRepositoryTestConfiguration;
 import com.arangodb.springframework.component.TenantProvider;
 import com.arangodb.springframework.core.ArangoOperations;
-import com.arangodb.springframework.repository.IdTestRepository;
-import com.arangodb.springframework.testdata.IdTestEntity;
 
 /**
  * @author Paulo Ferreira
- *
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { ArangoMultiTenancyRepositoryTestConfiguration.class })
+@ContextConfiguration(classes = {ArangoMultiTenancyRepositoryTestConfiguration.class})
 public class MultiTenancyDBLevelRepositoryTest {
 
-	private static final String TENANT00 = "tenant00";
+    private static final String TENANT00 = "tenant00";
 
-	@Autowired
-	protected ArangoOperations template;
+    @Autowired
+    protected ArangoOperations template;
 
-	@Autowired
-	TenantProvider tenantProvider;
+    @Autowired
+    TenantProvider tenantProvider;
 
-	@Autowired
-	IdTestRepository<String> idTestRepository;
-	
-	/*
-	 * For some reason, findAll already creates the collection by itself
-	 */
+    @Autowired
+    StringIdTestRepository idTestRepository;
 
-	@Test
-	public void dbFindAll() {
-		tenantProvider.setId(TENANT00);
-		assertThat(idTestRepository.findAll().iterator().hasNext(), is(false));
-	}
+    /*
+     * For some reason, findAll already creates the collection by itself
+     */
 
-	@Test
-	public void dbFindOne() {
-		tenantProvider.setId(TENANT00);
-		IdTestEntity<String> entity = new IdTestEntity<>();
-		entity.setId("MyId");
-		Example<IdTestEntity<String>> example = Example.of(entity);
-		Optional<IdTestEntity<String>> result = idTestRepository.findOne(example);
-		assertThat(result.isPresent(), is(false));
-	}
+    @Test
+    public void dbFindAll() {
+        tenantProvider.setId(TENANT00);
+        assertThat(idTestRepository.findAll().iterator().hasNext(), is(false));
+    }
 
-	@BeforeEach
-	@AfterEach
-	public void cleanup() {
-		tenantProvider.setId(TENANT00);
-		template.dropDatabase();
-	}
+    @Test
+    public void dbFindOne() {
+        tenantProvider.setId(TENANT00);
+        StringIdTestEntity entity = new StringIdTestEntity();
+        entity.setId("MyId");
+        Example<StringIdTestEntity> example = Example.of(entity);
+        Optional<StringIdTestEntity> result = idTestRepository.findOne(example);
+        assertThat(result.isPresent(), is(false));
+    }
+
+    @BeforeEach
+    @AfterEach
+    public void cleanup() {
+        tenantProvider.setId(TENANT00);
+        template.dropDatabase();
+    }
 
 }

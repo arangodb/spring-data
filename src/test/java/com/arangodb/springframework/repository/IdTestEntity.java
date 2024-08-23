@@ -18,28 +18,8 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.springframework.testdata;
+package com.arangodb.springframework.repository;
 
-import org.springframework.data.annotation.Id;
-
-import com.arangodb.springframework.annotation.Document;
-
-/**
- * @author Mark Vollmary
- *
- */
-@Document
-public class IdTestEntity<ID> {
-
-	@Id
-	private ID id;
-
-	public ID getId() {
-		return id;
-	}
-
-	public void setId(final ID id) {
-		this.id = id;
-	}
-
+public interface IdTestEntity<ID> {
+	 ID getId();
 }

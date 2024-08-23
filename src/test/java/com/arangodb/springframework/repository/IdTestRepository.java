@@ -25,20 +25,19 @@ import java.util.Optional;
 import org.springframework.data.repository.query.Param;
 
 import com.arangodb.springframework.annotation.Query;
-import com.arangodb.springframework.testdata.IdTestEntity;
 
 /**
  * @author Mark Vollmary
  * 
  */
-public interface IdTestRepository<ID> extends ArangoRepository<IdTestEntity<ID>, ID> {
+public interface IdTestRepository<T extends IdTestEntity<ID>, ID>  extends ArangoRepository<T, ID> {
 
-	@Query("FOR i IN idTestEntity FILTER i._key == @id RETURN i")
-	Optional<IdTestEntity<ID>> findByQuery(@Param("id") ID id);
+	@Query("FOR i IN #collection FILTER i._key == @id RETURN i")
+	Optional<T> findByQuery(@Param("id") ID id);
 
-	@Query("FOR i IN idTestEntity FILTER i._key == @id RETURN i._key")
+	@Query("FOR i IN #collection FILTER i._key == @id RETURN i._key")
 	Optional<ID> findIdByQuery(@Param("id") ID id);
 
-	@Query("FOR i IN idTestEntity FILTER i._key == @entity._key RETURN i")
-	Optional<IdTestEntity<ID>> findByEntity(@Param("entity") IdTestEntity<ID> entity);
+	@Query("FOR i IN #collection FILTER i._key == @entity._key RETURN i")
+	Optional<T> findByEntity(@Param("entity") T entity);
 }

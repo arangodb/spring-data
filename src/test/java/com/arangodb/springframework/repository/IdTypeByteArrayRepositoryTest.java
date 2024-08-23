@@ -20,10 +20,24 @@
 
 package com.arangodb.springframework.repository;
 
-/**
- * @author Mark Vollmary
- *
- */
-public class IdTypeByteArrayRepositoryTest extends AbstractTestEntityRepositoryTest<byte[]> {
+import org.springframework.beans.factory.annotation.Autowired;
 
+
+public class IdTypeByteArrayRepositoryTest extends AbstractTestEntityRepositoryTest<ByteArrayIdTestEntity, byte[]> {
+    @Autowired
+    private ByteArrayIdTestRepository repository;
+
+    public IdTypeByteArrayRepositoryTest() {
+        super(ByteArrayIdTestEntity.class);
+    }
+
+    @Override
+    protected IdTestRepository<ByteArrayIdTestEntity, byte[]> repository() {
+        return repository;
+    }
+
+    @Override
+    protected ByteArrayIdTestEntity createEntity() {
+        return new ByteArrayIdTestEntity();
+    }
 }
