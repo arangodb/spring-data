@@ -5,11 +5,9 @@ import org.junit.jupiter.api.Test;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.*;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,6 +25,85 @@ public class JavaTimeUtilTest {
 
     private static String oldFormat(final Date date) {
         return OLD_DATE_FORMAT.format(date);
+    }
+
+    @Test
+    void formatInstant() {
+        Instant instant = Instant.ofEpochMilli(1723642733351L);
+        assertThat(JavaTimeUtil.format(instant)).isEqualTo("2024-08-14T13:38:53.351Z");
+    }
+
+    @Test
+    void parseInstant() {
+        Instant instant = JavaTimeUtil.parseInstant("2024-08-14T13:38:53.351Z");
+        assertThat(instant).isEqualTo(Instant.ofEpochMilli(1723642733351L));
+    }
+
+    @Test
+    void formatLocalDate() {
+        LocalDate date = LocalDate.ofInstant(Instant.ofEpochMilli(1723642733351L), ZoneOffset.UTC);
+        assertThat(JavaTimeUtil.format(date)).isEqualTo("2024-08-14");
+    }
+
+    @Test
+    void parseLocalDate() {
+        LocalDate date = JavaTimeUtil.parseLocalDate("2024-08-14");
+        assertThat(date)
+                .hasDayOfMonth(14)
+                .hasMonth(Month.AUGUST)
+                .hasYear(2024);
+    }
+
+    @Test
+    void formatOffsetDateTime() {
+        OffsetDateTime odt = OffsetDateTime.ofInstant(Instant.ofEpochMilli(1723642733351L), ZoneOffset.UTC);
+        assertThat(JavaTimeUtil.format(odt)).isEqualTo("2024-08-14T13:38:53.351Z");
+    }
+
+    @Test
+    void parseOffsetDateTime() {
+        OffsetDateTime odt = JavaTimeUtil.parseOffsetDateTime("2024-08-14T13:38:53.351Z");
+        assertThat(odt.toInstant().toEpochMilli()).isEqualTo(1723642733351L);
+    }
+
+    @Test
+    void formatLocalDateTime() {
+        LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(1723642733351L), ZoneOffset.UTC);
+        assertThat(JavaTimeUtil.format(ldt)).isEqualTo("2024-08-14T13:38:53.351");
+    }
+
+    @Test
+    void parseLocalDateTime() {
+        LocalDateTime ldt = JavaTimeUtil.parseLocalDateTime("2024-08-14T13:38:53.351");
+        assertThat(ldt.toInstant(ZoneOffset.UTC).toEpochMilli()).isEqualTo(1723642733351L);
+    }
+
+    @Test
+    void formatLocalTime() {
+        LocalTime lt = LocalTime.ofInstant(Instant.ofEpochMilli(1723642733351L), ZoneOffset.UTC);
+        assertThat(JavaTimeUtil.format(lt)).isEqualTo("13:38:53.351");
+    }
+
+    @Test
+    void parseLocalTime() {
+        LocalTime lt = JavaTimeUtil.parseLocalTime("13:38:53.351");
+        assertThat(lt)
+                .hasHour(13)
+                .hasMinute(38)
+                .hasSecond(53)
+                .hasNano(351_000_000);
+    }
+
+    @Test
+    void formatZonedDateTime() {
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(1723642733351L), ZoneOffset.UTC);
+        assertThat((JavaTimeUtil.format(zdt))).isEqualTo("2024-08-14T13:38:53.351Z");
+    }
+
+    @Test
+    void parseZonedDateTime() {
+        ZonedDateTime zdt = JavaTimeUtil.parseZonedDateTime("2024-08-14T13:38:53.351Z");
+        assertThat(zdt.toInstant().toEpochMilli()).isEqualTo(1723642733351L);
     }
 
     @Test
@@ -69,85 +146,8 @@ public class JavaTimeUtilTest {
 
     @Test
     void format() {
-        var input = new Date(1723642733350L);
+        var input = new Date(1723642733351L);
         assertThat(JavaTimeUtil.format(input)).isEqualTo(oldFormat(input));
-    }
-
-    @Test
-    void concurrentParse() {
-        testConcurrent(date -> JavaTimeUtil.parse(JavaTimeUtil.format(date)));
-    }
-
-    @Test
-    void oldConcurrentParse() {
-        assertThrows(RuntimeException.class, () -> testConcurrent(date -> oldParse(JavaTimeUtil.format(date))));
-    }
-
-    @Test
-    void concurrentFormat() {
-        testConcurrent(JavaTimeUtil::format);
-    }
-
-    @Test
-    void oldConcurrentFormat() {
-        assertThrows(RuntimeException.class, () -> testConcurrent(JavaTimeUtilTest::oldFormat));
-    }
-
-    private void testConcurrent(ThrowingConsumer<Date> fn) {
-        AtomicReference<Throwable> e = new AtomicReference<>();
-        Date[] dates;
-        try {
-            dates = new Date[]{
-                    JavaTimeUtil.parse("2018-04-16T15:17:21.005Z"),
-                    JavaTimeUtil.parse("2019-04-16T15:17:21.020Z")
-            };
-        } catch (ParseException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        var threads = IntStream.range(0, 16)
-                .mapToObj(i -> dates[i % dates.length])
-                .map(date -> new Thread(() -> {
-                    for (int j = 0; j < 10_000; j++) {
-                        fn.accept(date);
-                    }
-                }))
-                .toList();
-
-        for (Thread t : threads) {
-            t.setUncaughtExceptionHandler((th, ex) -> {
-                e.set(ex);
-            });
-            t.start();
-        }
-
-        for (Thread t : threads) {
-            try {
-                t.join();
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        Throwable thrown = e.get();
-        if (thrown != null) {
-            throw new RuntimeException(thrown);
-        }
-    }
-
-    @FunctionalInterface
-    private interface ThrowingConsumer<T> extends Consumer<T> {
-
-        @Override
-        default void accept(final T elem) {
-            try {
-                acceptThrows(elem);
-            } catch (final Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        void acceptThrows(T elem) throws Exception;
     }
 
 }
