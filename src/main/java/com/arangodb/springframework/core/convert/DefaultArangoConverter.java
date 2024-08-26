@@ -120,6 +120,16 @@ public class DefaultArangoConverter implements ArangoConverter {
         return (R) readInternal(TypeInformation.of(type), source);
     }
 
+    @Override
+    public void readProperty(
+            final ArangoPersistentEntity<?> entity,
+            final PersistentPropertyAccessor<?> accessor,
+            final JsonNode source,
+            final ArangoPersistentProperty property
+    ) {
+        readProperty(entity, null, accessor, source, property);
+    }
+
     private Object readInternal(final TypeInformation<?> type, final JsonNode source) {
         if (source == null) {
             return null;
@@ -161,8 +171,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             return readMap(typeToUse, source);
         }
 
-		if (!source.isArray() && (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class))) {
-			return readMap(TypeInformation.MAP, source);
+        if (!source.isArray() && (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class))) {
+            return readMap(TypeInformation.MAP, source);
         }
 
         if (typeToUse.getType().isArray()) {
@@ -173,8 +183,8 @@ public class DefaultArangoConverter implements ArangoConverter {
             return readCollection(typeToUse, source);
         }
 
-		if (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class)) {
-			return readCollection(TypeInformation.COLLECTION, source);
+        if (TypeInformation.OBJECT.equals(typeToUse) || rawTypeToUse.equals(Object.class)) {
+            return readCollection(TypeInformation.COLLECTION, source);
         }
 
         ArangoPersistentEntity<?> entity = context.getRequiredPersistentEntity(rawTypeToUse);
@@ -331,11 +341,11 @@ public class DefaultArangoConverter implements ArangoConverter {
             final ArangoPersistentProperty property,
             final Annotation annotation
     ) {
-		if (source.isMissingNode() || source.isNull()) {
-			return Optional.empty();
-		}
+        if (source.isMissingNode() || source.isNull()) {
+            return Optional.empty();
+        }
 
-		Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
+        Optional<ReferenceResolver<Annotation>> resolver = resolverFactory.getReferenceResolver(annotation);
 
         if (resolver.isEmpty()) {
             return Optional.empty();
@@ -349,9 +359,9 @@ public class DefaultArangoConverter implements ArangoConverter {
 
             return resolver.map(res -> res.resolveMultiple(ids, property.getTypeInformation(), annotation));
         } else if (source.isObject()) {
-			// source contains target
-			return Optional.of(readInternal(property.getTypeInformation(), source));
-		} else {
+            // source contains target
+            return Optional.of(readInternal(property.getTypeInformation(), source));
+        } else {
             if (!source.isTextual()) {
                 throw new MappingException(
                         String.format("A reference must be of type String, but got type %s!", source.getNodeType()));
@@ -446,7 +456,7 @@ public class DefaultArangoConverter implements ArangoConverter {
                 Enum<?> e = Enum.valueOf((Class<? extends Enum>) type, value);
                 return e;
             } else if (byte[].class.isAssignableFrom(type)) {
-				return Base64.getDecoder().decode(value);
+                return Base64.getDecoder().decode(value);
             } else if (java.sql.Date.class.isAssignableFrom(type)) {
                 return new java.sql.Date(parseDate(value).getTime());
             } else if (Timestamp.class.isAssignableFrom(type)) {
@@ -778,16 +788,16 @@ public class DefaultArangoConverter implements ArangoConverter {
         }
 
         return Optional.ofNullable(entity.getIdentifierAccessor(source).getIdentifier())
-            .map(key -> {
-                if (annotation != null) {
-                    return resolverFactory.getReferenceResolver(annotation)
-                            .map(resolver -> resolver.write(source, entity, convertId(key)))
-                            .orElseThrow(() -> new IllegalArgumentException("Missing reference resolver for " + annotation));
-                } else {
-                    return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key));
-                }
-            })
-            .or(() -> Optional.ofNullable((String) entity.getArangoIdAccessor(source).getIdentifier()));
+                .map(key -> {
+                    if (annotation != null) {
+                        return resolverFactory.getReferenceResolver(annotation)
+                                .map(resolver -> resolver.write(source, entity, convertId(key)))
+                                .orElseThrow(() -> new IllegalArgumentException("Missing reference resolver for " + annotation));
+                    } else {
+                        return MetadataUtils.createIdFromCollectionAndKey(entity.getCollection(), convertId(key));
+                    }
+                })
+                .or(() -> Optional.ofNullable((String) entity.getArangoIdAccessor(source).getIdentifier()));
     }
 
     private static Collection<?> asCollection(final Object source) {
@@ -845,8 +855,6 @@ public class DefaultArangoConverter implements ArangoConverter {
         if (DBDocumentEntity.class.isAssignableFrom(type)) {
             return false;
         } else if (JsonNode.class.isAssignableFrom(type)) {
-            return false;
-        } else if (type.isArray() && type.getComponentType() != byte.class) {
             return false;
         } else if (isSimpleType(type)) {
             return true;

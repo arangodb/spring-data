@@ -28,113 +28,101 @@ import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.arangodb.springframework.AbstractArangoTest;
-import com.arangodb.springframework.testdata.IdTestEntity;
 
 /**
  * @author Mark Vollmary
- * @param <ID>
  *
  */
-public abstract class AbstractTestEntityRepositoryTest<ID> extends AbstractArangoTest {
+public abstract class AbstractTestEntityRepositoryTest<T extends IdTestEntity<ID>, ID> extends AbstractArangoTest {
 
-	@Autowired
-	protected IdTestRepository<ID> repository;
+	protected abstract IdTestRepository<T, ID> repository();
+    protected abstract T createEntity();
 
-	public AbstractTestEntityRepositoryTest(final Class<?>... collections) {
-		super(IdTestEntity.class);
+	public AbstractTestEntityRepositoryTest(Class<T> clazz) {
+		super(clazz);
 	}
 
 	@Test
 	public void deleteAll() {
-		final IdTestEntity<ID> entity = new IdTestEntity<>();
-		repository.save(entity);
-		assertThat(repository.count(), is(1L));
-		repository.deleteAll(Arrays.asList(entity));
-		assertThat(repository.count(), is(0L));
+		T entity = createEntity();
+		repository().save(entity);
+		assertThat(repository().count(), is(1L));
+		repository().deleteAll(Arrays.asList(entity));
+		assertThat(repository().count(), is(0L));
 	}
 
 	@Test
 	public void deleteById() {
-		final IdTestEntity<ID> entity = new IdTestEntity<>();
-		repository.save(entity);
-		assertThat(repository.count(), is(1L));
-		repository.deleteById(entity.getId());
-		assertThat(repository.count(), is(0L));
+		T entity = createEntity();
+		repository().save(entity);
+		assertThat(repository().count(), is(1L));
+		repository().deleteById(entity.getId());
+		assertThat(repository().count(), is(0L));
+	}
+
+	@Test
+	public void delete() {
+		T entity = createEntity();
+		repository().save(entity);
+		assertThat(repository().count(), is(1L));
+		repository().delete(entity);
+		assertThat(repository().count(), is(0L));
 	}
 
 	@Test
 	public void deleteAllById() {
-		final IdTestEntity<ID> e1 = new IdTestEntity<>();
-		final IdTestEntity<ID> e2 = new IdTestEntity<>();
-		repository.save(e1);
-		repository.save(e2);
-		assertThat(repository.count(), is(2L));
-		repository.deleteAllById(Arrays.asList(e1.getId(), e2.getId()));
-		assertThat(repository.count(), is(0L));
+		T e1 = createEntity();
+		T e2 = createEntity();
+		repository().save(e1);
+		repository().save(e2);
+		assertThat(repository().count(), is(2L));
+		repository().deleteAllById(Arrays.asList(e1.getId(), e2.getId()));
+		assertThat(repository().count(), is(0L));
 	}
 
 	@Test
 	public void existsById() {
-		final IdTestEntity<ID> entity = new IdTestEntity<>();
-		repository.save(entity);
-		assertThat(repository.existsById(entity.getId()), is(true));
+		T entity = createEntity();
+		repository().save(entity);
+		assertThat(repository().existsById(entity.getId()), is(true));
 	}
 
 	@Test
 	public void findAllById() {
-		final IdTestEntity<ID> entity1 = new IdTestEntity<>();
-		final IdTestEntity<ID> entity2 = new IdTestEntity<>();
-		repository.saveAll(Arrays.asList(entity1, entity2));
-		final Iterable<IdTestEntity<ID>> find = repository.findAllById(Arrays.asList(entity1.getId(), entity2.getId()));
+		T entity1 = createEntity();
+		T entity2 = createEntity();
+		repository().saveAll(Arrays.asList(entity1, entity2));
+		final Iterable<T> find = repository().findAllById(Arrays.asList(entity1.getId(), entity2.getId()));
 		assertThat(StreamSupport.stream(find.spliterator(), false).count(), is(2L));
 	}
 
 	@Test
 	public void findById() {
-		final IdTestEntity<ID> entity = new IdTestEntity<>();
-		repository.save(entity);
-		final Optional<IdTestEntity<ID>> find = repository.findById(entity.getId());
+		T entity = createEntity();
+		repository().save(entity);
+		final Optional<T> find = repository().findById(entity.getId());
 		assertThat(find.isPresent(), is(true));
 	}
 
 	@Test
 	public void save() {
-		repository.save(new IdTestEntity<>());
-		assertThat(repository.count(), is(1L));
+		repository().save(createEntity());
+		assertThat(repository().count(), is(1L));
 	}
 
 	@Test
 	public void saveAll() {
-		repository.saveAll(Arrays.asList(new IdTestEntity<>(), new IdTestEntity<>()));
-		assertThat(repository.count(), is(2L));
-	}
-
-	@Test
-	public void query() {
-		final IdTestEntity<ID> entity = new IdTestEntity<>();
-		repository.save(entity);
-		final Optional<IdTestEntity<ID>> find = repository.findByQuery(entity.getId());
-		assertThat(find.isPresent(), is(true));
-		assertThat(find.get().getId(), is(entity.getId()));
-	}
-
-	@Test
-	public void queryId() {
-		final IdTestEntity<ID> entity = new IdTestEntity<>();
-		repository.save(entity);
-		final Optional<ID> find = repository.findIdByQuery(entity.getId());
-		assertThat(find.isPresent(), is(true));
-		assertThat(find.get(), is(entity.getId()));
+		repository().saveAll(Arrays.asList(createEntity(), createEntity()));
+		assertThat(repository().count(), is(2L));
 	}
 
 	@Test
 	public void queryEntity() {
-		final IdTestEntity<ID> entity = new IdTestEntity<>();
-		repository.save(entity);
-		final Optional<IdTestEntity<ID>> find = repository.findByEntity(entity);
+		T entity = createEntity();
+		repository().save(entity);
+		final Optional<T> find = repository().findByEntity(entity);
 		assertThat(find.isPresent(), is(true));
 		assertThat(find.get().getId(), is(entity.getId()));
 	}

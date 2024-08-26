@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.Data;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 
@@ -61,6 +62,28 @@ public class RefMappingTest extends AbstractArangoTest {
 		e0.entity = e1;
 		template.insert(e0);
 		final SingleReferenceTestEntity document = template.find(e0.id, SingleReferenceTestEntity.class).get();
+		assertThat(document, is(notNullValue()));
+		assertThat(document.entity, is(notNullValue()));
+		assertThat(document.entity.id, is(e1.id));
+	}
+
+	@Data
+	@Document
+	public static class NumericReferenceTestEntity {
+		@Id
+		public Integer id;
+		@Ref
+		private NumericReferenceTestEntity entity;
+	}
+
+	@Test
+	public void refNumeric() {
+		final NumericReferenceTestEntity e1 = new NumericReferenceTestEntity();
+		template.insert(e1);
+		final NumericReferenceTestEntity e0 = new NumericReferenceTestEntity();
+		e0.entity = e1;
+		template.insert(e0);
+		final NumericReferenceTestEntity document = template.find(e0.id, NumericReferenceTestEntity.class).get();
 		assertThat(document, is(notNullValue()));
 		assertThat(document.entity, is(notNullValue()));
 		assertThat(document.entity.id, is(e1.id));

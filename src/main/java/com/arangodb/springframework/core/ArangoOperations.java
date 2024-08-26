@@ -146,6 +146,35 @@ public interface ArangoOperations {
 	MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAll(Iterable<?> values, Class<?> entityClass) throws DataAccessException;
 
 	/**
+	 * Deletes multiple documents with the given IDs from a collection.
+	 *
+	 * @param ids
+	 *            The keys of the documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	<T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteAllById(
+			Iterable<?> ids,
+			DocumentDeleteOptions options,
+			Class<T> entityClass) throws DataAccessException;
+
+	/**
+	 * Deletes multiple documents with the given IDs from a collection.
+	 *
+	 * @param ids
+	 *            The keys of the documents
+	 * @param entityClass
+	 *            The entity class which represents the collection
+	 * @return information about the documents
+	 * @throws DataAccessException
+	 */
+	MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAllById(Iterable<?> ids, Class<?> entityClass) throws DataAccessException;
+
+	/**
 	 * Deletes the document with the given {@code id} from a collection.
 	 *
 	 * @param id

@@ -20,12 +20,25 @@
 
 package com.arangodb.springframework.repository;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.math.BigInteger;
 
-/**
- * @author Mark Vollmary
- *
- */
-public class IdTypeBigIntegerRepositoryTest extends AbstractTestEntityRepositoryTest<BigInteger> {
+public class IdTypeBigIntegerRepositoryTest extends AbstractTestEntityRepositoryTest<BigIntegerIdTestEntity, BigInteger> {
+    @Autowired
+    private BigIntegerIdTestRepository repository;
 
+    public IdTypeBigIntegerRepositoryTest() {
+        super(BigIntegerIdTestEntity.class);
+    }
+
+    @Override
+    protected IdTestRepository<BigIntegerIdTestEntity, BigInteger> repository() {
+        return repository;
+    }
+
+    @Override
+    protected BigIntegerIdTestEntity createEntity() {
+        return BigIntegerIdTestEntity.create();
+    }
 }

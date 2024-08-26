@@ -20,12 +20,25 @@
 
 package com.arangodb.springframework.repository;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.UUID;
 
-/**
- * @author Mark Vollmary
- *
- */
-public class IdTypeUUIDRepositoryTest extends AbstractTestEntityRepositoryTest<UUID> {
+public class IdTypeUUIDRepositoryTest extends AbstractTestEntityRepositoryTest<UuidIdTestEntity, UUID> {
+    @Autowired
+    private UuidIdTestRepository repository;
 
+    public IdTypeUUIDRepositoryTest() {
+        super(UuidIdTestEntity.class);
+    }
+
+    @Override
+    protected IdTestRepository<UuidIdTestEntity, UUID> repository() {
+        return repository;
+    }
+
+    @Override
+    protected UuidIdTestEntity createEntity() {
+        return UuidIdTestEntity.create();
+    }
 }

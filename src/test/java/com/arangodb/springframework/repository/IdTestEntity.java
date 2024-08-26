@@ -20,10 +20,7 @@
 
 package com.arangodb.springframework.repository;
 
-/**
- * @author Mark Vollmary
- *
- */
-public class IdTypeByteArrayRepositoryTest extends AbstractTestEntityRepositoryTest<byte[]> {
-
+public interface IdTestEntity<ID> {
+	 ID getId();
+	 ID getValue();
 }
