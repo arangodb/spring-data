@@ -38,6 +38,6 @@ public class IdTypeLongRepositoryTest extends AbstractTestEntityRepositoryTest<L
 
     @Override
     protected LongIdTestEntity createEntity() {
-        return new LongIdTestEntity();
+        return LongIdTestEntity.create();
     }
 }

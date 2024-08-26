@@ -38,6 +38,7 @@ import com.arangodb.springframework.core.mapping.event.*;
 import com.arangodb.springframework.core.template.DefaultUserOperation.CollectionCallback;
 import com.arangodb.springframework.core.util.ArangoExceptionTranslator;
 import com.arangodb.springframework.core.util.MetadataUtils;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -680,7 +681,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         final PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(value);
         final ArangoPersistentProperty idProperty = entity.getIdProperty();
         if (idProperty != null && !idProperty.isImmutable()) {
-            accessor.setProperty(idProperty, documentEntity.getKey());
+            converter.readProperty(entity, accessor, JsonNodeFactory.instance.textNode(documentEntity.getKey()), idProperty);
         }
         entity.getArangoIdProperty().filter(arangoId -> !arangoId.isImmutable())
                 .ifPresent(arangoId -> accessor.setProperty(arangoId, documentEntity.getId()));

@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author Mark Vollmary
- *
  */
 public class IdTypeIntegerRepositoryTest extends AbstractTestEntityRepositoryTest<IntegerIdTestEntity, Integer> {
     @Autowired
@@ -41,6 +40,6 @@ public class IdTypeIntegerRepositoryTest extends AbstractTestEntityRepositoryTes
 
     @Override
     protected IntegerIdTestEntity createEntity() {
-        return new IntegerIdTestEntity();
+        return IntegerIdTestEntity.create();
     }
 }

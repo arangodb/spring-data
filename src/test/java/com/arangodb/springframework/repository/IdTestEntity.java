@@ -22,4 +22,5 @@ package com.arangodb.springframework.repository;
 
 public interface IdTestEntity<ID> {
 	 ID getId();
+	 ID getValue();
 }

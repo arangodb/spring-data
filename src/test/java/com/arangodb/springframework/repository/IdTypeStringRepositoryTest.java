@@ -37,6 +37,6 @@ public class IdTypeStringRepositoryTest extends AbstractTestEntityRepositoryTest
 
     @Override
     protected StringIdTestEntity createEntity() {
-        return new StringIdTestEntity();
+        return StringIdTestEntity.create();
     }
 }

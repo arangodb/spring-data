@@ -39,6 +39,6 @@ public class IdTypeBigIntegerRepositoryTest extends AbstractTestEntityRepository
 
     @Override
     protected BigIntegerIdTestEntity createEntity() {
-        return new BigIntegerIdTestEntity();
+        return BigIntegerIdTestEntity.create();
     }
 }

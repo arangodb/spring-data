@@ -9,6 +9,15 @@ import java.util.UUID;
 @Data
 @Document
 public class UuidIdTestEntity implements IdTestEntity<UUID> {
+
+    public static UuidIdTestEntity create() {
+        UuidIdTestEntity res = new UuidIdTestEntity();
+        res.setId(UUID.randomUUID());
+        res.setValue(UUID.randomUUID());
+        return res;
+    }
+
     @Id
     private UUID id;
+    private UUID value;
 }

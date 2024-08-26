@@ -20,7 +20,9 @@
 
 package com.arangodb.springframework.core.convert;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
@@ -32,6 +34,13 @@ import com.arangodb.springframework.core.mapping.ArangoPersistentProperty;
  *
  */
 public interface ArangoConverter extends ArangoEntityReader, ArangoEntityWriter {
+
+	void readProperty(
+			ArangoPersistentEntity<?> entity,
+			PersistentPropertyAccessor<?> accessor,
+			JsonNode source,
+			ArangoPersistentProperty property
+	);
 
 	boolean isCollectionType(Class<?> type);
 
