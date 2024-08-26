@@ -325,6 +325,21 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     }
 
     @Override
+    public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteAllById(Iterable<?> ids, DocumentDeleteOptions options, Class<T> entityClass) throws DataAccessException {
+        ArrayList<String> convertedIds = new ArrayList<>();
+        for (Object id : ids) {
+            convertedIds.add(converter.convertId(id));
+        }
+        return deleteAll(convertedIds, options, entityClass);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public MultiDocumentEntity<DocumentDeleteEntity<?>> deleteAllById(Iterable<?> ids, Class<?> entityClass) throws DataAccessException {
+        return deleteAllById(ids, new DocumentDeleteOptions(), (Class) entityClass);
+    }
+
+    @Override
     public <T> DocumentDeleteEntity<T> delete(final Object id, final DocumentDeleteOptions options, final Class<T> entityClass)
             throws DataAccessException {
 

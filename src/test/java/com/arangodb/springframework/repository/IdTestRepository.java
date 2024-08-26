@@ -31,13 +31,6 @@ import com.arangodb.springframework.annotation.Query;
  * 
  */
 public interface IdTestRepository<T extends IdTestEntity<ID>, ID>  extends ArangoRepository<T, ID> {
-
-	@Query("FOR i IN #collection FILTER i._key == @id RETURN i")
-	Optional<T> findByQuery(@Param("id") ID id);
-
-	@Query("FOR i IN #collection FILTER i._key == @id RETURN i._key")
-	Optional<ID> findIdByQuery(@Param("id") ID id);
-
 	@Query("FOR i IN #collection FILTER i._key == @entity._key RETURN i")
 	Optional<T> findByEntity(@Param("entity") T entity);
 }

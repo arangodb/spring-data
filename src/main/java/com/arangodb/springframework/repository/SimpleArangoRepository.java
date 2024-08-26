@@ -171,7 +171,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public void delete(final T entity) {
-		String id = (String) arangoOperations.getConverter().getMappingContext()
+		Object id = arangoOperations.getConverter().getMappingContext()
 				.getRequiredPersistentEntity(domainClass).getIdentifierAccessor(entity).getRequiredIdentifier();
 		arangoOperations.delete(id, domainClass);
 	}
@@ -181,7 +181,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @implNote do not add @Override annotation to keep backwards compatibility with spring-data-commons 2.4
      */
     public void deleteAllById(Iterable<? extends ID> ids) {
-        arangoOperations.deleteAll(ids, domainClass);
+        arangoOperations.deleteAllById(ids, domainClass);
     }
 
 	/**

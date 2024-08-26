@@ -846,8 +846,6 @@ public class DefaultArangoConverter implements ArangoConverter {
             return false;
         } else if (JsonNode.class.isAssignableFrom(type)) {
             return false;
-        } else if (type.isArray() && type.getComponentType() != byte.class) {
-            return false;
         } else if (isSimpleType(type)) {
             return true;
         } else {

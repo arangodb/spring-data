@@ -39,6 +39,8 @@ public class IdTypeUUIDRepositoryTest extends AbstractTestEntityRepositoryTest<U
 
     @Override
     protected UuidIdTestEntity createEntity() {
-        return new UuidIdTestEntity();
+        UuidIdTestEntity v = new UuidIdTestEntity();
+        v.setId(UUID.randomUUID());
+        return v;
     }
 }

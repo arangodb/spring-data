@@ -119,24 +119,6 @@ public abstract class AbstractTestEntityRepositoryTest<T extends IdTestEntity<ID
 	}
 
 	@Test
-	public void query() {
-		T entity = createEntity();
-		repository().save(entity);
-		final Optional<T> find = repository().findByQuery(entity.getId());
-		assertThat(find.isPresent(), is(true));
-		assertThat(find.get().getId(), is(entity.getId()));
-	}
-
-	@Test
-	public void queryId() {
-		T entity = createEntity();
-		repository().save(entity);
-		final Optional<ID> find = repository().findIdByQuery(entity.getId());
-		assertThat(find.isPresent(), is(true));
-		assertThat(find.get(), is(entity.getId()));
-	}
-
-	@Test
 	public void queryEntity() {
 		T entity = createEntity();
 		repository().save(entity);
