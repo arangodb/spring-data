@@ -9,6 +9,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.util.Streamable;
@@ -18,6 +19,7 @@ import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Created by F625633 on 06/07/2017.
@@ -218,6 +220,22 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
     }
 
     @Test
+    public void deleteNonExistingTest() {
+        repository.saveAll(customers);
+        repository.delete(john);
+        assertThrows(OptimisticLockingFailureException.class, () -> repository.delete(john));
+    }
+
+    @Test
+    public void deleteWithRevTest() {
+        repository.saveAll(customers);
+        var johnCopy = repository.findById(john.getId()).get();
+        johnCopy.setName("Johnny");
+        repository.save(johnCopy);
+        assertThrows(OptimisticLockingFailureException.class, () -> repository.delete(john));
+    }
+
+    @Test
     public void deleteByIdTest() {
         repository.saveAll(customers);
         final String johnId = john.getId();
@@ -245,6 +263,22 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
         repository.deleteAll(toDelete);
         assertThat(repository.existsById(bob.getId()), equalTo(true));
         assertThat(repository.existsById(johnId), equalTo(false));
+    }
+
+    @Test
+    public void deleteByIterableNonExistingTest() {
+        repository.saveAll(customers);
+        repository.delete(john);
+        assertThrows(OptimisticLockingFailureException.class, () -> repository.deleteAll(List.of(john, bob)));
+    }
+
+    @Test
+    public void deleteByIterableWithRevTest() {
+        repository.saveAll(customers);
+        var johnCopy = repository.findById(john.getId()).get();
+        johnCopy.setName("Johnny");
+        repository.save(johnCopy);
+        assertThrows(OptimisticLockingFailureException.class, () -> repository.deleteAll(List.of(john, bob)));
     }
 
     @Test
