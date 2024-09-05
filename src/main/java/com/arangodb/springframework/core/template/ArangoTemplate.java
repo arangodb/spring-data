@@ -239,6 +239,10 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         return MetadataUtils.determineDocumentKeyFromId(converter.convertId(id));
     }
 
+    public RuntimeException translateException(RuntimeException e) {
+        return DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+    }
+
     @Override
     public ArangoDB driver() {
         return arango;
@@ -252,7 +256,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             }
             return version;
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
     }
 
@@ -280,7 +284,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             ArangoCursor<T> cursor = db().query(query, entityClass, bindVars == null ? null : prepareBindVars(bindVars), options);
             return new ArangoExtCursor<>(cursor, entityClass, eventPublisher);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
     }
 
@@ -309,7 +313,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             result = _collection(entityClass).deleteDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         potentiallyEmitAfterDeleteEvent(values, entityClass, result);
@@ -327,8 +331,14 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 
     @Override
     public <T> MultiDocumentEntity<DocumentDeleteEntity<T>> deleteAllById(Iterable<?> ids, DocumentDeleteOptions options, Class<T> entityClass) throws DataAccessException {
+        if (ids == null) {
+            throw new IllegalArgumentException("ids must not be null");
+        }
         ArrayList<String> convertedIds = new ArrayList<>();
         for (Object id : ids) {
+            if (id == null) {
+                throw new IllegalArgumentException("id must not be null");
+            }
             convertedIds.add(converter.convertId(id));
         }
         return deleteAll(convertedIds, options, entityClass);
@@ -350,7 +360,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             result = _collection(entityClass, id).deleteDocument(determineDocumentKeyFromId(id), options, entityClass);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         potentiallyEmitEvent(new AfterDeleteEvent<>(id, entityClass));
@@ -375,7 +385,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             result = _collection(entityClass).updateDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         updateDBFields(values, result);
@@ -402,7 +412,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             result = _collection(value.getClass(), id).updateDocument(determineDocumentKeyFromId(id), value, options);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         updateDBFields(value, result);
@@ -428,7 +438,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             result = _collection(entityClass).replaceDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         updateDBFields(values, result);
@@ -454,7 +464,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             result = _collection(value.getClass(), id).replaceDocument(determineDocumentKeyFromId(id), value, options);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         updateDBFields(value, result);
@@ -477,7 +487,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             }
             return Optional.ofNullable(res);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
     }
 
@@ -507,7 +517,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             }
             return docs;
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
     }
 
@@ -521,7 +531,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             result = _collection(entityClass).insertDocuments(toList(values), options, entityClass);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         updateDBFields(values, result);
@@ -543,7 +553,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             result = _collection(value.getClass()).insertDocument(value, options);
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         updateDBFields(value, result);
@@ -576,7 +586,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             );
             result = it.hasNext() ? it.next() : null;
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         updateDBFieldsFromObject(value, result);
@@ -606,7 +616,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
                     entityClass
             ).asListRemaining();
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
 
         updateDBFieldsFromObjects(values, result);
@@ -694,7 +704,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             return _collection(entityClass).documentExists(determineDocumentKeyFromId(id));
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
     }
 
@@ -704,7 +714,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             db.drop();
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
         databaseCache.remove(db.name());
         collectionCache.keySet().stream().filter(key -> key.getDb().equals(db.name()))
@@ -741,7 +751,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         try {
             return arango.getUsers();
         } catch (final ArangoDBException e) {
-            throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+            throw translateException(e);
         }
     }
 

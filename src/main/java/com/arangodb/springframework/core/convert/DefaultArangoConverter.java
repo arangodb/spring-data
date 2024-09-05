@@ -829,7 +829,8 @@ public class DefaultArangoConverter implements ArangoConverter {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convertIfNecessary(final Object source, final Class<T> type) {
+    @Override
+    public <T> T convertIfNecessary(final Object source, final Class<T> type) {
         return (T) (source == null ? null
                 : type.isAssignableFrom(source.getClass()) ? source : conversionService.convert(source, type));
     }

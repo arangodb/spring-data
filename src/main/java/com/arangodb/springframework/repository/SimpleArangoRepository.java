@@ -21,13 +21,21 @@
 package com.arangodb.springframework.repository;
 
 import com.arangodb.ArangoCursor;
+import com.arangodb.ArangoDBException;
+import com.arangodb.entity.DocumentDeleteEntity;
+import com.arangodb.entity.ErrorEntity;
+import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.springframework.core.ArangoOperations;
+import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.springframework.core.DocumentNotFoundException;
+import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
+import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
+import com.arangodb.springframework.core.template.ArangoTemplate;
 import com.arangodb.springframework.core.util.AqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.*;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.lang.Nullable;
@@ -47,26 +55,30 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleArangoRepository.class);
 
-	private final ArangoOperations arangoOperations;
+	private final ArangoTemplate arangoTemplate;
+	private final ArangoConverter converter;
 	private final ArangoMappingContext mappingContext;
 	private final ArangoExampleConverter exampleConverter;
 	private final Class<T> domainClass;
 	private final boolean returnOriginalEntities;
+    private final ArangoPersistentEntity<?> persistentEntity;
 
 	/**
-	 * @param arangoOperations       The template used to execute much of the
+	 * @param arangoTemplate       The template used to execute much of the
 	 *                               functionality of this class
 	 * @param domainClass            the class type of this repository
 	 * @param returnOriginalEntities whether save and saveAll should return the
 	 *                               original entities or new ones
 	 */
-	public SimpleArangoRepository(final ArangoOperations arangoOperations, final Class<T> domainClass, boolean returnOriginalEntities) {
+	public SimpleArangoRepository(final ArangoTemplate arangoTemplate, final Class<T> domainClass, boolean returnOriginalEntities) {
 		super();
-		this.arangoOperations = arangoOperations;
+		this.arangoTemplate = arangoTemplate;
 		this.domainClass = domainClass;
 		this.returnOriginalEntities = returnOriginalEntities;
-		mappingContext = (ArangoMappingContext) arangoOperations.getConverter().getMappingContext();
-		exampleConverter = new ArangoExampleConverter(mappingContext, arangoOperations.getResolverFactory());
+		converter = arangoTemplate.getConverter();
+		mappingContext = (ArangoMappingContext) converter.getMappingContext();
+		exampleConverter = new ArangoExampleConverter(mappingContext, arangoTemplate.getResolverFactory());
+        persistentEntity = mappingContext.getRequiredPersistentEntity(domainClass);
 	}
 
 	/**
@@ -77,7 +89,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> S save(final S entity) {
-		S saved = arangoOperations.repsert(entity);
+		S saved = arangoTemplate.repsert(entity);
 		return returnOriginalEntities ? entity : saved;
 	}
 
@@ -90,7 +102,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
-		Iterable<S> saved = arangoOperations.repsertAll(entities, domainClass);
+		Iterable<S> saved = arangoTemplate.repsertAll(entities, domainClass);
 		return returnOriginalEntities ? entities : saved;
 	}
 
@@ -102,7 +114,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Optional<T> findById(final ID id) {
-		return arangoOperations.find(id, domainClass);
+		return arangoTemplate.find(id, domainClass);
 	}
 
 	/**
@@ -113,7 +125,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public boolean existsById(final ID id) {
-		return arangoOperations.exists(id, domainClass);
+		return arangoTemplate.exists(id, domainClass);
 	}
 
 	/**
@@ -123,7 +135,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAll() {
-		return arangoOperations.findAll(domainClass);
+		return arangoTemplate.findAll(domainClass);
 	}
 
 	/**
@@ -135,7 +147,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAllById(final Iterable<ID> ids) {
-		return arangoOperations.findAll(ids, domainClass);
+		return arangoTemplate.findAll(ids, domainClass);
 	}
 
 	/**
@@ -146,7 +158,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public long count() {
-		return arangoOperations.collection(domainClass).count();
+		return arangoTemplate.collection(domainClass).count();
 	}
 
 	/**
@@ -157,7 +169,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public void deleteById(final ID id) {
 		try {
-			arangoOperations.delete(id, domainClass);
+			arangoTemplate.delete(id, domainClass);
 		} catch (DocumentNotFoundException unknown) {
 //			 silently ignored
 		}
@@ -169,20 +181,35 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 *
 	 * @param entity the entity to be deleted from the database
 	 */
-	@Override
-	public void delete(final T entity) {
-		Object id = arangoOperations.getConverter().getMappingContext()
-				.getRequiredPersistentEntity(domainClass).getIdentifierAccessor(entity).getRequiredIdentifier();
-		arangoOperations.delete(id, domainClass);
-	}
+    @Override
+    public void delete(final T entity) {
+		Object id = persistentEntity.getIdentifierAccessor(entity).getRequiredIdentifier();
+        DocumentDeleteOptions opts = new DocumentDeleteOptions();
+		persistentEntity.getRevProperty()
+                .map(persistentEntity.getPropertyAccessor(entity)::getProperty)
+				.map(r -> converter.convertIfNecessary(r, String.class))
+                .ifPresent(opts::ifMatch);
+
+        try {
+            arangoTemplate.delete(id, opts, domainClass);
+        } catch (DocumentNotFoundException e) {
+            throw new OptimisticLockingFailureException(e.getMessage(), e);
+        }
+    }
 
     /**
      * Deletes all instances of the type {@code T} with the given IDs.
 	 * @implNote do not add @Override annotation to keep backwards compatibility with spring-data-commons 2.4
      */
-    public void deleteAllById(Iterable<? extends ID> ids) {
-        arangoOperations.deleteAllById(ids, domainClass);
-    }
+	public void deleteAllById(Iterable<? extends ID> ids) {
+		MultiDocumentEntity<DocumentDeleteEntity<?>> res = arangoTemplate.deleteAllById(ids, domainClass);
+		for (ErrorEntity error : res.getErrors()) {
+			// Entities that aren't found in the persistence store are silently ignored.
+			if (error.getErrorNum() != 1202) {
+				throw arangoTemplate.translateException(new ArangoDBException(error));
+			}
+		}
+	}
 
 	/**
 	 * Deletes all the given documents from the database
@@ -199,7 +226,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public void deleteAll() {
-		arangoOperations.collection(domainClass).truncate();
+		arangoTemplate.collection(domainClass).truncate();
 	}
 
 	/**
@@ -243,7 +270,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @return the name of the collection
 	 */
 	private String getCollectionName() {
-		return arangoOperations.getConverter().getMappingContext().getPersistentEntity(domainClass).getCollection();
+		return persistentEntity.getCollection();
 	}
 
 	/**
@@ -315,8 +342,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
 		final String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
 		final String query = String.format("FOR e IN @@col %s COLLECT WITH COUNT INTO length RETURN length", filter);
-		arangoOperations.collection(domainClass);
-		final ArangoCursor<Long> cursor = arangoOperations.query(query, bindVars, null, Long.class);
+		arangoTemplate.collection(domainClass);
+		final ArangoCursor<Long> cursor = arangoTemplate.query(query, bindVars, null, Long.class);
 		return cursor.next();
 	}
 
@@ -341,8 +368,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		bindVars.put("@col", getCollectionName());
 		final String query = String.format("FOR e IN @@col %s %s RETURN e",
 				buildFilterClause(example, bindVars), buildSortClause(sort, "e"));
-		arangoOperations.collection(domainClass);
-		return arangoOperations.query(query, bindVars, null, domainClass);
+		arangoTemplate.collection(domainClass);
+		return arangoTemplate.query(query, bindVars, null, domainClass);
 	}
 
 	private <S extends T> ArangoCursor<T> findAllInternal(final Pageable pageable, @Nullable final Example<S> example,
@@ -350,8 +377,8 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		bindVars.put("@col", getCollectionName());
 		final String query = String.format("FOR e IN @@col %s %s RETURN e",
 				buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
-		arangoOperations.collection(domainClass);
-		return arangoOperations.query(query, bindVars,
+		arangoTemplate.collection(domainClass);
+		return arangoTemplate.query(query, bindVars,
 				pageable != null ? new AqlQueryOptions().fullCount(true) : null, domainClass);
 	}
 

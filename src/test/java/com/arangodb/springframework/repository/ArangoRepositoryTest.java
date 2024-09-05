@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.util.Streamable;
@@ -217,6 +218,8 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
         repository.delete(john);
         assertThat(repository.existsById(bob.getId()), equalTo(true));
         assertThat(repository.existsById(johnId), equalTo(false));
+
+        assertThrows(IllegalArgumentException.class, () -> repository.delete(null));
     }
 
     @Test
@@ -242,6 +245,14 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
         repository.deleteById(johnId);
         assertThat(repository.existsById(bob.getId()), equalTo(true));
         assertThat(repository.existsById(johnId), equalTo(false));
+
+        // ensure it does not throw in case entities are not found
+        repository.deleteById(johnId);
+
+        assertThrows(IllegalArgumentException.class, () -> repository.deleteById(null));
+
+        // document key  is not valid.
+        assertThrows(UncategorizedDataAccessException.class, () -> repository.deleteById(""));
     }
 
     @Test
@@ -252,6 +263,15 @@ public class ArangoRepositoryTest extends AbstractArangoRepositoryTest {
         repository.deleteAllById(Arrays.asList(johnId, bobId));
         assertThat(repository.existsById(bobId), equalTo(false));
         assertThat(repository.existsById(johnId), equalTo(false));
+
+        // ensure it does not throw in case entities are not found
+        repository.deleteAllById(Arrays.asList(johnId, bobId));
+
+        assertThrows(IllegalArgumentException.class, () -> repository.deleteAllById(null));
+        assertThrows(IllegalArgumentException.class, () -> repository.deleteAllById(Collections.singleton(null)));
+
+        // document key  is not valid.
+        assertThrows(UncategorizedDataAccessException.class, () -> repository.deleteAllById(List.of("")));
     }
 
     @Test

@@ -67,7 +67,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			collection.drop();
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -76,7 +76,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			collection.truncate();
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -86,7 +86,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 			final Long count = collection.count().getCount();
 			return count != null ? count : -1L;
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -95,7 +95,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.getProperties();
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -104,7 +104,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.getIndexes();
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -114,7 +114,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.ensurePersistentIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -124,7 +124,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.ensureGeoIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -135,7 +135,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.ensureFulltextIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -144,7 +144,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.ensureTtlIndex(fields, options);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -153,7 +153,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			collection.deleteIndex(id);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -162,7 +162,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			collection.grantAccess(username, permissions);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -171,7 +171,7 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			collection.resetAccess(username);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
 	}
 
@@ -180,8 +180,12 @@ public class DefaultCollectionOperations implements CollectionOperations {
 		try {
 			return collection.getPermissions(username);
 		} catch (final ArangoDBException e) {
-			throw DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
+			throw translateException(e);
 		}
+	}
+
+	private RuntimeException translateException(RuntimeException e) {
+		return DataAccessUtils.translateIfNecessary(e, exceptionTranslator);
 	}
 
 }
