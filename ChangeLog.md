@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [4.3.0] - 2024-09-05
+
+- fixed delete with revision in ArangoRepository (#317, DE-843)
+- fixed mapping of entities with non-string ids (#316, DE-842)
+- added `METHOD` and `ANNOTATION_TYPE` to property annotations targets (#314, DE-780)
+- fixed concurrency bug in date formatting and parsing (#313, DE-840) 
+- updated `arangodb-java-driver` to version `7.8.0`
+
+
 ## [4.2.0] - 2024-06-21
 
 - added support to Spring Data `3.3` (DE-816, #306)
