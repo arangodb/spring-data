@@ -52,6 +52,8 @@ public interface ArangoConverter extends ArangoEntityReader, ArangoEntityWriter 
 
 	ConversionService getConversionService();
 
+	<T> T convertIfNecessary(Object source, Class<T> type);
+
 	String convertId(Object id);
 
 }

@@ -21,6 +21,7 @@
 package com.arangodb.springframework.repository;
 
 import com.arangodb.springframework.config.ArangoConfiguration;
+import com.arangodb.springframework.core.template.ArangoTemplate;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -30,15 +31,13 @@ import org.springframework.data.repository.core.support.RepositoryFactoryBeanSup
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.util.Assert;
 
-import com.arangodb.springframework.core.ArangoOperations;
-
 /**
  * Created by F625633 on 07/07/2017.
  */
 public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 		extends RepositoryFactoryBeanSupport<T, S, ID>  implements ApplicationContextAware {
 
-	private ArangoOperations arangoOperations;
+	private ArangoTemplate arangoTemplate;
 	private ApplicationContext applicationContext;
 	private ArangoConfiguration arangoConfiguration;
 
@@ -48,8 +47,8 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 	}
 
 	@Autowired
-	public void setArangoOperations(final ArangoOperations arangoOperations) {
-		this.arangoOperations = arangoOperations;
+	public void setArangoTemplate(final ArangoTemplate arangoTemplate) {
+		this.arangoTemplate = arangoTemplate;
 	}
 
 	@Autowired
@@ -59,8 +58,8 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
-		Assert.notNull(arangoOperations, "arangoOperations not configured");
-		return new ArangoRepositoryFactory(arangoOperations, applicationContext, arangoConfiguration);
+		Assert.notNull(arangoTemplate, "arangoOperations not configured");
+		return new ArangoRepositoryFactory(arangoTemplate, applicationContext, arangoConfiguration);
 	}
 
 	@Override

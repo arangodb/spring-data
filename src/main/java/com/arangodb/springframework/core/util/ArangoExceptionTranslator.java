@@ -28,12 +28,7 @@ import com.arangodb.ArangoDBException;
 import com.arangodb.springframework.ArangoUncategorizedException;
 import org.springframework.lang.Nullable;
 
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
-
 import static com.arangodb.springframework.core.util.ArangoErrors.*;
-import static java.util.Map.entry;
 
 /**
  * Translate any {@link ArangoDBException} to the appropriate {@link DataAccessException} using response code and error number.
@@ -44,58 +39,53 @@ import static java.util.Map.entry;
  */
 public class ArangoExceptionTranslator implements PersistenceExceptionTranslator {
 
-	@Override
-	@Nullable
-	public DataAccessException translateExceptionIfPossible(final RuntimeException ex) {
-		if (ex instanceof DataAccessException exception) {
-			return exception;
-		}
-		if (ex instanceof ArangoDBException exception) {
-			final Integer responseCode = exception.getResponseCode();
-			if (responseCode == null) {
-				return new ArangoUncategorizedException(exception.getMessage(), exception);
-			}
-			BiFunction<String, ArangoDBException, DataAccessException> constructor = switch (responseCode) {
-				case ERROR_HTTP_UNAUTHORIZED, ERROR_HTTP_FORBIDDEN -> PermissionDeniedDataAccessException::new;
-				case ERROR_HTTP_BAD_PARAMETER, ERROR_HTTP_METHOD_NOT_ALLOWED -> InvalidDataAccessApiUsageException::new;
-				case ERROR_HTTP_NOT_FOUND -> mostSpecific(exception, Map.ofEntries(
-							entry(hasErrorNumber(ERROR_ARANGO_DOCUMENT_NOT_FOUND), DocumentNotFoundException::new)
-						), InvalidDataAccessResourceUsageException::new);
-				case ERROR_HTTP_CONFLICT -> mostSpecific(exception, Map.ofEntries(
-							entry(hasErrorNumber(ERROR_ARANGO_CONFLICT).and(errorMessageContains("write-write")), TransientDataAccessResourceException::new),
-							// from AQL: {"code":409,"error":true,"errorMessage":"AQL: conflict, _rev values do not match (while executing)","errorNum":1200}
-							entry(hasErrorNumber(ERROR_ARANGO_CONFLICT).and(errorMessageContains("_rev")), OptimisticLockingFailureException::new),
-							entry(hasErrorNumber(ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED).and(errorMessageContains("_key")), DuplicateKeyException::new)
-						),
-						DataIntegrityViolationException::new);
-				case ERROR_HTTP_PRECONDITION_FAILED -> mostSpecific(exception, Map.ofEntries(
-								// from document API: {"error":true,"code":412,"errorNum":1200,"errorMessage":"conflict, _rev values do not match"}
-								entry(hasErrorNumber(ERROR_ARANGO_CONFLICT).and(errorMessageContains("_rev")), OptimisticLockingFailureException::new)
-						),
-						DataAccessResourceFailureException::new);
-				case ERROR_HTTP_SERVICE_UNAVAILABLE -> DataAccessResourceFailureException::new;
-				default -> ArangoUncategorizedException::new;
-			};
-			return constructor.apply(exception.getMessage(), exception);
-		}
-		return null;
-	}
+    @Override
+    @Nullable
+    public DataAccessException translateExceptionIfPossible(final RuntimeException ex) {
+        if (ex instanceof DataAccessException exception) {
+            return exception;
+        }
 
-	private static BiFunction<String, ArangoDBException, DataAccessException> mostSpecific(ArangoDBException exception,
-											 Map<Predicate<ArangoDBException>, BiFunction<String, ArangoDBException, DataAccessException>> specific,
-											 BiFunction<String, ArangoDBException, DataAccessException> fallback) {
-		return specific.entrySet().stream()
-				.filter(entry -> entry.getKey().test(exception))
-				.map(Map.Entry::getValue)
-				.findFirst()
-				.orElse(fallback);
-	}
+        if (ex instanceof ArangoDBException e) {
+            final Integer responseCode = e.getResponseCode();
+            if (responseCode == null) {
+                return new ArangoUncategorizedException(e.getMessage(), e);
+            }
+            return switch (responseCode) {
+                case ERROR_HTTP_UNAUTHORIZED, ERROR_HTTP_FORBIDDEN ->
+                        new PermissionDeniedDataAccessException(e.getMessage(), e);
+                case ERROR_HTTP_BAD_PARAMETER, ERROR_HTTP_METHOD_NOT_ALLOWED ->
+                        new InvalidDataAccessApiUsageException(e.getMessage(), e);
+                case ERROR_HTTP_NOT_FOUND -> hasErrorNumber(e, ERROR_ARANGO_DOCUMENT_NOT_FOUND) ?
+                        new DocumentNotFoundException(e.getMessage(), e) :
+                        new InvalidDataAccessResourceUsageException(e.getMessage(), e);
+                case ERROR_HTTP_CONFLICT ->
+                        hasErrorNumber(e, ERROR_ARANGO_CONFLICT) && errorMessageContains(e, "write-write") ?
+                                new TransientDataAccessResourceException(e.getMessage(), e) :
+                                // from AQL: {"code":409,"error":true,"errorMessage":"AQL: conflict, _rev values do not match (while executing)","errorNum":1200}
+                                hasErrorNumber(e, ERROR_ARANGO_CONFLICT) && errorMessageContains(e, "_rev") ?
+                                        new OptimisticLockingFailureException(e.getMessage(), e) :
+                                        hasErrorNumber(e, ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED) && errorMessageContains(e, "_key") ?
+                                                new DuplicateKeyException(e.getMessage(), e) :
+                                                new DataIntegrityViolationException(e.getMessage(), e);
+                case ERROR_HTTP_PRECONDITION_FAILED ->
+                    // from document API: {"error":true,"code":412,"errorNum":1200,"errorMessage":"conflict, _rev values do not match"}
+                        hasErrorNumber(e, ERROR_ARANGO_CONFLICT) && errorMessageContains(e, "_rev") ?
+                                new OptimisticLockingFailureException(e.getMessage(), e) :
+                                new DataAccessResourceFailureException(e.getMessage(), e);
+                case ERROR_HTTP_SERVICE_UNAVAILABLE -> new DataAccessResourceFailureException(e.getMessage(), e);
+                default -> new ArangoUncategorizedException(e.getMessage(), e);
+            };
+        }
 
-	private static Predicate<ArangoDBException> hasErrorNumber(int expected) {
-		return exception -> exception.getErrorNum() != null && exception.getErrorNum() == expected;
-	}
+        return null;
+    }
 
-	private static Predicate<ArangoDBException> errorMessageContains(String expected) {
-		return exception -> exception.getErrorMessage() != null && exception.getErrorMessage().contains(expected);
-	}
+    private static boolean hasErrorNumber(ArangoDBException exception, int expected) {
+        return exception.getErrorNum() != null && exception.getErrorNum() == expected;
+    }
+
+    private static boolean errorMessageContains(ArangoDBException exception, String expected) {
+        return exception.getErrorMessage() != null && exception.getErrorMessage().contains(expected);
+    }
 }

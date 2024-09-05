@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 
 import com.arangodb.springframework.config.ArangoConfiguration;
+import com.arangodb.springframework.core.template.ArangoTemplate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
@@ -58,17 +59,17 @@ import com.arangodb.springframework.repository.query.StringBasedArangoQuery;
  */
 public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
-	private final ArangoOperations arangoOperations;
+	private final ArangoTemplate arangoTemplate;
 	private final ApplicationContext applicationContext;
 	private final boolean returnOriginalEntities;
 	private final MappingContext<? extends ArangoPersistentEntity<?>, ArangoPersistentProperty> context;
 
-    public ArangoRepositoryFactory(final ArangoOperations arangoOperations,
+    public ArangoRepositoryFactory(final ArangoTemplate arangoTemplate,
                                    final ApplicationContext applicationContext,
                                    final ArangoConfiguration arangoConfiguration) {
-        this.arangoOperations = arangoOperations;
+        this.arangoTemplate = arangoTemplate;
         this.applicationContext = applicationContext;
-        this.context = arangoOperations.getConverter().getMappingContext();
+        this.context = arangoTemplate.getConverter().getMappingContext();
         returnOriginalEntities = arangoConfiguration.returnOriginalEntities();
     }
 
@@ -82,7 +83,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	protected Object getTargetRepository(final RepositoryInformation metadata) {
-		return new SimpleArangoRepository(arangoOperations, metadata.getDomainType(), returnOriginalEntities);
+		return new SimpleArangoRepository(arangoTemplate, metadata.getDomainType(), returnOriginalEntities);
 	}
 
 	@Override
@@ -109,7 +110,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 		QueryLookupStrategy strategy = null;
 		switch (key) {
 		case CREATE_IF_NOT_FOUND:
-			strategy = new DefaultArangoQueryLookupStrategy(arangoOperations, applicationContext);
+			strategy = new DefaultArangoQueryLookupStrategy(arangoTemplate, applicationContext);
 			break;
 		case CREATE:
 			break;

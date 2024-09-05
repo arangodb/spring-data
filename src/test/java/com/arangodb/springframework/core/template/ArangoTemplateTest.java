@@ -368,6 +368,28 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 	}
 
 	@Test
+	public void deleteDocumentWithRev() {
+		var doc = new Customer("John", "Doe", 30);
+		DocumentEntity res = template.insert(doc);
+		template.delete(doc.getId(), new DocumentDeleteOptions().ifMatch(doc.getRev()), Customer.class);
+		Optional<Customer> customer = template.find(res.getId(), Customer.class);
+		assertThat(customer.isPresent(), is(false));
+	}
+
+	@Test
+	public void deleteDocumentWithRevConflict() {
+		Customer doc = new Customer("John", "Doe", 30);
+		DocumentEntity res = template.insert(doc);
+
+		Customer doc2 = template.find(res.getId(), Customer.class).get();
+		doc2.setName("Johnny");
+		template.update(doc2.getId(), doc2);
+
+		assertThrows(OptimisticLockingFailureException.class, () ->
+				template.delete(doc.getId(), new DocumentDeleteOptions().ifMatch(doc.getRev()), Customer.class));
+	}
+
+	@Test
 	public void deleteDocumentReturnOld() {
 		Customer doc = new Customer("John", "Doe", 30);
 		String id = template.insert(doc).getId();
@@ -395,6 +417,45 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(deletedA.isPresent(), is(false));
 		final Optional<Product> deletedB = template.find(b.getId(), Product.class);
 		assertThat(deletedB.isPresent(), is(false));
+	}
+
+	@Test
+	public void deleteDocumentsWithRev() {
+		var a = template.insert(new Product("a"), new DocumentCreateOptions().returnNew(true));
+		var b = template.insert(new Product("b"),  new DocumentCreateOptions().returnNew(true));
+
+		MultiDocumentEntity<DocumentDeleteEntity<Product>> res = template.deleteAll(List.of(a, b),
+				new DocumentDeleteOptions().ignoreRevs(false),
+				Product.class);
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getDocuments().size(), is(2));
+
+		final Optional<Product> deletedA = template.find(a.getId(), Product.class);
+		assertThat(deletedA.isPresent(), is(false));
+		final Optional<Product> deletedB = template.find(b.getId(), Product.class);
+		assertThat(deletedB.isPresent(), is(false));
+	}
+
+	@Test
+	public void deleteDocumentsWithRevConflict() {
+		var a = template.insert(new Product("a"), new DocumentCreateOptions().returnNew(true));
+		var b = template.insert(new Product("b"),  new DocumentCreateOptions().returnNew(true));
+
+		var a2 = template.find(a.getId(), Product.class).get();
+		a2.setName("aa");
+		template.update(a2.getId(), a2);
+
+		MultiDocumentEntity<DocumentDeleteEntity<Product>> res = template.deleteAll(List.of(a, b),
+				new DocumentDeleteOptions().ignoreRevs(false), Product.class);
+		assertThat(res, is(notNullValue()));
+		assertThat(res.getDocuments().size(), is(1));
+		assertThat(res.getDocuments().get(0).getKey(), is(b.getKey()));
+		assertThat(res.getErrors().size(), is(1));
+		assertThat(res.getErrors().get(0).getErrorNum(), is(1200));
+		assertThat(res.getErrors().get(0).getErrorMessage(), containsString("conflict, _rev values do not match"));
+
+		assertThat(template.find(a.getId(), Product.class).isPresent(), is(true));
+		assertThat(template.find(b.getId(), Product.class).isPresent(), is(false));
 	}
 
 	@Test
