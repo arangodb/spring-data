@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.util.MetadataUtils;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.springframework.annotation.Ref;
@@ -37,10 +38,10 @@ import com.arangodb.springframework.core.ArangoOperations;
  */
 public class RefResolver extends AbstractResolver implements ReferenceResolver<Ref> {
 
-    private final ArangoOperations template;
+	private final ArangoOperations template;
 
-    public RefResolver(final ArangoOperations template) {
-        super(template.getConverter().getConversionService());
+	public RefResolver(final ArangoOperations template, QueryTransactionBridge transactionBridge) {
+		super(template.getConverter().getConversionService(), transactionBridge);
         this.template = template;
     }
 
@@ -58,7 +59,7 @@ public class RefResolver extends AbstractResolver implements ReferenceResolver<R
     }
 
     private Object _resolve(final String id, final TypeInformation<?> type) {
-        return template.find(id, type.getType())
+        return template.find(id, type.getType(), defaultReadOptions())
                 .orElseThrow(() -> cannotResolveException(id, type));
     }
 
