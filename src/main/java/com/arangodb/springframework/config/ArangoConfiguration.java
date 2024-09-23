@@ -83,7 +83,7 @@ public interface ArangoConfiguration {
     }
 
     @Bean
-    default ArangoOperations arangoTemplate() throws Exception {
+    default ArangoTemplate arangoTemplate() throws Exception {
         return new ArangoTemplate(arango().serde(serde()).build(), database(), arangoConverter(), resolverFactory());
     }
 
