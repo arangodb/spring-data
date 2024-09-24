@@ -22,15 +22,12 @@ package com.arangodb.springframework.core;
 
 import java.util.Collection;
 
+import com.arangodb.model.*;
 import org.springframework.dao.DataAccessException;
 
 import com.arangodb.entity.CollectionPropertiesEntity;
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.Permissions;
-import com.arangodb.model.FulltextIndexOptions;
-import com.arangodb.model.GeoIndexOptions;
-import com.arangodb.model.PersistentIndexOptions;
-import com.arangodb.model.TtlIndexOptions;
 
 /**
  * Interface that specifies a basic set of ArangoDB operations on collection
@@ -136,6 +133,32 @@ public interface CollectionOperations {
 	 * @throws DataAccessException
 	 */
 	IndexEntity ensureTtlIndex(Iterable<String> fields, TtlIndexOptions options) throws DataAccessException;
+
+	/**
+	 * Creates a MD-index for the collection, if it does not already exist.
+	 *
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensureMDIndex(Iterable<String> fields, MDIndexOptions options)
+			throws DataAccessException;
+
+	/**
+	 * Creates a MD-Prefixed-index for the collection, if it does not already exist.
+	 *
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensureMDPrefixedIndex(Iterable<String> fields, MDPrefixedIndexOptions options)
+			throws DataAccessException;
 
 	/**
 	 * Deletes the index with the given {@code id} from the collection.

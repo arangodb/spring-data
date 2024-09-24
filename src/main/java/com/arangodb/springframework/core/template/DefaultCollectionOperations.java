@@ -23,6 +23,7 @@ package com.arangodb.springframework.core.template;
 import java.util.Collection;
 import java.util.Map;
 
+import com.arangodb.model.*;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -32,10 +33,6 @@ import com.arangodb.ArangoDBException;
 import com.arangodb.entity.CollectionPropertiesEntity;
 import com.arangodb.entity.IndexEntity;
 import com.arangodb.entity.Permissions;
-import com.arangodb.model.FulltextIndexOptions;
-import com.arangodb.model.GeoIndexOptions;
-import com.arangodb.model.PersistentIndexOptions;
-import com.arangodb.model.TtlIndexOptions;
 import com.arangodb.springframework.core.CollectionOperations;
 
 /**
@@ -143,6 +140,26 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	public IndexEntity ensureTtlIndex(Iterable<String> fields, TtlIndexOptions options) throws DataAccessException {
 		try {
 			return collection.ensureTtlIndex(fields, options);
+		} catch (final ArangoDBException e) {
+			throw translateException(e);
+		}
+	}
+
+	@Override
+	public IndexEntity ensureMDIndex(final Iterable<String> fields, final MDIndexOptions options)
+			throws DataAccessException {
+		try {
+			return collection.ensureMDIndex(fields, options);
+		} catch (final ArangoDBException e) {
+			throw translateException(e);
+		}
+	}
+
+	@Override
+	public IndexEntity ensureMDPrefixedIndex(final Iterable<String> fields, final MDPrefixedIndexOptions options)
+			throws DataAccessException {
+		try {
+			return collection.ensureMDPrefixedIndex(fields, options);
 		} catch (final ArangoDBException e) {
 			throw translateException(e);
 		}

@@ -24,15 +24,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
-import com.arangodb.springframework.annotation.TtlIndex;
+import com.arangodb.springframework.annotation.*;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentEntity;
 
 import com.arangodb.model.CollectionCreateOptions;
-import com.arangodb.springframework.annotation.FulltextIndex;
-import com.arangodb.springframework.annotation.GeoIndex;
-import com.arangodb.springframework.annotation.PersistentIndex;
 
 /**
  * @author Mark Vollmary
@@ -58,6 +55,10 @@ public interface ArangoPersistentEntity<T>
 	Collection<FulltextIndex> getFulltextIndexes();
 
 	Optional<TtlIndex> getTtlIndex();
+
+	Collection<MDIndex> getMDIndexes();
+
+	Collection<MDPrefixedIndex> getMDPrefixedIndexes();
 
 	Map<String, ArangoPersistentProperty> getComputedValuesProperties();
 
