@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+
+## [4.4.0] - 2024-09-24
+
+- updated Java Driver to version `7.9.0`
+- added MD-Index support (#320, DE-789)
+- added allowRetry AQL query option (DE-589)
+- fixed arangoTemplate bean factory (#319)
+
+
 ## [4.3.0] - 2024-09-05
 
 - fixed delete with revision in ArangoRepository (#317, DE-843)
