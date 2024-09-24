@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author Mark Vollmary
@@ -502,4 +503,23 @@ public class ArangoIndexTest extends AbstractArangoTest {
         assertThat(ttlIdx.getExpireAfter(), is(3600));
     }
 
+    @MDIndex(fields = {"a", "b"}, sparse = true, unique = true)
+    public static class MDIndexTestEntity {
+        private double a;
+        private double b;
+    }
+
+    @Test
+    public void mdIndex() {
+        assumeTrue(isAtLeastVersion(3, 12));
+        Collection<IndexEntity> indexes = template.collection(MDIndexTestEntity.class).getIndexes();
+        assertThat(indexes, hasSize(2));
+        assertThat(indexes.stream().map(IndexEntity::getType).collect(Collectors.toList()),
+                hasItems(IndexType.primary, IndexType.mdi));
+        IndexEntity mdiIdx = indexes.stream().filter(i -> i.getType() == IndexType.mdi).findFirst().get();
+        assertThat(mdiIdx.getFields(), hasSize(2));
+        assertThat(mdiIdx.getFields(), hasItems("a", "b"));
+        assertThat(mdiIdx.getSparse(), is(true));
+        assertThat(mdiIdx.getUnique(), is(true));
+    }
 }

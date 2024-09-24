@@ -60,4 +60,20 @@ public abstract class AbstractArangoTest {
 		staticTemplate.dropDatabase();
 	}
 
+    public boolean isAtLeastVersion(final int major, final int minor) {
+        return isAtLeastVersion(major, minor, 0);
+    }
+
+    public boolean isAtLeastVersion(final int major, final int minor, final int patch) {
+        return TestUtils.isAtLeastVersion(template.getVersion().getVersion(), major, minor, patch);
+    }
+
+    public boolean isLessThanVersion(final int major, final int minor) {
+        return isLessThanVersion(major, minor, 0);
+    }
+
+    public boolean isLessThanVersion(final int major, final int minor, final int patch) {
+        return TestUtils.isLessThanVersion(template.getVersion().getVersion(), major, minor, patch);
+    }
+
 }

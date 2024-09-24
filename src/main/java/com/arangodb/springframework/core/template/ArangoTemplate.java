@@ -23,10 +23,7 @@ package com.arangodb.springframework.core.template;
 import com.arangodb.*;
 import com.arangodb.entity.*;
 import com.arangodb.model.*;
-import com.arangodb.springframework.annotation.FulltextIndex;
-import com.arangodb.springframework.annotation.GeoIndex;
-import com.arangodb.springframework.annotation.PersistentIndex;
-import com.arangodb.springframework.annotation.TtlIndex;
+import com.arangodb.springframework.annotation.*;
 import com.arangodb.springframework.core.ArangoOperations;
 import com.arangodb.springframework.core.CollectionOperations;
 import com.arangodb.springframework.core.UserOperations;
@@ -174,6 +171,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         persistentEntity.getFulltextIndexedProperties().forEach(p -> ensureFulltextIndex(collection, p));
         persistentEntity.getTtlIndex().ifPresent(index -> ensureTtlIndex(collection, index));
         persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p));
+        persistentEntity.getMDIndexes().forEach(index -> ensureMDIndex(collection, index));
     }
 
     private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation) {
@@ -228,6 +226,15 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         final TtlIndexOptions options = new TtlIndexOptions();
         value.getTtlIndexed().ifPresent(i -> options.expireAfter(i.expireAfter()));
         collection.ensureTtlIndex(Collections.singleton(value.getFieldName()), options);
+    }
+
+    private static void ensureMDIndex(final CollectionOperations collection, final MDIndex annotation) {
+        collection.ensureMDIndex(Arrays.asList(annotation.fields()),
+                new MDIndexOptions()
+                        .unique(annotation.unique())
+                        .fieldValueTypes(annotation.fieldValueTypes())
+                        .sparse(annotation.sparse())
+        );
     }
 
     private Optional<String> determineCollectionFromId(final Object id) {

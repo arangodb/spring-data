@@ -272,6 +272,14 @@ public class DefaultArangoPersistentEntity<T> extends BasicPersistentEntity<T, A
         return getIndex(TtlIndex.class);
     }
 
+    @Override
+    public Collection<MDIndex> getMDIndexes() {
+        final Collection<MDIndex> indexes = getIndexes(MDIndex.class);
+        Optional.ofNullable(findAnnotation(MDIndexes.class))
+                .ifPresent(i -> indexes.addAll(Arrays.asList(i.value())));
+        return indexes;
+    }
+
     private <A extends Annotation> Optional<A> getIndex(final Class<A> annotation) {
         return Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(getType(), annotation));
     }
