@@ -156,6 +156,16 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	}
 
 	@Override
+	public IndexEntity ensureMDPrefixedIndex(final Iterable<String> fields, final MDPrefixedIndexOptions options)
+			throws DataAccessException {
+		try {
+			return collection.ensureMDPrefixedIndex(fields, options);
+		} catch (final ArangoDBException e) {
+			throw translateException(e);
+		}
+	}
+
+	@Override
 	public void dropIndex(final String id) throws DataAccessException {
 		try {
 			collection.deleteIndex(id);

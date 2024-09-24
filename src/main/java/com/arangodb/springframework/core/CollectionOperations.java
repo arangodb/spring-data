@@ -148,6 +148,19 @@ public interface CollectionOperations {
 			throws DataAccessException;
 
 	/**
+	 * Creates a MD-Prefixed-index for the collection, if it does not already exist.
+	 *
+	 * @param fields
+	 *            A list of attribute paths
+	 * @param options
+	 *            Additional options, can be null
+	 * @return information about the index
+	 * @throws DataAccessException
+	 */
+	IndexEntity ensureMDPrefixedIndex(Iterable<String> fields, MDPrefixedIndexOptions options)
+			throws DataAccessException;
+
+	/**
 	 * Deletes the index with the given {@code id} from the collection.
 	 *
 	 * @param id

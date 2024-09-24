@@ -58,6 +58,8 @@ public interface ArangoPersistentEntity<T>
 
 	Collection<MDIndex> getMDIndexes();
 
+	Collection<MDPrefixedIndex> getMDPrefixedIndexes();
+
 	Map<String, ArangoPersistentProperty> getComputedValuesProperties();
 
 	Collection<ArangoPersistentProperty> getPersistentIndexedProperties();

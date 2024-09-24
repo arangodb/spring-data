@@ -172,6 +172,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
         persistentEntity.getTtlIndex().ifPresent(index -> ensureTtlIndex(collection, index));
         persistentEntity.getTtlIndexedProperty().ifPresent(p -> ensureTtlIndex(collection, p));
         persistentEntity.getMDIndexes().forEach(index -> ensureMDIndex(collection, index));
+        persistentEntity.getMDPrefixedIndexes().forEach(index -> ensureMDPrefixedIndex(collection, index));
     }
 
     private static void ensurePersistentIndex(final CollectionOperations collection, final PersistentIndex annotation) {
@@ -231,6 +232,16 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
     private static void ensureMDIndex(final CollectionOperations collection, final MDIndex annotation) {
         collection.ensureMDIndex(Arrays.asList(annotation.fields()),
                 new MDIndexOptions()
+                        .unique(annotation.unique())
+                        .fieldValueTypes(annotation.fieldValueTypes())
+                        .sparse(annotation.sparse())
+        );
+    }
+
+    private static void ensureMDPrefixedIndex(final CollectionOperations collection, final MDPrefixedIndex annotation) {
+        collection.ensureMDPrefixedIndex(Arrays.asList(annotation.fields()),
+                new MDPrefixedIndexOptions()
+                        .prefixFields(Arrays.asList(annotation.prefixFields()))
                         .unique(annotation.unique())
                         .fieldValueTypes(annotation.fieldValueTypes())
                         .sparse(annotation.sparse())

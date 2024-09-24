@@ -505,8 +505,6 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
     @MDIndex(fields = {"a", "b"}, sparse = true, unique = true)
     public static class MDIndexTestEntity {
-        private double a;
-        private double b;
     }
 
     @Test
@@ -521,5 +519,25 @@ public class ArangoIndexTest extends AbstractArangoTest {
         assertThat(mdiIdx.getFields(), hasItems("a", "b"));
         assertThat(mdiIdx.getSparse(), is(true));
         assertThat(mdiIdx.getUnique(), is(true));
+    }
+
+    @MDPrefixedIndex(prefixFields = {"p1", "p2"}, fields = {"a", "b"}, sparse = true, unique = true)
+    public static class MDPrefixedIndexTestEntity {
+    }
+
+    @Test
+    public void mdPrefixedIndex() {
+        assumeTrue(isAtLeastVersion(3, 12));
+        Collection<IndexEntity> indexes = template.collection(MDPrefixedIndexTestEntity.class).getIndexes();
+        assertThat(indexes, hasSize(2));
+        assertThat(indexes.stream().map(IndexEntity::getType).collect(Collectors.toList()),
+                hasItems(IndexType.primary, IndexType.mdiPrefixed));
+        IndexEntity mdiPrefixedIdx = indexes.stream().filter(i -> i.getType() == IndexType.mdiPrefixed).findFirst().get();
+        assertThat(mdiPrefixedIdx.getPrefixFields(), hasSize(2));
+        assertThat(mdiPrefixedIdx.getPrefixFields(), hasItems("p1", "p2"));
+        assertThat(mdiPrefixedIdx.getFields(), hasSize(2));
+        assertThat(mdiPrefixedIdx.getFields(), hasItems("a", "b"));
+        assertThat(mdiPrefixedIdx.getSparse(), is(true));
+        assertThat(mdiPrefixedIdx.getUnique(), is(true));
     }
 }
