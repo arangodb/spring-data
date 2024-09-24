@@ -127,6 +127,9 @@ public class ArangoQueryMethod extends QueryMethod {
 		if (allowDirtyRead) {
 			options.allowDirtyRead(allowDirtyRead);
 		}
+		if (queryOptions.allowRetry()) {
+			options.allowRetry(true);
+		}
 		return options;
 	}
 

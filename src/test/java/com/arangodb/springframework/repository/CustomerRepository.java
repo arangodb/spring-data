@@ -51,7 +51,7 @@ public interface CustomerRepository extends ArangoRepository<Customer, String>, 
     @Query("FOR c IN #collection FILTER c._key == @id AND c.`customer-name` == @name RETURN c")
     ArangoCursor<Customer> findOneByBindVarsAql(AqlQueryOptions options, @BindVars Map<String, Object> bindVars);
 
-    @QueryOptions(count = true)
+    @QueryOptions(count = true, allowRetry = true)
     @Query("for i in @n..10000 return 1/i")
     ArangoCursor<Double> sequenceTo10K(@Param("n") Integer n, AqlQueryOptions options);
 
