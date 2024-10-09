@@ -3,7 +3,7 @@ version: 2.1
 parameters:
   docker-img:
     type: 'string'
-    default: ""
+    default: ''
 
 commands:
   timeout:
@@ -23,7 +23,7 @@ commands:
     parameters:
       docker-img:
         type: 'string'
-        default: <<pipeline.parameters.docker-img>>
+        default: 'docker.io/arangodb/arangodb:latest'
       topology:
         type: 'string'
         default: 'single'
@@ -118,7 +118,7 @@ jobs:
     parameters:
       docker-img:
         type: 'string'
-        default: <<pipeline.parameters.docker-img>>
+        default: 'docker.io/arangodb/arangodb:latest'
       topology:
         type: 'string'
         default: 'single'
@@ -144,7 +144,7 @@ jobs:
     parameters:
       docker-img:
         type: 'string'
-        default: <<pipeline.parameters.docker-img>>
+        default: 'docker.io/arangodb/arangodb:latest'
       spring-boot-version:
         type: 'string'
         default: '3.2.6'
@@ -211,10 +211,14 @@ workflows:
           name: test-<<matrix.topology>>
           matrix:
             parameters:
+              docker-img:
+                - <<pipeline.parameters.docker-img>>
               topology:
                 - 'single'
                 - 'cluster'
   test-protocol:
+    when:
+      not: <<pipeline.parameters.docker-img>>
     jobs:
       - test:
           name: test-<<matrix.protocol>>
@@ -229,6 +233,8 @@ workflows:
                 - 'HTTP2_VPACK'
                 - 'HTTP2_JSON'
   test-spring-version:
+    when:
+      not: <<pipeline.parameters.docker-img>>
     jobs:
       - integration-test:
           name: test-<<matrix.spring-boot-version>>
