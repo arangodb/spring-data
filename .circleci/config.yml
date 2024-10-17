@@ -167,6 +167,27 @@ jobs:
           working_directory: integration-tests
       - report
       - store_cache
+
+  tutorial:
+    parameters:
+      docker-img:
+        type: 'string'
+        default: 'docker.io/arangodb/arangodb:latest'
+    executor: 'j21'
+    steps:
+      - timeout
+      - checkout
+      - setup_remote_docker
+      - start-db:
+          docker-img: <<parameters.docker-img>>
+      - load_cache
+      - mvn-install
+      - run:
+          name: Run tutorial
+          command: mvn spring-boot:run
+          working_directory: tutorial
+      - store_cache
+
   deploy:
     executor: 'j17'
     steps:
@@ -177,6 +198,7 @@ jobs:
       - config_gpg
       - deploy
       - store_cache
+
   release:
     executor: 'j17'
     steps:
@@ -243,6 +265,9 @@ workflows:
               spring-boot-version:
                 - '3.2.6'
                 - '3.3.0'
+  tutorial:
+    jobs:
+      - tutorial
   deploy:
     jobs:
       - deploy:
