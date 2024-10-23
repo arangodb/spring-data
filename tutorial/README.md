@@ -50,7 +50,7 @@ We have to create a Maven `pom.xml`:
         <dependency>
             <groupId>com.arangodb</groupId>
             <artifactId>arangodb-spring-data</artifactId>
-            <version>4.4.0</version>
+            <version>4.4.1</version>
         </dependency>
     </dependencies>
 
