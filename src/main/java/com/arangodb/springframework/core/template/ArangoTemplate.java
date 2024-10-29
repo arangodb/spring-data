@@ -262,22 +262,26 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
 	}
 
     private static void ensureMDIndex(final CollectionOperations collection, final MDIndex annotation, Collection<IndexEntity> existing) {
-        collection.ensureMDIndex(Arrays.asList(annotation.fields()),
-                new MDIndexOptions()
-                        .unique(annotation.unique())
-                        .fieldValueTypes(annotation.fieldValueTypes())
-                        .sparse(annotation.sparse())
-        );
+        final MDIndexOptions options = new MDIndexOptions()
+                .unique(annotation.unique())
+                .fieldValueTypes(annotation.fieldValueTypes())
+                .sparse(annotation.sparse());
+        Collection<String> fields = Arrays.asList(annotation.fields());
+        if (createNewIndex(IndexType.mdi, fields, existing)) {
+            existing.add(collection.ensureMDIndex(fields, options));
+        }
     }
 
     private static void ensureMDPrefixedIndex(final CollectionOperations collection, final MDPrefixedIndex annotation, Collection<IndexEntity> existing) {
-        collection.ensureMDPrefixedIndex(Arrays.asList(annotation.fields()),
-                new MDPrefixedIndexOptions()
-                        .prefixFields(Arrays.asList(annotation.prefixFields()))
-                        .unique(annotation.unique())
-                        .fieldValueTypes(annotation.fieldValueTypes())
-                        .sparse(annotation.sparse())
-        );
+        final MDPrefixedIndexOptions options = new MDPrefixedIndexOptions()
+                .prefixFields(Arrays.asList(annotation.prefixFields()))
+                .unique(annotation.unique())
+                .fieldValueTypes(annotation.fieldValueTypes())
+                .sparse(annotation.sparse());
+        Collection<String> fields = Arrays.asList(annotation.fields());
+        if (createNewIndex(IndexType.mdiPrefixed, fields, existing)) {
+            existing.add(collection.ensureMDPrefixedIndex(fields, options));
+        }
     }
 
 	private static boolean createNewIndex(IndexType type, Collection<String> fields, Collection<IndexEntity> existing) {
@@ -507,7 +511,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
             final Collection<String> keys = new ArrayList<>();
             ids.forEach(id -> keys.add(determineDocumentKeyFromId(id)));
 			boolean transactional = options != null && options.getStreamTransactionId() != null;
-			Collection<T> docs = _collection(entityClass, transactional).getDocuments(keys, entityClass).getDocuments();
+			Collection<T> docs = _collection(entityClass, transactional).getDocuments(keys, entityClass, options).getDocuments();
             for (T doc : docs) {
                 if (doc != null) {
                     potentiallyEmitEvent(new AfterLoadEvent<>(doc));
@@ -574,7 +578,7 @@ public class ArangoTemplate implements ArangoOperations, CollectionCallback, App
                     bindVars,
 					options, clazz
             );
-            result = it.hasNext() ? it.next() : null;
+            result = it.next();
         } catch (final ArangoDBException e) {
             throw translateException(e);
         }
