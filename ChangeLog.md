@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ## [Unreleased]
 
 
+## [4.4.2] - 2024-11-08
+
+- updated Java Driver to version `7.12.0`
+
+
 ## [4.4.1] - 2024-10-23
 
 - updated Java Driver to version `7.10.0`
