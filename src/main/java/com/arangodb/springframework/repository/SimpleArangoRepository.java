@@ -27,14 +27,15 @@ import com.arangodb.entity.ErrorEntity;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.model.DocumentDeleteOptions;
+import com.arangodb.model.DocumentExistsOptions;
+import com.arangodb.model.DocumentReadOptions;
 import com.arangodb.springframework.core.DocumentNotFoundException;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.template.ArangoTemplate;
 import com.arangodb.springframework.core.util.AqlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.*;
 import org.springframework.data.repository.query.FluentQuery;
@@ -53,8 +54,6 @@ import java.util.function.Function;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleArangoRepository.class);
-
 	private final ArangoTemplate arangoTemplate;
 	private final ArangoConverter converter;
 	private final ArangoMappingContext mappingContext;
@@ -62,6 +61,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	private final Class<T> domainClass;
 	private final boolean returnOriginalEntities;
     private final ArangoPersistentEntity<?> persistentEntity;
+	private final QueryTransactionBridge transactionBridge;
 
 	/**
 	 * @param arangoTemplate       The template used to execute much of the
@@ -69,12 +69,14 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @param domainClass            the class type of this repository
 	 * @param returnOriginalEntities whether save and saveAll should return the
 	 *                               original entities or new ones
+	 * @param transactionBridge the optional transaction bridge
 	 */
-	public SimpleArangoRepository(final ArangoTemplate arangoTemplate, final Class<T> domainClass, boolean returnOriginalEntities) {
+	public SimpleArangoRepository(final ArangoTemplate arangoTemplate, final Class<T> domainClass, boolean returnOriginalEntities, final QueryTransactionBridge transactionBridge) {
 		super();
 		this.arangoTemplate = arangoTemplate;
 		this.domainClass = domainClass;
 		this.returnOriginalEntities = returnOriginalEntities;
+        this.transactionBridge = transactionBridge;
 		converter = arangoTemplate.getConverter();
 		mappingContext = (ArangoMappingContext) converter.getMappingContext();
 		exampleConverter = new ArangoExampleConverter(mappingContext, arangoTemplate.getResolverFactory());
@@ -89,7 +91,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> S save(final S entity) {
-		S saved = arangoTemplate.repsert(entity);
+		S saved = arangoTemplate.repsert(entity, defaultQueryOptions());
 		return returnOriginalEntities ? entity : saved;
 	}
 
@@ -102,7 +104,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> saveAll(final Iterable<S> entities) {
-		Iterable<S> saved = arangoTemplate.repsertAll(entities, domainClass);
+		Iterable<S> saved = arangoTemplate.repsertAll(entities, defaultQueryOptions(), domainClass);
 		return returnOriginalEntities ? entities : saved;
 	}
 
@@ -114,7 +116,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Optional<T> findById(final ID id) {
-		return arangoTemplate.find(id, domainClass);
+		return arangoTemplate.find(id, domainClass, defaultReadOptions());
 	}
 
 	/**
@@ -125,7 +127,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public boolean existsById(final ID id) {
-		return arangoTemplate.exists(id, domainClass);
+		return arangoTemplate.exists(id, defaultExistsOptions(), domainClass);
 	}
 
 	/**
@@ -135,7 +137,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAll() {
-		return arangoTemplate.findAll(domainClass);
+		return arangoTemplate.findAll(defaultReadOptions(), domainClass);
 	}
 
 	/**
@@ -147,7 +149,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAllById(final Iterable<ID> ids) {
-		return arangoTemplate.findAll(ids, domainClass);
+		return arangoTemplate.findAll(ids, defaultReadOptions(), domainClass);
 	}
 
 	/**
@@ -169,7 +171,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	@Override
 	public void deleteById(final ID id) {
 		try {
-			arangoTemplate.delete(id, domainClass);
+			arangoTemplate.delete(id, defaultDeleteOptions(), domainClass);
 		} catch (DocumentNotFoundException unknown) {
 //			 silently ignored
 		}
@@ -184,7 +186,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
     @Override
     public void delete(final T entity) {
 		Object id = persistentEntity.getIdentifierAccessor(entity).getRequiredIdentifier();
-        DocumentDeleteOptions opts = new DocumentDeleteOptions();
+        DocumentDeleteOptions opts = defaultDeleteOptions();
 		persistentEntity.getRevProperty()
                 .map(persistentEntity.getPropertyAccessor(entity)::getProperty)
 				.map(r -> converter.convertIfNecessary(r, String.class))
@@ -202,7 +204,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 * @implNote do not add @Override annotation to keep backwards compatibility with spring-data-commons 2.4
      */
 	public void deleteAllById(Iterable<? extends ID> ids) {
-		MultiDocumentEntity<DocumentDeleteEntity<?>> res = arangoTemplate.deleteAllById(ids, domainClass);
+		MultiDocumentEntity<DocumentDeleteEntity<T>> res = arangoTemplate.deleteAllById(ids, defaultDeleteOptions(), domainClass);
 		for (ErrorEntity error : res.getErrors()) {
 			// Entities that aren't found in the persistence store are silently ignored.
 			if (error.getErrorNum() != 1202) {
@@ -255,10 +257,6 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public Page<T> findAll(final Pageable pageable) {
-		if (pageable == null) {
-			LOGGER.debug("Pageable in findAll(Pageable) is null");
-		}
-
 		final ArangoCursor<T> result = findAllInternal(pageable, null, new HashMap<>());
 		final List<T> content = result.asListRemaining();
 		return new PageImpl<>(content, pageable, ((Number) result.getStats().getFullCount()).longValue());
@@ -295,7 +293,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public <S extends T> Iterable<S> findAll(final Example<S> example) {
-		return (ArangoCursor) findAllInternal((Pageable) null, example, new HashMap<>());
+		return (ArangoCursor<S>) findAllInternal((Pageable) null, example, new HashMap<>());
 	}
 
 	/**
@@ -340,10 +338,10 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final Map<String, Object> bindVars = new HashMap<>();
 		bindVars.put("@col", getCollectionName());
 		final String predicate = exampleConverter.convertExampleToPredicate(example, bindVars);
-		final String filter = predicate.length() == 0 ? "" : " FILTER " + predicate;
+		final String filter = predicate.isEmpty() ? "" : " FILTER " + predicate;
 		final String query = String.format("FOR e IN @@col %s COLLECT WITH COUNT INTO length RETURN length", filter);
 		arangoTemplate.collection(domainClass);
-		final ArangoCursor<Long> cursor = arangoTemplate.query(query, bindVars, null, Long.class);
+		final ArangoCursor<Long> cursor = arangoTemplate.query(query, bindVars, defaultQueryOptions(), Long.class);
 		return cursor.next();
 	}
 
@@ -369,7 +367,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final String query = String.format("FOR e IN @@col %s %s RETURN e",
 				buildFilterClause(example, bindVars), buildSortClause(sort, "e"));
 		arangoTemplate.collection(domainClass);
-		return arangoTemplate.query(query, bindVars, null, domainClass);
+		return arangoTemplate.query(query, bindVars, defaultQueryOptions(), domainClass);
 	}
 
 	private <S extends T> ArangoCursor<T> findAllInternal(final Pageable pageable, @Nullable final Example<S> example,
@@ -379,7 +377,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 				buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
 		arangoTemplate.collection(domainClass);
 		return arangoTemplate.query(query, bindVars,
-				pageable != null ? new AqlQueryOptions().fullCount(true) : null, domainClass);
+				pageable != null ? new AqlQueryOptions().fullCount(true) : defaultQueryOptions(), domainClass);
 	}
 
 	private <S extends T> String buildFilterClause(final Example<S> example, final Map<String, Object> bindVars) {
@@ -406,5 +404,37 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
     private String buildSortClause(final Sort sort, final String varName) {
         return sort == null ? "" : AqlUtils.buildSortClause(AqlUtils.toPersistentSort(sort, mappingContext, domainClass), varName);
     }
+
+	private DocumentReadOptions defaultReadOptions() {
+		DocumentReadOptions options = new DocumentReadOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
+		}
+		return options;
+	}
+
+	private AqlQueryOptions defaultQueryOptions() {
+		AqlQueryOptions options = new AqlQueryOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
+		}
+		return options;
+	}
+
+	private DocumentExistsOptions defaultExistsOptions() {
+		DocumentExistsOptions options = new DocumentExistsOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
+		}
+		return options;
+	}
+
+	private DocumentDeleteOptions defaultDeleteOptions() {
+		DocumentDeleteOptions options = new DocumentDeleteOptions();
+		if (transactionBridge != null) {
+			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
+		}
+		return options;
+	}
 
 }
