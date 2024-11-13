@@ -27,7 +27,7 @@ We have to create a Maven `pom.xml`:
         <relativePath/>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.4</version>
+        <version>3.3.5</version>
     </parent>
 
     <groupId>com.arangodb</groupId>
