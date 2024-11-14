@@ -267,7 +267,13 @@ workflows:
                 - '3.3.0'
   tutorial:
     jobs:
-      - tutorial
+      - tutorial:
+          name: tutorial-<<matrix.docker-img>>
+          matrix:
+            parameters:
+              docker-img:
+                - 'docker.io/arangodb/arangodb:3.11'
+                - 'docker.io/arangodb/arangodb:3.12'
   deploy:
     jobs:
       - deploy:
