@@ -25,10 +25,7 @@ import com.arangodb.ArangoDBException;
 import com.arangodb.entity.DocumentDeleteEntity;
 import com.arangodb.entity.ErrorEntity;
 import com.arangodb.entity.MultiDocumentEntity;
-import com.arangodb.model.AqlQueryOptions;
-import com.arangodb.model.DocumentDeleteOptions;
-import com.arangodb.model.DocumentExistsOptions;
-import com.arangodb.model.DocumentReadOptions;
+import com.arangodb.model.*;
 import com.arangodb.springframework.core.DocumentNotFoundException;
 import com.arangodb.springframework.core.convert.ArangoConverter;
 import com.arangodb.springframework.core.mapping.ArangoMappingContext;
@@ -160,7 +157,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public long count() {
-		return arangoTemplate.collection(domainClass).count();
+		return arangoTemplate.collection(domainClass).count(defaultCountOptions());
 	}
 
 	/**
@@ -228,7 +225,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	 */
 	@Override
 	public void deleteAll() {
-		arangoTemplate.collection(domainClass).truncate();
+		arangoTemplate.collection(domainClass).truncate(defaultTruncateOptions());
 	}
 
 	/**
@@ -406,35 +403,33 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
     }
 
 	private DocumentReadOptions defaultReadOptions() {
-		DocumentReadOptions options = new DocumentReadOptions();
-		if (transactionBridge != null) {
-			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
-		}
-		return options;
+		return defaultTransactionalOptions(new DocumentReadOptions());
 	}
 
 	private AqlQueryOptions defaultQueryOptions() {
-		AqlQueryOptions options = new AqlQueryOptions();
-		if (transactionBridge != null) {
-			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
-		}
-		return options;
+		return defaultTransactionalOptions(new AqlQueryOptions());
 	}
 
 	private DocumentExistsOptions defaultExistsOptions() {
-		DocumentExistsOptions options = new DocumentExistsOptions();
-		if (transactionBridge != null) {
-			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
-		}
-		return options;
+		return defaultTransactionalOptions(new DocumentExistsOptions());
 	}
 
 	private DocumentDeleteOptions defaultDeleteOptions() {
-		DocumentDeleteOptions options = new DocumentDeleteOptions();
+		return defaultTransactionalOptions(new DocumentDeleteOptions());
+	}
+
+	private CollectionTruncateOptions defaultTruncateOptions() {
+		return defaultTransactionalOptions(new CollectionTruncateOptions());
+	}
+
+	private CollectionCountOptions defaultCountOptions() {
+		return defaultTransactionalOptions(new CollectionCountOptions());
+	}
+
+	private <O extends TransactionalOptions<O>> O defaultTransactionalOptions(O options) {
 		if (transactionBridge != null) {
 			options.streamTransactionId(transactionBridge.getCurrentTransaction(Collections.singleton(getCollectionName())));
 		}
 		return options;
 	}
-
 }
