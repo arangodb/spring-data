@@ -373,8 +373,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 		final String query = String.format("FOR e IN @@col %s %s RETURN e",
 				buildFilterClause(example, bindVars), buildPageableClause(pageable, "e"));
 		arangoTemplate.collection(domainClass);
-		return arangoTemplate.query(query, bindVars,
-				pageable != null ? new AqlQueryOptions().fullCount(true) : defaultQueryOptions(), domainClass);
+		return arangoTemplate.query(query, bindVars, defaultQueryOptions().fullCount(pageable != null), domainClass);
 	}
 
 	private <S extends T> String buildFilterClause(final Example<S> example, final Map<String, Object> bindVars) {
@@ -415,7 +414,7 @@ public class SimpleArangoRepository<T, ID> implements ArangoRepository<T, ID> {
 	}
 
 	private DocumentDeleteOptions defaultDeleteOptions() {
-		return defaultTransactionalOptions(new DocumentDeleteOptions());
+		return defaultTransactionalOptions(new DocumentDeleteOptions().returnOld(false));
 	}
 
 	private CollectionTruncateOptions defaultTruncateOptions() {
