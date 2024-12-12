@@ -7,14 +7,21 @@ Spring Boot Starter ArangoDB.
 A more extensive demo about the features of Spring Data ArangoDB can be found in the 
 [Spring Boot Starter ArangoDB Demo](https://github.com/arangodb/spring-boot-starter/tree/main/demo).
 
-# Getting Started
+## Get started
 
-## Build a project with Maven
+This tutorial is about how to configure [Spring Data ArangoDB](https://github.com/arangodb/spring-data)
+without using Spring Boot Starter ArangoDB.
 
-First, we have to set up a project and add every needed dependency.
-We use `Maven` and `Spring Boot` for this demo.
+For a more extensive tutorial about the features of Spring Data ArangoDB and
+Spring Boot support, see the [Spring Boot Starter](../spring-boot-arangodb.md)
+documentation.
 
-We have to create a Maven `pom.xml`:
+### Build a project with Maven
+
+Set up a project and add every needed dependency. This demo uses Maven and
+Spring Boot.
+
+Create a Maven `pom.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -57,7 +64,10 @@ We have to create a Maven `pom.xml`:
 </project>
 ```
 
-## Entity classes
+Substitute the versions with the latest available versions that are compatible.
+See the [Supported versions](#supported-versions) for details.
+
+### Entity classes
 
 For this tutorial we will model our entity with a Java record class:
 
@@ -72,7 +82,7 @@ public record Character(
 }
 ```
 
-## Create a repository
+### Create a repository
 
 Now that we have our data model, we want to store data. For this, we create a repository interface which
 extends `ArangoRepository`. This gives us access to CRUD operations, paging, and query by example mechanics.
@@ -82,7 +92,7 @@ public interface CharacterRepository extends ArangoRepository<Character, String>
 }
 ```
 
-## Create a Configuration class
+### Create a Configuration class
 
 We need a configuration class to set up everything to connect to our ArangoDB instance and to declare that all
 needed Spring Beans are processed by the Spring container.
@@ -90,7 +100,7 @@ needed Spring Beans are processed by the Spring container.
 - `@EnableArangoRepositories`: Defines where Spring can find your repositories
 - `arango()`: Method to configure the connection to the ArangoDB instance
 - `database()`: Method to define the database name
-- `returnOriginalEntities()`: Method to configures the behaviour of repository save methods to either return the  
+- `returnOriginalEntities()`: Method to configures the behavior of repository save methods to either return the  
   original entities (updated where possible) or new ones. Set to `false` to use java records.
 
 ```java
@@ -118,7 +128,26 @@ public class AdbConfig implements ArangoConfiguration {
 }
 ```
 
-## Create a CommandLineRunner
+Note that, in case the driver is configured to use a protocol with `VPACK`
+content type (i.e. `HTTP_VPACK` or `HTTP2_VPACK`), then the
+`ArangoConfiguration#contentType()` method must be overridden to return
+`ContentType.VPACK` as shown in the following example:
+
+```java
+@Override
+public ArangoDB.Builder arango() {
+  new ArangoDB.Builder()
+      // ...    
+      .protocol(Protocol.HTTP2_VPACK);
+}
+
+@Override
+public ContentType contentType() {
+  return ContentType.VPACK;
+}
+```
+
+### Create a CommandLineRunner
 
 To run our demo as command line application, we have to create a class implementing `CommandLineRunner`:
 
@@ -148,7 +177,7 @@ public class CrudRunner implements CommandLineRunner {
 }
 ```
 
-## Run the applucation
+### Run the application
 
 Finally, we create a main class:
 
@@ -174,10 +203,3 @@ This should produce a console output similar to:
 ```
 Ned Stark saved in the database: Character[id=2029, name=Ned, surname=Stark]
 ```
-
-# Learn more
-
-* [ArangoDB](https://www.arangodb.com)
-* [Spring Data ArangoDB](https://github.com/arangodb/spring-data)
-* [ArangoDB Java Driver](https://github.com/arangodb/arangodb-java-driver)
-* [Spring Boot Starter ArangoDB Demo](https://github.com/arangodb/spring-boot-starter/tree/main/demo)
