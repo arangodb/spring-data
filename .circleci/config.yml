@@ -263,8 +263,8 @@ workflows:
           matrix:
             parameters:
               spring-boot-version:
-                - '3.2.6'
-                - '3.3.0'
+                - '3.3.6'
+                - '3.4.0'
   tutorial:
     jobs:
       - tutorial:

@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- added support to Spring Data `3.4`
+- updated Java Driver to version `7.15.0`
+- updated Jackson Dataformat Velocypack to version `4.5.0`
 
 ## [4.4.2] - 2024-11-08
 
