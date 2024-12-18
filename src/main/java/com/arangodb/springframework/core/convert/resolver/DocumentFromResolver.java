@@ -20,10 +20,10 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.ArangoCursor;
-import com.arangodb.model.AqlQueryOptions;
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.core.ArangoOperations;
 
@@ -38,11 +38,11 @@ import java.util.function.Supplier;
  */
 public class DocumentFromResolver extends AbstractResolver implements RelationResolver<From> {
 
-    private final ArangoOperations template;
+	private final ArangoOperations template;
 
-    public DocumentFromResolver(final ArangoOperations template) {
-        super(template.getConverter().getConversionService());
-        this.template = template;
+    public DocumentFromResolver(final ArangoOperations template, QueryTransactionBridge transactionBridge) {
+		super(template.getConverter().getConversionService(), transactionBridge);
+		this.template = template;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class DocumentFromResolver extends AbstractResolver implements RelationRe
         Map<String, Object> bindVars = new HashMap<>();
         bindVars.put("@edge", type);
         bindVars.put("id", id);
-        return template.query(query, bindVars, new AqlQueryOptions(), type);
+        return template.query(query, bindVars, defaultQueryOptions(), type);
     }
 
 }
