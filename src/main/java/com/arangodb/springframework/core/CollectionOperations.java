@@ -57,7 +57,16 @@ public interface CollectionOperations {
 	 *
 	 * @throws DataAccessException
 	 */
-	void truncate() throws DataAccessException;
+	void truncate(CollectionTruncateOptions options) throws DataAccessException;
+
+	/**
+	 * Removes all documents from the collection, but leaves the indexes intact
+	 *
+	 * @throws DataAccessException
+	 */
+	default void truncate() throws DataAccessException {
+		truncate(new CollectionTruncateOptions());
+	}
 
 	/**
 	 * Counts the documents in a collection
@@ -65,7 +74,17 @@ public interface CollectionOperations {
 	 * @return number of
 	 * @throws DataAccessException
 	 */
-	long count() throws DataAccessException;
+	long count(CollectionCountOptions options) throws DataAccessException;
+
+	/**
+	 * Counts the documents in a collection
+	 *
+	 * @return number of
+	 * @throws DataAccessException
+	 */
+	default long count() throws DataAccessException {
+		return count(new CollectionCountOptions());
+	}
 
 	/**
 	 * Reads the properties of the specified collection
