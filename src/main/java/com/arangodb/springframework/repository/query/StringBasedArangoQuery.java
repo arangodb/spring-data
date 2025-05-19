@@ -33,9 +33,8 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Modifier;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +45,7 @@ import java.util.regex.Pattern;
  * @author Mark Vollmary
  * @author Christian Lechner
  * @author Michele Rastelli
+ * @author Arne Burmeister
  */
 public class StringBasedArangoQuery extends AbstractArangoQuery {
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -69,13 +69,14 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	private final ApplicationContext applicationContext;
 
 	public StringBasedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations,
-								  final ApplicationContext applicationContext) {
-		this(method.getAnnotatedQuery(), method, operations, applicationContext);
+								  final QueryTransactionBridge transactionBridge, final ApplicationContext applicationContext) {
+		this(method.getAnnotatedQuery(), method, operations, transactionBridge, applicationContext);
 	}
 
 	public StringBasedArangoQuery(final String query, final ArangoQueryMethod method,
-		final ArangoOperations operations, final ApplicationContext applicationContext) {
-		super(method, operations);
+		final ArangoOperations operations, final QueryTransactionBridge transactionBridge,
+		final ApplicationContext applicationContext) {
+		super(method, operations, transactionBridge);
 		Assert.notNull(query, "Query must not be null!");
 
 		this.query = query;
@@ -90,14 +91,35 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	}
 
 	@Override
-	protected String createQuery(
-		final ArangoParameterAccessor accessor,
+	protected QueryWithCollections createQuery(
+            final ArangoParameterAccessor accessor,
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options) {
 
 		extractBindVars(accessor, bindVars);
 
-		return prepareQuery(accessor);
+		return new QueryWithCollections(prepareQuery(accessor), allCollectionNames(bindVars));
+	}
+
+	private Collection<String> allCollectionNames(Map<String, Object> bindVars) {
+		HashSet<String> allCollections = new HashSet<>();
+		if (!Modifier.isAbstract(domainClass.getModifiers())) {
+			allCollections.add(collectionName);
+		}
+		bindVars.entrySet().stream()
+				.filter(entry -> entry.getKey().startsWith("@"))
+				.map(Map.Entry::getValue)
+				.map(this::asCollectionName)
+				.map(AqlUtils::buildCollectionName)
+				.forEach(allCollections::add);
+		return allCollections;
+	}
+
+	private String asCollectionName(Object value) {
+		if (value instanceof Class<?>) {
+			return mappingContext.getRequiredPersistentEntity((Class<?>) value).getCollection();
+		}
+		return value.toString();
 	}
 
 	@Override
@@ -149,7 +171,7 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 			final ArangoParameter param = bindableParams.getParameter(i);
 			final Object value = accessor.getBindableValue(i);
 			if (param.isNamedParameter()) {
-				bindVars.put(param.getName().get(), value);
+				param.getName().ifPresent(name -> bindVars.put(name, value));
 			} else {
 				final String key = String.valueOf(param.getIndex());
 				final String collectionKey = "@" + key;
