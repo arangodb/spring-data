@@ -1,7 +1,7 @@
 package com.arangodb.springframework.core.template;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.arangodb.ArangoCollection;
 
@@ -13,7 +13,7 @@ class CollectionCacheValue {
 	public CollectionCacheValue(final ArangoCollection collection) {
 		super();
 		this.collection = collection;
-		this.entities = new ArrayList<>();
+		this.entities = new CopyOnWriteArrayList<>();
 	}
 
 	public ArangoCollection getCollection() {
