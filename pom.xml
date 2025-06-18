@@ -4,14 +4,14 @@
 
     <groupId>com.arangodb</groupId>
     <artifactId>arangodb-spring-data</artifactId>
-    <version>4.5.0</version>
+    <version>4.6.0-SNAPSHOT</version>
     <inceptionYear>2017</inceptionYear>
     <packaging>jar</packaging>
 
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>3.4.0</version>
+        <version>3.5.0</version>
         <relativePath/>
     </parent>
 
@@ -61,10 +61,10 @@
 
     <properties>
         <java-module-name>com.arangodb.springframework</java-module-name>
-        <arangodb.version>7.15.0</arangodb.version>
+        <arangodb.version>7.20.0</arangodb.version>
 
         <!-- enforce dependencies convergence -->
-        <slf4j>2.0.16</slf4j>
+        <slf4j>2.0.17</slf4j>
     </properties>
 
     <build>
@@ -308,6 +308,11 @@
                 <groupId>com.arangodb</groupId>
                 <artifactId>vst-protocol</artifactId>
                 <version>${arangodb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>1.5.12</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
