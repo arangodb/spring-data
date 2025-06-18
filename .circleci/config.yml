@@ -265,6 +265,7 @@ workflows:
               spring-boot-version:
                 - '3.3.6'
                 - '3.4.0'
+                - '3.5.0'
   tutorial:
     jobs:
       - tutorial:
