@@ -62,6 +62,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		assertThat(version.getLicense(), is(notNullValue()));
 		assertThat(version.getServer(), is(notNullValue()));
 		assertThat(version.getVersion(), is(notNullValue()));
+		assertThat(template.db(), is(notNullValue()));
 	}
 
 	@Test
@@ -409,7 +410,7 @@ public class ArangoTemplateTest extends AbstractArangoTest {
 		final Product documentA = template.find(a.getId(), Product.class).get();
 		final Product documentB = template.find(b.getId(), Product.class).get();
 
-		final MultiDocumentEntity<DocumentDeleteEntity<?>> res = template.deleteAll(Arrays.asList(documentA, documentB), Product.class);
+		final MultiDocumentEntity<DocumentDeleteEntity<Product>> res = template.deleteAll(Arrays.asList(documentA, documentB), Product.class);
 		assertThat(res, is(notNullValue()));
 		assertThat(res.getDocuments().size(), is(2));
 

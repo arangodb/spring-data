@@ -20,6 +20,7 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.data.util.TypeInformation;
 
 import com.arangodb.springframework.annotation.To;
@@ -35,8 +36,8 @@ public class EdgeToResolver extends AbstractResolver implements RelationResolver
 
 	private final ArangoOperations template;
 
-	public EdgeToResolver(final ArangoOperations template) {
-		super(template.getConverter().getConversionService());
+	public EdgeToResolver(final ArangoOperations template, QueryTransactionBridge transactionBridge) {
+		super(template.getConverter().getConversionService(), transactionBridge);
 		this.template = template;
 	}
 
@@ -48,7 +49,7 @@ public class EdgeToResolver extends AbstractResolver implements RelationResolver
 	}
 
 	private Object _resolveOne(final String id, final TypeInformation<?> type) {
-		return template.find(id, type.getType())
+		return template.find(id, type.getType(), defaultReadOptions())
 				.orElseThrow(() -> cannotResolveException(id, type));
 	}
 
