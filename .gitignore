@@ -248,3 +248,4 @@ fabric.properties
 .idea
 
 arangodb-spring-data.iml
+/.flattened-pom.xml
