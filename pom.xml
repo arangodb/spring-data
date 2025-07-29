@@ -4,7 +4,7 @@
 
     <groupId>com.arangodb</groupId>
     <artifactId>arangodb-spring-data</artifactId>
-    <version>4.6.0</version>
+    <version>4.7.0-SNAPSHOT</version>
     <inceptionYear>2017</inceptionYear>
     <packaging>jar</packaging>
 
@@ -34,17 +34,6 @@
             <url>https://github.com/mpv1989</url>
         </developer>
     </developers>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
 
     <repositories>
         <repository>
@@ -87,19 +76,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.7.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <stagingProfileId>84aff6e87e214c</stagingProfileId>
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                </configuration>
             </plugin>
 
             <plugin>
@@ -189,11 +165,14 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.1</version>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <extensions>true</extensions>
                 <configuration>
-                    <retryFailedDeploymentCount>10</retryFailedDeploymentCount>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
                 </configuration>
             </plugin>
 
