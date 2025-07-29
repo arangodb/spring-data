@@ -23,7 +23,7 @@ commands:
     parameters:
       docker-img:
         type: 'string'
-        default: 'docker.io/arangodb/arangodb:latest'
+        default: 'docker.io/arangodb/enterprise:latest'
       topology:
         type: 'string'
         default: 'single'
@@ -118,7 +118,7 @@ jobs:
     parameters:
       docker-img:
         type: 'string'
-        default: 'docker.io/arangodb/arangodb:latest'
+        default: 'docker.io/arangodb/enterprise:latest'
       topology:
         type: 'string'
         default: 'single'
@@ -144,7 +144,7 @@ jobs:
     parameters:
       docker-img:
         type: 'string'
-        default: 'docker.io/arangodb/arangodb:latest'
+        default: 'docker.io/arangodb/enterprise:latest'
       spring-boot-version:
         type: 'string'
         default: '3.2.6'
@@ -172,7 +172,7 @@ jobs:
     parameters:
       docker-img:
         type: 'string'
-        default: 'docker.io/arangodb/arangodb:latest'
+        default: 'docker.io/arangodb/enterprise:latest'
     executor: 'j21'
     steps:
       - timeout
