@@ -28,6 +28,7 @@ public record Character(
         @Id
         String id,
         String name,
-        String surname
+        String surname,
+        Long expiresAt
 ) {
 }
