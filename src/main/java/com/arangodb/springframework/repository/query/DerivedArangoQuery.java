@@ -44,15 +44,16 @@ public class DerivedArangoQuery extends AbstractArangoQuery {
 	private final PartTree tree;
 	private final List<String> geoFields;
 
-	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
-		super(method, operations);
+	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations,
+							  final QueryTransactionBridge transactionBridge) {
+		super(method, operations, transactionBridge);
 		tree = new PartTree(method.getName(), domainClass);
 		geoFields = getGeoFields();
 	}
 
 	@Override
-	protected String createQuery(
-		final ArangoParameterAccessor accessor,
+	protected QueryWithCollections createQuery(
+            final ArangoParameterAccessor accessor,
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions options) {
 

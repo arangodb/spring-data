@@ -69,18 +69,18 @@ public class DefaultCollectionOperations implements CollectionOperations {
 	}
 
 	@Override
-	public void truncate() throws DataAccessException {
+	public void truncate(CollectionTruncateOptions options) throws DataAccessException {
 		try {
-			collection.truncate();
+			collection.truncate(options);
 		} catch (final ArangoDBException e) {
 			throw translateException(e);
 		}
 	}
 
 	@Override
-	public long count() throws DataAccessException {
+	public long count(CollectionCountOptions options) throws DataAccessException {
 		try {
-			final Long count = collection.count().getCount();
+			final Long count = collection.count(options).getCount();
 			return count != null ? count : -1L;
 		} catch (final ArangoDBException e) {
 			throw translateException(e);
