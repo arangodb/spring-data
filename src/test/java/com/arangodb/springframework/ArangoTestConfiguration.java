@@ -23,7 +23,7 @@ package com.arangodb.springframework;
 import com.arangodb.ArangoDB;
 import com.arangodb.ContentType;
 import com.arangodb.Protocol;
-import com.arangodb.config.ArangoConfigProperties;
+import com.arangodb.internal.config.ArangoConfigPropertiesImpl;
 import com.arangodb.internal.serde.ContentTypeFactory;
 import com.arangodb.springframework.annotation.EnableArangoAuditing;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
@@ -39,6 +39,7 @@ import org.springframework.data.domain.AuditorAware;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  * @author Mark Vollmary
@@ -65,8 +66,11 @@ public class ArangoTestConfiguration implements ArangoConfiguration {
 
     @Override
     public ArangoDB.Builder arango() {
+        Properties properties = new Properties();
+        properties.put("arangodb.hosts", System.getProperty("arango.endpoints", "172.28.0.1:8529"));
+        properties.put("arangodb.password", "test");
         return new ArangoDB.Builder()
-                .loadProperties(ArangoConfigProperties.fromFile())
+                .loadProperties(new ArangoConfigPropertiesImpl(properties))
                 .protocol(protocol);
     }
 

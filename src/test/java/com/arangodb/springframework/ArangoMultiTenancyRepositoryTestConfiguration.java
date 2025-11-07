@@ -21,7 +21,7 @@
 package com.arangodb.springframework;
 
 import com.arangodb.ArangoDB;
-import com.arangodb.config.ArangoConfigProperties;
+import com.arangodb.internal.config.ArangoConfigPropertiesImpl;
 import com.arangodb.springframework.annotation.EnableArangoRepositories;
 import com.arangodb.springframework.config.ArangoConfiguration;
 import com.arangodb.springframework.core.mapping.CustomMappingTest;
@@ -31,6 +31,7 @@ import org.springframework.core.convert.converter.Converter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  *
@@ -49,8 +50,11 @@ public class ArangoMultiTenancyRepositoryTestConfiguration implements ArangoConf
 
 	@Override
 	public ArangoDB.Builder arango() {
-		return new ArangoDB.Builder().loadProperties(ArangoConfigProperties.fromFile());
-	}
+        Properties properties = new Properties();
+        properties.put("arangodb.hosts", System.getProperty("arango.endpoints", "172.28.0.1:8529"));
+        properties.put("arangodb.password", "test");
+        return new ArangoDB.Builder().loadProperties(new ArangoConfigPropertiesImpl(properties));
+    }
 
 	@Override
 	public String database() {
