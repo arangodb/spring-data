@@ -22,6 +22,7 @@ package com.arangodb.springframework.repository;
 
 import com.arangodb.springframework.config.ArangoConfiguration;
 import com.arangodb.springframework.core.template.ArangoTemplate;
+import com.arangodb.springframework.repository.query.QueryTransactionBridge;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -39,6 +40,7 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 
 	private ArangoTemplate arangoTemplate;
 	private ApplicationContext applicationContext;
+	private QueryTransactionBridge transactionBridge;
 	private ArangoConfiguration arangoConfiguration;
 
 	@Autowired
@@ -51,6 +53,11 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 		this.arangoTemplate = arangoTemplate;
 	}
 
+	@Autowired(required = false)
+	public void setTransactionBridge(final QueryTransactionBridge transactionBridge) {
+		this.transactionBridge = transactionBridge;
+	}
+
 	@Autowired
 	public void setArangoConfiguration(final ArangoConfiguration arangoConfiguration) {
 		this.arangoConfiguration = arangoConfiguration;
@@ -59,7 +66,7 @@ public class ArangoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
 		Assert.notNull(arangoTemplate, "arangoOperations not configured");
-		return new ArangoRepositoryFactory(arangoTemplate, applicationContext, arangoConfiguration);
+		return new ArangoRepositoryFactory(arangoTemplate, applicationContext, transactionBridge, arangoConfiguration);
 	}
 
 	@Override

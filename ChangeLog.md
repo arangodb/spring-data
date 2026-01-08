@@ -92,6 +92,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - return updated entity from `ArangoOperations.repsert()` (#285)
 - removed deprecated `AbstractArangoConfiguration` in favor of `ArangoConfiguration`
 - removed support for Joda-Time
+- added support for transactions offering a platform transaction manager based on stream transactions (#80)
 
 ## [3.10.0] - 2023-05-17
 
