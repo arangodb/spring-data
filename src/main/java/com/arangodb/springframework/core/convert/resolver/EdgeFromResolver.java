@@ -20,7 +20,7 @@
 
 package com.arangodb.springframework.core.convert.resolver;
 
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 
 import com.arangodb.springframework.annotation.From;
 import com.arangodb.springframework.core.ArangoOperations;

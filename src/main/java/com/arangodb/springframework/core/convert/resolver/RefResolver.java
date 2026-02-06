@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
 import com.arangodb.springframework.core.util.MetadataUtils;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 
 import com.arangodb.springframework.annotation.Ref;
 import com.arangodb.springframework.core.ArangoOperations;

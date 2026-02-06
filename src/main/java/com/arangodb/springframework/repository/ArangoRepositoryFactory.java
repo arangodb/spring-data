@@ -36,9 +36,9 @@ import org.springframework.data.repository.core.support.AnnotationRepositoryMeta
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.QueryLookupStrategy;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -102,7 +102,7 @@ public class ArangoRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(
-			@Nullable final QueryLookupStrategy.Key key, final QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			@Nullable final QueryLookupStrategy.Key key, final ValueExpressionDelegate delegate) {
 
 		if (key == null) {
 			return Optional.empty();

@@ -24,7 +24,7 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 
 import com.arangodb.springframework.core.mapping.ArangoPersistentEntity;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 
 /**
  * @author Mark Vollmary

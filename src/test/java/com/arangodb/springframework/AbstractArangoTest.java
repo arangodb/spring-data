@@ -26,12 +26,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.arangodb.springframework.core.ArangoOperations;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 /**
  * @author Mark Vollmary
  */
 @SpringJUnitConfig(ArangoTestConfiguration.class)
+@DirtiesContext // Avoid parallel execution because the database is deleted after test and the name is the same for all tests
 public abstract class AbstractArangoTest {
 
 	private static volatile ArangoOperations staticTemplate;
