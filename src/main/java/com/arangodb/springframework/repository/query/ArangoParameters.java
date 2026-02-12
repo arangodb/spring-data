@@ -36,7 +36,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersSource;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.arangodb.model.AqlQueryOptions;

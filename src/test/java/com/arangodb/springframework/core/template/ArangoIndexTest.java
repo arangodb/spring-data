@@ -482,8 +482,14 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
     @Test
     public void multipleTtlIndexedShouldThrow() {
-        assertThat(Assertions.assertThrows(MappingException.class,
-                        () -> template.collection(MultipleTtlIndexedTestEntity.class).getIndexes()).getMessage(),
+        MappingException exception = Assertions.assertThrows(MappingException.class,
+                () -> template.collection(MultipleTtlIndexedTestEntity.class).getIndexes());
+        // In Spring Data 4.0, the validation happens during entity creation and may be wrapped
+        String message = exception.getMessage();
+        if (exception.getCause() != null) {
+            message = exception.getCause().getMessage();
+        }
+        assertThat(message,
                 containsString("Found multiple ttl indexed properties!"));
     }
 

@@ -33,7 +33,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.util.StringUtils;
 
 import com.arangodb.model.AqlQueryOptions;
