@@ -23,7 +23,7 @@ package com.arangodb.springframework.core.convert.resolver;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 
 /**
  * @author Mark Vollmary

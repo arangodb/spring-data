@@ -34,7 +34,7 @@ Create a Maven `pom.xml`:
         <relativePath/>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.0</version>
+        <version>4.0.2</version>
     </parent>
 
     <groupId>com.arangodb</groupId>
@@ -57,7 +57,7 @@ Create a Maven `pom.xml`:
         <dependency>
             <groupId>com.arangodb</groupId>
             <artifactId>arangodb-spring-data</artifactId>
-            <version>4.7.0-SNAPSHOT</version>
+            <version>5.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

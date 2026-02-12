@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.springframework.annotation.Relations;
