@@ -6,33 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
-## [5.0.0] - TBD
+## [5.0.0] - 2026-02-12
 
-### Breaking Changes
-- **Upgraded to Spring Boot 4.0 / Spring Data 2025.1 (Spring Data Commons 4.0)**
-  - Minimum Java version: 17 (Java 21+ recommended)
-  - Spring Framework upgraded to 7.0
-  - Spring Data Commons upgraded to 4.0
-
-### API Changes
-- Updated package imports for Spring Data Commons 4.0:
-  - `TypeInformation`: moved from `org.springframework.data.util` to `org.springframework.data.core`
-  - `PropertyPath`: moved from `org.springframework.data.mapping` to `org.springframework.data.core`
-  - `QueryMethodEvaluationContextProvider` replaced with `ValueExpressionDelegate`
-
-### Dependency Updates
-- Updated `spring-data-parent` from 3.5.0 to 4.0.0
-- Updated `maven-resources-plugin` from 2.7 to 3.3.1
-- ArangoDB Java Driver remains at 7.20.0
-
-### Test Updates
-- Updated test expectations to match Spring Data 4.0 validation behavior
-- Entity validation now occurs during PersistentEntity creation
-
-### Migration Notes
-- Applications using this library must upgrade to Spring Boot 4.0
-- Review the [Spring Boot 4.0 Migration Guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide) for application-level changes
-- No changes required to ArangoDB-specific code or annotations
+- upgraded Spring Framework dependency to version 7.0 (DE-1087)
+- upgraded Spring Data Commons dependency to version 4.0 (DE-1087)
+- updated Java Driver to version `7.25.0`
 
 ## [4.6.0] - 2025-06-18
 
