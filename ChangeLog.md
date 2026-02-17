@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- updated Java Driver to version `7.25.0`
+
 ## [4.6.0] - 2025-06-18
 
 - added support to Spring Data `3.5` (DE-1027, #329)

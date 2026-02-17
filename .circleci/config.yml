@@ -104,10 +104,16 @@ executors:
   j21:
     docker:
       - image: 'cimg/openjdk:21.0'
+  j25:
+    docker:
+      - image: 'cimg/openjdk:25.0'
 
 jobs:
   test:
     parameters:
+      jdk:
+        type: 'string'
+        default: 'j21'
       docker-img:
         type: 'string'
         default: 'docker.io/arangodb/enterprise:latest'
@@ -117,7 +123,7 @@ jobs:
       protocol:
         type: 'string'
         default: 'HTTP2_JSON'
-    executor: 'j21'
+    executor: <<parameters.jdk>>
     steps:
       - timeout
       - checkout
@@ -139,7 +145,7 @@ jobs:
         default: 'docker.io/arangodb/enterprise:latest'
       spring-boot-version:
         type: 'string'
-        default: '3.2.6'
+        default: '3.5.9'
     executor: 'j17'
     steps:
       - timeout
@@ -197,14 +203,24 @@ workflows:
       not: <<pipeline.parameters.docker-img>>
     jobs:
       - test:
-          name: test-<<matrix.topology>>-<<matrix.docker-img>>
+          name: test-<<matrix.topology>>
           matrix:
             parameters:
-              docker-img:
-                - 'docker.io/arangodb/enterprise:3.12'
               topology:
                 - 'single'
                 - 'cluster'
+  test-jdk-versions:
+    when:
+      not: <<pipeline.parameters.docker-img>>
+    jobs:
+      - test:
+          name: test-jdk-<<matrix.jdk>>
+          matrix:
+            parameters:
+              jdk:
+                - 'j17'
+                - 'j21'
+                - 'j25'
   test-adb-topology:
     when: <<pipeline.parameters.docker-img>>
     jobs:
@@ -225,8 +241,6 @@ workflows:
           name: test-<<matrix.protocol>>
           matrix:
             parameters:
-              docker-img:
-                - 'docker.io/arangodb/enterprise:3.12'
               protocol:
                 - 'HTTP_VPACK'
                 - 'HTTP_JSON'
@@ -241,17 +255,11 @@ workflows:
           matrix:
             parameters:
               spring-boot-version:
-                - '3.3.6'
-                - '3.4.0'
-                - '3.5.0'
+                - '3.5.9'
   tutorial:
     jobs:
       - tutorial:
-          name: tutorial-<<matrix.docker-img>>
-          matrix:
-            parameters:
-              docker-img:
-                - 'docker.io/arangodb/enterprise:3.12'
+          name: tutorial
   deploy:
     jobs:
       - deploy:
