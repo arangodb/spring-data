@@ -268,4 +268,4 @@ workflows:
             tags:
               only: /^deploy.*/
             branches:
-              ignore: /.*/
+              only: main
