@@ -266,6 +266,6 @@ workflows:
           context: java-release
           filters:
             tags:
-              only: /^deploy.*/
+              only: /^deploy-4\..*/
             branches:
               ignore: /.*/
