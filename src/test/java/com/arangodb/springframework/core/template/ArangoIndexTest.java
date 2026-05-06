@@ -45,15 +45,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 public class ArangoIndexTest extends AbstractArangoTest {
 
     private IndexType geo1() {
-        return geoType(IndexType.geo1);
+        return IndexType.geo;
     }
 
     private IndexType geo2() {
-        return geoType(IndexType.geo2);
-    }
-
-    private IndexType geoType(final IndexType type) {
-        return Integer.valueOf(template.getVersion().getVersion().split("\\.")[1]) >= 4 ? IndexType.geo : type;
+        return IndexType.geo;
     }
 
     public static class PersistentIndexedSingleFieldTestEntity {
@@ -66,7 +62,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
         assertThat(template.collection(PersistentIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(
                 template.collection(PersistentIndexedSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.persistent));
         assertThat(template.collection(PersistentIndexedSingleFieldTestEntity.class).getIndexes().stream()
                         .filter(i -> i.getType() == IndexType.persistent).findFirst().get().getFields(),
@@ -106,7 +102,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
                 is(3));
         assertThat(
                 template.collection(PersistentIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.persistent));
     }
 
@@ -119,7 +115,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
         assertThat(template.collection(PersistentIndexWithSingleFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(
                 template.collection(PersistentIndexWithSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.persistent));
         assertThat(template.collection(PersistentIndexedSingleFieldTestEntity.class).getIndexes().stream()
                         .filter(i -> i.getType() == IndexType.persistent).findFirst().get().getFields(),
@@ -137,7 +133,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
                 is(3));
         assertThat(
                 template.collection(PersistentIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.persistent));
     }
 
@@ -150,7 +146,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
         assertThat(template.collection(PersistentIndexWithMultiFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(
                 template.collection(PersistentIndexWithMultiFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.persistent));
         assertThat(
                 template.collection(PersistentIndexWithMultiFieldTestEntity.class).getIndexes().stream()
@@ -168,7 +164,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
                 is(3));
         assertThat(
                 template.collection(PersistentIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.persistent));
     }
 
@@ -181,7 +177,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     public void singleFieldGeoIndexed() {
         assertThat(template.collection(GeoIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(template.collection(GeoIndexedSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, geo1()));
         assertThat(template.collection(GeoIndexedSingleFieldTestEntity.class).getIndexes().stream()
                         .filter(i -> i.getType() == geo1()).findFirst().get().getFields(),
@@ -197,7 +193,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     public void geoJsonFieldGeoIndexed() {
         assertThat(template.collection(GeoIndexedGeoJsonFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(template.collection(GeoIndexedGeoJsonFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, geo1()));
         assertThat(template.collection(GeoIndexedGeoJsonFieldTestEntity.class).getIndexes().stream()
                         .filter(i -> i.getType() == geo1()).findFirst().get().getFields(),
@@ -215,7 +211,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     public void multipleSingleFieldGeoIndexed() {
         assertThat(template.collection(GeoIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
         assertThat(template.collection(GeoIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, geo1()));
     }
 
@@ -227,7 +223,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     public void singleFieldGeoIndex() {
         assertThat(template.collection(GeoIndexWithSingleFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(template.collection(GeoIndexWithSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, geo1()));
         assertThat(template.collection(GeoIndexedSingleFieldTestEntity.class).getIndexes().stream()
                         .filter(i -> i.getType() == geo1()).findFirst().get().getFields(),
@@ -243,7 +239,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     public void multipleSingleFieldGeoIndex() {
         assertThat(template.collection(GeoIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
         assertThat(template.collection(GeoIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, geo1()));
     }
 
@@ -255,7 +251,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     public void multiFieldGeoIndex() {
         assertThat(template.collection(GeoIndexWithMultiFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(template.collection(GeoIndexWithMultiFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, geo2()));
         assertThat(template.collection(GeoIndexWithMultiFieldTestEntity.class).getIndexes().stream()
                         .filter(i -> i.getType() == geo2()).findFirst().get().getFields(),
@@ -283,6 +279,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     @Test
     @SuppressWarnings("deprecation")
     public void singleFieldFulltextIndexed() {
+        assumeTrue(isLessThanVersion(4, 0));
         assertThat(template.collection(FulltextIndexedSingleFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(template.collection(FulltextIndexedSingleFieldTestEntity.class).getIndexes().stream()
                         .map(i -> i.getType()).collect(Collectors.toList()),
@@ -303,6 +300,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     @Test
     @SuppressWarnings("deprecation")
     public void multipleSingleFieldFulltextIndexed() {
+        assumeTrue(isLessThanVersion(4, 0));
         assertThat(template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
         assertThat(
                 template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
@@ -317,6 +315,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     @Test
     @SuppressWarnings("deprecation")
     public void singleFieldFulltextIndex() {
+        assumeTrue(isLessThanVersion(4, 0));
         assertThat(template.collection(FulltextIndexWithSingleFieldTestEntity.class).getIndexes().size(), is(2));
         assertThat(
                 template.collection(FulltextIndexWithSingleFieldTestEntity.class).getIndexes().stream()
@@ -335,10 +334,11 @@ public class ArangoIndexTest extends AbstractArangoTest {
     @Test
     @SuppressWarnings("deprecation")
     public void multipleSingleFieldFulltextIndex() {
+        assumeTrue(isLessThanVersion(4, 0));
         assertThat(template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
         assertThat(
                 template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
-                        .map(i -> i.getType()).collect(Collectors.toList()),
+                        .map(IndexEntity::getType).collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.fulltext));
     }
 
@@ -349,6 +349,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     @Test
     @SuppressWarnings("deprecation")
     public void multipleIndexesFulltextIndex() {
+        assumeTrue(isLessThanVersion(4, 0));
         assertThat(template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().size(), is(3));
         assertThat(
                 template.collection(FulltextIndexedMultipleSingleFieldTestEntity.class).getIndexes().stream()
@@ -365,14 +366,33 @@ public class ArangoIndexTest extends AbstractArangoTest {
         private String a;
     }
 
+    public static class DifferentIndexedAnnotationsAdb4 {
+        @PersistentIndexed
+        @GeoIndexed
+        @TtlIndexed
+        private String a;
+    }
+
     @Test
     @SuppressWarnings("deprecation")
     public void differentIndexedAnnotationsSameField() {
+        assumeTrue(isLessThanVersion(4, 0));
         assertThat(template.collection(DifferentIndexedAnnotations.class).getIndexes().size(), is(5));
         assertThat(
-                template.collection(DifferentIndexedAnnotations.class).getIndexes().stream().map(i -> i.getType())
+                template.collection(DifferentIndexedAnnotations.class).getIndexes().stream()
+                        .map(IndexEntity::getType)
                         .collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.persistent, geo1(), IndexType.fulltext, IndexType.ttl));
+    }
+
+    @Test
+    public void differentIndexedAnnotationsSameFieldAdb4() {
+        assertThat(template.collection(DifferentIndexedAnnotationsAdb4.class).getIndexes().size(), is(4));
+        assertThat(
+                template.collection(DifferentIndexedAnnotationsAdb4.class).getIndexes().stream()
+                        .map(IndexEntity::getType)
+                        .collect(Collectors.toList()),
+                hasItems(IndexType.primary, IndexType.persistent, geo1(), IndexType.ttl));
     }
 
     @PersistentIndex(fields = {"a"})
@@ -385,6 +405,7 @@ public class ArangoIndexTest extends AbstractArangoTest {
     @Test
     @SuppressWarnings("deprecation")
     public void differentIndexAnnotations() {
+        assumeTrue(isLessThanVersion(4, 0));
         assertThat(template.collection(DifferentIndexAnnotations.class).getIndexes().size(), is(4));
         assertThat(
                 template.collection(DifferentIndexAnnotations.class).getIndexes().stream().map(i -> i.getType())
@@ -402,15 +423,33 @@ public class ArangoIndexTest extends AbstractArangoTest {
 
     }
 
+    @PersistentIndex(fields = {"a"})
+    @PersistentIndex(fields = {"b"})
+    @GeoIndex(fields = {"a"})
+    @GeoIndex(fields = {"b"})
+    public static class MultipleDifferentIndexAnnotationsAdb4 {
+
+    }
+
     @Test
     @SuppressWarnings("deprecation")
     public void multipleDifferentIndexAnnotations() {
+        assumeTrue(isLessThanVersion(4, 0));
         assertThat(template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().size(), is(7));
         assertThat(
-                template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().stream().map(i -> i.getType())
+                template.collection(MultipleDifferentIndexAnnotations.class).getIndexes().stream().map(IndexEntity::getType)
                         .collect(Collectors.toList()),
                 hasItems(IndexType.primary, IndexType.persistent, geo1(),
                         IndexType.fulltext));
+    }
+
+    @Test
+    public void multipleDifferentIndexAnnotationsAdb4() {
+        assertThat(template.collection(MultipleDifferentIndexAnnotationsAdb4.class).getIndexes().size(), is(5));
+        assertThat(
+                template.collection(MultipleDifferentIndexAnnotationsAdb4.class).getIndexes().stream().map(IndexEntity::getType)
+                        .collect(Collectors.toList()),
+                hasItems(IndexType.primary, IndexType.persistent, geo1()));
     }
 
     @Document("TwoEntityCollectionWithAdditionalIndexesCollection")
