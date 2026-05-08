@@ -206,6 +206,9 @@ workflows:
           name: test-<<matrix.topology>>
           matrix:
             parameters:
+              docker-img:
+                - 'docker.io/arangodb/enterprise:3.12'
+                - 'docker.io/arangodb/enterprise-preview:4.0-nightly'
               topology:
                 - 'single'
                 - 'cluster'
