@@ -41,46 +41,45 @@ import java.util.Map;
  */
 public class DerivedArangoQuery extends AbstractArangoQuery {
 
-	private final PartTree tree;
-	private final List<String> geoFields;
+    private final PartTree tree;
+    private final List<String> geoFields;
 
-	public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
-		super(method, operations);
-		tree = new PartTree(method.getName(), domainClass);
-		geoFields = getGeoFields();
-	}
+    public DerivedArangoQuery(final ArangoQueryMethod method, final ArangoOperations operations) {
+        super(method, operations);
+        tree = new PartTree(method.getName(), domainClass);
+        geoFields = getGeoFields();
+    }
 
-	@Override
-	protected String createQuery(
-		final ArangoParameterAccessor accessor,
-		final Map<String, Object> bindVars,
-		final AqlQueryOptions options) {
+    @Override
+    protected String createQuery(
+            final ArangoParameterAccessor accessor,
+            final Map<String, Object> bindVars,
+            final AqlQueryOptions options) {
 
-		return new DerivedQueryCreator(mappingContext, domainClass, tree, accessor, new BindParameterBinding(bindVars),
-				geoFields).createQuery();
-	}
+        return new DerivedQueryCreator(mappingContext, domainClass, tree, accessor, new BindParameterBinding(bindVars),
+                geoFields).createQuery();
+    }
 
-	@Override
-	protected boolean isCountQuery() {
-		return tree.isCountProjection();
-	}
+    @Override
+    protected boolean isCountQuery() {
+        return tree.isCountProjection();
+    }
 
-	@Override
-	protected boolean isExistsQuery() {
-		return tree.isExistsProjection();
-	}
+    @Override
+    protected boolean isExistsQuery() {
+        return tree.isExistsProjection();
+    }
 
-	private List<String> getGeoFields() {
-		final List<String> geoFields = new LinkedList<>();
-		if (method.isGeoQuery()) {
-			for (final IndexEntity index : operations.collection(domainClass).getIndexes()) {
-				final IndexType type = index.getType();
-				if (type == IndexType.geo || type == IndexType.geo1 || type == IndexType.geo2) {
-					geoFields.addAll(index.getFields());
-				}
-			}
-		}
-		return geoFields;
-	}
+    private List<String> getGeoFields() {
+        final List<String> geoFields = new LinkedList<>();
+        if (method.isGeoQuery()) {
+            for (final IndexEntity index : operations.collection(domainClass).getIndexes()) {
+                if (index.getType() == IndexType.geo) {
+                    geoFields.addAll(index.getFields());
+                }
+            }
+        }
+        return geoFields;
+    }
 
 }

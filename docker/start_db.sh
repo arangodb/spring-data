@@ -3,8 +3,8 @@
 # Configuration environment variables:
 #   STARTER_MODE:             (single|cluster|activefailover), default single
 #   DOCKER_IMAGE:             ArangoDB docker image, default docker.io/arangodb/enterprise:latest
+#   STARTER_DOCKER_IMAGE:     ArangoDB Starter docker image, default docker.io/arangodb/arangodb-starter:latest
 #   SSL:                      (true|false), default false
-#   EXTENDED_NAMES:           (true|false), default false
 #   ARANGO_LICENSE_KEY:       only required for ArangoDB Enterprise
 
 # EXAMPLE:
@@ -12,10 +12,10 @@
 
 STARTER_MODE=${STARTER_MODE:=single}
 DOCKER_IMAGE=${DOCKER_IMAGE:=docker.io/arangodb/enterprise:latest}
+STARTER_DOCKER_IMAGE=${STARTER_DOCKER_IMAGE:=docker.io/arangodb/arangodb-starter:latest}
 SSL=${SSL:=false}
-EXTENDED_NAMES=${EXTENDED_NAMES:=false}
+COMPRESSION=${COMPRESSION:=false}
 
-STARTER_DOCKER_IMAGE=docker.io/arangodb/arangodb-starter:latest
 GW=172.28.0.1
 docker network create arangodb --subnet 172.28.0.0/16
 
@@ -43,8 +43,8 @@ if [ "$SSL" == "true" ]; then
     ARANGOSH_SCHEME=http+ssl
 fi
 
-if [ "$EXTENDED_NAMES" == "true" ]; then
-    STARTER_ARGS="${STARTER_ARGS} --all.database.extended-names=true"
+if [ "$COMPRESSION" == "true" ]; then
+    STARTER_ARGS="${STARTER_ARGS} --all.http.compress-response-threshold=1"
 fi
 
 # data volume
@@ -57,6 +57,7 @@ docker run -d \
     -p 8528:8528 \
     --volumes-from arangodb-data \
     -v /var/run/docker.sock:/var/run/docker.sock \
+    --security-opt label=disable \
     -e ARANGO_LICENSE_KEY="$ARANGO_LICENSE_KEY" \
     $STARTER_DOCKER_IMAGE \
     $STARTER_ARGS \
@@ -65,12 +66,14 @@ docker run -d \
     --auth.jwt-secret=/data/jwtSecret \
     --starter.address="${GW}" \
     --docker.image="${DOCKER_IMAGE}" \
-    --starter.local --starter.mode=${STARTER_MODE} --all.log.level=debug --all.log.output=+ --log.verbose --all.server.descriptors-minimum=1024
+    --starter.local --starter.mode=${STARTER_MODE} --all.log.level=debug --all.log.output=+ --log.verbose \
+    --all.server.descriptors-minimum=1024 --all.javascript.allow-admin-execute=true --all.server.maximal-threads=128 \
+    --all.experimental-vector-index=true
 
 
 wait_server() {
     # shellcheck disable=SC2091
-    until $(curl --output /dev/null --insecure --fail --silent --head -i -H "$AUTHORIZATION_HEADER" "$SCHEME://$1/_api/version"); do
+    until $(curl --output /dev/null --insecure --fail --silent -i -H "$AUTHORIZATION_HEADER" "$SCHEME://$1/_api/version"); do
         printf '.'
         sleep 1
     done
