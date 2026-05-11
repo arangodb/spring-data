@@ -3,7 +3,6 @@ package com.arangodb.springframework.repository.query.derived;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -842,8 +841,6 @@ public class DerivedQueryCreatorTest extends AbstractArangoRepositoryTest {
 
 	@Test
 	public void polygonTest() {
-        assumeTrue(isLessThanVersion(4, 0));
-
 		final int[][] locations = { { 11, 31 }, { 20, 20 }, { 20, 40 }, { 70, 30 }, { 40, 10 }, { -10, -10 },
 				{ -10, 20 }, { -10, 60 }, { 30, 50 }, { 10, 20 }, { 5, 30 } };
 		final Customer[] customers = new Customer[11];

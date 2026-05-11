@@ -3,9 +3,7 @@
  */
 package com.arangodb.springframework.repository.query.derived;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Box;
@@ -23,199 +21,225 @@ import com.arangodb.springframework.repository.query.derived.geo.Ring;
  */
 public class BindParameterBinding {
 
-	interface UniqueCheck {
-		void check(Point point);
-	}
+    interface UniqueCheck {
+        void check(Point point);
+    }
 
-	private final Map<String, Object> bindVars;
+    private final Map<String, Object> bindVars;
 
-	public BindParameterBinding(final Map<String, Object> bindVars) {
-		super();
-		this.bindVars = bindVars;
-	}
+    public BindParameterBinding(final Map<String, Object> bindVars) {
+        super();
+        this.bindVars = bindVars;
+    }
 
-	public int bind(
-		final Object value,
-		final boolean shouldIgnoreCase,
-		final Boolean borderStatus,
-		final UniqueCheck uniqueCheck,
-		final int startIndex) {
-		int index = startIndex;
-		final Object caseAdjusted = ignoreArgumentCase(value, shouldIgnoreCase);
-		final Class<? extends Object> clazz = caseAdjusted.getClass();
-		if (clazz == Distance.class) {
-			final Distance distance = (Distance) caseAdjusted;
-			bind(index++, convertDistanceToMeters(distance));
-		} else if (borderStatus != null && borderStatus) {
-			bind(index++, escapeSpecialCharacters((String) caseAdjusted) + "%");
-		} else if (borderStatus != null) {
-			bind(index++, "%" + escapeSpecialCharacters((String) caseAdjusted));
-		} else {
-			bind(index++, caseAdjusted);
-		}
-		return index;
-	}
+    public int bind(
+            final Object value,
+            final boolean shouldIgnoreCase,
+            final Boolean borderStatus,
+            final UniqueCheck uniqueCheck,
+            final int startIndex) {
+        int index = startIndex;
+        final Object caseAdjusted = ignoreArgumentCase(value, shouldIgnoreCase);
+        final Class<? extends Object> clazz = caseAdjusted.getClass();
+        if (clazz == Distance.class) {
+            final Distance distance = (Distance) caseAdjusted;
+            bind(index++, convertDistanceToMeters(distance));
+        } else if (borderStatus != null && borderStatus) {
+            bind(index++, escapeSpecialCharacters((String) caseAdjusted) + "%");
+        } else if (borderStatus != null) {
+            bind(index++, "%" + escapeSpecialCharacters((String) caseAdjusted));
+        } else {
+            bind(index++, caseAdjusted);
+        }
+        return index;
+    }
 
-	public int bindPolygon(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
-		int index = startIndex;
-		final Polygon polygon = (Polygon) ignoreArgumentCase(value, shouldIgnoreCase);
-		final List<List<Double>> points = new LinkedList<>();
-		polygon.forEach(p -> {
-			final List<Double> point = new LinkedList<>();
-			point.add(p.getY());
-			point.add(p.getX());
-			points.add(point);
-		});
-		bind(index++, points);
-		return index;
-	}
+    public int bindPolygon(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
+        int index = startIndex;
+        final Polygon polygon = (Polygon) ignoreArgumentCase(value, shouldIgnoreCase);
+        final List<List<Double>> points = new LinkedList<>();
+        polygon.forEach(p -> {
+            final List<Double> point = new LinkedList<>();
+            point.add(p.getX());
+            point.add(p.getY());
+            points.add(point);
+        });
+        if (!points.isEmpty() && !points.get(0).equals(points.get(points.size() - 1))) {
+            points.add(new LinkedList<>(points.get(0)));
+        }
+        if (!isCounterClockwise(points)) {
+            Collections.reverse(points);
+        }
 
-	public int bindRing(
-		final Object value,
-		final boolean shouldIgnoreCase,
-		final UniqueCheck uniqueCheck,
-		final int startIndex,
-		final boolean toGeoJson
-	) {
-		int index = startIndex;
-		final Ring<?> ring = (Ring<?>) ignoreArgumentCase(value, shouldIgnoreCase);
-		final Point point = ring.getPoint();
-		index = bindPoint(point, uniqueCheck, index, toGeoJson);
-		final Range<?> range = ring.getRange();
-		index = bindRange(range, index);
-		return index;
-	}
+        final Map<String, Object> geoJsonPolygon = new LinkedHashMap<>();
+        geoJsonPolygon.put("type", "Polygon");
+        geoJsonPolygon.put("coordinates", Collections.singletonList(points));
 
-	public int bindRange(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
-		final int index = startIndex;
-		final Range<?> range = (Range<?>) ignoreArgumentCase(value, shouldIgnoreCase);
-		return bindRange(range, index);
-	}
+        bind(index++, geoJsonPolygon);
+        return index;
+    }
 
-	public int bindBox(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
-		int index = startIndex;
-		final Box box = (Box) ignoreArgumentCase(value, shouldIgnoreCase);
-		final Point first = box.getFirst();
-		final Point second = box.getSecond();
-		final double minLatitude = Math.min(first.getY(), second.getY());
-		final double maxLatitude = Math.max(first.getY(), second.getY());
-		final double minLongitude = Math.min(first.getX(), second.getX());
-		final double maxLongitude = Math.max(first.getX(), second.getX());
-		bind(index++, minLatitude);
-		bind(index++, maxLatitude);
-		bind(index++, minLongitude);
-		bind(index++, maxLongitude);
-		return index;
-	}
+    private static boolean isCounterClockwise(final List<List<Double>> ring) {
+        if (ring.size() < 4) {
+            return true;
+        }
+        double sum = 0.0;
+        for (int i = 0; i < ring.size() - 1; i++) {
+            final List<Double> a = ring.get(i);
+            final List<Double> b = ring.get(i + 1);
+            sum += (b.get(0) - a.get(0)) * (b.get(1) + a.get(1));
+        }
+        // In the standard shoelace formulation, a negative sum means
+        // counter-clockwise (when y points up). The sum above is twice the
+        // signed area with the sign convention used by GeoJSON / s2.
+        return sum < 0.0;
+    }
 
-	public int bindPoint(
-		final Object value,
-		final boolean shouldIgnoreCase,
-		final UniqueCheck uniqueCheck,
-		final int startIndex,
-		final boolean toGeoJson
-	) {
-		return bindPoint((Point) ignoreArgumentCase(value, shouldIgnoreCase), uniqueCheck, startIndex, toGeoJson);
-	}
+    public int bindRing(
+            final Object value,
+            final boolean shouldIgnoreCase,
+            final UniqueCheck uniqueCheck,
+            final int startIndex,
+            final boolean toGeoJson
+    ) {
+        int index = startIndex;
+        final Ring<?> ring = (Ring<?>) ignoreArgumentCase(value, shouldIgnoreCase);
+        final Point point = ring.getPoint();
+        index = bindPoint(point, uniqueCheck, index, toGeoJson);
+        final Range<?> range = ring.getRange();
+        index = bindRange(range, index);
+        return index;
+    }
 
-	private int bindPoint(final Point point, final UniqueCheck uniqueCheck, final int startIndex, final boolean toGeoJson) {
-		uniqueCheck.check(point);
-		int index = startIndex;
-		if(toGeoJson) {
-			bind(index++, point);
-		} else {
-			bind(index++, point.getY());
-			bind(index++, point.getX());
-		}
-		return index;
-	}
+    public int bindRange(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
+        final int index = startIndex;
+        final Range<?> range = (Range<?>) ignoreArgumentCase(value, shouldIgnoreCase);
+        return bindRange(range, index);
+    }
 
-	public int bindCircle(
-		final Object value,
-		final boolean shouldIgnoreCase,
-		final UniqueCheck uniqueCheck,
-		final int startIndex,
-		final boolean toGeoJson
-	) {
-		int index = startIndex;
-		final Circle circle = (Circle) ignoreArgumentCase(value, shouldIgnoreCase);
-		final Point center = circle.getCenter();
-		uniqueCheck.check(center);
-		if (toGeoJson) {
-			bind(index++, center);
-		} else {
-			bind(index++, center.getY());
-			bind(index++, center.getX());
-		}
-		bind(index++, convertDistanceToMeters(circle.getRadius()));
-		return index;
-	}
+    public int bindBox(final Object value, final boolean shouldIgnoreCase, final int startIndex) {
+        int index = startIndex;
+        final Box box = (Box) ignoreArgumentCase(value, shouldIgnoreCase);
+        final Point first = box.getFirst();
+        final Point second = box.getSecond();
+        final double minLatitude = Math.min(first.getY(), second.getY());
+        final double maxLatitude = Math.max(first.getY(), second.getY());
+        final double minLongitude = Math.min(first.getX(), second.getX());
+        final double maxLongitude = Math.max(first.getX(), second.getX());
+        bind(index++, minLatitude);
+        bind(index++, maxLatitude);
+        bind(index++, minLongitude);
+        bind(index++, maxLongitude);
+        return index;
+    }
 
-	private int bindRange(final Range<?> range, int index) {
-		Object lowerBound = range.getLowerBound().getValue().get();
-		Object upperBound = range.getUpperBound().getValue().get();
-		if (lowerBound.getClass() == Distance.class && upperBound.getClass() == lowerBound.getClass()) {
-			lowerBound = convertDistanceToMeters((Distance) lowerBound);
-			upperBound = convertDistanceToMeters((Distance) upperBound);
-		}
-		bind(index++, lowerBound);
-		bind(index++, upperBound);
-		return index;
-	}
+    public int bindPoint(
+            final Object value,
+            final boolean shouldIgnoreCase,
+            final UniqueCheck uniqueCheck,
+            final int startIndex,
+            final boolean toGeoJson
+    ) {
+        return bindPoint((Point) ignoreArgumentCase(value, shouldIgnoreCase), uniqueCheck, startIndex, toGeoJson);
+    }
 
-	private void bind(final int index, final Object value) {
-		bindVars.put(Integer.toString(index), value);
-	}
+    private int bindPoint(final Point point, final UniqueCheck uniqueCheck, final int startIndex, final boolean toGeoJson) {
+        uniqueCheck.check(point);
+        int index = startIndex;
+        if (toGeoJson) {
+            bind(index++, point);
+        } else {
+            bind(index++, point.getY());
+            bind(index++, point.getX());
+        }
+        return index;
+    }
 
-	private double convertDistanceToMeters(final Distance distance) {
-		return distance.getNormalizedValue() * Metrics.KILOMETERS.getMultiplier() * 1000;
-	}
+    public int bindCircle(
+            final Object value,
+            final boolean shouldIgnoreCase,
+            final UniqueCheck uniqueCheck,
+            final int startIndex,
+            final boolean toGeoJson
+    ) {
+        int index = startIndex;
+        final Circle circle = (Circle) ignoreArgumentCase(value, shouldIgnoreCase);
+        final Point center = circle.getCenter();
+        uniqueCheck.check(center);
+        if (toGeoJson) {
+            bind(index++, center);
+        } else {
+            bind(index++, center.getY());
+            bind(index++, center.getX());
+        }
+        bind(index++, convertDistanceToMeters(circle.getRadius()));
+        return index;
+    }
 
-	/**
-	 * Escapes special characters which could be used in an operand of LIKE operator
-	 *
-	 * @param string
-	 * @return
-	 */
-	private String escapeSpecialCharacters(final String string) {
-		final StringBuilder escaped = new StringBuilder();
-		for (final char character : string.toCharArray()) {
-			if (character == '%' || character == '_' || character == '\\') {
-				escaped.append('\\');
-			}
-			escaped.append(character);
-		}
-		return escaped.toString();
-	}
+    private int bindRange(final Range<?> range, int index) {
+        Object lowerBound = range.getLowerBound().getValue().get();
+        Object upperBound = range.getUpperBound().getValue().get();
+        if (lowerBound.getClass() == Distance.class && upperBound.getClass() == lowerBound.getClass()) {
+            lowerBound = convertDistanceToMeters((Distance) lowerBound);
+            upperBound = convertDistanceToMeters((Distance) upperBound);
+        }
+        bind(index++, lowerBound);
+        bind(index++, upperBound);
+        return index;
+    }
 
-	/**
-	 * Lowers case of a given argument if its type is String, Iterable<String> or String[] if shouldIgnoreCase is true
-	 *
-	 * @param argument
-	 * @param shouldIgnoreCase
-	 * @return
-	 */
-	private Object ignoreArgumentCase(final Object argument, final boolean shouldIgnoreCase) {
-		if (!shouldIgnoreCase) {
-			return argument;
-		}
-		if (argument instanceof String text) {
-			return text.toLowerCase();
-		}
-		final List<String> lowered = new LinkedList<>();
-		if (argument.getClass().isArray()) {
-			final String[] array = (String[]) argument;
-			for (final String string : array) {
-				lowered.add(string.toLowerCase());
-			}
-		} else {
-			@SuppressWarnings("unchecked")
-			final Iterable<String> iterable = (Iterable<String>) argument;
-			for (final Object object : iterable) {
-				lowered.add(((String) object).toLowerCase());
-			}
-		}
-		return lowered;
-	}
+    private void bind(final int index, final Object value) {
+        bindVars.put(Integer.toString(index), value);
+    }
+
+    private double convertDistanceToMeters(final Distance distance) {
+        return distance.getNormalizedValue() * Metrics.KILOMETERS.getMultiplier() * 1000;
+    }
+
+    /**
+     * Escapes special characters which could be used in an operand of LIKE operator
+     *
+     * @param string
+     * @return
+     */
+    private String escapeSpecialCharacters(final String string) {
+        final StringBuilder escaped = new StringBuilder();
+        for (final char character : string.toCharArray()) {
+            if (character == '%' || character == '_' || character == '\\') {
+                escaped.append('\\');
+            }
+            escaped.append(character);
+        }
+        return escaped.toString();
+    }
+
+    /**
+     * Lowers case of a given argument if its type is String, Iterable<String> or String[] if shouldIgnoreCase is true
+     *
+     * @param argument
+     * @param shouldIgnoreCase
+     * @return
+     */
+    private Object ignoreArgumentCase(final Object argument, final boolean shouldIgnoreCase) {
+        if (!shouldIgnoreCase) {
+            return argument;
+        }
+        if (argument instanceof String text) {
+            return text.toLowerCase();
+        }
+        final List<String> lowered = new LinkedList<>();
+        if (argument.getClass().isArray()) {
+            final String[] array = (String[]) argument;
+            for (final String string : array) {
+                lowered.add(string.toLowerCase());
+            }
+        } else {
+            @SuppressWarnings("unchecked") final Iterable<String> iterable = (Iterable<String>) argument;
+            for (final Object object : iterable) {
+                lowered.add(((String) object).toLowerCase());
+            }
+        }
+        return lowered;
+    }
 
 }

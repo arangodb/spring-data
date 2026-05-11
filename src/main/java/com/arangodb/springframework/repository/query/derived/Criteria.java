@@ -140,7 +140,7 @@ public class Criteria {
 	}
 
 	public static Criteria isInPolygon(final int index, final String property) {
-		return new Criteria("IS_IN_POLYGON(@" + index + ", " + property + "[0], " + property + "[1])");
+		return new Criteria("GEO_CONTAINS(@" + index + ", GEO_POINT(" + property + "[1], " + property + "[0]))");
 	}
 
 	public static Criteria geoContains(final int index, final String property) {
