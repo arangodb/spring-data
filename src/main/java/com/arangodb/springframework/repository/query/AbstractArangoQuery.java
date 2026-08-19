@@ -2,7 +2,7 @@
  * DISCLAIMER
  *
  * Copyright 2018 ArangoDB GmbH, Cologne, Germany
- *
+ * Copyright 2023 Hewlett Packard Enterprise Development LP.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
  * limitations under the License.
  *
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
+ * Copyright holder is Hewlett Packard Enterprise Development LP.
  */
 
 package com.arangodb.springframework.repository.query;
@@ -177,6 +178,10 @@ public abstract class AbstractArangoQuery implements RepositoryQuery {
 		if (mergedOptions.getAllowDirtyRead() == null) {
 			mergedOptions.allowDirtyRead(oldStatic.getAllowDirtyRead());
 		}
+		if(mergedOptions.getForceOneShardAttributeValue() != null) {
+			mergedOptions.forceOneShardAttributeValue(oldStatic.getForceOneShardAttributeValue());
+		}
+
 
 		return mergedOptions;
 	}
