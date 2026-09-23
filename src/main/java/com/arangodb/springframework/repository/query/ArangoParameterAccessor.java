@@ -2,6 +2,7 @@
  * DISCLAIMER
  *
  * Copyright 2018 ArangoDB GmbH, Cologne, Germany
+ * Copyright 2023 Hewlett Packard Enterprise Development LP.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +17,7 @@
  * limitations under the License.
  *
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
+ * Copyright holder is Hewlett Packard Enterprise Development LP.
  */
 
 package com.arangodb.springframework.repository.query;
@@ -25,6 +27,10 @@ import java.util.Map;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 import com.arangodb.model.AqlQueryOptions;
+
+import com.arangodb.springframework.repository.query.filter.Filterable;
+
+import com.arangodb.springframework.repository.query.search.Searchable;
 
 /**
  * 
@@ -39,5 +45,8 @@ public interface ArangoParameterAccessor extends ParameterAccessor {
 	Map<String, Object> getBindVars();
 
 	Map<String, Object> getSpelVars();
+	
+	Filterable getFilter(String placeholder);
 
+	Searchable getSearch();
 }
