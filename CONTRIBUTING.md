@@ -21,6 +21,11 @@ To run tests integrated with a database server, the easiest way is to use docker
 
 More server versions and starter modes will be checked for a pull request. 
 
+## Agent-assisted development
+
+[AGENTS.md](AGENTS.md) links to repository-specific architecture, change guidance,
+and CircleCI-aligned test recipes.
+
 ## Contribute
 
 To contribute code:

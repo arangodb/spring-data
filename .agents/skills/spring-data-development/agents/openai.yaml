@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Data ArangoDB Development"
+  short_description: "Maintain and extend Spring Data ArangoDB"
+  default_prompt: "Use $spring-data-development to implement and validate a change in this repository."

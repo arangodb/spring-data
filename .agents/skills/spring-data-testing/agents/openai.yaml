@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Data ArangoDB Testing"
+  short_description: "Run focused tests and reproduce CircleCI jobs"
+  default_prompt: "Use $spring-data-testing to select and run validation for this repository change."
