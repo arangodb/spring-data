@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [5.1.0] - 2026-09-28
+
 - added support to Spring Data `4.1`
+- updated Java Driver to version `7.28.0`
 
 ## [5.0.0] - 2026-02-12
 
