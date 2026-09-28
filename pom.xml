@@ -11,7 +11,7 @@
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>4.0.2</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -85,7 +85,6 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.42</version>
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
@@ -256,7 +255,6 @@
         <dependency>
             <groupId>org.skyscreamer</groupId>
             <artifactId>jsonassert</artifactId>
-            <version>1.5.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -268,7 +266,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.42</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -280,7 +277,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.5.25</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
