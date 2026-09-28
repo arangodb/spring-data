@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- added support to Spring Data `4.1`
+
 ## [5.0.0] - 2026-02-12
 
 - upgraded Spring Framework dependency to version 7.0 (DE-1087)

@@ -25,7 +25,7 @@ matrices; it does not take their combined Cartesian product:
 | `test-adb-version` | `test` | `docker.io/arangodb/enterprise:3.12` and `docker.io/arangodb/core-preview:4-nightly`, each with `single` and `cluster` |
 | `test-jdk-versions` | `test` | JDK 17, 21, 25 (`j17`, `j21`, `j25`) |
 | `test-protocol` | `test` | `HTTP_VPACK`, `HTTP_JSON`, `HTTP2_VPACK`, `HTTP2_JSON` |
-| `test-spring-version` | `integration-test` | JDK 17, Boot parent `4.0.2`; default image, single server, `HTTP2_JSON` |
+| `test-spring-version` | `integration-test` | JDK 17, Boot parents `4.0.8` and `4.1.1`; default image, single server, `HTTP2_JSON` |
 | `tutorial` | `tutorial` | JDK 21, default image, single server; run the application, not Surefire |
 
 With a nonempty pipeline `docker-img`, `test-adb-topology` runs `test` against that
@@ -91,26 +91,26 @@ Use JDK 17 and the default single-server database. CI changes the Boot parent in
 `integration-tests/pom.xml`, installs the root library, then tests the consumer:
 
 ```sh
-boot_version=4.0.2
-(
-  cd integration-tests
-  sed -i "0,/<version>.*<\/version>/s//<version>${boot_version}<\/version>/" pom.xml
-)
 mvn install -Dmaven.test.skip=true -Dgpg.skip=true -Dmaven.javadoc.skip=true
-(
-  cd integration-tests
-  mvn --version
-  mvn dependency:tree
-  mvn -Darangodb.protocol=HTTP2_JSON test
-)
+for boot_version in 4.0.8 4.1.1; do
+  (
+    cd integration-tests
+    sed -i "0,/<version>.*<\/version>/s//<version>${boot_version}<\/version>/" pom.xml
+    mvn --version
+    mvn dependency:tree
+    mvn clean -Darangodb.protocol=HTTP2_JSON test
+  )
+done
 ```
 
 The version substitution is the GNU `sed` command used by CI; it edits the first
 version element, the Boot parent, not the library version or root Spring Data
-parent. Use the checked-out matrix value; do not commit temporary matrix overrides.
-Reinstall after library changes so the consumer does not test a stale local or
-published artifact. The install step skips even test compilation and is setup,
-not validation. Both GPG and Javadoc skip flags are intentional CI install flags.
+parent. CI runs each listed matrix value in its own job. Locally, the loop above
+repeats the consumer run for both `4.0.8` and `4.1.1` and cleans compiled output
+between them; leave the checked-in parent at `4.1.1` afterward. Reinstall after
+library changes so the consumer does not test a stale local or published artifact.
+The install step skips even test compilation and is setup, not validation. Both
+GPG and Javadoc skip flags are intentional CI install flags.
 Both consumers pin the library version literally (the integration project's own
 `<version>`, the tutorial's dependency); it must equal the root version installed.
 
