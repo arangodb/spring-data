@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
  * @author Mark Vollmary
  * @author Christian Lechner
  * @author Michele Rastelli
+ * @author Siva Prasad Erigineni
  */
 public class StringBasedArangoQuery extends AbstractArangoQuery {
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -59,9 +60,14 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 	private static final String COLLECTION_PLACEHOLDER = "#collection";
 	private static final Pattern COLLECTION_PLACEHOLDER_PATTERN = Pattern
 			.compile(Pattern.quote(COLLECTION_PLACEHOLDER));
+	private static final Pattern FILTER_PLACEHOLDER_PATTERN = Pattern
+			.compile("#filter[a-zA-Z0-9-]*");
 
 	private static final Pattern BIND_PARAM_PATTERN = Pattern.compile("@(@?[A-Za-z0-9][A-Za-z0-9_]*)");
 
+	private static final String SEARCH_PLACEHOLDER = "#search";
+	private static final Pattern SEARCH_PLACEHOLDER_PATTERN = Pattern
+			.compile(Pattern.quote(SEARCH_PLACEHOLDER));
 	private final String query;
 	private	final String collectionName;
 	private final Expression queryExpression;
@@ -84,7 +90,9 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 
 		assertSinglePageablePlaceholder();
 		assertSingleSortPlaceholder();
-
+		assertFiltersPlaceholders();
+		assertSingleSearchPlaceholder();
+		
 		this.queryBindParams = getBindParamsInQuery();
 		queryExpression = PARSER.parseExpression(query, ParserContext.TEMPLATE_EXPRESSION);
 	}
@@ -131,6 +139,20 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 		} else if (accessor.getParameters().hasSortParameter()) {
 			final String sortClause = AqlUtils.buildSortClause(accessor.getSort());
 			preparedQuery = SORT_PLACEHOLDER_PATTERN.matcher(preparedQuery).replaceFirst(sortClause);
+		}
+		
+		if (accessor.getParameters().hasFilterParameter()) {
+			Matcher matcher = FILTER_PLACEHOLDER_PATTERN.matcher(preparedQuery);
+			while(matcher.find()) {
+				final String placeholder = matcher.group().replace("#", "");
+				final String filterClause = AqlUtils.buildFilterClause(accessor.getFilter(placeholder));
+				preparedQuery = FILTER_PLACEHOLDER_PATTERN.matcher(preparedQuery).replaceFirst(filterClause);
+			}
+		}
+
+		if (accessor.getParameters().hasSearchParameter()) {
+			final String searchClause = AqlUtils.buildSearchClause(accessor.getSearch());
+			preparedQuery = SEARCH_PLACEHOLDER_PATTERN.matcher(preparedQuery).replaceFirst(searchClause);
 		}
 
 		return preparedQuery;
@@ -223,6 +245,32 @@ public class StringBasedArangoQuery extends AbstractArangoQuery {
 				String.format(
 					"Native query with Sort param must contain exactly one sort placeholder (%s)! Offending method: %s",
 					SORT_PLACEHOLDER, method));
+		}
+	}
+	private void assertFiltersPlaceholders() {
+		if (method.getParameters().hasFilterParameter()) {
+			int placeholderOccurrences = 0;
+			int parameterOccurrences = method.getParameters().getFilterIndexes().size();
+
+			Matcher matcher = FILTER_PLACEHOLDER_PATTERN.matcher(query);
+			while(matcher.find()) {
+				placeholderOccurrences++;
+			}
+
+			Assert.isTrue(placeholderOccurrences == parameterOccurrences, String.format("The number of filter "
+					+ " placeholders (%d) does not match with the number of @Filter parameters (%d)! Offending method: %s", placeholderOccurrences, parameterOccurrences, method));
+		}
+	}
+
+	private void assertSingleSearchPlaceholder() {
+		if (method.getParameters().hasSearchParameter()) {
+			final int firstOccurrence = query.indexOf(SEARCH_PLACEHOLDER);
+			final int secondOccurrence = query.indexOf(SEARCH_PLACEHOLDER, firstOccurrence + SEARCH_PLACEHOLDER.length());
+
+			Assert.isTrue(firstOccurrence > -1 && secondOccurrence < 0,
+					String.format(
+							"Native query with @Search param must contain exactly one search placeholder (%s)! Offending method: %s",
+							SEARCH_PLACEHOLDER, method));
 		}
 	}
 
